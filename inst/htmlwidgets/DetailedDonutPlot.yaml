@@ -1,0 +1,14 @@
+dependencies:
+  - name: d3
+    version: 3.5.11
+    src: htmlwidgets/lib/d3
+    script: d3.min.js
+  - name: d3pie
+    version: 0.1.8
+    src: htmlwidgets/lib/d3pie
+    script:d3pie.js
+  - name: DetailedDonutPlot
+  	version: 0.0.1
+  	scr: htmlwidgets/lib/DetailedDonutPlot
+  	stylesheet: DetailedDonutPlot.css
+  	
