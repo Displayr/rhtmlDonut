@@ -254,13 +254,14 @@ var helpers = {
 		var canvasHeight = pie.options.size.canvasHeight;
 		var backgroundColor = pie.options.misc.colors.background;
 
-		var svg = d3.select(element).append("svg:svg")
-			.attr("width", canvasWidth)
-			.attr("height", canvasHeight);
+        var svg = d3.select(element).append("g").attr("class", "mainPlot");
+		//var svg = d3.select(element).append("svg:svg")
+		//	.attr("width", canvasWidth)
+		//	.attr("height", canvasHeight);
 
-		if (backgroundColor !== "transparent") {
-			svg.style("background-color", function() { return backgroundColor; });
-		}
+		//if (backgroundColor !== "transparent") {
+		//	svg.style("background-color", function() { return backgroundColor; });
+		//}
 
 		return svg;
 	},
@@ -685,7 +686,7 @@ var math = {
 		return data;
 	},
 
-	
+
 
 	// var pieCenter = math.getPieCenter();
 	getPieTranslateCenter: function(pieCenter) {
