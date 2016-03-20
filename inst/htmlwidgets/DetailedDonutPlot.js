@@ -34,7 +34,7 @@ function DetailedDonutPlot() {
     			pieInnerRadius: "80%"
     		},
     		data: {
-    			sortOrder: "label-asc",
+    			sortOrder: "value-desc",
     			content: pieData
     		}
     	});
