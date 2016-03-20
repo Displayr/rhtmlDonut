@@ -29,6 +29,8 @@ function DetailedDonutPlot() {
     			location: "pie-center"
     		},
     		size: {
+    		    canvasWidth: width,
+    		    canvasHeight: height,
     			pieInnerRadius: "80%"
     		},
     		data: {
