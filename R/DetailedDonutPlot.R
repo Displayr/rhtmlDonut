@@ -1,15 +1,15 @@
 detailed.donut <- function(
     values,
-    values.font = 10,
-    values.size = NULL,
+    values.font = NULL,
+    values.size = 10,
     values.color = NULL,
     labels = NULL,
-    labels.font = 10,
-    labels.size = NULL,
+    labels.font = NULL,
+    labels.size = 10,
     labels.color = NULL,
     groups = NULL,
-    groups.font = 10,
-    groups.size = NULL,
+    groups.font = NULL,
+    groups.size = 10,
     groups.color = NULL,
     prefix = NULL,
     suffix = NULL,
@@ -25,6 +25,17 @@ detailed.donut <- function(
         labels = paste0("label", 1:n)
     }
 
+    if (!is.null(groups)) {
+        groups.lab = unique(groups)
+        groups.sums = rep(0, length(groups.lab))
+        for (i in 1:length(groups.lab)) {
+            groups.sums[i] = sum(values[groups == groups.lab[i]])
+        }
+    } else {
+        groups.lab = NULL
+        groups.sums = NULL
+    }
+
 
     # create a list that contains the settings
     settings <- list(
@@ -34,6 +45,8 @@ detailed.donut <- function(
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,
+        groupsLab = groups.lab,
+        groupsSums = groups.sums,
         groups = groups,
         groupsFont = groups.font,
         groupsSize = groups.size,

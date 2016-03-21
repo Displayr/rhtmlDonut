@@ -1,6 +1,11 @@
-# library(devtools)
-# install_github("xtmwang/DetailedDonutPlot")
-test.data = c(1,2,3,2,5)
-test.labels = c("JavaScript", "Ruby", "Java", "C++", "Objective-C")
+library(devtools)
+install_github("xtmwang/DetailedDonutPlot")
 
-DetailedDonutPlot::detailed.donut(values = test.data, labels = test.labels)
+browser = as.data.frame(data.table::fread("examples/browser_version.csv", header = T, sep = ","))
+values = as.numeric(browser[13,-1])
+labels = colnames(browser)[-1]
+groups = strsplit(labels, " ")
+groups = sapply(groups, function(x){x[1]})
+
+DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
+DetailedDonutPlot::detailed.donut(values = values, labels = labels)

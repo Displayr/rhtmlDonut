@@ -95,6 +95,7 @@ var defaultSettings = {
 		mainLabel: {
 			color: "#333333",
 			font: "arial",
+			fontWeight: "bold",
 			fontSize: 10
 		},
 		percentage: {
@@ -117,7 +118,7 @@ var defaultSettings = {
 			enabled: false,
 			truncateLength: 30
 		},
-    formatter: null
+        formatter: null
 	},
 	effects: {
 		load: {
@@ -226,11 +227,11 @@ var validate = {
 		var data = [];
 		for (var i=0; i<options.data.content.length; i++) {
 			if (typeof options.data.content[i].value !== "number" || isNaN(options.data.content[i].value)) {
-				console.log("not valid: ", options.data.content[i]);
+				// console.log("not valid: ", options.data.content[i]);
 				continue;
 			}
 			if (options.data.content[i].value <= 0) {
-				console.log("not valid - should have positive value: ", options.data.content[i]);
+				// console.log("not valid - should have positive value: ", options.data.content[i]);
 				continue;
 			}
 			data.push(options.data.content[i]);
@@ -660,26 +661,33 @@ var math = {
 
 	sortPieData: function(pie) {
 		var data                 = pie.options.data.content;
-		var sortOrder            = pie.options.data.sortOrder;
+		var sortOrder;
+		if (pie.options.groups.values) {
+		    if (pie.options.data.sortOrder == "default") {
+		        sortOrder = "group-desc";
+		    } else {
+		        sortOrder = pie.options.data.sortOrder;
+		    }
+		} else {
+		    if (pie.options.data.sortOrder == "default") {
+		        sortOrder = "value-desc";
+		    } else {
+		        sortOrder = pie.options.data.sortOrder;
+		    }
+		}
 
 		switch (sortOrder) {
-			case "none":
+		    case "group-desc":
+                // group descending
+		        break;
+			case "initial":
 				// do nothing
-				break;
-			case "random":
-				data = helpers.shuffleArray(data);
-				break;
-			case "value-asc":
-				data.sort(function(a, b) { return (a.value < b.value) ? -1 : 1; });
 				break;
 			case "value-desc":
 				data.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
 				break;
 			case "label-asc":
 				data.sort(function(a, b) { return (a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1; });
-				break;
-			case "label-desc":
-				data.sort(function(a, b) { return (a.label.toLowerCase() < b.label.toLowerCase()) ? 1 : -1; });
 				break;
 		}
 
@@ -742,7 +750,7 @@ var math = {
 
         var cos = Math.cos,
 			sin = Math.sin,
-		// subtract midpoints, so that midpoint is translated to origin and add it in the end again
+		// subtract reference point, so that reference point is translated to origin and add it in the end again
 		xr = (x - xm) * cos(a) - (y - ym) * sin(a) + xm,
 		yr = (x - xm) * sin(a) + (y - ym) * cos(a) + ym;
 
@@ -756,11 +764,21 @@ var math = {
 	 * @param dist
 	 * @param a angle in degrees
 	 */
-	translate: function(x, y, d, a) {
+	// rotation starting from 12 o'clock position
+	translate12: function(x, y, d, a) {
 		var rads = math.toRadians(a);
 		return {
 			x: x + d * Math.sin(rads),
 			y: y - d * Math.cos(rads)
+		};
+	},
+
+    // rotation starting from 9 o'clock position
+	translate9: function(x, y, d, a) {
+		var rads = math.toRadians(a);
+		return {
+			x: x - d * Math.cos(rads),
+			y: y - d * Math.sin(rads)
 		};
 	},
 
@@ -820,41 +838,42 @@ var labels = {
 				.text(function(d, i) {
 					var str = d.label;
 
-          // if a custom formatter has been defined, pass it the raw label string - it can do whatever it wants with it.
-          // we only apply truncation if it's not defined
-					if (settings.formatter) {
-            formatterContext.index = i;
-            formatterContext.part = 'mainLabel';
-            formatterContext.value = d.value;
-            formatterContext.label = str;
-            str = settings.formatter(formatterContext);
-          } else if (settings.truncation.enabled && d.label.length > settings.truncation.truncateLength) {
-            str = d.label.substring(0, settings.truncation.truncateLength) + "...";
-          }
-          return str;
+                  // if a custom formatter has been defined, pass it the raw label string - it can do whatever it wants with it.
+                  // we only apply truncation if it's not defined
+        		  /*  if (settings.formatter) {
+                        formatterContext.index = i;
+                        formatterContext.part = 'mainLabel';
+                        formatterContext.value = d.value;
+                        formatterContext.label = str;
+                        str = settings.formatter(formatterContext);
+                      } else if (settings.truncation.enabled && d.label.length > settings.truncation.truncateLength) {
+                        str = d.label.substring(0, settings.truncation.truncateLength) + "...";
+                      }*/
+                  return str;
 				})
 				.style("font-size", settings.mainLabel.fontSize + "px")
 				.style("font-family", settings.mainLabel.font)
-				.style("fill", settings.mainLabel.color);
+				.style("fill", settings.mainLabel.color)
+				.style("font-weight", settings.mainLabel.fontWeight);
 		}
 
 		// 2. Add the percentage label
-		if (include.percentage) {
+		/*if (include.percentage) {
 			labelGroup.append("text")
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentPercentage" + i + "-" + section; })
 				.attr("class", pie.cssPrefix + "segmentPercentage-" + section)
 				.text(function(d, i) {
 					var percentage = segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces);
-          if (settings.formatter) {
-            formatterContext.index = i;
-            formatterContext.part = "percentage";
-            formatterContext.value = d.value;
-            formatterContext.label = percentage;
-            percentage = settings.formatter(formatterContext);
-          } else {
-            percentage += "%";
-          }
-          return percentage;
+                  if (settings.formatter) {
+                    formatterContext.index = i;
+                    formatterContext.part = "percentage";
+                    formatterContext.value = d.value;
+                    formatterContext.label = percentage;
+                    percentage = settings.formatter(formatterContext);
+                  } else {
+                    percentage += "%";
+                  }
+                  return percentage;
 				})
 				.style("font-size", settings.percentage.fontSize + "px")
 				.style("font-family", settings.percentage.font)
@@ -867,16 +886,16 @@ var labels = {
 				.attr("id", function(d, i) { return pie.cssPrefix +  "segmentValue" + i + "-" + section; })
 				.attr("class", pie.cssPrefix + "segmentValue-" + section)
 				.text(function(d, i) {
-          formatterContext.index = i;
-          formatterContext.part = "value";
-          formatterContext.value = d.value;
-          formatterContext.label = d.value;
-          return settings.formatter ? settings.formatter(formatterContext, d.value) : d.value;
-        })
+                  formatterContext.index = i;
+                  formatterContext.part = "value";
+                  formatterContext.value = d.value;
+                  formatterContext.label = d.value;
+                  return settings.formatter ? settings.formatter(formatterContext, d.value) : d.value;
+                })
 				.style("font-size", settings.value.fontSize + "px")
 				.style("font-family", settings.value.font)
 				.style("fill", settings.value.color);
-		}
+		}*/
 	},
 
 	/**
@@ -930,7 +949,8 @@ var labels = {
 
 	computeLinePosition: function(pie, i) {
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
-		var originCoords = math.rotate(pie.pieCenter.x, pie.pieCenter.y - pie.outerRadius, pie.pieCenter.x, pie.pieCenter.y, angle);
+		var originCoords = math.rotate(pie.pieCenter.x - pie.outerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
+		//console.log(pie.outerLabelGroupData[i]);
 		var heightOffset = pie.outerLabelGroupData[i].h / 5; // TODO check
 		var labelXMargin = 6; // the x-distance of the label from the end of the line [TODO configurable]
 
@@ -938,10 +958,21 @@ var labels = {
 		var midPoint = 4;
 		var x2, y2, x3, y3;
 
-		// this resolves an issue when the
+		angle = angle - 90;
+		if (angle < 0) {
+		    quarter = 3;
+		} else if (angle < 90) {
+		    quarter = 0;
+		} else if (angle < 180) {
+		    quarter = 1;
+		} else {
+		    quarter = 2;
+		}
+
+		/*// this resolves an issue when the
 		if (quarter === 2 && angle === 180) {
 			quarter = 1;
-		}
+		}*/
 
 		switch (quarter) {
 			case 0:
@@ -1040,7 +1071,9 @@ var labels = {
 					// now recompute the "center" based on the current _innerRadius
 					if (pie.innerRadius > 0) {
 						var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
-						var newCoords = math.translate(pie.pieCenter.x, pie.pieCenter.y, pie.innerRadius, angle);
+						console.log(angle);
+						var newCoords = math.translate9(pie.pieCenter.x, pie.pieCenter.y, pie.innerRadius, angle);
+						console.log(newCoords);
 						pieCenterCopy.x = newCoords.x;
 						pieCenterCopy.y = newCoords.y;
 					}
@@ -1049,11 +1082,14 @@ var labels = {
 					var xOffset = dims.w / 2;
 					var yOffset = dims.h / 4; // confusing! Why 4? should be 2, but it doesn't look right
 
-					x = pieCenterCopy.x + (pie.lineCoordGroups[i][0].x - pieCenterCopy.x) / 1.8;
-					y = pieCenterCopy.y + (pie.lineCoordGroups[i][0].y - pieCenterCopy.y) / 1.8;
+					x = pieCenterCopy.x;
+					y = pieCenterCopy.y;
 
-					x = x - xOffset;
-					y = y + yOffset;
+					//x = pieCenterCopy.x + (pie.lineCoordGroups[i][0].x - pieCenterCopy.x) / 1.8;
+					//y = pieCenterCopy.y + (pie.lineCoordGroups[i][0].y - pieCenterCopy.y) / 1.8;
+
+					//x = x - xOffset;
+					//y = y + yOffset;
 				}
 
 				return "translate(" + x + "," + y + ")";
@@ -1077,14 +1113,14 @@ var labels = {
 					return (percentage !== null && segmentPercentage < percentage) ? 0 : 1;
 				});
 
-			d3.selectAll("." + pie.cssPrefix + "labelGroup-inner")
+			/*d3.selectAll("." + pie.cssPrefix + "labelGroup-inner")
 				.transition()
 				.duration(labelFadeInTime)
 				.style("opacity", function(d, i) {
 					var percentage = pie.options.labels.inner.hideWhenLessThanPercentage;
 					var segmentPercentage = segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces);
 					return (percentage !== null && segmentPercentage < percentage) ? 0 : 1;
-				});
+				});*/
 
 			d3.selectAll("g." + pie.cssPrefix + "lineGroups")
 				.transition()
@@ -1150,7 +1186,7 @@ var labels = {
 			});
 
 		// 2. now adjust those positions to try to accommodate conflicts
-		labels.resolveOuterLabelCollisions(pie);
+		// labels.resolveOuterLabelCollisions(pie);
 	},
 
 	/**
@@ -1252,25 +1288,31 @@ var labels = {
 	 * @param i 0-N where N is the dataset size - 1.
 	 */
 	getIdealOuterLabelPositions: function(pie, i) {
-    var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
-    if (!labelGroupNode) {
-      return;
-    }
-    var labelGroupDims = labelGroupNode.getBBox();
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 
 		var originalX = pie.pieCenter.x;
 		var originalY = pie.pieCenter.y - (pie.outerRadius + pie.options.labels.outer.pieDistance);
-		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle);
+		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
 
 		// if the label is on the left half of the pie, adjust the values
 		var hemisphere = "right"; // hemisphere
-		if (angle > 180) {
+        if (angle > 270 || angle < 90) {
 			newCoords.x -= (labelGroupDims.width + 8);
 			hemisphere = "left";
 		} else {
 			newCoords.x += 8;
 		}
+		/*if (angle > 180) {
+			newCoords.x -= (labelGroupDims.width + 8);
+			hemisphere = "left";
+		} else {
+			newCoords.x += 8;
+		}*/
 
 		pie.outerLabelGroupData[i] = {
 			x: newCoords.x,
@@ -1294,7 +1336,6 @@ var segments = {
 		var colors = pie.options.colors;
 		var loadEffects = pie.options.effects.load;
 		var segmentStroke = pie.options.misc.colors.segmentStroke;
-
 		// we insert the pie chart BEFORE the title, to ensure the title overlaps the pie
 		var pieChartElement = pie.svg.insert("g", "#" + pie.cssPrefix + "title")
 			.attr("transform", function() { return math.getPieTranslateCenter(pieCenter); })
@@ -1338,20 +1379,65 @@ var segments = {
 			.attrTween("d", function(b) {
 				var i = d3.interpolate({ value: 0 }, b);
 				return function(t) {
-					return pie.arc(i(t));
+					return arc(i(t));
 				};
 			});
 
 		pie.svg.selectAll("g." + pie.cssPrefix + "arc")
-			.attr("transform",
-			function(d, i) {
+			.attr("transform", function(d, i) {
 				var angle = 0;
 				if (i > 0) {
 					angle = segments.getSegmentAngle(i-1, pie.options.data.content, pie.totalSize);
 				}
-				return "rotate(" + angle + ")";
-			}
-		);
+				return "rotate(" + (angle - 90) + ")";
+		    });
+
+
+		// if groups are assigned
+		if (pie.options.groups.content) {
+		    var groupArc = d3.svg.arc()
+    			.innerRadius(0)
+    			.outerRadius(pie.innerRadius)
+    			.startAngle(0)
+    			.endAngle(function(d) {
+    				return (d.value / pie.totalSize) * 2 * Math.PI;
+    			});
+
+    		var gr = pieChartElement.selectAll("." + pie.cssPrefix + "garc")
+    			.data(pie.options.groups.content)
+    			.enter()
+    			.append("g")
+    			.attr("class", pie.cssPrefix + "garc");
+
+    		gr.append("path")
+    			.attr("id", function(d, i) { return pie.cssPrefix + "gsegment" + i; })
+    			.attr("fill", function(d, i) {
+    				return d.color ? d.color : colors[i];
+    			})
+    			.style("stroke", segmentStroke)
+    			.style("stroke-width", 1)
+    			.transition()
+    			.ease("cubic-in-out")
+    			.duration(loadSpeed)
+    			.attr("data-index", function(d, i) { return i; })
+    			.attrTween("d", function(b) {
+    				var i = d3.interpolate({ value: 0 }, b);
+    				return function(t) {
+    					return groupArc(i(t));
+    				};
+    			});
+
+    		pie.svg.selectAll("g." + pie.cssPrefix + "garc")
+    			.attr("transform", function(d, i) {
+    				var angle = 0;
+    				if (i > 0) {
+    					angle = segments.getSegmentAngle(i-1, pie.options.groups.content, pie.totalSize);
+    				}
+    				return "rotate(" + (angle - 90) + ")";
+    			});
+
+    	    pie.groupArc = groupArc;
+		}
 		pie.arc = arc;
 	},
 
@@ -1371,7 +1457,8 @@ var segments = {
 	},
 
 	addSegmentEventHandlers: function(pie) {
-		var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-inner,." + pie.cssPrefix + "labelGroup-outer");
+		//var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-inner,." + pie.cssPrefix + "labelGroup-outer");
+		var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-outer");
 
 		arc.on("click", function() {
 			var currentEl = d3.select(this);
@@ -1412,18 +1499,18 @@ var segments = {
 				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
 			}
 
-      if (pie.options.tooltips.enabled) {
-        index = segment.attr("data-index");
-        tt.showTooltip(pie, index);
-      }
+            if (pie.options.tooltips.enabled) {
+                index = segment.attr("data-index");
+                tt.showTooltip(pie, index);
+            }
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
 			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded);
 		});
 
-    arc.on("mousemove", function() {
-      tt.moveTooltip(pie);
-    });
+        arc.on("mousemove", function() {
+          tt.moveTooltip(pie);
+        });
 
 		arc.on("mouseout", function() {
 			var currentEl = d3.select(this);
@@ -1445,10 +1532,10 @@ var segments = {
 				segment.style("fill", color);
 			}
 
-      if (pie.options.tooltips.enabled) {
-        index = segment.attr("data-index");
-        tt.hideTooltip(pie, index);
-      }
+            if (pie.options.tooltips.enabled) {
+                index = segment.attr("data-index");
+                t.hideTooltip(pie, index);
+            }
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
 			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
@@ -2121,11 +2208,11 @@ var tt = {
 				segments.addGradients(self);
 			}
 			segments.create(self); // also creates this.arc
-			labels.add(self, "inner", self.options.labels.inner.format);
+			//labels.add(self, "inner", self.options.labels.inner.format);
 			labels.add(self, "outer", self.options.labels.outer.format);
 
 			// position the label elements relatively within their individual group (label, percentage, value)
-			labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
+			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
 			labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
 			labels.computeOuterLabelCoords(self);
 
@@ -2140,7 +2227,7 @@ var tt = {
 				labels.addLabelLines(self);
 			}
 
-			labels.positionLabelGroups(self, "inner");
+			//labels.positionLabelGroups(self, "inner");
 			labels.fadeInLabelsAndLines(self);
 
       // add and position the tooltips
