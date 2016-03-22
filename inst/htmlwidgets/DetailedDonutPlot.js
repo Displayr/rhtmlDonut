@@ -3,47 +3,160 @@ function DetailedDonutPlot() {
         labels,
         settings,
         pieData,
+        pie,
         n,
         width = 500,
-        height = 500,
-        i,
-        j;
+        height = 500;
 
+    function resizeChart(el) {
+        pie.options.size.canvasWidth = width;
+        pie.options.size.canvasHeight = height;
+        pie.redraw();
+    }
 
     function chart(selection) {
+
+        // set color luminance
+        // from http://www.sitepoint.com/javascript-generate-lighter-darker-color/
+
+        function increaseBrightness(hex, percent){
+            // strip the leading # if it's there
+            hex = hex.replace(/^\s*#|\s*$/g, '');
+
+            // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
+            if(hex.length == 3){
+                hex = hex.replace(/(.)/g, '$1$1');
+            }
+
+            var r = parseInt(hex.substr(0, 2), 16),
+                g = parseInt(hex.substr(2, 2), 16),
+                b = parseInt(hex.substr(4, 2), 16);
+
+            return '#' +
+               ((0|(1<<8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
+               ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
+        }
+
+        function colorLuminance(hex, lum) {
+
+        	// validate hex string
+        	hex = String(hex).replace(/[^0-9a-f]/gi, '');
+        	if (hex.length < 6) {
+        		hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        	}
+        	lum = lum || 0;
+
+        	// convert to decimal and change luminosity
+        	var rgb = "#", c, i;
+        	for (i = 0; i < 3; i++) {
+        		c = parseInt(hex.substr(i*2,2), 16);
+        		c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16);
+        		rgb += ("00"+c).substr(c.length);
+        	}
+
+        	return rgb;
+        }
 
         var svg = selection.select("svg"),
             svgEl = svg[0][0];
 
-        var pieData = [];
-        for (i = 0; i < n; i++) {
-            var d = { label: labels[i], value: values[i] };
-            pieData.push(d);
-        }
+        var pieData = [],
+            pieColor = [],
+            groupData = [],
+            groupColor = [],
+            i;
 
-        var groupData = [];
         if (settings.groups) {
+            var hash = {},
+                idx,
+                deltaLum,
+                lum,
+                baseColor,
+                nInGroups = [];
+
             if (!settings.groupsColor) {
                 settings.groupsColor = d3.scale.category20().range();
             }
+
+            if (settings.groupsSums.length > settings.groupsColor.length) {
+                for (i = 0; i < settings.groupsSums.length-settings.groupsColor.length; i++) {
+                    settings.groupsColor.push(settings.groupsColor[i]);
+                }
+            }
+
+
             for (i = 0; i < settings.groupsSums.length; i++) {
-                var d1 = { label: settings.groupsLab[i], value: settings.groupsSums[i], color: settings.groupsColor[i]};
-                groupData.push(d1);
+                groupData.push({ label: settings.groupsLab[i], value: settings.groupsSums[i], color: settings.groupsColor[i], num: settings.groupsBins[i]});
+            }
+
+
+            for (i = 0; i < n; i++) {
+                pieData.push({ label: labels[i], value: values[i], group: settings.groups[i], groupSum: settings.groupsSumsEach[i]});
+            }
+
+    		switch (settings.order) {
+    		    case "default":
+                    // group descending
+                    groupData.sort(function(a, b) { return (a.value <= b.value) ?
+                                                            ((a.value === b.value) ?
+                                                            ((a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1) : 1) : -1; });
+                    pieData.sort(function(a, b) { return (a.groupSum < b.groupSum) ? 1 : -1; });
+    		        break;
+    			case "none":
+    				// show non-contiguous groups
+    				break;
+    			case "descending":
+    			    // same as group descending
+    				pieData.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
+    				break;
+    			case "alphabetical":
+    			    // group alphabetical
+                    groupData.sort(function(a, b) { return (a.label > b.label) ? 1 : -1; });
+    				pieData.sort(function(a, b) { return (a.groupSum > b.groupSum) ? 1 : -1; });
+    				break;
+    		}
+
+            for (i = 0; i < settings.groupsSums.length; i++) {
+                hash[groupData[i].label] = i;
+                nInGroups.push(0);
+            }
+
+            if (!settings.valuesColor) {
+                settings.valuesColor = [];
+                for (i = 0; i < n; i++) {
+                    idx = hash[pieData[i].group];
+                    baseColor = groupData[idx].color;
+                    deltaLum = 0.7 / groupData[idx].num;
+                    if (deltaLum > 0.2) {
+                        deltaLum = 0.2;
+                    }
+                    lum = deltaLum * (1 + nInGroups[idx]);
+                    pieData[i].color = increaseBrightness(baseColor, lum * 100);
+                    nInGroups[idx] += 1;
+                }
+            }
+
+        } else {
+
+            for (i = 0; i < n; i++) {
+                pieData.push({ label: labels[i], value: values[i], color: settings.valuesColor[i] });
             }
         }
-
-        var	pie  = new d3pie(svgEl, {
+        console.log(pieData);
+        pie  = new d3pie(svgEl, {
         		size: {
         		    canvasWidth: width,
         		    canvasHeight: height,
         			pieInnerRadius: "80%"
         		},
         		data: {
-        			sortOrder: settings.order,
+        			sortOrder: "none",
             		font: settings.valuesFont ? settings.valuesFont : "arial",
             		fontSize: settings.valuesSize ? settings.valuesSize : 10,
             		prefix: settings.prefix,
             		suffix: settings.suffix,
+            		color: settings.valuesColor,
         			content: pieData
         		},
             	misc: {
@@ -99,7 +212,7 @@ function DetailedDonutPlot() {
 
     // resize
     chart.resize = function(el) {
-        resize_chart(el);
+        resizeChart(el);
     };
 
     chart.width = function(v) {

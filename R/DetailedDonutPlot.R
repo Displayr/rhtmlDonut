@@ -1,3 +1,6 @@
+#' Create a detailed donut plot
+#' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
+
 detailed.donut <- function(
     values,
     values.font = NULL,
@@ -19,6 +22,8 @@ detailed.donut <- function(
     width = NULL,
     height = NULL) {
 
+    val.perc = values/sum(values)
+    vmax = max(val.perc)
     n = length(values)
 
     if (is.null(labels)) {
@@ -26,14 +31,62 @@ detailed.donut <- function(
     }
 
     if (!is.null(groups)) {
-        groups.lab = unique(groups)
+        groups.temp = table(groups)
+        groups.num = as.numeric(as.factor(groups))
+        groups.bins = as.vector(groups.temp)
+        groups.lab = names(groups.temp)
+        ng = length(groups.lab)
+
+        hash = new.env(hash=TRUE, parent=emptyenv(), size=ng)
+        for (i in 1:ng) {
+            assign(groups.lab[i], i, hash)
+        }
+
+        gnmax = max(groups.num)
         groups.sums = rep(0, length(groups.lab))
-        for (i in 1:length(groups.lab)) {
+        groups.sums.each = rep(0, length(groups))
+
+        if (!is.null(groups.color)) {
+            if (length(groups.color) < ng) {
+                for (i in 1:(ng-length(groups.color))) {
+                    groups.color = c(groups.color, groups.color[i])
+                }
+            }
+            groups.color = groups.color[sort(unique(groups), index.return = T)$ix]
+        }
+        # a linear scan search, might be slow if data is too large
+        for (i in 1:ng) {
             groups.sums[i] = sum(values[groups == groups.lab[i]])
         }
+        groups.sums.perc = groups.sums/sum(values)
+        if (order == "default" || order == "descending") {
+
+            # group.num[i] * vmax * 10 >> values[i]
+            # groups.sums[idx] * gnmax * vmax * 10000 should be >> group.num[i] * vmax * 10
+            for (i in 1:n) {
+                idx = get(groups[i], hash)
+                groups.sums.each[i] = groups.sums.perc[idx] * gnmax * vmax * 10000 + groups.num[i] * vmax * 2 + val.perc[i]
+            }
+
+        } else if (order == "alphabetical") {
+            for (i in 1:n) {
+                idx = get(groups[i], hash)
+                if (values[i] == 0) {
+                    groups.sums.each[i] = groups.num[i] * vmax * 10
+                } else {
+                    groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
+                }
+                if (is.null(values.color)) {
+
+                }
+            }
+        }
+
     } else {
         groups.lab = NULL
+        groups.bins = NULL
         groups.sums = NULL
+        groups.sums.each = NULL
     }
 
 
@@ -45,12 +98,14 @@ detailed.donut <- function(
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,
-        groupsLab = groups.lab,
-        groupsSums = groups.sums,
-        groups = groups,
-        groupsFont = groups.font,
-        groupsSize = groups.size,
-        groupsColor = groups.color,
+        groups = groups, # length = n
+        groupsFont = groups.font, # string
+        groupsSize = groups.size, # scalar
+        groupsColor = groups.color, # length = length(unique(groups))
+        groupsLab = groups.lab, # sorted unique labels
+        groupsBins = groups.bins, # number of items in each group
+        groupsSums = groups.sums, # length = length(unique(groups))
+        groupsSumsEach = groups.sums.each, # length = n
         prefix = prefix,
         suffix = suffix,
         order = order,

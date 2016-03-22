@@ -1,8 +1,8 @@
 /*!
- * d3pie
- * @author Ben Keen
+ * This is not the standard d3pie. It's edited by Xiaoting Wang for a DetailedDonutPlot
+ * @author Ben Keen, Xiaoting Wang
  * @version 0.1.8
- * @date May 1st, 2015
+ * @date 22 March, 2016
  * @repo http://github.com/benkeen/d3pie
  */
 
@@ -131,7 +131,7 @@ var defaultSettings = {
 			size: 10
 		},
 		highlightSegmentOnMouseover: true,
-		highlightLuminosity: -0.2
+		highlightLuminosity: 0.2
 	},
 	tooltips: {
 		enabled: false,
@@ -660,35 +660,41 @@ var math = {
 	},
 
 	sortPieData: function(pie) {
-		var data                 = pie.options.data.content;
-		var sortOrder;
-		if (pie.options.groups.values) {
-		    if (pie.options.data.sortOrder == "default") {
-		        sortOrder = "group-desc";
-		    } else {
-		        sortOrder = pie.options.data.sortOrder;
-		    }
-		} else {
-		    if (pie.options.data.sortOrder == "default") {
-		        sortOrder = "value-desc";
-		    } else {
-		        sortOrder = pie.options.data.sortOrder;
-		    }
-		}
+		var data                    = pie.options.data.content;
+		var sortOrder               = pie.options.data.sortOrder;
 
-		switch (sortOrder) {
-		    case "group-desc":
-                // group descending
-		        break;
-			case "initial":
-				// do nothing
-				break;
-			case "value-desc":
-				data.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
-				break;
-			case "label-asc":
-				data.sort(function(a, b) { return (a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1; });
-				break;
+		if (pie.options.groups.content) {
+		    var groupData           = pie.options.groups.content;
+    		switch (sortOrder) {
+    		    case "default":
+                    // group descending
+    		        break;
+    			case "none":
+    				// show non-contiguous groups
+    				break;
+    			case "descending":
+    			    // same as group descending
+    				break;
+    			case "alphabetical":
+    			    // group alphabetical
+    				break;
+    		}
+		} else {
+    		switch (sortOrder) {
+    		    case "default":
+                    // group descending
+                    data.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
+    		        break;
+    			case "initial":
+    				// do nothing
+    				break;
+    			case "descending":
+    				data.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
+    				break;
+    			case "alphabetical":
+    				data.sort(function(a, b) { return (a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1; });
+    				break;
+    		}
 		}
 
 		return data;
@@ -1041,7 +1047,8 @@ var labels = {
 		lineGroup.append("path")
 			.attr("d", lineFunction)
 			.attr("stroke", function(d, i) {
-				return (pie.options.labels.lines.color === "segment") ? pie.options.colors[i] : pie.options.labels.lines.color;
+			    return pie.options.data.content[i].color;
+				//return (pie.options.labels.lines.color === "segment") ? pie.options.colors[i] : pie.options.labels.lines.color;
 			})
 			.attr("stroke-width", 1)
 			.attr("fill", "none")
@@ -1363,12 +1370,12 @@ var segments = {
 
 		g.append("path")
 			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
-			.attr("fill", function(d, i) {
-				var color = colors[i];
+			.attr("fill", function(d, i) { return d.color;
+				/*var color = colors[i];
 				if (pie.options.misc.gradient.enabled) {
 					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
 				}
-				return color;
+				return color;*/
 			})
 			.style("stroke", segmentStroke)
 			.style("stroke-width", 1)
@@ -1412,7 +1419,7 @@ var segments = {
     		gr.append("path")
     			.attr("id", function(d, i) { return pie.cssPrefix + "gsegment" + i; })
     			.attr("fill", function(d, i) {
-    				return d.color ? d.color : colors[i];
+    				return  d.color;
     			})
     			.style("stroke", segmentStroke)
     			.style("stroke-width", 1)
@@ -1482,7 +1489,7 @@ var segments = {
 			}
 		});
 
-		arc.on("mouseover", function() {
+		arc.on("mouseover", function(d) {
 			var currentEl = d3.select(this);
 			var segment, index;
 
@@ -1495,7 +1502,7 @@ var segments = {
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
 				index = segment.attr("data-index");
-				var segColor = pie.options.colors[index];
+				var segColor = d.color;
 				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
 			}
 
@@ -1512,7 +1519,7 @@ var segments = {
           tt.moveTooltip(pie);
         });
 
-		arc.on("mouseout", function() {
+		arc.on("mouseout", function(d) {
 			var currentEl = d3.select(this);
 			var segment, index;
 
@@ -1525,10 +1532,10 @@ var segments = {
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
 				index = segment.attr("data-index");
-				var color = pie.options.colors[index];
-				if (pie.options.misc.gradient.enabled) {
-					color = "url(#" + pie.cssPrefix + "grad" + index + ")";
-				}
+				var color = d.color;
+				//if (pie.options.misc.gradient.enabled) {
+				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+				//}
 				segment.style("fill", color);
 			}
 
@@ -1982,7 +1989,6 @@ var tt = {
 			this.cssPrefix = "p" + _uniqueIDCounter + "_";
 			_uniqueIDCounter++;
 		}
-
 
 		// now run some validation on the user-defined info
 		if (!validate.initialCheck(this)) {
