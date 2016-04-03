@@ -2,7 +2,6 @@ function DetailedDonutPlot() {
     var values,
         labels,
         settings,
-        pieData,
         pie,
         n,
         width = 500,
@@ -16,9 +15,8 @@ function DetailedDonutPlot() {
 
     function chart(selection) {
 
-        // set color luminance
-        // from http://www.sitepoint.com/javascript-generate-lighter-darker-color/
 
+        // from http://stackoverflow.com/questions/6443990/javascript-calculate-brighter-colour
         function increaseBrightness(hex, percent){
             // strip the leading # if it's there
             hex = hex.replace(/^\s*#|\s*$/g, '');
@@ -38,6 +36,7 @@ function DetailedDonutPlot() {
                ((0|(1<<8) + b + (256 - b) * percent / 100).toString(16)).substr(1);
         }
 
+        // from http://www.sitepoint.com/javascript-generate-lighter-darker-color/
         function colorLuminance(hex, lum) {
 
         	// validate hex string
@@ -58,8 +57,8 @@ function DetailedDonutPlot() {
         	return rgb;
         }
 
-        var svg = selection.select("svg"),
-            svgEl = svg[0][0];
+        // select svg element
+        var svgEl = selection.select("svg")[0][0];
 
         var pieData = [],
             pieColor = [],
@@ -87,12 +86,14 @@ function DetailedDonutPlot() {
 
 
             for (i = 0; i < settings.groupsSums.length; i++) {
-                groupData.push({ label: settings.groupsLab[i], value: settings.groupsSums[i], color: settings.groupsColor[i], num: settings.groupsBins[i]});
+                groupData.push({ label: settings.groupsLab[i], value: settings.groupsSums[i],
+                                 color: settings.groupsColor[i], num: settings.groupsBins[i]});
             }
 
 
             for (i = 0; i < n; i++) {
-                pieData.push({ label: labels[i], value: values[i], group: settings.groups[i], groupSum: settings.groupsSumsEach[i]});
+                pieData.push({ label: labels[i], value: values[i], index: i,
+                                group: settings.groups[i], groupSum: settings.groupsSumsEach[i], groupSize: settings.groupsSizeEach[i]});
             }
 
     		switch (settings.order) {
@@ -143,7 +144,8 @@ function DetailedDonutPlot() {
                 pieData.push({ label: labels[i], value: values[i], color: settings.valuesColor[i] });
             }
         }
-        console.log(pieData);
+
+        // create the pie chart instance
         pie  = new d3pie(svgEl, {
         		size: {
         		    canvasWidth: width,
@@ -177,6 +179,7 @@ function DetailedDonutPlot() {
             			color: "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
+            			minFontSize: 8,
             			fontWeight: "bold"
             		}
             	},
@@ -186,7 +189,6 @@ function DetailedDonutPlot() {
             	    fontSize: settings.groupsSize ? settings.groupsSize : 10
             	}
             });
-
 
     }
 

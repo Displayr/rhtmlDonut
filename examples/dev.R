@@ -1,5 +1,5 @@
-library(devtools)
-install_github("xtmwang/DetailedDonutPlot")
+# library(devtools)
+# install_github("xtmwang/DetailedDonutPlot")
 
 browser = as.data.frame(data.table::fread("examples/browser_version.csv", header = T, sep = ","))
 values = as.numeric(browser[13,-1])
@@ -24,5 +24,5 @@ qColors <- c(grDevices::rgb(91, 155, 213, 255, max = 255), # blue
 colorVec = substring(qColors,1,7)
 
 DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = colorVec)
-DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = colorVec, order = "alphabetical")
-DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
+# DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = colorVec, order = "alphabetical")
+# DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)

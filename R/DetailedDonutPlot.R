@@ -45,6 +45,7 @@ detailed.donut <- function(
         gnmax = max(groups.num)
         groups.sums = rep(0, length(groups.lab))
         groups.sums.each = rep(0, length(groups))
+        groups.size.each = rep(0, length(groups))
 
         if (!is.null(groups.color)) {
             if (length(groups.color) < ng) {
@@ -66,11 +67,13 @@ detailed.donut <- function(
             for (i in 1:n) {
                 idx = get(groups[i], hash)
                 groups.sums.each[i] = groups.sums.perc[idx] * gnmax * vmax * 10000 + groups.num[i] * vmax * 2 + val.perc[i]
+                groups.size.each[i] = groups.bins[idx];
             }
 
         } else if (order == "alphabetical") {
             for (i in 1:n) {
                 idx = get(groups[i], hash)
+                groups.size.each[i] = groups.bins[idx];
                 if (values[i] == 0) {
                     groups.sums.each[i] = groups.num[i] * vmax * 10
                 } else {
@@ -106,6 +109,7 @@ detailed.donut <- function(
         groupsBins = groups.bins, # number of items in each group
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsSumsEach = groups.sums.each, # length = n
+        groupsSizeEach = groups.size.each, # length = n
         prefix = prefix,
         suffix = suffix,
         order = order,

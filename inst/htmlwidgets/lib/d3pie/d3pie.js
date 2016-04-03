@@ -361,10 +361,10 @@ var helpers = {
 			// r2.right < r1.left
 			((r2.x + r2.w) < r1.x) ||
 
-			// r2.top < r1.bottom
+			// r2.bottom < r1.top
 			((r2.y + r2.h) < r1.y) ||
 
-			// r2.bottom > r1.top
+			// r2.top > r1.bottom
 			(r2.y > (r1.y + r1.h))
 		);
 
@@ -1053,10 +1053,14 @@ var labels = {
 			.attr("stroke-width", 1)
 			.attr("fill", "none")
 			.style("opacity", function(d, i) {
-				var percentage = pie.options.labels.outer.hideWhenLessThanPercentage;
-				var segmentPercentage = segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces);
-				var isHidden = (percentage !== null && segmentPercentage < percentage) || pie.options.data.content[i].label === "";
-				return isHidden ? 0 : 1;
+			    if (pie.outerLabelGroupData[i].hide === 1) {
+			        return 0;
+			    } else {
+    				var percentage = pie.options.labels.outer.hideWhenLessThanPercentage;
+    				var segmentPercentage = segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces);
+    				var isHidden = (percentage !== null && segmentPercentage < percentage) || pie.options.data.content[i].label === "";
+    				return isHidden ? 0 : 1;
+			    }
 			});
 	},
 
@@ -1192,21 +1196,293 @@ var labels = {
 				return labels.getIdealOuterLabelPositions(pie, i);
 			});
 
-		// 2. now adjust those positions to try to accommodate conflicts
-		// labels.resolveOuterLabelCollisions(pie);
 	},
 
 	/**
 	 * This attempts to resolve label positioning collisions.
 	 */
 	resolveOuterLabelCollisions: function(pie) {
-    if (pie.options.labels.outer.format === "none") {
-      return;
-    }
+        if (pie.options.labels.outer.format === "none") {
+          return;
+        }
 
 		var size = pie.options.data.content.length;
 		labels.checkConflict(pie, 0, "clockwise", size);
 		labels.checkConflict(pie, size-1, "anticlockwise", size);
+	},
+
+	resolveOuterLabelCollisionsNew: function(pie) {
+        var objArray = pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")[0];
+        var center = pie.pieCenter;
+        var radius = pie.outerRadius + pie.options.labels.outer.pieDistance;
+
+        labels.placeObj(pie, objArray, center);
+	},
+
+	rotate: function(x, y, xm, ym, a) {
+
+        a = a * Math.PI / 180; // convert to radians
+
+        var cos = Math.cos,
+			sin = Math.sin,
+		// subtract reference point, so that reference point is translated to origin and add it in the end again
+		xr = (x - xm) * cos(a) - (y - ym) * sin(a) + xm,
+		yr = (x - xm) * sin(a) + (y - ym) * cos(a) + ym;
+
+		return { x: xr, y: yr };
+	},
+
+	getDist: function(a, b) {
+	    return Math.sqrt((a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y));
+	},
+
+    // calculate angle with respect to vertical axis
+    // angles are clockwise
+	getAngle: function (point, center) {
+	    var angle,
+	        startAngle;
+
+        if (point.x === center.x) {
+            if (point.y < center.y) {
+                angle = 0;
+            } else {
+                angle = 180;
+            }
+        } else if (point.y === center.y) {
+            if (point.x < center.x) {
+                angle = 270;
+            } else {
+                angle = 90;
+            }
+        } else {
+
+
+        }
+
+        return angle;
+    },
+
+	rectIntersect: function(r1, r2) {
+		var returnVal = (
+			// r2.left > r1.right
+			(r2.x > (r1.x + r1.w)) ||
+
+			// r2.right < r1.left
+			((r2.x + r2.w) < r1.x) ||
+
+			// r2.bottom < r1.top
+			((r2.y + r2.h) < r1.y) ||
+
+			// r2.top > r1.bottom
+			(r2.y > (r1.y + r1.h))
+		);
+
+		return !returnVal;
+	},
+
+    // @param objs, an array of DOM objects
+    // @param center, {x,y}
+    // @param radius, numeric
+	placeObj: function(pie, objs, center) {
+
+        var minFontSize = pie.options.labels.mainLabel.minFontSize;
+        if (objs.length <= 1) {
+            return;
+        }
+
+        /*
+        // reference point, all directions clockwise
+        // default starting quadrant should be 4
+        var refPt;
+        switch (startQuad) {
+            case 4:
+                refPt = {x:0, y:center.y};
+                break;
+            case 1:
+                refPt = {x:center.x, y:0};
+                break;
+            case 2:
+                refPt = {x:center.x*2, y:center.y};
+                break;
+            case 3:
+                refPt = {x:center.x*2, y:center.y*2};
+                break;
+        }
+
+        // Find the angle of the object relative to the center of the circle
+        // Have to be very careful about the coordinate system of the objects and the center
+        // Make sure that the objects are in global coordinate system by checking transforms
+        // Not supporting rotation at the moment
+        objsInfo = [];
+        for (var i = 0; i < objs.length; i++) {
+
+            var objInfo = {};
+            // local coordinate system
+            var bbox = objs[i].getBBox();
+            objInfo.localX = bbox.x;
+            objInfo.localY = bbox.y;
+            objInfo.w = bbox.width;
+            objInfo.h = bbox.height;
+
+            // transform, only checking one layer
+            var xforms = objs[i].getAttribute("transform");
+            var parts;
+            if (xforms) {
+                parts  = /translate\(\s*([^\s,)]+)[ ,]([^\s,)]+)/.exec(xforms);
+                objInfo.translateX = Number(parts[1]);
+                objInfo.translateY = Number(parts[2]);
+                objInfo.x = objInfo.localX + objInfo.translateX;
+                objInfo.y = objInfo.localY + objInfo.translateY;
+            } else {
+                objInfo.x = objInfo.localX;
+                objInfo.y = objInfo.localY;
+            }
+
+            // get quadrant of text
+            if (objInfo.x > center.x) {
+                objInfo.anchorPt = {x: objInfo.x, y: objInfo.y};
+                if (objInfo.y < center.y) {
+                    objInfo.quadrant = 1;
+                } else {
+                    objInfo.quadrant = 2;
+                }
+            } else {
+                objInfo.anchorPt = {x: objInfo.x + objInfo.w, y: objInfo.y};
+                if (objInfo.y < center.y) {
+                    objInfo.quadrant = 3;
+                } else {
+                    objInfo.quadrant = 4;
+                }
+            }
+
+            // get radius of text
+            //objInfo.radius = labels.getDist(objInfo.anchorPt, center);
+
+            // get angle of text
+            //objInfo.angle = labels.getAngle(objInfo.anchorPt, center);
+            objInfo.collide = 0;
+            objsInfo.push(objInfo);
+        }*/
+
+        var labelData = pie.outerLabelGroupData;
+        for (var i = 0; i < objs.length; i++) {
+            labelData[i].fontSize = pie.options.labels.mainLabel.fontSize;
+            labelData[i].collide = 1;
+            labelData[i].hide = 0;
+            if (pie.options.groups.content) {
+                labelData[i].group = pie.options.data.content[i].group;
+                labelData[i].groupSize = pie.options.data.content[i].groupSize;
+            }
+
+            if (labelData[i].x > center.x) {
+                labelData[i].anchorPt = {x: labelData[i].x, y: labelData[i].y};
+            } else {
+                labelData[i].anchorPt = {x: labelData[i].x + labelData[i].w, y: labelData[i].y};
+            }
+        }
+        //console.log(labelData);
+        var collisions = 1,
+            nItr = 1;
+        var curr, prev, next;
+        labelData[0].collide = 0;
+        while (collisions > 0 && nItr < 10) {
+
+            for (var i = 1; i < objs.length; i++) {
+                curr = labelData[i];
+                prev = labelData[i-1];
+                if (i == objs.length-1) {
+                    next = labelData[0];
+                } else {
+                    next = labelData[i+1];
+                }
+
+                if (labels.rectIntersect(curr, prev)) {
+                    if (labels.rectIntersect(curr, next)) {
+                        // colliding both, shrink text size
+                        curr.collide = 1;
+                        //if (i == 2) { console.log(i + " both " + nItr + "iteration");}
+                        for (var j = i; j < objs.length; j++) {
+                            var sel = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + j + "-outer");
+                            var node = d3.select("#" + pie.cssPrefix + "labelGroup" + j + "-outer").node();
+
+                            if (pie.options.groups.content) {
+                                if (labelData[j].group == curr.group || j == i+1 || labelData[i].groupSize == 1) {
+                                    // update label font size
+                                    labelData[j].fontSize = labelData[j].fontSize - 1;
+                                    if (labelData[j].fontSize < minFontSize) {
+
+                                        // hide label
+                                        labelData[j].hide = 1;
+                                        sel.style("font-size", 0).style("display", "none");
+
+                                    } else {
+                                        sel.style("font-size", labelData[j].fontSize + "px");
+                                    }
+
+                                    // update label width and height
+                                    var nodeDim = node.getBBox();
+                                    labelData[j].w = nodeDim.width;
+                                    labelData[j].h = nodeDim.height;
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    } else {
+                        // colliding with prev, move towards next one
+                        curr.collide = 1;
+                        //if (i == 2) { console.log(i + "prev");}
+                    }
+
+                } else if (labels.rectIntersect(curr, next)) {
+                    // colliding with next
+                    curr.collide = 1;
+                    //if (i == 2) { console.log(i + "next");}
+                    for (var j = i+1; j < objs.length; j++) {
+                        var sel = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + j + "-outer");
+                        var node = d3.select("#" + pie.cssPrefix + "labelGroup" + j + "-outer").node();
+
+                        if (pie.options.groups.content) {
+                            if (labelData[j].group == curr.group || j == i+1 || labelData[i].groupSize == 1) {
+
+                                // update label font size
+                                labelData[j].fontSize = labelData[j].fontSize - 1;
+                                if (labelData[j].fontSize < minFontSize) {
+
+                                    // hide label
+                                    labelData[j].hide = 1;
+                                    sel.style("font-size", 0).style("display", "none");
+
+                                } else {
+                                    sel.style("font-size", labelData[j].fontSize + "px");
+                                }
+
+                                // update label width and height
+                                var nodeDim = node.getBBox();
+                                labelData[j].w = nodeDim.width;
+                                labelData[j].h = nodeDim.height;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // not colliding
+                    curr.collide = 0;
+                }
+            }
+
+            collisions = 0;
+            for (var i = 0; i < objs.length; i++) {
+                collisions = collisions + labelData[i].collide;
+            }
+            nItr++;
+        }
+        //console.log(node);
+        console.log(objs);
+        console.log(labelData);
+        console.log(nItr);
+        console.log(collisions);
 	},
 
 	checkConflict: function(pie, currIndex, direction, size) {
@@ -2225,6 +2501,8 @@ var tt = {
 			// this is (and should be) dumb. It just places the outer groups at their calculated, collision-free positions
 			labels.positionLabelGroups(self, "outer");
 
+    		// 2. now adjust those positions to try to accommodate conflicts
+    		labels.resolveOuterLabelCollisionsNew(self);
 			// we use the label line positions for many other calculations, so ALWAYS compute them
 			labels.computeLabelLinePositions(self);
 
