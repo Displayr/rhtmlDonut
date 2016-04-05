@@ -28,5 +28,5 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 # load("data/browser.rda")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 
-# DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = colorVec, order = "alphabetical")
+DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors, order = "alphabetical")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)

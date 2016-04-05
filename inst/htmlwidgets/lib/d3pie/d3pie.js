@@ -2514,12 +2514,12 @@ var tt = {
 			//labels.positionLabelGroups(self, "inner");
 			labels.fadeInLabelsAndLines(self);
 
-      // add and position the tooltips
-      if (self.options.tooltips.enabled) {
-        tt.addTooltips(self);
-      }
+          // add and position the tooltips
+          if (self.options.tooltips.enabled) {
+            tt.addTooltips(self);
+          }
 
-      segments.addSegmentEventHandlers(self);
+          segments.addSegmentEventHandlers(self);
 		});
 	};
 
