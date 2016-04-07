@@ -23,7 +23,7 @@
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
 
 data("browser", package = "rhtmlDonut")
-rhtmlDonut::rhtmlDonut(values = values, labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 
 # load("data/browser.rda")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)

@@ -1,7 +1,7 @@
 #' Create an rhtmlDonut plot
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 
-rhtmlDonut <- function(
+Donut <- function(
     values,
     values.font = NULL,
     values.size = 10,
