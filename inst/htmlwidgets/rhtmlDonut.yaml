@@ -7,7 +7,7 @@ dependencies:
     version: 0.1.8
     src: htmlwidgets/lib/d3pie
     script: d3pie.js
-  - name: DetailedDonutPlot
+  - name: rhtmlDonut
     version: 0.0.1
-    scr: htmlwidgets/lib/DetailedDonutPlot
-    stylesheet: DetailedDonutPlot.css
+    scr: htmlwidgets/lib/rhtmlDonut
+    stylesheet: rhtmlDonut.css

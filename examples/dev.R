@@ -22,8 +22,8 @@
 # qColors = substring(qColors,1,7)
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
 
-data("browser", package = "DetailedDonutPlot")
-DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)
+data("browser", package = "rhtmlDonut")
+rhtmlDonut::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 
 # load("data/browser.rda")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)

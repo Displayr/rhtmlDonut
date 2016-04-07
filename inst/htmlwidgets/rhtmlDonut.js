@@ -237,7 +237,7 @@ function DetailedDonutPlot() {
 
 HTMLWidgets.widget({
 
-    name: "DetailedDonutPlot",
+    name: "rhtmlDonut",
 
     type: "output",
 

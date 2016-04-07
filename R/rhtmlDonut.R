@@ -126,7 +126,7 @@ detailed.donut <- function(
 
     # create the widget
     htmlwidgets::createWidget(
-        name = "DetailedDonutPlot",
+        name = "rhtmlDonut",
         x,
         width = width,
         height = height,
@@ -135,6 +135,6 @@ detailed.donut <- function(
             browser.fill = TRUE, # resizing will not work if FALSE
             viewer.fill = TRUE
         ),
-        package = "DetailedDonutPlot"
+        package = "rhtmlDonut"
     )
 }
