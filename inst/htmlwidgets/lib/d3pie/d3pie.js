@@ -842,7 +842,7 @@ var labels = {
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-" + section; })
 				.attr("class", pie.cssPrefix + "segmentMainLabel-" + section)
 				.text(function(d, i) {
-					var str = d.label;
+					var str = d.label + ":";
 
                   // if a custom formatter has been defined, pass it the raw label string - it can do whatever it wants with it.
                   // we only apply truncation if it's not defined
@@ -857,10 +857,40 @@ var labels = {
                       }*/
                   return str;
 				})
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("dy", 0)
 				.style("font-size", settings.mainLabel.fontSize + "px")
 				.style("font-family", settings.mainLabel.font)
 				.style("fill", settings.mainLabel.color)
-				.style("font-weight", settings.mainLabel.fontWeight);
+				.style("font-weight", settings.mainLabel.fontWeight)
+				.call(labels.wrap, settings.mainLabel.maxLabelLength)
+				.append("tspan")
+				.style("font-weight", "normal")
+				.attr("y", 0)
+				.text(function(d,i) {
+				    return dataFormatter(d.value);
+				})
+				.attr("x", function() {
+				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+				    var tspanLast = tspans[tspans.length-2];
+				    var tspanLastLength = tspanLast.getComputedTextLength();
+				    if (tspanLastLength + this.getComputedTextLength() > settings.mainLabel.maxLabelLength) {
+				        return 0
+				    } else {
+				        return tspanLastLength + 5 + "px";
+				    }
+				})
+				.attr("dy", function() {
+				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+				    var tspanLast = tspans[tspans.length-2];
+				    var tspanLastLength = tspanLast.getComputedTextLength();
+				    if (tspanLastLength + this.getComputedTextLength() > settings.mainLabel.maxLabelLength) {
+				        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+				    } else {
+				        return tspanLast.getAttribute("dy");
+				    }
+				});
 		}
 
 		// 2. Add the percentage label
@@ -903,6 +933,33 @@ var labels = {
 				.style("fill", settings.value.color);
 		}*/
 	},
+
+    wrap: function(text, width) {
+        var lineNumbers = [];
+        text.each(function() {
+            var text = d3.select(this),
+                words = text.text().split(/\s+/).reverse(),
+                word,
+                line = [],
+                lineNumber = 0,
+                lineHeight = 1.1, // ems
+                y = text.attr("y"),
+                dy = parseFloat(text.attr("dy")),
+                tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+            while (word = words.pop()) {
+                line.push(word);
+                tspan.text(line.join(" "));
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    tspan.text(line.join(" "));
+                    line = [word];
+                    tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                }
+            }
+            lineNumbers.push(lineNumber + 1);
+        });
+        //maxXaxisLines = d3.max(lineNumbers);
+    },
 
 	/**
 	 * @param section "inner" / "outer"
@@ -1367,6 +1424,8 @@ var labels = {
         var labelData = pie.outerLabelGroupData;
         for (var i = 0; i < objs.length; i++) {
             labelData[i].fontSize = pie.options.labels.mainLabel.fontSize;
+            labelData[i].arcFrac = pie.options.data.content[i].value/pie.totalSize;
+            labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 1;
             labelData[i].hide = 0;
             if (pie.options.groups.content) {
@@ -1416,7 +1475,36 @@ var labels = {
                                         sel.style("font-size", 0).style("display", "none");
 
                                     } else {
-                                        sel.style("font-size", labelData[j].fontSize + "px");
+                                        sel.style("font-size", labelData[j].fontSize + "px")
+                                        .selectAll("tspan")
+                        				.attr("x", function(d,i) {
+                        				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                        				    if (i == tspans.length - 1) {
+                            				    var tspanLast = tspans[tspans.length-2];
+                            				    var tspanLastLength = tspanLast.getComputedTextLength();
+                            				    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                            				        return 0
+                            				    } else {
+                            				        return tspanLastLength + 5 + "px";
+                            				    }
+                        				    } else {
+                        				        return 0;
+                        				    }
+                        				})
+                        				.attr("dy", function(d,i) {
+                        				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                        				    if (i == tspans.length - 1) {
+                            				    var tspanLast = tspans[tspans.length-2];
+                            				    var tspanLastLength = tspanLast.getComputedTextLength();
+                            				    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                            				        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                            				    } else {
+                            				        return tspanLast.getAttribute("dy");
+                            				    }
+                        				    } else {
+                        				        return this.getAttribute("dy");
+                        				    }
+                        				});
                                     }
 
                                     // update label width and height
@@ -1454,7 +1542,36 @@ var labels = {
                                     sel.style("font-size", 0).style("display", "none");
 
                                 } else {
-                                    sel.style("font-size", labelData[j].fontSize + "px");
+                                    sel.style("font-size", labelData[j].fontSize + "px")
+                                        .selectAll("tspan")
+                        				.attr("x", function(d,i) {
+                        				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                        				    if (i == tspans.length - 1) {
+                            				    var tspanLast = tspans[tspans.length-2];
+                            				    var tspanLastLength = tspanLast.getComputedTextLength();
+                            				    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                            				        return 0
+                            				    } else {
+                            				        return tspanLastLength + 5 + "px";
+                            				    }
+                        				    } else {
+                        				        return 0;
+                        				    }
+                        				})
+                        				.attr("dy", function(d,i) {
+                        				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                        				    if (i == tspans.length - 1) {
+                            				    var tspanLast = tspans[tspans.length-2];
+                            				    var tspanLastLength = tspanLast.getComputedTextLength();
+                            				    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                            				        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                            				    } else {
+                            				        return tspanLast.getAttribute("dy");
+                            				    }
+                        				    } else {
+                        				        return this.getAttribute("dy");
+                        				    }
+                        				});
                                 }
 
                                 // update label width and height

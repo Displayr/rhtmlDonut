@@ -1,5 +1,6 @@
 #' Create an rhtmlDonut plot
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
+#' @param border.color c("white", "none", hex colors)
 
 Donut <- function(
     values,
@@ -19,6 +20,7 @@ Donut <- function(
     order = "default",
     order.control = TRUE,
     border.color = "white",
+    max.label.length = 50,
     width = NULL,
     height = NULL) {
 
@@ -114,6 +116,7 @@ Donut <- function(
         suffix = suffix,
         order = order,
         orderControl = order.control,
+        maxLabelLength = max.label.length,
         borderColor = border.color
     )
 

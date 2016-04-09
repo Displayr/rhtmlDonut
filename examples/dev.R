@@ -23,10 +23,18 @@
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
 
 data("browser", package = "rhtmlDonut")
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
+labels[1] = "IE xcsdsds TTDF 11.0"
+labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 50)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 100)
+
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
 
 # load("data/browser.rda")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 
 DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors, order = "alphabetical")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
+
+button = png::readPNG("/Users/MichaelW/Desktop/button.png")
+rasterImage(button)

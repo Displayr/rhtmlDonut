@@ -145,6 +145,8 @@ function DetailedDonutPlot() {
             }
         }
 
+        dataFormatter = d3.format(",.1f");
+
         // create the pie chart instance
         pie  = new d3pie(svgEl, {
         		size: {
@@ -159,6 +161,7 @@ function DetailedDonutPlot() {
             		prefix: settings.prefix,
             		suffix: settings.suffix,
             		color: settings.valuesColor,
+            		dataFormatter: dataFormatter,
         			content: pieData
         		},
             	misc: {
@@ -179,6 +182,7 @@ function DetailedDonutPlot() {
             			color: "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
+            			maxLabelLength: settings.maxLabelLength,
             			minFontSize: 8,
             			fontWeight: "bold"
             		}
