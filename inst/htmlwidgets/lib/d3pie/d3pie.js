@@ -869,7 +869,19 @@ var labels = {
 				.style("font-weight", "normal")
 				.attr("y", 0)
 				.text(function(d,i) {
-				    return dataFormatter(d.value);
+
+				    if (pie.options.data.display == "percentage") {
+				        var val = dataFormatter(d.value / pie.totalSize * 100);
+				    } else {
+				        var val = dataFormatter(d.value);
+				    }
+				    if (pie.options.data.prefix) {
+				        val = pie.options.data.prefix + val;
+				    }
+				    if (pie.options.data.suffix) {
+				        val = val + pie.options.data.suffix;
+				    }
+				    return val;
 				})
 				.attr("x", function() {
 				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
@@ -1465,6 +1477,7 @@ var labels = {
                             var node = d3.select("#" + pie.cssPrefix + "labelGroup" + j + "-outer").node();
 
                             if (pie.options.groups.content) {
+                                // current label or next label or one label that only has 1 value in group
                                 if (labelData[j].group == curr.group || j == i+1 || labelData[i].groupSize == 1) {
                                     // update label font size
                                     labelData[j].fontSize = labelData[j].fontSize - 1;
@@ -1514,6 +1527,8 @@ var labels = {
                                 } else {
                                     break;
                                 }
+                            } else {
+
                             }
                         }
                     } else {

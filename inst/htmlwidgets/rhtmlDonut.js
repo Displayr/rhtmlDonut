@@ -162,6 +162,7 @@ function DetailedDonutPlot() {
             		suffix: settings.suffix,
             		color: settings.valuesColor,
             		dataFormatter: dataFormatter,
+            		display: settings.valuesDisplay,
         			content: pieData
         		},
             	misc: {

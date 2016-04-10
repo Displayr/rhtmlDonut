@@ -1,4 +1,5 @@
 #' Create an rhtmlDonut plot
+#' @param values.display c("percentage", "original")
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 #' @param border.color c("white", "none", hex colors)
 
@@ -7,6 +8,7 @@ Donut <- function(
     values.font = NULL,
     values.size = 10,
     values.color = NULL,
+    values.display = "percentage",
     labels = NULL,
     labels.font = NULL,
     labels.size = 10,
@@ -20,7 +22,7 @@ Donut <- function(
     order = "default",
     order.control = TRUE,
     border.color = "white",
-    max.label.length = 50,
+    max.label.length = 100,
     width = NULL,
     height = NULL) {
 
@@ -100,6 +102,7 @@ Donut <- function(
         valuesFont = values.font,
         valuesSize = values.size,
         valuesColor = values.color,
+        valuesDisplay = values.display,
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,
