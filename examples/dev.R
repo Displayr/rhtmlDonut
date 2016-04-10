@@ -32,6 +32,10 @@ rhtmlDonut::Donut(values = values,
                   groups = groups, groups.color = qColors,
                   prefix = "", suffix = "%",
                   max.label.length = 120)
+rhtmlDonut::Donut(values = values,
+                  labels = labels, labels.size = 11,
+                  prefix = "", suffix = "%",
+                  max.label.length = 120)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
 
 # load("data/browser.rda")
@@ -40,5 +44,12 @@ rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.colo
 DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors, order = "alphabetical")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
 
-button = png::readPNG("/Users/MichaelW/Desktop/button.png")
-rasterImage(button)
+# order
+rhtmlDonut::Donut(values = values,
+                  labels = labels, labels.size = 11,
+                  prefix = "", suffix = "%", order = "initial",
+                  max.label.length = 120)
+rhtmlDonut::Donut(values = values,
+                  labels = labels, labels.size = 11,
+                  prefix = "", suffix = "%", order = "alphabetical",
+                  max.label.length = 120)

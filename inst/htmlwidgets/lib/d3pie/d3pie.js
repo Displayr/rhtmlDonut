@@ -680,6 +680,7 @@ var math = {
     				break;
     		}
 		} else {
+		    console.log(sortOrder);
     		switch (sortOrder) {
     		    case "default":
                     // group descending
@@ -1151,9 +1152,9 @@ var labels = {
 					// now recompute the "center" based on the current _innerRadius
 					if (pie.innerRadius > 0) {
 						var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
-						console.log(angle);
+						//console.log(angle);
 						var newCoords = math.translate9(pie.pieCenter.x, pie.pieCenter.y, pie.innerRadius, angle);
-						console.log(newCoords);
+						//console.log(newCoords);
 						pieCenterCopy.x = newCoords.x;
 						pieCenterCopy.y = newCoords.y;
 					}
@@ -1611,10 +1612,10 @@ var labels = {
             nItr++;
         }
         //console.log(node);
-        console.log(objs);
-        console.log(labelData);
-        console.log(nItr);
-        console.log(collisions);
+        //console.log(objs);
+        //console.log(labelData);
+        //console.log(nItr);
+        //console.log(collisions);
 	},
 
 	checkConflict: function(pie, currIndex, direction, size) {

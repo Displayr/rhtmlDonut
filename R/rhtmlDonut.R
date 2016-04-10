@@ -94,6 +94,7 @@ Donut <- function(
         groups.bins = NULL
         groups.sums = NULL
         groups.sums.each = NULL
+        groups.size.each = NULL
     }
 
 

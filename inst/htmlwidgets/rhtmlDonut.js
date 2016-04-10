@@ -62,11 +62,12 @@ function DetailedDonutPlot() {
 
         var pieData = [],
             pieColor = [],
-            groupData = [],
+            groupData,
             groupColor = [],
             i;
 
         if (settings.groups) {
+            groupData = [];
             var hash = {},
                 idx,
                 deltaLum,
@@ -140,8 +141,18 @@ function DetailedDonutPlot() {
 
         } else {
 
+            if (!settings.valuesColor) {
+                settings.valuesColor = d3.scale.category20().range();
+            }
+
+            if (values.length > settings.valuesColor.length) {
+                for (i = 0; i < values.length-settings.valuesColor.length; i++) {
+                    settings.valuesColor.push(settings.valuesColor[i]);
+                }
+            }
+
             for (i = 0; i < n; i++) {
-                pieData.push({ label: labels[i], value: values[i], color: settings.valuesColor[i] });
+                pieData.push({ label: labels[i], value: values[i], index: i, color: settings.valuesColor[i] });
             }
         }
 
@@ -155,7 +166,7 @@ function DetailedDonutPlot() {
         			pieInnerRadius: "80%"
         		},
         		data: {
-        			sortOrder: "none",
+        			sortOrder: settings.groups ? "none" : settings.order,
             		font: settings.valuesFont ? settings.valuesFont : "arial",
             		fontSize: settings.valuesSize ? settings.valuesSize : 10,
             		prefix: settings.prefix,
