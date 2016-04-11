@@ -47,11 +47,11 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 # order
 rhtmlDonut::Donut(values = values,
                   labels = labels, labels.size = 11,
-                  prefix = "", suffix = "%", order = "default", cutoff.angle = 1,
+                  prefix = "", suffix = "%", order = "default",
                   max.label.length = 150)
 rhtmlDonut::Donut(values = values,
                   labels = labels, labels.size = 11,
-                  prefix = "", suffix = "%", order = "initial", cutoff.angle = 1,
+                  prefix = "", suffix = "%", order = "initial",
                   max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.color = qColors,
                   labels = labels, labels.size = 11,
