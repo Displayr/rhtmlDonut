@@ -1537,6 +1537,10 @@ var labels = {
             labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 0;
             labelData[i].hide = 0;
+            if (labelData[i].arcFrac < pie.options.data.cutoff) {
+                labelData[i].hide = 1;
+            }
+
             if (pie.options.groups.content) {
                 labelData[i].group = pie.options.data.content[i].group;
                 labelData[i].groupSize = pie.options.data.content[i].groupSize;
@@ -1570,6 +1574,10 @@ var labels = {
                     currSel = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + currIdx + "-outer");
                     currSelGroup = d3.select("#" + pie.cssPrefix + "labelGroup" + currIdx + "-outer");
                     currSelNode = currSelGroup.node();
+                    if (curr.hide == 1) {
+                        currSel.style("font-size", 0).style("display", "none");
+                        continue;
+                    }
 
                     /*if (currIdx == objs.length-1) {
                         prevIdx = currIdx-1;

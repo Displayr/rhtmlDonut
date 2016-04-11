@@ -23,6 +23,7 @@ Donut <- function(
     order.control = TRUE,
     border.color = "white",
     max.label.length = 150,
+    cutoff.angle = 1,
     width = NULL,
     height = NULL) {
 
@@ -121,6 +122,7 @@ Donut <- function(
         order = order,
         orderControl = order.control,
         maxLabelLength = max.label.length,
+        displayCutoff = cutoff.angle,
         borderColor = border.color
     )
 

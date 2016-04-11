@@ -178,6 +178,7 @@ function DetailedDonutPlot() {
             		color: settings.valuesColor,
             		dataFormatter: dataFormatter,
             		display: settings.valuesDisplay,
+            		cutoff: settings.displayCutoff / 360,
         			content: pieData
         		},
             	misc: {
