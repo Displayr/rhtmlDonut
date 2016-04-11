@@ -9,7 +9,7 @@ Donut <- function(
     values.size = 10,
     values.color = NULL,
     values.display = "percentage",
-    labels = NULL,
+    labels,
     labels.font = NULL,
     labels.size = 10,
     labels.color = NULL,
@@ -22,7 +22,7 @@ Donut <- function(
     order = "default",
     order.control = TRUE,
     border.color = "white",
-    max.label.length = 100,
+    max.label.length = 150,
     width = NULL,
     height = NULL) {
 
