@@ -1555,9 +1555,9 @@ var labels = {
         }
         labels.sortWithIndices(sortedValues);
 
-        if (pie.options.groups.content) {
+        //if (pie.options.groups.content) {
 
-        } else {
+        //} else {
 
             var collisions = 1,
                 nItr = 1;
@@ -1707,7 +1707,7 @@ var labels = {
                 }
                 nItr++;
             }
-        }
+        //}
 
         // turn off anything that has been set to hidden or still colliding
         d3.select("." + pie.cssPrefix + "segmentMainLabel-outer")

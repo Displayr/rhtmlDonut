@@ -17,16 +17,16 @@
 #              grDevices::rgb(153, 115, 0, 255, max = 255), # brown
 #              grDevices::rgb(38, 68, 120, 255, max = 255), # very dark blue
 #              grDevices::rgb(67, 104, 43, 255, max = 255), # darker green
-#              grDevices::rgb(255, 255, 255, 255, max = 255), # black
+#              grDevices::rgb(0, 0, 0, 255, max = 255), # black
 #              grDevices::rgb(255, 35, 35, 255, max = 255)) # red
-# qColors = substring(qColors,1,7)
+# qColors = substring(qColors1,1,7)
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
 
 data("browser", package = "rhtmlDonut")
 labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 50)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 100)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
 rhtmlDonut::Donut(values = values,
                   labels = labels, labels.size = 11,
                   groups = groups, groups.color = qColors,
@@ -53,7 +53,7 @@ rhtmlDonut::Donut(values = values,
                   labels = labels, labels.size = 11,
                   prefix = "", suffix = "%", order = "initial",
                   max.label.length = 150)
-rhtmlDonut::Donut(values = values,
+rhtmlDonut::Donut(values = values, values.color = qColors,
                   labels = labels, labels.size = 11,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)
