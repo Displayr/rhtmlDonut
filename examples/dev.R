@@ -55,5 +55,5 @@ rhtmlDonut::Donut(values = values,
                   max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.color = qColors,
                   labels = labels, labels.size = 11,
-                  prefix = "", suffix = "%", order = "alphabetical", cutoff.angle = 1,
+                  prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)

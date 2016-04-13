@@ -1138,10 +1138,9 @@ var labels = {
         if (pie.options.labels[section].format === "none") {
           return;
         }
+        var labelData = pie.outerLabelGroupData;
         /*var maxY = 0,
             minY = pie.svg.node().getBoundingClientRect().height;
-
-        var labelData = pie.outerLabelGroupData;
 
         for (var i = 0; i < labelData.length; i++) {
             if (labelData[i].y > maxY) {
@@ -1150,13 +1149,25 @@ var labels = {
             if (labelData[i].y < minY) {
                 minY = labelData[i].y;
             }
-        }
-
-        var yOffsetScale = d3.scale.pow().exponent(2).domain([minY, maxY]).range([-20, 20]);
+        }*/
+        var offsetSize = Math.round(pie.options.labels.mainLabel.fontSize * 2);
+        var yOffsetScale = d3.scale.pow().exponent(3).domain([0, pie.pieCenter.y]).range([0, offsetSize * 1.5]);
+        var xOffsetScale = d3.scale.pow().exponent(3).domain([0, pie.pieCenter.x]).range([offsetSize, 0]);
 
         for (var i = 0; i < labelData.length; i++) {
-            labelData[i].y += yOffsetScale(labelData[i].y);
-        }*/
+            if (labelData[i].y > pie.pieCenter.y) {
+                labelData[i].y += yOffsetScale(labelData[i].y - pie.pieCenter.y);
+            } else {
+                labelData[i].y -= yOffsetScale(pie.pieCenter.y - labelData[i].y);
+            }
+
+            if (labelData[i].x > pie.pieCenter.x) {
+                labelData[i].x += xOffsetScale(labelData[i].x - pie.pieCenter.x);
+            } else {
+                labelData[i].x -= xOffsetScale(pie.pieCenter.x - labelData[i].x);
+            }
+
+        }
 
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-" + section)
 			.style("opacity", 0)
