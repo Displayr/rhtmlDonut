@@ -100,7 +100,7 @@ Donut <- function(
     }
 
     if (is.null(small.angle)) {
-        small.angle = 0.2 / 100
+        small.angle = 0.3 / 100
     } else {
         small.angle = small.angle / 100
     }

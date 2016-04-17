@@ -58,15 +58,15 @@ rhtmlDonut::Donut(values = values, values.color = qColors, small.angle = 0,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)
 
-rhtmlDonut::Donut(values = values, values.size = 11,
-                  labels = labels, labels.size = 11,
+rhtmlDonut::Donut(values = values, values.size = 10,
+                  labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "default",
                   max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.size = 11,
-                  labels = labels, labels.size = 11,
+rhtmlDonut::Donut(values = values, values.size = 10,
+                  labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "initial",
                   max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.color = qColors,
-                  labels = labels, labels.size = 11,
+rhtmlDonut::Donut(values = values, values.size = 10, values.color = qColors,
+                  labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)

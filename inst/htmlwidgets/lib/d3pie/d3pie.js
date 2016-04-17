@@ -1491,39 +1491,8 @@ var labels = {
             objsInfo.push(objInfo);
         }*/
 
-        var wrapTspan = function(sel) {
-            sel.selectAll("tspan")
-            .attr("x", function(d,i) {
-                var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
-                if (i == tspans.length - 1) {
-                    var tspanLast = tspans[tspans.length-2];
-                    var tspanLastLength = tspanLast.getComputedTextLength();
-                    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
-                        return 0
-                    } else {
-                        return tspanLastLength + 5 + "px";
-                    }
-                } else {
-                    return 0;
-                }
-            })
-            .attr("dy", function(d,i) {
-                var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
-                if (i == tspans.length - 1) {
-                    var tspanLast = tspans[tspans.length-2];
-                    var tspanLastLength = tspanLast.getComputedTextLength();
-                    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
-                        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
-                    } else {
-                        return tspanLast.getAttribute("dy");
-                    }
-                } else {
-                    return this.getAttribute("dy");
-                }
-            });
-        }
 
-        var updateTextDims = function(v, sel, selGroup, node, minFontSize) {
+        /*var updateTextDims = function(v, sel, selGroup, node, minFontSize) {
             sel.style("font-size", function() {
                 if (v.fontSize < minFontSize) {
                     v.hide = 1;
@@ -1547,24 +1516,26 @@ var labels = {
                 var originalW = v.w;
                 v.w = nodeDim.width;
                 v.h = nodeDim.height;
-                if (next.hs == "left") {
+                if (v.hs == "left") {
                     v.x = v.x + originalW - v.w;
                 }
                 selGroup.attr("transform", function(d) {
                     return "translate(" + v.x + "," + v.y + ")";
                 });
             }
-        };
+        };*/
 
         // starting font size is always small, later increased
         var labelData = pie.outerLabelGroupData;
         for (var i = 0; i < objs.length; i++) {
             labelData[i].label = pie.options.data.content[i].label;
             labelData[i].fontSize = pie.options.labels.mainLabel.minFontSize;
+            labelData[i].valueSize = pie.options.data.fontSize;
             labelData[i].arcFrac = pie.options.data.content[i].value/pie.totalSize;
             labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 0;
             labelData[i].hide = 0;
+            labelData[i].stop = 0;
             //labelData[i].xlim = {max: labelData[i].x + pie.options.data.fontSize, min: labelData[i].x - pie.options.data.fontSize};
             labelData[i].ylim = {max: labelData[i].y + pie.options.data.fontSize*2, min: labelData[i].y - pie.options.data.fontSize*2};
 
@@ -1618,31 +1589,133 @@ var labels = {
 
             }
 
-            for (var j = i-1; j >= 0; j--) {
-                prev = labelData[j];
-                if (prev.hide === 0) {
-                    if (labels.rectIntersect(curr, prev)) {
-                		var info = {
-                			center: pie.pieCenter,
-                			lineLength: (pie.outerRadius + pie.options.labels.outer.pieDistance),
-                			heightChange: prev.h // 1 = padding
-                		};
+            if (i === objs.length-1) {
+                next = labelData[0];
+            } else {
+                next = labelData[i+1];
+            }
 
-                		if (i === objs.length-1) {
-                		    next = labelData[0];
-                		} else {
-                		    next = labelData[i+1];
-                		}
+            // next ones are not hidden
+            if (labels.rectIntersect(curr, next)) {
+                if (next.arcFrac > curr.arcFrac) {
+                    var flag = 0;
+                    for (var j = i-1; j >= 0; j--) {
+                        prev = labelData[j];
+                        if (prev.hide === 0) {
+                            if (labels.rectIntersect(curr, prev)) {
+                                flag = 1;
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    if (flag === 1) {
+                        labels.hideLabel(pie, curr);
+                    }
+                }
+            }
 
-                        labels.adjustOuterLabelPosNew(pie, curr, prev, next, info);
-                    } else {
-                        continue;
+            if (curr.hide === 0) {
+                for (var j = i-1; j >= 0; j--) {
+                    prev = labelData[j];
+                    if (prev.hide === 0) {
+                        if (labels.rectIntersect(curr, prev)) {
+                    		var info = {
+                    			center: pie.pieCenter,
+                    			lineLength: (pie.outerRadius + pie.options.labels.outer.pieDistance),
+                    			heightChange: prev.h +1// 1 = padding
+                    		};
+
+                    		if (i === objs.length-1) {
+                    		    next = labelData[0];
+                    		} else {
+                    		    next = labelData[i+1];
+                    		}
+
+                            labels.adjustOuterLabelPosNew(pie, curr, prev, next, info);
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
         }
-        console.log(pie.pieCenter);
-        console.log(pie.outerRadius + pie.options.labels.outer.pieDistance);
+
+        // put stuff in the middle
+        if (!pie.options.groups.content) {
+
+        }
+
+        // increase font size
+        var itr = minFontSize;
+        while (itr < pie.options.labels.mainLabel.fontSize) {
+
+            itr++;
+
+            for (var i = 0; i < objs.length; i++) {
+                currIdx = sortedValues.sortIndices[i];
+                curr = labelData[currIdx];
+                if (curr.hide === 0 && curr.stop === 0) {
+                    curr.fontSize = itr;
+                    labels.updateLabelText(pie, curr);
+
+                    for (var j = currIdx+1; j < objs.length; j++) {
+                        next = labelData[j];
+                        if (next.hide === 0) {
+                            if (labels.rectIntersect(curr, next)) {
+                                curr.fontSize -= 1;
+                                curr.stop = 1;
+                                labels.updateLabelText(pie, curr);
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (curr.stop === 0) {
+                        for (var j = currIdx-1; j >= 0; j--) {
+                            next = labelData[j];
+                            if (next.hide === 0) {
+                                if (labels.rectIntersect(curr, next)) {
+                                    curr.fontSize -= 1;
+                                    curr.stop = 1;
+                                    labels.updateLabelText(pie, curr);
+                                } else {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+
+/*
+        for (var i = 0; i < objs.length; i++) {
+            currIdx = sortedValues.sortIndices[i];
+            curr = labelData[currIdx];
+            if (curr.arcFrac < pie.options.data.minAngle) {
+                break;
+            }
+
+            if (curr.hide === 1 && curr.collide === 1) {
+                labels.showLabel(pie, curr);
+
+                if (curr.arcFrac >= pie.options.data.maxAngle) {
+
+
+
+                } else {
+
+                    //labels.showLabel(pie, curr);
+
+                }
+            }
+        }*/
+
         d3.selectAll("." + pie.cssPrefix + "labelGroup-outer")
             .attr("transform", function(d,i) {
                 return "translate(" + labelData[i].x + "," + labelData[i].y + ")";
@@ -1818,10 +1891,73 @@ var labels = {
                 }
             });*/
         console.log(labelData);
-        console.log(labelData[98]);
-        console.log(labelData[105]);
         //console.log(nItr);
         //console.log(collisions);
+	},
+
+    wrapTspan: function(pie, sel, fontSize, maxSize) {
+        sel.selectAll("tspan")
+            .style("font-size", function(d,i) {
+                var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                if (i == tspans.length - 1) {
+                    if (fontSize <= maxSize) {
+                        return fontSize + "px";
+                    } else {
+                        return maxSize + "px";
+                    }
+                } else {
+                    return fontSize + "px";
+                }
+            })
+            .attr("x", function(d,i) {
+                var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                if (i == tspans.length - 1) {
+                    var tspanLast = tspans[tspans.length-2];
+                    var tspanLastLength = tspanLast.getComputedTextLength();
+                    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                        return 0
+                    } else {
+                        return tspanLastLength + 5 + "px";
+                    }
+                } else {
+                    return 0;
+                }
+            })
+            .attr("dy", function(d,i) {
+                var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                if (i == tspans.length - 1) {
+                    var tspanLast = tspans[tspans.length-2];
+                    var tspanLastLength = tspanLast.getComputedTextLength();
+                    if (tspanLastLength + this.getComputedTextLength() > pie.options.labels.mainLabel.maxLabelLength) {
+                        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                    } else {
+                        return tspanLast.getAttribute("dy");
+                    }
+                } else {
+                    return this.getAttribute("dy");
+                }
+            });
+        },
+
+	updateLabelText: function(pie, curr) {
+
+        var sel = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer");
+        var nodeSel = d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-outer");
+        var node = nodeSel.node();
+
+        sel.style("font-size", curr.fontSize);
+        labels.wrapTspan(pie, sel, curr.fontSize, curr.valueSize);
+
+        var nodeDim = node.getBBox();
+        var originalW = curr.w;
+        curr.w = nodeDim.width;
+        curr.h = nodeDim.height;
+        if (curr.hs === "left") {
+            curr.x = curr.x + originalW - curr.w;
+        }
+        nodeSel.attr("transform", function(d) {
+            return "translate(" + curr.x + "," + curr.y + ")";
+        });
 	},
 
 	checkConflict: function(pie, currIndex, direction, size) {
@@ -1884,6 +2020,14 @@ var labels = {
 		labels.checkConflict(pie, nextIndex, direction, size);
 	},
 
+	showLabel: function(pie, curr) {
+	    curr.collide = 1;
+	    curr.hide = 0;
+
+        d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer")
+            .style("display", "inline");
+	},
+
 	hideLabel: function(pie, curr) {
 	    curr.collide = 1;
 	    curr.hide = 1;
@@ -1899,7 +2043,11 @@ var labels = {
 		if (colliding.hs === "left") {
 
 		    if (colliding.y > correct.y) {
-		        labels.hideLabel(pie, colliding);
+                if (colliding.arcFrac > correct.arcFrac) {
+                    labels.hideLabel(pie, correct);
+                } else {
+                    labels.hideLabel(pie, colliding);
+                }
 		        return;
 		    } else {
     		    if (correct.y - info.heightChange >= colliding.ylim.min) {
@@ -1911,14 +2059,18 @@ var labels = {
 
 		} else {
 
-    		if (colliding.y > correct.y) {
+    		if (colliding.y >= correct.y) {
     		    if (correct.y + info.heightChange <= colliding.ylim.max) {
     		        newYPos = correct.y + info.heightChange;
     		    } else {
     		        newYPos = colliding.ylim.max;
     		    }
     		} else {
-    		    labels.hideLabel(pie, colliding);
+                if (colliding.arcFrac > correct.arcFrac) {
+                    labels.hideLabel(pie, correct);
+                } else {
+                    labels.hideLabel(pie, colliding);
+                }
     		    return;
     		}
 		}
