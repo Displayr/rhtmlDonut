@@ -23,7 +23,8 @@ Donut <- function(
     order.control = TRUE,
     border.color = "white",
     max.label.length = 150,
-    cutoff.angle = NULL,
+    small.angle = NULL,
+    large.angle = NULL,
     width = NULL,
     height = NULL) {
 
@@ -98,12 +99,20 @@ Donut <- function(
         groups.size.each = NULL
     }
 
-    if (is.null(cutoff.angle)) {
-        if (order == "default" || order == "descending") {
-            cutoff.angle = 0.5
-        } else {
-            cutoff.angle = 1
-        }
+    if (is.null(small.angle)) {
+        small.angle = 0.2 / 100
+    } else {
+        small.angle = small.angle / 100
+    }
+
+    if (is.null(large.angle)) {
+        large.angle = 2 / 100
+    } else {
+        large.angle = large.angle / 100
+    }
+
+    if (small.angle > large.angle) {
+        small.angle = large.angle
     }
 
     # create a list that contains the settings
@@ -129,7 +138,8 @@ Donut <- function(
         order = order,
         orderControl = order.control,
         maxLabelLength = max.label.length,
-        displayCutoff = cutoff.angle,
+        minAngle = small.angle,
+        maxAngle = large.angle,
         borderColor = border.color
     )
 

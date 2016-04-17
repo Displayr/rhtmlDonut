@@ -178,7 +178,8 @@ function DetailedDonutPlot() {
             		color: settings.valuesColor,
             		dataFormatter: dataFormatter,
             		display: settings.valuesDisplay,
-            		cutoff: settings.displayCutoff / 360,
+            		minAngle: settings.minAngle,
+            		maxAngle: settings.maxAngle,
         			content: pieData
         		},
             	misc: {
@@ -198,7 +199,8 @@ function DetailedDonutPlot() {
             		outer: {
             			format: "label",
             			hideWhenLessThanPercentage: null,
-            			pieDistance: 30
+            			pieDistance: 20,
+            			offsetSize: 20
             		},
             		mainLabel: {
             			color: "#333333",
@@ -206,6 +208,7 @@ function DetailedDonutPlot() {
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
             			maxLabelLength: settings.maxLabelLength,
             			minFontSize: 8,
+            			horizontalPadding: 8,
             			fontWeight: "bold"
             		}
 
