@@ -1651,7 +1651,7 @@ var labels = {
             }
 
             // hide this label if the next is bigger than this, and if this is colliding with previous ones
-            if (labels.rectIntersect(curr, next)) {
+            /*if (labels.rectIntersect(curr, next)) {
                 if (next.arcFrac > curr.arcFrac) {
                     var flag = 0;
                     for (var j = i-1; j >= 0; j--) {
@@ -1667,7 +1667,7 @@ var labels = {
                         labels.hideLabel(pie, curr);
                     }
                 }
-            }
+            }*/
 
             if (curr.hide === 0) {
                 for (var j = i-1; j >= 0; j--) {
@@ -1684,13 +1684,18 @@ var labels = {
                             labels.adjustOuterLabelPosNew(pie, curr, prev, next, pie.pieCenter);
 
                             for (var k = i-1; k >= 0; k--) {
-                                if (labelData[k].hide === 0 && labels.rectIntersect(curr, labelData[k])) {
-                                    labels.hideLabel(pie, curr);
+                                if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                                    if (curr.arcFrac < labelData[k].arcFrac) {
+                                        labels.hideLabel(pie, curr);
+                                    } else {
+                                        labels.hideLabel(pie, labelData[k]);
+                                    }
+
                                     break;
                                 }
                             }
 
-                            if (curr.hide === 0) {
+                            if (curr.hide === 1) {
                                 break;
                             }
                         }
@@ -1705,7 +1710,8 @@ var labels = {
         }
 
         // increase font size
-/*        var itr = minFontSize;
+        // increase font size
+        var itr = minFontSize;
         var maxValueSize = pie.options.data.fontSize;
         var maxLabelSize = pie.options.labels.mainLabel.fontSize;
         while (itr < Math.max(maxLabelSize, maxValueSize)) {
@@ -1716,15 +1722,17 @@ var labels = {
                 currIdx = sortedValues.sortIndices[i];
                 curr = labelData[currIdx];
                 if (curr.hide === 0 && curr.stop === 0) {
-                    curr.fontSize = itr;
-                    curr.valueSize = itr;   // TODO update this to the font setting
+                    curr.fontSize = itr > maxLabelSize ? maxLabelSize : itr;
+                    curr.valueSize = itr > maxValueSize ? maxValueSize : itr;   // TODO update this to the font setting
                     labels.updateLabelText(pie, curr);
 
                     for (var j = currIdx+1; j < objs.length; j++) {
                         next = labelData[j];
                         if (next.hide === 0) {
                             if (labels.rectIntersect(curr, next)) {
-                                curr.fontSize -= 1;
+                            	var _currFontSize = curr.fontSize;
+                                curr.fontSize -= _currFontSize >= curr.valueSize ? 1 : 0;
+                                curr.valueSize -= curr.valueSize >= _currFontSize ? 1 : 0;
                                 curr.stop = 1;
                                 labels.updateLabelText(pie, curr);
                             }
@@ -1736,7 +1744,9 @@ var labels = {
                             next = labelData[j];
                             if (next.hide === 0) {
                                 if (labels.rectIntersect(curr, next)) {
-                                    curr.fontSize -= 1;
+									var _currFontSize = curr.fontSize;
+									curr.fontSize -= _currFontSize >= curr.valueSize ? 1 : 0;
+									curr.valueSize -= curr.valueSize >= _currFontSize ? 1 : 0;
                                     curr.stop = 1;
                                     labels.updateLabelText(pie, curr);
                                 }
@@ -1745,12 +1755,11 @@ var labels = {
                     }
                 }
             }
-
         }
 
 
 
-        for (var i = 0; i < objs.length; i++) {
+/*        for (var i = 0; i < objs.length; i++) {
             currIdx = sortedValues.sortIndices[i];
             curr = labelData[currIdx];
             if (curr.arcFrac < pie.options.data.minAngle) {
