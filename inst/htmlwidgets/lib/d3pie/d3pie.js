@@ -1025,6 +1025,8 @@ var labels = {
 	},
 
 	computeLinePosition: function(pie, i) {
+
+	    var pieDistance = pie.options.labels.outer.pieDistance + pie.options.labels.outer.offsetSize/2;
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 		var originCoords = math.rotate(pie.pieCenter.x - pie.outerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
 		//console.log(pie.outerLabelGroupData[i]);
@@ -1033,7 +1035,7 @@ var labels = {
 
 		var quarter = Math.floor(angle / 90);
 		var midPoint = 4;
-		var x2, y2, x3, y3;
+		var x2, y2, x3, y3, x4, x5, y4, y5;
 
 		angle = angle - 90;
 		if (angle < 0) {
@@ -1046,39 +1048,75 @@ var labels = {
 		    quarter = 2;
 		}
 
+		switch (quarter) {
+			case 0:
+				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
+				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				break;
+			case 1:
+				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
+				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				break;
+			case 2:
+				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
+				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				break;
+			case 3:
+				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
+				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				break;
+		}
 		/*// this resolves an issue when the
 		if (quarter === 2 && angle === 180) {
 			quarter = 1;
-		}*/
+		}
 
 		switch (quarter) {
 			case 0:
 				x2 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) / 2);
 				y2 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) / midPoint);
+				x4 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) * 0.7);
+				y4 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) * 0.7);
+				x5 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) * 0.3);
+				y5 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) * 0.3);
 				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
 				break;
 			case 1:
 				x2 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
 				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
+				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
+				x5 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
+				y5 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
 				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
 				break;
 			case 2:
 				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				x2 = originCoords.x - (originCoords.x - startOfLabelX) / midPoint;
+				x2 = originCoords.x + (startOfLabelX - originCoords.x) / midPoint;
 				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
 				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
 				break;
 			case 3:
-				var startOfLabel = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				x2 = startOfLabel + ((originCoords.x - startOfLabel) / midPoint);
-				y2 = pie.outerLabelGroupData[i].y + (originCoords.y - pie.outerLabelGroupData[i].y) / midPoint;
+				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
+				x2 = originCoords.x + (startOfLabelX - originCoords.x) / midPoint;
+				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
 				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
 				break;
-		}
+		}*/
 
 		/*
 		 * x1 / y1: the x/y coords of the start of the line, at the mid point of the segments arc on the pie circumference
@@ -1088,6 +1126,14 @@ var labels = {
 		if (pie.options.labels.lines.style === "straight") {
 			pie.lineCoordGroups[i] = [
 				{ x: originCoords.x, y: originCoords.y },
+				{ x: x3, y: y3 }
+			];
+		} else if (pie.options.labels.lines.style === "aligned") {
+		    pie.lineCoordGroups[i] = [
+				{ x: originCoords.x, y: originCoords.y },
+				//{ x: x2, y: y2 },
+				{ x: x4, y: y4 },
+				//{ x: x5, y: y5 },
 				{ x: x3, y: y3 }
 			];
 		} else {
@@ -1111,9 +1157,14 @@ var labels = {
 			.attr("class", pie.cssPrefix + "lineGroup");
 
 		var lineFunction = d3.svg.line()
-			.interpolate("basis")
 			.x(function(d) { return d.x; })
 			.y(function(d) { return d.y; });
+
+		if (pie.options.labels.lines.style === "aligned") {
+			lineFunction.interpolate("basis");
+		} else {
+		    lineFunction.interpolate("basis");
+		}
 
 		lineGroup.append("path")
 			.attr("d", lineFunction)

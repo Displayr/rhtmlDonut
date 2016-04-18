@@ -196,11 +196,14 @@ function DetailedDonutPlot() {
             		}
             	},
             	labels: {
+            	    lines: {
+            	        style: "aligned"
+            	    },
             		outer: {
             			format: "label",
             			hideWhenLessThanPercentage: null,
-            			pieDistance: 20,
-            			offsetSize: 20
+            			pieDistance: Math.min(width/23, height/23, 15),
+            			offsetSize: Math.min(width/13, height/13, 30)
             		},
             		mainLabel: {
             			color: "#333333",
