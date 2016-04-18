@@ -1585,7 +1585,7 @@ var labels = {
         for (var i = 0; i < objs.length; i++) {
             labelData[i].label = pie.options.data.content[i].label;
             labelData[i].fontSize = pie.options.labels.mainLabel.minFontSize;
-            labelData[i].valueSize = pie.options.data.fontSize;
+            labelData[i].valueSize = pie.options.labels.mainLabel.minFontSize;
             labelData[i].arcFrac = pie.options.data.content[i].value/pie.totalSize;
             labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 0;
@@ -1650,7 +1650,7 @@ var labels = {
                 next = labelData[i+1];
             }
 
-            // next ones are not hidden
+            // hide this label if the next is bigger than this, and if this is colliding with previous ones
             if (labels.rectIntersect(curr, next)) {
                 if (next.arcFrac > curr.arcFrac) {
                     var flag = 0;
@@ -1659,8 +1659,6 @@ var labels = {
                         if (prev.hide === 0) {
                             if (labels.rectIntersect(curr, prev)) {
                                 flag = 1;
-                                break;
-                            } else {
                                 break;
                             }
                         }
@@ -1676,11 +1674,6 @@ var labels = {
                     prev = labelData[j];
                     if (prev.hide === 0) {
                         if (labels.rectIntersect(curr, prev)) {
-                    		var info = {
-                    			center: pie.pieCenter,
-                    			lineLength: (pie.outerRadius + pie.options.labels.outer.pieDistance),
-                    			heightChange: prev.h +1// 1 = padding
-                    		};
 
                     		if (i === objs.length-1) {
                     		    next = labelData[0];
@@ -1688,9 +1681,18 @@ var labels = {
                     		    next = labelData[i+1];
                     		}
 
-                            labels.adjustOuterLabelPosNew(pie, curr, prev, next, info);
-                        } else {
-                            break;
+                            labels.adjustOuterLabelPosNew(pie, curr, prev, next, pie.pieCenter);
+
+                            for (var k = i-1; k >= 0; k--) {
+                                if (labelData[k].hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                                    labels.hideLabel(pie, curr);
+                                    break;
+                                }
+                            }
+
+                            if (curr.hide === 0) {
+                                break;
+                            }
                         }
                     }
                 }
@@ -1703,8 +1705,10 @@ var labels = {
         }
 
         // increase font size
-        var itr = minFontSize;
-        while (itr < pie.options.labels.mainLabel.fontSize) {
+/*        var itr = minFontSize;
+        var maxValueSize = pie.options.data.fontSize;
+        var maxLabelSize = pie.options.labels.mainLabel.fontSize;
+        while (itr < Math.max(maxLabelSize, maxValueSize)) {
 
             itr++;
 
@@ -1713,6 +1717,7 @@ var labels = {
                 curr = labelData[currIdx];
                 if (curr.hide === 0 && curr.stop === 0) {
                     curr.fontSize = itr;
+                    curr.valueSize = itr;   // TODO update this to the font setting
                     labels.updateLabelText(pie, curr);
 
                     for (var j = currIdx+1; j < objs.length; j++) {
@@ -1722,8 +1727,6 @@ var labels = {
                                 curr.fontSize -= 1;
                                 curr.stop = 1;
                                 labels.updateLabelText(pie, curr);
-                            } else {
-                                break;
                             }
                         }
                     }
@@ -1736,8 +1739,6 @@ var labels = {
                                     curr.fontSize -= 1;
                                     curr.stop = 1;
                                     labels.updateLabelText(pie, curr);
-                                } else {
-                                    break;
                                 }
                             }
                         }
@@ -1748,7 +1749,7 @@ var labels = {
         }
 
 
-/*
+
         for (var i = 0; i < objs.length; i++) {
             currIdx = sortedValues.sortIndices[i];
             curr = labelData[currIdx];
@@ -2092,12 +2093,12 @@ var labels = {
 	},
 
 	// does a little math to shift a label into a new position based on the last properly placed one
-	adjustOuterLabelPosNew: function(pie, colliding, correct, next, info) {
-		var xDiff, yDiff, newXPos, newYPos, newXAnchor;
-
+	adjustOuterLabelPosNew: function(pie, colliding, correct, next, center) {
+		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange;
+        heightChange = correct.h + 1;
 		if (colliding.hs === "left") {
 
-		    if (colliding.y > correct.y) {
+		    if (colliding.y >= correct.y) {
                 if (colliding.arcFrac > correct.arcFrac) {
                     labels.hideLabel(pie, correct);
                 } else {
@@ -2105,8 +2106,8 @@ var labels = {
                 }
 		        return;
 		    } else {
-    		    if (correct.y - info.heightChange >= colliding.ylim.min) {
-    		        newYPos = correct.y - info.heightChange;
+    		    if (correct.y - heightChange >= colliding.ylim.min) {
+    		        newYPos = correct.y - heightChange;
     		    } else {
     		        newYPos = colliding.ylim.min;
     		    }
@@ -2115,8 +2116,8 @@ var labels = {
 		} else {
 
     		if (colliding.y >= correct.y) {
-    		    if (correct.y + info.heightChange <= colliding.ylim.max) {
-    		        newYPos = correct.y + info.heightChange;
+    		    if (correct.y + heightChange <= colliding.ylim.max) {
+    		        newYPos = correct.y + heightChange;
     		    } else {
     		        newYPos = colliding.ylim.max;
     		    }
@@ -2130,7 +2131,7 @@ var labels = {
     		}
 		}
 
-		yDiff = info.center.y - newYPos;
+		yDiff = center.y - newYPos;
 
         // rotate colliding element with radius equal to its computed radius
 		if (Math.abs(colliding.r) > Math.abs(yDiff)) {
@@ -2139,9 +2140,9 @@ var labels = {
             var padding = pie.options.labels.mainLabel.horizontalPadding;
             // possibly need to do some more shifting
     		if (correct.hs === "right") {
-    			newXPos = info.center.x + xDiff;
+    			newXPos = center.x + xDiff;
     		} else {
-    			newXPos = info.center.x - xDiff - colliding.w;
+    			newXPos = center.x - xDiff - colliding.w;
     		}
 
     		/*if (next.quadrant === colliding.quadrant) {
@@ -2168,7 +2169,7 @@ var labels = {
 		    colliding.anchorPt.x = colliding.x + colliding.w;
 		}
 		colliding.anchorPt.y = colliding.y;
-		colliding.r = labels.getDist(colliding.anchorPt.x, colliding.anchorPt.y, info.center.x, info.center.y)
+		colliding.r = labels.getDist(colliding.anchorPt.x, colliding.anchorPt.y, center.x, center.y)
 
 
 	},

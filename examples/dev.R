@@ -70,3 +70,5 @@ rhtmlDonut::Donut(values = values, values.size = 10, values.color = qColors,
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)
+
+htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")
