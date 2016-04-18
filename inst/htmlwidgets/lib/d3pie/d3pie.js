@@ -1054,12 +1054,14 @@ var labels = {
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				if (x4 > x3) { x4 = x3; }
 				break;
 			case 1:
 				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) * 0.5;
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				if (x4 > x3) { x4 = x3; }
 				break;
 			case 2:
 				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
@@ -1067,6 +1069,7 @@ var labels = {
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				if (x4 < x3) { x4 = x3; }
 				break;
 			case 3:
 				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
@@ -1074,6 +1077,7 @@ var labels = {
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
 				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				if (x4 < x3) { x4 = x3; }
 				break;
 		}
 		/*// this resolves an issue when the

@@ -202,8 +202,8 @@ function DetailedDonutPlot() {
             		outer: {
             			format: "label",
             			hideWhenLessThanPercentage: null,
-            			pieDistance: Math.min(width/23, height/23, 15),
-            			offsetSize: Math.min(width/13, height/13, 30)
+            			pieDistance: Math.min(width/25, height/25, 15),
+            			offsetSize: Math.min(width/15, height/15, 25)
             		},
             		mainLabel: {
             			color: "#333333",
