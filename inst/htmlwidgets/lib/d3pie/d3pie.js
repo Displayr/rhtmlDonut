@@ -600,18 +600,18 @@ var math = {
 		var h = size.canvasHeight - canvasPadding.top - canvasPadding.bottom;
 
 		// now factor in the footer, title & subtitle
-    if (pie.options.header.location !== "pie-center") {
-      h -= pie.textComponents.headerHeight;
-    }
+        if (pie.options.header.location !== "pie-center") {
+          h -= pie.textComponents.headerHeight;
+        }
 
-    if (pie.textComponents.footer.exists) {
-      h -= pie.textComponents.footer.h;
-    }
+        if (pie.textComponents.footer.exists) {
+          h -= pie.textComponents.footer.h;
+        }
 
 		// for really teeny pies, h may be < 0. Adjust it back
 		h = (h < 0) ? 0 : h;
 
-		var outerRadius = ((w < h) ? w : h) / 3;
+		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
 		var innerRadius, percent;
 
 		// if the user specified something, use that instead
@@ -835,7 +835,7 @@ var labels = {
 			.attr("class", pie.cssPrefix + "labelGroup-" + section)
 			.style("opacity", 0);
 
-    var formatterContext = { section: section, sectionDisplayType: sectionDisplayType };
+        var formatterContext = { section: section, sectionDisplayType: sectionDisplayType };
 
 		// 1. Add the main label
 		if (include.mainLabel) {
@@ -871,11 +871,11 @@ var labels = {
 				.style("font-size", settings.mainLabel.minFontSize + "px")
 				.attr("y", 0)
 				.text(function(d,i) {
-
+                    var val;
 				    if (pie.options.data.display == "percentage") {
-				        var val = dataFormatter(d.value / pie.totalSize * 100);
+				        val = dataFormatter(d.value / pie.totalSize * 100);
 				    } else {
-				        var val = dataFormatter(d.value);
+				        val = dataFormatter(d.value);
 				    }
 				    if (pie.options.data.prefix) {
 				        val = pie.options.data.prefix + val;
@@ -905,8 +905,47 @@ var labels = {
 				        return tspanLast.getAttribute("dy");
 				    }
 				});
+
 		}
 
+        var extraLabelGroup;
+        if (!pie.options.groups.content) {
+            extraLabelGroup = pie.svg.append("g")
+			    .attr("class", pie.cssPrefix + "labels-extra")
+			    .selectAll("." + pie.cssPrefix + "labelGroup-extra")
+    			.data(pie.options.data.content)
+                .enter()
+                .append("g")
+                .attr("id", function(d, i) { return pie.cssPrefix + "labelGroup" + i + "-extra"; })
+                .attr("data-index", function(d, i) { return i; })
+                .attr("class", pie.cssPrefix + "labelGroup-extra")
+                .style("opacity", 0)
+                .append("text")
+				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-extra"; })
+				.attr("class", pie.cssPrefix + "segmentMainLabel-extra")
+				.text(function(d, i) {
+				    var val;
+				    if (pie.options.data.display == "percentage") {
+				        val = dataFormatter(d.value / pie.totalSize * 100);
+				    } else {
+				        val = dataFormatter(d.value);
+				    }
+				    if (pie.options.data.prefix) {
+				        val = pie.options.data.prefix + val;
+				    }
+				    if (pie.options.data.suffix) {
+				        val = val + pie.options.data.suffix;
+				    }
+					return d.label + ":  " + val;
+				})
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("dy", 0)
+				.style("font-size", settings.mainLabel.minFontSize + "px")
+				.style("font-family", settings.mainLabel.font)
+				.style("fill", settings.mainLabel.color)
+				.style("font-weight", settings.mainLabel.fontWeight);
+        }
 		// 2. Add the percentage label
 		/*if (include.percentage) {
 			labelGroup.append("text")
@@ -1705,9 +1744,28 @@ var labels = {
         }
 
         // put stuff in the middle
-        if (!pie.options.groups.content) {
+        /*if (!pie.options.groups.content) {
+            for (var i = 0; i < objs.length; i++) {
+                currIdx = sortedValues.sortIndices[i];
+                curr = labelData[currIdx];
+                if (curr.hide === 0) {
+                    d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-extra")
+                        .style("display", "none");
+                    continue;
+                }
 
-        }
+                // set text position and check collision
+                curr.hide = 2;
+
+
+
+                // place text
+                d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-extra")
+                .attr("transform", function() {
+                    return "translate(" + curr.x + "," + curr.y + ")";
+                });
+            }
+        }*/
 
         // increase font size
         var itr = minFontSize;

@@ -10,6 +10,22 @@ function DetailedDonutPlot() {
     function resizeChart(el) {
         pie.options.size.canvasWidth = width;
         pie.options.size.canvasHeight = height;
+
+        var pieDist = Math.min(width/30, height/25, 15);
+        var offsetSize = Math.min(width/25, height/20, 25);
+        pie.options.labels.outer.pieDistance = pieDist;
+        pie.options.labels.outer.offsetSize = offsetSize;
+
+        var canvasPadding = pie.options.misc.canvasPadding;
+		var w = width - canvasPadding.left - canvasPadding.right;
+		var h = height - canvasPadding.top - canvasPadding.bottom;
+
+		// for really teeny pies, h may be < 0. Adjust it back
+		h = (h < 0) ? 0 : h;
+
+		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
+
+        pie.options.labels.mainLabel.maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
         pie.redraw();
     }
 
@@ -162,6 +178,25 @@ function DetailedDonutPlot() {
 
         dataFormatter = d3.format(",.1f");
 
+        var pieDist = Math.min(width/30, height/25, 15);
+        var offsetSize = Math.min(width/25, height/20, 25);
+
+        var canvasPadding = {
+			top: 5,
+			right: 5,
+			bottom: 5,
+			left: 5
+		};
+		var w = width - canvasPadding.left - canvasPadding.right;
+		var h = height - canvasPadding.top - canvasPadding.bottom;
+
+		// for really teeny pies, h may be < 0. Adjust it back
+		h = (h < 0) ? 0 : h;
+
+		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
+
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
+
         // create the pie chart instance
         pie  = new d3pie(svgEl, {
         		size: {
@@ -201,14 +236,14 @@ function DetailedDonutPlot() {
             		outer: {
             			format: "label",
             			hideWhenLessThanPercentage: null,
-            			pieDistance: Math.min(width/25, height/25, 15),
-            			offsetSize: Math.min(width/15, height/15, 25)
+            			pieDistance: pieDist,
+            			offsetSize: offsetSize
             		},
             		mainLabel: {
             			color: "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
-            			maxLabelLength: settings.maxLabelLength,
+            			maxLabelLength: maxLabelLength,
             			minFontSize: 8,
             			horizontalPadding: 8,
             			fontWeight: "bold"
