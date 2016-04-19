@@ -2,6 +2,7 @@
 #' @param values.display c("percentage", "original")
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 #' @param border.color c("white", "none", hex colors)
+#' @param value.thres threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3
 
 Donut <- function(
     values,
@@ -9,6 +10,7 @@ Donut <- function(
     values.size = 10,
     values.color = NULL,
     values.display = "percentage",
+    value.thres = NULL,
     labels,
     labels.font = NULL,
     labels.size = 10,
@@ -23,8 +25,6 @@ Donut <- function(
     order.control = TRUE,
     border.color = "white",
     max.label.length = 150,
-    small.angle = NULL,
-    large.angle = NULL,
     width = NULL,
     height = NULL) {
 
@@ -99,21 +99,24 @@ Donut <- function(
         groups.size.each = NULL
     }
 
-    if (is.null(small.angle)) {
-        small.angle = 0.3 / 100
+    if (is.null(value.thres)) {
+        value.thres = 0.3 / 100
     } else {
-        small.angle = small.angle / 100
+        if (value.thres > 100) {
+            value.thres = 100
+        }
+        value.thres = value.thres / 100
     }
 
-    if (is.null(large.angle)) {
-        large.angle = 2 / 100
-    } else {
-        large.angle = large.angle / 100
-    }
-
-    if (small.angle > large.angle) {
-        small.angle = large.angle
-    }
+#     if (is.null(large.angle)) {
+#         large.angle = 2 / 100
+#     } else {
+#         large.angle = large.angle / 100
+#     }
+#
+#     if (small.angle > large.angle) {
+#         small.angle = large.angle
+#     }
 
     # create a list that contains the settings
     settings <- list(
@@ -138,8 +141,7 @@ Donut <- function(
         order = order,
         orderControl = order.control,
         maxLabelLength = max.label.length,
-        minAngle = small.angle,
-        maxAngle = large.angle,
+        minAngle = value.thres,
         borderColor = border.color
     )
 

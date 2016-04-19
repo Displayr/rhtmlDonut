@@ -45,15 +45,15 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
 
 # order
-rhtmlDonut::Donut(values = values, values.size = 10, small.angle = 0,
+rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "default",
                   max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.size = 10, small.angle = 0,
+rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "initial",
                   max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.color = qColors, small.angle = 0,
+rhtmlDonut::Donut(values = values, values.color = qColors, value.thres = 0,
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)

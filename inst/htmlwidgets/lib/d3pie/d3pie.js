@@ -1710,7 +1710,6 @@ var labels = {
         }
 
         // increase font size
-        // increase font size
         var itr = minFontSize;
         var maxValueSize = pie.options.data.fontSize;
         var maxLabelSize = pie.options.labels.mainLabel.fontSize;

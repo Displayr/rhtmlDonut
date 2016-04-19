@@ -179,7 +179,6 @@ function DetailedDonutPlot() {
             		dataFormatter: dataFormatter,
             		display: settings.valuesDisplay,
             		minAngle: settings.minAngle,
-            		maxAngle: settings.maxAngle,
         			content: pieData
         		},
             	misc: {
