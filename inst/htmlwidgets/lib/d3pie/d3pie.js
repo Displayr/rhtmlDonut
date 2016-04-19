@@ -2380,7 +2380,39 @@ var segments = {
 
 	addSegmentEventHandlers: function(pie) {
 		//var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-inner,." + pie.cssPrefix + "labelGroup-outer");
-		var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-outer");
+		//var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-outer");
+        var arc = d3.selectAll("." + pie.cssPrefix + "arc");
+        var lb = d3.selectAll("." + pie.cssPrefix + "labelGroup-outer");
+        arc.style("cursor", "pointer");
+        lb.style("cursor", "pointer")
+            .style('-webkit-touch-callout', 'none')
+            .style('-webkit-user-select', 'none')
+            .style('-khtml-user-select', 'none')
+            .style('-moz-user-select', 'none')
+            .style('-ms-user-select', 'none')
+            .style('user-select', 'none');
+
+        lb.on("click", function() {
+			var currentEl = d3.select(this);
+			var segment;
+
+			// mouseover works on both the segments AND the segment labels, hence the following
+			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
+				segment = currentEl.select("path");
+			} else {
+				var index = currentEl.attr("data-index");
+				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+			}
+			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+			segments.onSegmentEvent(pie, pie.options.callbacks.onClickSegment, segment, isExpanded);
+			if (pie.options.effects.pullOutSegmentOnClick.effect !== "none") {
+				if (isExpanded) {
+					segments.closeSegment(pie, segment.node());
+				} else {
+					segments.openSegment(pie, segment.node());
+				}
+			}
+		});
 
 		arc.on("click", function() {
 			var currentEl = d3.select(this);
@@ -2404,7 +2436,7 @@ var segments = {
 			}
 		});
 
-		arc.on("mouseover", function(d) {
+		arc.on("mouseover", function(d, i) {
 			var currentEl = d3.select(this);
 			var segment, index;
 
@@ -2422,8 +2454,13 @@ var segments = {
 			}
 
             if (pie.options.tooltips.enabled) {
-                index = segment.attr("data-index");
-                tt.showTooltip(pie, index);
+                console.log(d.value);
+                console.log(pie.options.data.minAngle);
+                console.log(pie.outerLabelGroupData[i].hide);
+                if (pie.outerLabelGroupData[i].hide === 1 || d.value < pie.options.data.minAngle) {
+                    index = segment.attr("data-index");
+                    tt.showTooltip(pie, index);
+                }
             }
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
@@ -2434,7 +2471,7 @@ var segments = {
           tt.moveTooltip(pie);
         });
 
-		arc.on("mouseout", function(d) {
+		arc.on("mouseout", function(d, i) {
 			var currentEl = d3.select(this);
 			var segment, index;
 
@@ -2455,8 +2492,10 @@ var segments = {
 			}
 
             if (pie.options.tooltips.enabled) {
+
                 index = segment.attr("data-index");
-                t.hideTooltip(pie, index);
+                tt.hideTooltip(pie, index);
+
             }
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
@@ -2789,6 +2828,18 @@ var tt = {
         .style("font-size", function(d) { return pie.options.tooltips.styles.fontSize; })
         .style("font-family", function(d) { return pie.options.tooltips.styles.font; })
         .text(function(d, i) {
+				    if (pie.options.data.display == "percentage") {
+				        var val = dataFormatter(d.value / pie.totalSize * 100);
+				    } else {
+				        var val = dataFormatter(d.value);
+				    }
+				    if (pie.options.data.prefix) {
+				        val = pie.options.data.prefix + val;
+				    }
+				    if (pie.options.data.suffix) {
+				        val = val + pie.options.data.suffix;
+				    }
+				    return d.label + ": " + val;
           var caption = pie.options.tooltips.string;
           if (pie.options.tooltips.type === "caption") {
             caption = d.caption;
@@ -2826,8 +2877,6 @@ var tt = {
 
     tt.currentTooltip = index;
     d3.select("#" + pie.cssPrefix + "tooltip" + index)
-      .transition()
-      .duration(fadeInSpeed)
       .style("opacity", function() { return 1; });
 
     tt.moveTooltip(pie);

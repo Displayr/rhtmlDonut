@@ -215,6 +215,22 @@ function DetailedDonutPlot() {
             		}
 
             	},
+            	tooltips: {
+            		enabled: true,
+            		type: "placeholder", // caption|placeholder
+                string: "",
+                placeholderParser: null,
+            	styles: {
+                  fadeInSpeed: 1,
+            			backgroundColor: "#000000",
+                  backgroundOpacity: 0.5,
+            			color: "#efefef",
+                  borderRadius: 2,
+                  font: "arial",
+                  fontSize: 10,
+                  padding: 4
+            		}
+            	},
             	groups: {
             	    content: groupData,
             	    font: settings.groupsFont ? settings.groupsFont : "arial",
