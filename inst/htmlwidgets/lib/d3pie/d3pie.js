@@ -2414,6 +2414,51 @@ var segments = {
 			}
 		});
 
+		lb.on("mouseover", function(d, i) {
+			var currentEl = d3.select(this);
+			var segment, index;
+
+			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
+				segment = currentEl.select("path");
+			} else {
+				index = currentEl.attr("data-index");
+				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+			}
+
+			if (pie.options.effects.highlightSegmentOnMouseover) {
+				index = segment.attr("data-index");
+				var segColor = d.color;
+				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+			}
+
+			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded);
+		});
+
+		lb.on("mouseout", function(d, i) {
+			var currentEl = d3.select(this);
+			var segment, index;
+
+			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
+				segment = currentEl.select("path");
+			} else {
+				index = currentEl.attr("data-index");
+				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+			}
+
+			if (pie.options.effects.highlightSegmentOnMouseover) {
+				index = segment.attr("data-index");
+				var color = d.color;
+				//if (pie.options.misc.gradient.enabled) {
+				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+				//}
+				segment.style("fill", color);
+			}
+
+			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
+		});
+
 		arc.on("click", function() {
 			var currentEl = d3.select(this);
 			var segment;
@@ -2454,9 +2499,6 @@ var segments = {
 			}
 
             if (pie.options.tooltips.enabled) {
-                console.log(d.value);
-                console.log(pie.options.data.minAngle);
-                console.log(pie.outerLabelGroupData[i].hide);
                 if (pie.outerLabelGroupData[i].hide === 1 || d.value < pie.options.data.minAngle) {
                     index = segment.attr("data-index");
                     tt.showTooltip(pie, index);
