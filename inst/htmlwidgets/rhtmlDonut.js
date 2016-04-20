@@ -8,6 +8,14 @@ function DetailedDonutPlot() {
         height = 500;
 
     function resizeChart(el) {
+
+        if (width < 200) {
+            return;
+        }
+
+        if (height < 200) {
+            return;
+        }
         pie.options.size.canvasWidth = width;
         pie.options.size.canvasHeight = height;
 
@@ -244,7 +252,7 @@ function DetailedDonutPlot() {
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
             			maxLabelLength: maxLabelLength,
-            			minFontSize: 8,
+            			minFontSize: settings.minFontSize,
             			horizontalPadding: 8,
             			fontWeight: "bold"
             		}

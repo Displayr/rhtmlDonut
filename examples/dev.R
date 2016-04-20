@@ -27,11 +27,10 @@ labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 50)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
-rhtmlDonut::Donut(values = values,
-                  labels = labels, labels.size = 11,
+rhtmlDonut::Donut(values = values, values.size = 10,
+                  labels = labels, labels.size = 10,
                   groups = groups, groups.color = qColors,
-                  prefix = "", suffix = "%",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values,
                   labels = labels, labels.size = 11,
                   prefix = "", suffix = "%",
@@ -58,17 +57,14 @@ rhtmlDonut::Donut(values = values, values.color = qColors, value.thres = 0,
                   prefix = "", suffix = "%", order = "alphabetical",
                   max.label.length = 150)
 
+rhtmlDonut::Donut(values = values, values.size = 10, border.color = "none",
+                  labels = labels, labels.size = 10,
+                  prefix = "", suffix = "%", order = "default")
 rhtmlDonut::Donut(values = values, values.size = 10,
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "default",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%", order = "initial")
 rhtmlDonut::Donut(values = values, values.size = 10,
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "initial",
-                  max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.size = 10, values.color = qColors,
-                  labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "alphabetical",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%", order = "alphabetical")
 
 htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")

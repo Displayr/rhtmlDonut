@@ -1,5 +1,5 @@
 #' Create an rhtmlDonut plot
-#' @param values.display c("percentage", "original")
+#' @param values.display choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 #' @param border.color c("white", "none", hex colors)
 #' @param value.thres threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3
@@ -15,6 +15,7 @@ Donut <- function(
     labels.font = NULL,
     labels.size = 10,
     labels.color = NULL,
+    labels.minFontSize = 8,
     groups = NULL,
     groups.font = NULL,
     groups.size = 10,
@@ -142,6 +143,7 @@ Donut <- function(
         orderControl = order.control,
         maxLabelLength = max.label.length,
         minAngle = value.thres,
+        minFontSize = labels.minFontSize,
         borderColor = border.color
     )
 
