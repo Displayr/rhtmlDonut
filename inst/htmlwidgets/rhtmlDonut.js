@@ -34,7 +34,7 @@ function DetailedDonutPlot() {
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
 
         pie.options.labels.mainLabel.maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
-        pie.redraw();
+        pie.redrawWithoutLoading();
     }
 
     function chart(selection) {

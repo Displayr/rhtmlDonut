@@ -1191,7 +1191,7 @@ var labels = {
 	addLabelLines: function(pie) {
 		var lineGroups = pie.svg.insert("g", "." + pie.cssPrefix + "pieChart") // meaning, BEFORE .pieChart
 			.attr("class", pie.cssPrefix + "lineGroups")
-			.style("opacity", 0);
+			.style("opacity", 1);
 
 		var lineGroup = lineGroups.selectAll("." + pie.cssPrefix + "lineGroup")
 			.data(pie.lineCoordGroups)
@@ -1267,7 +1267,7 @@ var labels = {
         }
 
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-" + section)
-			.style("opacity", 0)
+			.style("opacity", 1)
 			.attr("transform", function(d, i) {
 				var x, y;
 				if (section === "outer") {
@@ -2338,32 +2338,48 @@ var segments = {
 		// if we're not fading in the pie, just set the load speed to 0
 		var loadSpeed = loadEffects.speed;
 		if (loadEffects.effect === "none") {
-			loadSpeed = 0;
+    		g.append("path")
+    		    .attr("class", pie.cssPrefix + "arcEl")
+    			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
+    			.attr("fill", function(d, i) { return d.color;
+    				/*var color = colors[i];
+    				if (pie.options.misc.gradient.enabled) {
+    					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
+    				}
+    				return color;*/
+    			})
+    			.style("stroke", segmentStroke)
+    			.style("stroke-width", 1)
+    			.attr("data-index", function(d, i) { return i; })
+    			.attr("d", function(d) {
+    				return arc(d);
+    			});
+		} else {
+    		g.append("path")
+    		    .attr("class", pie.cssPrefix + "arcEl")
+    			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
+    			.attr("fill", function(d, i) { return d.color;
+    				/*var color = colors[i];
+    				if (pie.options.misc.gradient.enabled) {
+    					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
+    				}
+    				return color;*/
+    			})
+    			.style("stroke", segmentStroke)
+    			.style("stroke-width", 1)
+    			.transition()
+    			.ease("cubic-in-out")
+    			.duration(loadSpeed)
+    			.attr("data-index", function(d, i) { return i; })
+    			.attrTween("d", function(b) {
+    				var i = d3.interpolate({ value: 0 }, b);
+    				return function(t) {
+    					return arc(i(t));
+    				};
+    			});
 		}
 
-		g.append("path")
-			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
-			.attr("fill", function(d, i) { return d.color;
-				/*var color = colors[i];
-				if (pie.options.misc.gradient.enabled) {
-					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
-				}
-				return color;*/
-			})
-			.style("stroke", segmentStroke)
-			.style("stroke-width", 1)
-			.transition()
-			.ease("cubic-in-out")
-			.duration(loadSpeed)
-			.attr("data-index", function(d, i) { return i; })
-			.attrTween("d", function(b) {
-				var i = d3.interpolate({ value: 0 }, b);
-				return function(t) {
-					return arc(i(t));
-				};
-			});
-
-		pie.svg.selectAll("g." + pie.cssPrefix + "arc")
+		pie.svg.selectAll("." + pie.cssPrefix + "arc")
 			.attr("transform", function(d, i) {
 				var angle = 0;
 				if (i > 0) {
@@ -2389,23 +2405,39 @@ var segments = {
     			.append("g")
     			.attr("class", pie.cssPrefix + "garc");
 
-    		gr.append("path")
-    			.attr("id", function(d, i) { return pie.cssPrefix + "gsegment" + i; })
-    			.attr("fill", function(d, i) {
-    				return  d.color;
-    			})
-    			.style("stroke", segmentStroke)
-    			.style("stroke-width", 1)
-    			.transition()
-    			.ease("cubic-in-out")
-    			.duration(loadSpeed)
-    			.attr("data-index", function(d, i) { return i; })
-    			.attrTween("d", function(b) {
-    				var i = d3.interpolate({ value: 0 }, b);
-    				return function(t) {
-    					return groupArc(i(t));
-    				};
-    			});
+            if (loadEffects.effect === "none") {
+        		gr.append("path")
+        		    .attr("class", pie.cssPrefix + "garcEl")
+        			.attr("id", function(d, i) { return pie.cssPrefix + "gsegment" + i; })
+        			.attr("fill", function(d, i) {
+        				return  d.color;
+        			})
+        			.style("stroke", segmentStroke)
+        			.style("stroke-width", 1)
+        			.attr("data-index", function(d, i) { return i; })
+        			.attr("d", function(d) {
+        				return arc(d);
+        			});
+            } else {
+        		gr.append("path")
+        		    .attr("class", pie.cssPrefix + "garcEl")
+        			.attr("id", function(d, i) { return pie.cssPrefix + "gsegment" + i; })
+        			.attr("fill", function(d, i) {
+        				return  d.color;
+        			})
+        			.style("stroke", segmentStroke)
+        			.style("stroke-width", 1)
+        			.transition()
+        			.ease("cubic-in-out")
+        			.duration(loadSpeed)
+        			.attr("data-index", function(d, i) { return i; })
+        			.attrTween("d", function(b) {
+        				var i = d3.interpolate({ value: 0 }, b);
+        				return function(t) {
+        					return groupArc(i(t));
+        				};
+        			});
+            }
 
     		pie.svg.selectAll("g." + pie.cssPrefix + "garc")
     			.attr("transform", function(d, i) {
@@ -2419,6 +2451,57 @@ var segments = {
     	    pie.groupArc = groupArc;
 		}
 		pie.arc = arc;
+	},
+
+	reshapeSegment: function(pie) {
+	    pie.svg.select("." + pie.cssPrefix + "pieChart")
+	        .attr("transform", function() { return math.getPieTranslateCenter(pie.pieCenter); });
+
+	    pie.arc = d3.svg.arc()
+			.innerRadius(pie.innerRadius)
+			.outerRadius(pie.outerRadius)
+			.startAngle(0)
+			.endAngle(function(d) {
+				return (d.value / pie.totalSize) * 2 * Math.PI;
+			});
+
+		pie.svg.selectAll("." + pie.cssPrefix + "arcEl")
+		    .attr("d", function(d) {
+		        return pie.arc(d);
+		    });
+
+		pie.svg.selectAll("g." + pie.cssPrefix + "arc")
+			.attr("transform", function(d, i) {
+				var angle = 0;
+				if (i > 0) {
+					angle = segments.getSegmentAngle(i-1, pie.options.data.content, pie.totalSize);
+				}
+				return "rotate(" + (angle - 90) + ")";
+		    });
+
+	    if (pie.options.groups.content) {
+            pie.groupArc = d3.svg.arc()
+    			.innerRadius(0)
+    			.outerRadius(pie.innerRadius)
+    			.startAngle(0)
+    			.endAngle(function(d) {
+    				return (d.value / pie.totalSize) * 2 * Math.PI;
+    			});
+
+    		pie.svg.selectAll("." + pie.cssPrefix + "garcEl")
+    		    .attr("d", function(d) {
+    		        return pie.groupArc(d);
+    		    });
+
+    		pie.svg.selectAll("g." + pie.cssPrefix + "garc")
+    			.attr("transform", function(d, i) {
+    				var angle = 0;
+    				if (i > 0) {
+    					angle = segments.getSegmentAngle(i-1, pie.options.groups.content, pie.totalSize);
+    				}
+    				return "rotate(" + (angle - 90) + ")";
+    			});
+	    }
 	},
 
 	addGradients: function(pie) {
@@ -3093,6 +3176,14 @@ var tt = {
 		_init.call(this);
 	};
 
+	d3pie.prototype.redrawWithoutLoading = function() {
+		d3.selectAll("." + this.cssPrefix + "labels-outer").remove();
+		d3.selectAll("." + this.cssPrefix + "labels-extra").remove();
+		d3.selectAll("." + this.cssPrefix + "lineGroups").remove();
+        d3.selectAll("." + this.cssPrefix + "tooltips").remove();
+		_initNoLoading.call(this);
+	};
+
 	d3pie.prototype.destroy = function() {
 		this.element.innerHTML = ""; // clear out the SVG
 		d3.select(this.element).attr(_scriptName, null); // remove the data attr
@@ -3308,6 +3399,137 @@ var tt = {
           }
 
           segments.addSegmentEventHandlers(self);
+		});
+	};
+
+	var _initNoLoading = function() {
+
+		// prep-work
+		this.outerLabelGroupData = [];
+		/* this.svg = helpers.addSVGSpace(this);
+
+		// store info about the main text components as part of the d3pie object instance
+		this.textComponents = {
+			headerHeight: 0,
+			title: {
+				exists: this.options.header.title.text !== "",
+				h: 0,
+				w: 0
+			},
+			subtitle: {
+				exists: this.options.header.subtitle.text !== "",
+				h: 0,
+				w: 0
+			},
+			footer: {
+				exists: this.options.footer.text !== "",
+				h: 0,
+				w: 0
+			}
+		};
+
+		this.outerLabelGroupData = [];
+
+		// add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
+		if (this.textComponents.title.exists) {
+			text.addTitle(this);
+		}
+		if (this.textComponents.subtitle.exists) {
+			text.addSubtitle(this);
+		}
+		text.addFooter(this);
+
+		// the footer never moves. Put it in place now*/
+		var self = this;
+		/*helpers.whenIdExists(this.cssPrefix + "footer", function() {
+			text.positionFooter(self);
+			var d3 = helpers.getDimensions(self.cssPrefix + "footer");
+			self.textComponents.footer.h = d3.h;
+			self.textComponents.footer.w = d3.w;
+		});*/
+
+		// now create the pie chart and position everything accordingly
+		var reqEls = [];
+		if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
+		if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
+		if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }
+
+		helpers.whenElementsExist(reqEls, function() {
+		    /*
+			if (self.textComponents.title.exists) {
+				var d1 = helpers.getDimensions(self.cssPrefix + "title");
+				self.textComponents.title.h = d1.h;
+				self.textComponents.title.w = d1.w;
+			}
+			if (self.textComponents.subtitle.exists) {
+				var d2 = helpers.getDimensions(self.cssPrefix + "subtitle");
+				self.textComponents.subtitle.h = d2.h;
+				self.textComponents.subtitle.w = d2.w;
+			}
+			// now compute the full header height
+			if (self.textComponents.title.exists || self.textComponents.subtitle.exists) {
+				var headerHeight = 0;
+				if (self.textComponents.title.exists) {
+					headerHeight += self.textComponents.title.h;
+					if (self.textComponents.subtitle.exists) {
+						headerHeight += self.options.header.titleSubtitlePadding;
+					}
+				}
+				if (self.textComponents.subtitle.exists) {
+					headerHeight += self.textComponents.subtitle.h;
+				}
+				self.textComponents.headerHeight = headerHeight;
+			}*/
+
+			// at this point, all main text component dimensions have been calculated
+			math.computePieRadius(self);
+
+			// this value is used all over the place for placing things and calculating locations. We figure it out ONCE
+			// and store it as part of the object
+			math.calculatePieCenter(self);
+
+			// position the title and subtitle
+			//text.positionTitle(self);
+			//text.positionSubtitle(self);
+
+			// now create the pie chart segments, and gradients if the user desired
+			if (self.options.misc.gradient.enabled) {
+				segments.addGradients(self);
+			}
+			self.options.effects.load.effect = "none";
+			//segments.create(self); // also creates this.arc
+			segments.reshapeSegment(self);
+			//labels.add(self, "inner", self.options.labels.inner.format);
+
+			labels.add(self, "outer", self.options.labels.outer.format);
+
+			// position the label elements relatively within their individual group (label, percentage, value)
+			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
+			labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
+			labels.computeOuterLabelCoords(self);
+
+			// this is (and should be) dumb. It just places the outer groups at their calculated, collision-free positions
+			labels.positionLabelGroups(self, "outer");
+
+    		// 2. now adjust those positions to try to accommodate conflicts
+    		labels.resolveOuterLabelCollisionsNew(self);
+			// we use the label line positions for many other calculations, so ALWAYS compute them
+			labels.computeLabelLinePositions(self);
+
+			// only add them if they're actually enabled
+			if (self.options.labels.lines.enabled && self.options.labels.outer.format !== "none") {
+				labels.addLabelLines(self);
+			}
+
+			//labels.positionLabelGroups(self, "inner");
+			//labels.fadeInLabelsAndLines(self);
+
+            // add and position the tooltips
+            if (self.options.tooltips.enabled) {
+                tt.addTooltips(self);
+            }
+
+            segments.addSegmentEventHandlers(self);
 		});
 	};
 
