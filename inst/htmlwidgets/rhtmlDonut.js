@@ -32,8 +32,8 @@ function DetailedDonutPlot() {
 		h = (h < 0) ? 0 : h;
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
-
-        pie.options.labels.mainLabel.maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
+        pie.options.labels.mainLabel.maxLabelLength = settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength;
         pie.redrawWithoutLoading();
     }
 
@@ -251,8 +251,9 @@ function DetailedDonutPlot() {
             			color: "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
-            			maxLabelLength: maxLabelLength,
+            			maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
             			minFontSize: settings.minFontSize,
+            			labelsInner: settings.labelsInner,
             			horizontalPadding: 8,
             			fontWeight: "bold"
             		}

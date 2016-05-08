@@ -25,7 +25,7 @@
 data("browser", package = "rhtmlDonut")
 labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 50)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.size = 10,
                   labels = labels, labels.size = 10,
@@ -45,7 +45,7 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 
 # order
 rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
-                  labels = labels, labels.size = 10,
+                  labels = labels, labels.size = 10, labels.inner = FALSE,
                   prefix = "", suffix = "%", order = "default",
                   max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,

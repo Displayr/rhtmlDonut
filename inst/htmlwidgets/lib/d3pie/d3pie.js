@@ -909,7 +909,8 @@ var labels = {
 		}
 
         var extraLabelGroup;
-        if (!pie.options.groups.content) {
+        // no group and labels.inner == TRUE
+        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner) {
             extraLabelGroup = pie.svg.append("g")
 			    .attr("class", pie.cssPrefix + "labels-extra")
 			    .selectAll("." + pie.cssPrefix + "labelGroup-extra")
@@ -1672,6 +1673,7 @@ var labels = {
         }
 
         var curr, prev, next;
+        // TODO: still buggy when texts are dense
         for (var i = 1; i < objs.length; i++) {
 
             curr = labelData[i];
@@ -2523,8 +2525,12 @@ var segments = {
 		//var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-inner,." + pie.cssPrefix + "labelGroup-outer");
 		//var arc = d3.selectAll("." + pie.cssPrefix + "arc,." + pie.cssPrefix + "labelGroup-outer");
         var arc = d3.selectAll("." + pie.cssPrefix + "arc");
+        var garc = d3.selectAll("." + pie.cssPrefix + "garc");
         var lb = d3.selectAll("." + pie.cssPrefix + "labelGroup-outer");
         arc.style("cursor", "pointer");
+        if (garc) {
+            garc.style("cursor", "pointer");
+        }
         lb.style("cursor", "pointer")
             .style('-webkit-touch-callout', 'none')
             .style('-webkit-user-select', 'none')
@@ -2642,7 +2648,7 @@ var segments = {
             if (pie.options.tooltips.enabled) {
                 if (pie.outerLabelGroupData[i].hide === 1 || d.value < pie.options.data.minAngle) {
                     index = segment.attr("data-index");
-                    tt.showTooltip(pie, index);
+                    tt.showTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
                 }
             }
 
@@ -2651,7 +2657,8 @@ var segments = {
 		});
 
         arc.on("mousemove", function() {
-          tt.moveTooltip(pie);
+            var index = d3.select(this).select("path").attr("data-index");
+            tt.moveTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
         });
 
 		arc.on("mouseout", function(d, i) {
@@ -2677,7 +2684,58 @@ var segments = {
             if (pie.options.tooltips.enabled) {
 
                 index = segment.attr("data-index");
-                tt.hideTooltip(pie, index);
+                tt.hideTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
+
+            }
+
+			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
+		});
+
+		garc.on("mouseover", function(d, i) {
+			var currentEl = d3.select(this);
+			var segment, index;
+			segment = currentEl.select("path");
+
+			if (pie.options.effects.highlightSegmentOnMouseover) {
+				var segColor = d.color;
+				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+			}
+
+            if (pie.options.tooltips.enabled) {
+                if (1 > 0) {
+                    index = segment.attr("data-index");
+                    tt.showTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+                }
+            }
+
+			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded);
+		});
+
+        garc.on("mousemove", function() {
+            var index = d3.select(this).select("path").attr("data-index");
+            tt.moveTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+        });
+
+		garc.on("mouseout", function(d, i) {
+			var currentEl = d3.select(this);
+			var segment, index;
+			segment = currentEl.select("path");
+
+			if (pie.options.effects.highlightSegmentOnMouseover) {
+				//index = segment.attr("data-index");
+				var color = d.color;
+				//if (pie.options.misc.gradient.enabled) {
+				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+				//}
+				segment.style("fill", color);
+			}
+
+            if (pie.options.tooltips.enabled) {
+
+                index = segment.attr("data-index");
+                tt.hideTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
 
             }
 
@@ -3049,24 +3107,91 @@ var tt = {
 					return -(dims.h / 2) + 1;
 				}
 			});
+
+		if (pie.options.groups.content) {
+    		var groupTips = pie.svg.insert("g")
+    			.attr("class", pie.cssPrefix + "gtooltips");
+
+            groupTips.selectAll("." + pie.cssPrefix + "gtooltip")
+              .data(pie.options.groups.content)
+              .enter()
+              .append("g")
+                .attr("class", pie.cssPrefix + "gtooltip")
+                .attr("id", function(d, i) { return pie.cssPrefix + "gtooltip" + i; })
+                .style("opacity", 0)
+              .append("rect")
+                .attr({
+        			    rx: pie.options.tooltips.styles.borderRadius,
+        			    ry: pie.options.tooltips.styles.borderRadius,
+        			    x: -pie.options.tooltips.styles.padding,
+        			    opacity: pie.options.tooltips.styles.backgroundOpacity
+        		    })
+        	    .style("fill", pie.options.tooltips.styles.backgroundColor);
+
+            groupTips.selectAll("." + pie.cssPrefix + "gtooltip")
+              .data(pie.options.groups.content)
+              .append("text")
+                .attr("fill", function(d) { return pie.options.tooltips.styles.color; })
+                .style("font-size", function(d) { return pie.options.tooltips.styles.fontSize; })
+                .style("font-family", function(d) { return pie.options.tooltips.styles.font; })
+                .text(function(d, i) {
+        				    if (pie.options.data.display == "percentage") {
+        				        var val = dataFormatter(d.value / pie.totalSize * 100);
+        				    } else {
+        				        var val = dataFormatter(d.value);
+        				    }
+        				    if (pie.options.data.prefix) {
+        				        val = pie.options.data.prefix + val;
+        				    }
+        				    if (pie.options.data.suffix) {
+        				        val = val + pie.options.data.suffix;
+        				    }
+        				    return d.label + ": " + val;
+                  var caption = pie.options.tooltips.string;
+                  if (pie.options.tooltips.type === "caption") {
+                    caption = d.caption;
+                  }
+                  return tt.replacePlaceholders(pie, caption, i, {
+                    label: d.label,
+                    value: d.value,
+                    percentage: segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces)
+                  });
+                });
+
+    		groupTips.selectAll("." + pie.cssPrefix + "gtooltip rect")
+    			.attr({
+    				width: function (d, i) {
+    					var dims = helpers.getDimensions(pie.cssPrefix + "gtooltip" + i);
+    					return dims.w + (2 * pie.options.tooltips.styles.padding);
+    				},
+    				height: function (d, i) {
+    					var dims = helpers.getDimensions(pie.cssPrefix + "gtooltip" + i);
+    					return dims.h + (2 * pie.options.tooltips.styles.padding);
+    				},
+    				y: function (d, i) {
+    					var dims = helpers.getDimensions(pie.cssPrefix + "gtooltip" + i);
+    					return -(dims.h / 2) + 1;
+    				}
+    			});
+		}
 	},
 
-  showTooltip: function(pie, index) {
+  showTooltip: function(pie, selector) {
 
-	  var fadeInSpeed = pie.options.tooltips.styles.fadeInSpeed;
+	  /*var fadeInSpeed = pie.options.tooltips.styles.fadeInSpeed;
 	  if (tt.currentTooltip === index) {
 		  fadeInSpeed = 1;
-	  }
+	  }*/
 
-    tt.currentTooltip = index;
-    d3.select("#" + pie.cssPrefix + "tooltip" + index)
+    // tt.currentTooltip = index;
+    d3.select(selector)
       .style("opacity", function() { return 1; });
 
-    tt.moveTooltip(pie);
+    tt.moveTooltip(pie, selector);
   },
 
-  moveTooltip: function(pie) {
-    d3.selectAll("#" + pie.cssPrefix + "tooltip" + tt.currentTooltip)
+  moveTooltip: function(pie, selector) {
+    d3.select(selector)
       .attr("transform", function(d) {
         var mouseCoords = d3.mouse(this.parentNode);
         var x = mouseCoords[0] + pie.options.tooltips.styles.padding + 2;
@@ -3075,13 +3200,13 @@ var tt = {
       });
   },
 
-  hideTooltip: function(pie, index) {
-    d3.select("#" + pie.cssPrefix + "tooltip" + index)
+  hideTooltip: function(pie, selector) {
+    d3.select(selector)
       .style("opacity", function() { return 0; });
 
     // move the tooltip offscreen. This ensures that when the user next mouseovers the segment the hidden
     // element won't interfere
-    d3.select("#" + pie.cssPrefix + "tooltip" + tt.currentTooltip)
+    d3.select(selector)
        .attr("transform", function(d, i) {
 
          // klutzy, but it accounts for tooltip padding which could push it onscreen
@@ -3181,6 +3306,7 @@ var tt = {
 		d3.selectAll("." + this.cssPrefix + "labels-extra").remove();
 		d3.selectAll("." + this.cssPrefix + "lineGroups").remove();
         d3.selectAll("." + this.cssPrefix + "tooltips").remove();
+        d3.selectAll("." + this.cssPrefix + "gtooltips").remove();
 		_initNoLoading.call(this);
 	};
 

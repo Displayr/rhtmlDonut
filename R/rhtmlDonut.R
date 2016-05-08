@@ -16,6 +16,7 @@ Donut <- function(
     labels.size = 10,
     labels.color = NULL,
     labels.minFontSize = 8,
+    labels.inner = FALSE,
     groups = NULL,
     groups.font = NULL,
     groups.size = 10,
@@ -25,7 +26,7 @@ Donut <- function(
     order = "default",
     order.control = TRUE,
     border.color = "white",
-    max.label.length = 150,
+    max.label.length = NULL,
     width = NULL,
     height = NULL) {
 
@@ -128,6 +129,7 @@ Donut <- function(
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,
+        labelsInner = labels.inner,
         groups = groups, # length = n
         groupsFont = groups.font, # string
         groupsSize = groups.size, # scalar
