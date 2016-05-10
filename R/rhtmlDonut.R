@@ -1,4 +1,4 @@
-#' Create an rhtmlDonut plot
+#' Create a Donut plot
 #' @param values.display choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 #' @param border.color c("white", "none", hex colors)

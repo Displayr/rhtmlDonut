@@ -868,6 +868,7 @@ var labels = {
 				.call(labels.wrap, settings.mainLabel.maxLabelLength)
 				.append("tspan")
 				.style("font-weight", "normal")
+				.style("font-family", pie.options.data.font)
 				.style("font-size", settings.mainLabel.minFontSize + "px")
 				.attr("y", 0)
 				.text(function(d,i) {
@@ -941,11 +942,51 @@ var labels = {
 				})
 				.attr("x", 0)
 				.attr("y", 0)
-				.attr("dy", 0)
+				.attr("dy", ".35em")
 				.style("font-size", settings.mainLabel.minFontSize + "px")
 				.style("font-family", settings.mainLabel.font)
 				.style("fill", settings.mainLabel.color)
 				.style("font-weight", settings.mainLabel.fontWeight);
+        }
+
+        // add the group label
+        if (pie.options.groups.content) {
+            groupLabelGroup = pie.svg.append("g")
+			    .attr("class", pie.cssPrefix + "labels-group")
+			    .selectAll("." + pie.cssPrefix + "labelGroup-group")
+			    .data(pie.options.groups.content)
+			    .enter()
+			    .append("g")
+                .attr("id", function(d, i) { return pie.cssPrefix + "labelGroup" + i + "-group"; })
+                .attr("data-index", function(d, i) { return i; })
+                .attr("class", pie.cssPrefix + "labelGroup-group")
+                .style("opacity", 1)
+                .append("text")
+				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-group"; })
+				.attr("class", pie.cssPrefix + "segmentMainLabel-group")
+				.text(function(d, i) {
+				    var val;
+				    if (pie.options.data.display == "percentage") {
+				        val = dataFormatter(d.value / pie.totalSize * 100);
+				    } else {
+				        val = dataFormatter(d.value);
+				    }
+				    if (pie.options.data.prefix) {
+				        val = pie.options.data.prefix + val;
+				    }
+				    if (pie.options.data.suffix) {
+				        val = val + pie.options.data.suffix;
+				    }
+					return d.label + ":  " + val;
+				})
+				.attr("x", 0)
+				.attr("y", 0)
+                .attr("dy", ".35em")
+                .attr("text-anchor", "middle")
+				.style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
+				.style("font-family", pie.options.groups.font)
+				.style("fill", pie.options.labels.mainLabel.color)
+				.style("font-weight", pie.options.groups.fontWeight);
         }
 		// 2. Add the percentage label
 		/*if (include.percentage) {
@@ -987,6 +1028,70 @@ var labels = {
 				.style("fill", settings.value.color);
 		}*/
 	},
+
+	/**
+	 * @param i 0-N where N is the dataset size - 1.
+	 */
+	getIdealOuterLabelPositions: function(pie, i) {
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
+		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+
+		var originalX = pie.pieCenter.x;
+		var originalY = pie.pieCenter.y - (pie.outerRadius + pie.options.labels.outer.pieDistance);
+		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
+
+		// if the label is on the left half of the pie, adjust the values
+		var hemisphere = "right"; // hemisphere
+
+        if (angle > 270 || angle < 90) {
+			newCoords.x -= (labelGroupDims.width + pie.options.labels.mainLabel.horizontalPadding);
+			hemisphere = "left";
+		} else {
+			newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
+		}
+		/*if (angle > 180) {
+			newCoords.x -= (labelGroupDims.width + 8);
+			hemisphere = "left";
+		} else {
+			newCoords.x += 8;
+		}*/
+
+		pie.outerLabelGroupData[i] = {
+		    i: i,
+			x: newCoords.x,
+			y: newCoords.y,
+			w: labelGroupDims.width,
+			h: labelGroupDims.height,
+			hs: hemisphere
+		};
+	},
+
+	getGroupLabelPositions: function(pie, i) {
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-group").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
+
+		var angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalSize, { midpoint: true });
+
+		var originalX = pie.pieCenter.x;
+		var originalY = pie.pieCenter.y - pie.innerRadius/2;
+		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
+
+		pie.groupLabelGroupData[i] = {
+		    i: i,
+			x: newCoords.x,
+			y: newCoords.y,
+			w: labelGroupDims.width,
+			h: labelGroupDims.height
+		};
+	},
+
 
     wrap: function(text, width) {
         var lineNumbers = [];
@@ -1379,7 +1484,23 @@ var labels = {
 		};
 	},
 
+	positionGroupLabels: function(pie) {
 
+		// 1. figure out the ideal positions for the outer labels
+		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-group")
+			.each(function(d, i) {
+				return labels.getGroupLabelPositions(pie, i);
+			});
+        console.log(pie.groupLabelGroupData);
+		d3.selectAll("." + pie.cssPrefix + "labelGroup-group")
+			.style("opacity", 1)
+			.attr("transform", function(d, i) {
+				var x, y;
+				x = pie.groupLabelGroupData[i].x;
+				y = pie.groupLabelGroupData[i].y;
+			    return "translate(" + x + "," + y + ")";
+		    });
+	},
 	/**
 	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
 	 * 1. Make a first pass and position them in the ideal positions, based on the pie sizes
@@ -1416,7 +1537,7 @@ var labels = {
         labels.placeObj(pie, objArray, center);
 	},
 
-	rotate: function(x, y, xm, ym, a) {
+	/*rotate: function(x, y, xm, ym, a) {
 
         a = a * Math.PI / 180; // convert to radians
 
@@ -1427,7 +1548,7 @@ var labels = {
 		yr = (x - xm) * sin(a) + (y - ym) * cos(a) + ym;
 
 		return { x: xr, y: yr };
-	},
+	},*/
 
 	getDist: function(ax, ay, bx, by) {
 	    return Math.sqrt((ax-bx)*(ax-bx) + (ay-by)*(ay-by));
@@ -2262,48 +2383,8 @@ var labels = {
 
 		pie.outerLabelGroupData[nextIndex].x = newXPos;
 		pie.outerLabelGroupData[nextIndex].y = newYPos;
-	},
-
-	/**
-	 * @param i 0-N where N is the dataset size - 1.
-	 */
-	getIdealOuterLabelPositions: function(pie, i) {
-        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
-        if (!labelGroupNode) {
-          return;
-        }
-        var labelGroupDims = labelGroupNode.getBBox();
-		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
-
-		var originalX = pie.pieCenter.x;
-		var originalY = pie.pieCenter.y - (pie.outerRadius + pie.options.labels.outer.pieDistance);
-		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
-
-		// if the label is on the left half of the pie, adjust the values
-		var hemisphere = "right"; // hemisphere
-
-        if (angle > 270 || angle < 90) {
-			newCoords.x -= (labelGroupDims.width + pie.options.labels.mainLabel.horizontalPadding);
-			hemisphere = "left";
-		} else {
-			newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
-		}
-		/*if (angle > 180) {
-			newCoords.x -= (labelGroupDims.width + 8);
-			hemisphere = "left";
-		} else {
-			newCoords.x += 8;
-		}*/
-
-		pie.outerLabelGroupData[i] = {
-		    i: i,
-			x: newCoords.x,
-			y: newCoords.y,
-			w: labelGroupDims.width,
-			h: labelGroupDims.height,
-			hs: hemisphere
-		};
 	}
+
 };
 
 	//// --------- segments.js -----------
@@ -3304,6 +3385,7 @@ var tt = {
 	d3pie.prototype.redrawWithoutLoading = function() {
 		d3.selectAll("." + this.cssPrefix + "labels-outer").remove();
 		d3.selectAll("." + this.cssPrefix + "labels-extra").remove();
+		d3.selectAll("." + this.cssPrefix + "labels-group").remove();
 		d3.selectAll("." + this.cssPrefix + "lineGroups").remove();
         d3.selectAll("." + this.cssPrefix + "tooltips").remove();
         d3.selectAll("." + this.cssPrefix + "gtooltips").remove();
@@ -3428,6 +3510,7 @@ var tt = {
 		};
 
 		this.outerLabelGroupData = [];
+		this.groupLabelGroupData = [];
 
 		// add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
 		if (this.textComponents.title.exists) {
@@ -3498,6 +3581,9 @@ var tt = {
 			//labels.add(self, "inner", self.options.labels.inner.format);
 			labels.add(self, "outer", self.options.labels.outer.format);
 
+			if (self.options.groups.content) {
+			    labels.positionGroupLabels(self);
+			}
 			// position the label elements relatively within their individual group (label, percentage, value)
 			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
 			labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
@@ -3532,6 +3618,7 @@ var tt = {
 
 		// prep-work
 		this.outerLabelGroupData = [];
+		this.groupLabelGroupData = [];
 		/* this.svg = helpers.addSVGSpace(this);
 
 		// store info about the main text components as part of the d3pie object instance
@@ -3628,6 +3715,10 @@ var tt = {
 			//labels.add(self, "inner", self.options.labels.inner.format);
 
 			labels.add(self, "outer", self.options.labels.outer.format);
+
+			if (self.options.groups.content) {
+			    labels.positionGroupLabels(self);
+			}
 
 			// position the label elements relatively within their individual group (label, percentage, value)
 			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);

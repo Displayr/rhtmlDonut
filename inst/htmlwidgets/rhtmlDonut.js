@@ -248,7 +248,7 @@ function DetailedDonutPlot() {
             			offsetSize: offsetSize
             		},
             		mainLabel: {
-            			color: "#333333",
+            			color: settings.labelsColor ? settings.labelsColor : "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
             			maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
@@ -277,6 +277,7 @@ function DetailedDonutPlot() {
             	},
             	groups: {
             	    content: groupData,
+            	    color: settings.groupsColor ? settings.groupsColor : "#333333",
             	    font: settings.groupsFont ? settings.groupsFont : "arial",
             	    fontSize: settings.groupsSize ? settings.groupsSize : 10
             	}

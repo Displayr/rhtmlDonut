@@ -2,7 +2,7 @@
 % Please edit documentation in R/rhtmlDonut.R
 \name{Donut}
 \alias{Donut}
-\title{Create an rhtmlDonut plot}
+\title{Create a Donut plot}
 \usage{
 Donut(values, values.font = NULL, values.size = 10, values.color = NULL,
   values.display = "percentage", value.thres = NULL, labels,
@@ -26,6 +26,6 @@ Donut(values, values.font = NULL, values.size = 10, values.color = NULL,
 a donut plot
 }
 \description{
-Create an rhtmlDonut plot
+Create a Donut plot
 }
 
