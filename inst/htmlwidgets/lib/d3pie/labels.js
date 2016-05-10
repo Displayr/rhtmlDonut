@@ -153,8 +153,27 @@ var labels = {
                 .attr("class", pie.cssPrefix + "labelGroup-group")
                 .style("opacity", 1)
                 .append("text")
+				.attr("x", 0)
+				.attr("y", 0)
+                .attr("text-anchor", "middle")
+				.style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
+				.style("font-family", pie.options.groups.font)
+				.style("fill", pie.options.labels.mainLabel.color)
+				.style("font-weight", pie.options.groups.fontWeight)
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-group"; })
 				.attr("class", pie.cssPrefix + "segmentMainLabel-group")
+				.attr("dy", ".35em");
+
+			groupLabelGroup.append("tspan")
+				.attr("x", 0)
+				.attr("y", 0)
+			    .attr("dy", 0)
+				.text(function(d) {
+				    return d.label + ":  ";
+				});
+
+			groupLabelGroup.append("tspan")
+			    .attr("dy", 0)
 				.text(function(d, i) {
 				    var val;
 				    if (pie.options.data.display == "percentage") {
@@ -168,16 +187,8 @@ var labels = {
 				    if (pie.options.data.suffix) {
 				        val = val + pie.options.data.suffix;
 				    }
-					return d.label + ":  " + val;
-				})
-				.attr("x", 0)
-				.attr("y", 0)
-                .attr("dy", ".35em")
-                .attr("text-anchor", "middle")
-				.style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
-				.style("font-family", pie.options.groups.font)
-				.style("fill", pie.options.labels.mainLabel.color)
-				.style("font-weight", pie.options.groups.fontWeight);
+					return val;
+				});
         }
 		// 2. Add the percentage label
 		/*if (include.percentage) {
@@ -271,7 +282,7 @@ var labels = {
 		var angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalSize, { midpoint: true });
 
 		var originalX = pie.pieCenter.x;
-		var originalY = pie.pieCenter.y - pie.innerRadius/2;
+		var originalY = pie.pieCenter.y - pie.innerRadius*0.6;
 		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
 
 		pie.groupLabelGroupData[i] = {
@@ -620,7 +631,31 @@ var labels = {
     // puts the group labels
 	positionGroupLabels: function(pie) {
 
-		// 1. figure out the ideal positions for the outer labels
+	    var checkBounds = function(bb, stAngle, d, i) {
+            var center = {},
+                pts = [];
+            center.x = pie.groupLabelGroupData[i].x - pie.pieCenter.x;
+            center.y = pie.groupLabelGroupData[i].y - pie.pieCenter.y;
+
+            pts.push({ x : center.x + bb.x,     y : center.y + bb.y});       // top left point
+            pts.push({ x : pts[0].x + bb.width, y : pts[0].y});              // top right point
+            pts.push({ x : pts[0].x,            y : pts[0].y + bb.height});  // bottom left point
+            pts.push({ x : pts[0].x + bb.width, y : pts[0].y + bb.height});  // bottom right point
+
+            var dtAngle = pie.groupArc.endAngle()(d)/Math.PI*180;
+            var edAngle = stAngle + dtAngle;
+            var r1 = 0;
+            var r2 = pie.innerRadius;
+
+            pie.groupLabelGroupData[i].hide = !(
+                labels.ptInArc(pts[0], r1, r2, stAngle, edAngle) &&
+                labels.ptInArc(pts[1], r1, r2, stAngle, edAngle) &&
+                labels.ptInArc(pts[2], r1, r2, stAngle, edAngle) &&
+                labels.ptInArc(pts[3], r1, r2, stAngle, edAngle));
+
+            return edAngle;
+	    };
+
 		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-group")
 			.each(function(d, i) {
 				return labels.getGroupLabelPositions(pie, i);
@@ -635,44 +670,31 @@ var labels = {
 			    return "translate(" + x + "," + y + ")";
 		    })
 		    .each(function(d,i) {
-		        var bb = this.getBBox(),
-		            center = {};
-                center.x = pie.groupLabelGroupData[i].x - pie.pieCenter.x;
-                center.y = pie.groupLabelGroupData[i].y - pie.pieCenter.y;
+		        var bb = this.getBBox();
 
-                var topLeft = {
-                    x : center.x + bb.x,
-                    y : center.y + bb.y
-                };
-                //console.log("topleft " + topLeft.x + ", " + topLeft.y);
-                var topRight = {
-                    x : topLeft.x + bb.width,
-                    y : topLeft.y
-                };
+                var stAngleTemp = checkBounds(bb, stAngle, d, i);
 
-                var bottomLeft = {
-                    x : topLeft.x,
-                    y : topLeft.y + bb.height
-                };
+                if (pie.groupLabelGroupData[i].hide) {
 
-                var bottomRight = {
-                    x : topLeft.x + bb.width,
-                    y : topLeft.y + bb.height
-                };
+                    var thisText = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-group");
 
-                var dtAngle = pie.groupArc.endAngle()(d)/Math.PI*180;
-                var edAngle = stAngle + dtAngle;
-                var r1 = 0;
-                var r2 = pie.innerRadius;
+                    thisText.selectAll("tspan")
+                        .attr("x", 0)
+                        .attr("dy", function(d,i) {
+                            var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                            if (i == tspans.length - 1) {
+                                var tspanLast = tspans[tspans.length-2];
+                                return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                            } else {
+                                return this.getAttribute("dy");
+                            }
+                        });
 
-                // console.log("st angle " + stAngle + " end angle " + edAngle);
+    		        bb = this.getBBox();
+    		        stAngleTemp = checkBounds(bb, stAngle, d, i);
+                }
 
-                pie.groupLabelGroupData[i].hide = !(
-                    labels.ptInArc(topLeft, r1, r2, stAngle, edAngle) &&
-                    labels.ptInArc(topRight, r1, r2, stAngle, edAngle) &&
-                    labels.ptInArc(bottomLeft, r1, r2, stAngle, edAngle) &&
-                    labels.ptInArc(bottomRight, r1, r2, stAngle, edAngle));
-                stAngle = edAngle;
+                stAngle = stAngleTemp;
 		    })
 		    .style("display", function(d,i) {
 		        return pie.groupLabelGroupData[i].hide ? "none" : "inline";
