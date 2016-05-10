@@ -4,6 +4,9 @@
 #' @param border.color c("white", "none", hex colors)
 #' @param value.thres threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3
 
+#' @return a donut plot
+#' @export
+#'
 Donut <- function(
     values,
     values.font = NULL,
