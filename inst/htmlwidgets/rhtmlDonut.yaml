@@ -6,7 +6,15 @@ dependencies:
   - name: d3pie
     version: 0.1.8
     src: htmlwidgets/lib/d3pie
-    script: d3pie.js
+    script: 
+        - d3pie.js
+        - validate.js
+        - helpers.js
+        - math.js
+        - labels.js
+        - segments.js
+        - text.js
+        - tooltip.js
     stylesheet: d3pie.css
   - name: rhtmlDonut
     version: 0.0.1
