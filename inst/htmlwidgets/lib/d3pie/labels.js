@@ -672,7 +672,7 @@ var labels = {
 
 		        pie.groupLabelGroupData[i].stAngle = stAngle;
 		        pie.groupLabelGroupData[i].edAngle = stAngle + pie.groupArc.endAngle()(d)/Math.PI*180;
-
+                pie.groupLabelGroupData[i].wrapped = false;
                 checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
 
                 if (pie.groupLabelGroupData[i].hide) {
@@ -691,6 +691,8 @@ var labels = {
                             }
                         });
 
+                    pie.groupLabelGroupData[i].wrapped = true;
+
     		        bb = this.getBBox();
     		        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
                 }
@@ -702,43 +704,58 @@ var labels = {
 		    })
 		    .each(function(d,i) {
 
-		        if (!pie.groupLabelGroupData[i].hide) {
+		        var thisText = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-group");
+		        var currSize = parseFloat(thisText.style("font-size"));
 
-		            var thisText = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-group");
-		            var currSize = parseFloat(thisText.style("font-size"));
-
-		            while (currSize < groupSize) {
+		            while (currSize < groupSize && !pie.groupLabelGroupData[i].hide) {
 		                currSize += 1;
 		                thisText.style("font-size", currSize + "px");
 		                var bb = this.getBBox();
                         checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+
 		                if (pie.groupLabelGroupData[i].hide){
 
-                            thisText.selectAll("tspan")
-                                .attr("x", 0)
-                                .attr("dy", function(d,i) {
-                                    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
-                                    if (i == tspans.length - 1) {
-                                        var tspanLast = tspans[tspans.length-2];
-                                        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
-                                    } else {
-                                        return this.getAttribute("dy");
-                                    }
-                                });
-
-            		        bb = this.getBBox();
-            		        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
-
-		                    if (pie.groupLabelGroupData[i].hide){
+                            // if already wrapped, undo text size increase
+		                    if (pie.groupLabelGroupData[i].wrapped) {
     		                    currSize -= 1;
         		                thisText.style("font-size", currSize + "px");
-        		                var bb = this.getBBox();
+        		                bb = this.getBBox();
                                 checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
-    		                    break;
+                                break;
+		                    } else {
+		                        // try wrapping
+                                thisText.selectAll("tspan")
+                                    .attr("x", 0)
+                                    .attr("dy", function(d,i) {
+                                        var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                                        if (i == tspans.length - 1) {
+                                            var tspanLast = tspans[tspans.length-2];
+                                            return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                                        } else {
+                                            return this.getAttribute("dy");
+                                        }
+                                    });
+
+                		        bb = this.getBBox();
+                		        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+
+                                if (pie.groupLabelGroupData[i].hide){
+        		                    currSize -= 1;
+            		                thisText.style("font-size", currSize + "px");
+                                    thisText.selectAll("tspan")[0][1].removeAttribute("x");
+                                    thisText.selectAll("tspan")[0][1].removeAttribute("dy");
+            		                bb = this.getBBox();
+                                    checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+
+                                }
+                                break;
 		                    }
 		                }
 		            }
-		        }
+
+		    })
+		    .style("display", function(d,i) {
+		        return pie.groupLabelGroupData[i].hide ? "none" : "inline";
 		    });
 
 		    //console.log(pie.groupLabelGroupData);

@@ -222,16 +222,8 @@ var segments = {
         var lb = d3.selectAll("." + pie.cssPrefix + "labelGroup-outer");
         var groupLb = d3.selectAll("." + pie.cssPrefix + "labelGroup-group");
         arc.style("cursor", "pointer");
-        if (garc) {
-            garc.style("cursor", "default");
-        }
-        groupLb.style("cursor", "default")
-            .style('-webkit-touch-callout', 'none')
-            .style('-webkit-user-select', 'none')
-            .style('-khtml-user-select', 'none')
-            .style('-moz-user-select', 'none')
-            .style('-ms-user-select', 'none')
-            .style('user-select', 'none');
+
+
         lb.style("cursor", "pointer")
             .style('-webkit-touch-callout', 'none')
             .style('-webkit-user-select', 'none')
@@ -306,6 +298,8 @@ var segments = {
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
 			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
 		});
+
+
 
 		arc.on("click", function() {
 			var currentEl = d3.select(this);
@@ -393,56 +387,97 @@ var segments = {
 			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
 		});
 
-		garc.on("mouseover", function(d, i) {
-			var currentEl = d3.select(this);
-			var segment, index;
-			segment = currentEl.select("path");
 
-			if (pie.options.effects.highlightSegmentOnMouseover) {
-				var segColor = d.color;
-				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
-			}
+        if (garc) {
+            garc.style("cursor", "default");
+            groupLb.style("cursor", "default")
+                .style('-webkit-touch-callout', 'none')
+                .style('-webkit-user-select', 'none')
+                .style('-khtml-user-select', 'none')
+                .style('-moz-user-select', 'none')
+                .style('-ms-user-select', 'none')
+                .style('user-select', 'none');
 
-            if (pie.options.tooltips.enabled) {
-                if (pie.groupLabelGroupData[i].hide) {
-                    index = segment.attr("data-index");
-                    tt.showTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+            groupLb.on("mouseover", function(d, i) {
+    			var currentEl = d3.select(this);
+    			var segment, index;
+    			segment = d3.select("#" + pie.cssPrefix + "gsegment" + i);
+
+    			if (pie.options.effects.highlightSegmentOnMouseover) {
+    				index = segment.attr("data-index");
+    				var segColor = d.color;
+    				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+    			}
+
+    		});
+
+    		groupLb.on("mouseout", function(d, i) {
+    			var currentEl = d3.select(this);
+    			var segment, index;
+    			segment = d3.select("#" + pie.cssPrefix + "gsegment" + i);
+
+    			if (pie.options.effects.highlightSegmentOnMouseover) {
+    				index = segment.attr("data-index");
+    				var color = d.color;
+    				//if (pie.options.misc.gradient.enabled) {
+    				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+    				//}
+    				segment.style("fill", color);
+    			}
+    		});
+
+    		garc.on("mouseover", function(d, i) {
+    			var currentEl = d3.select(this);
+    			var segment, index;
+    			segment = currentEl.select("path");
+
+    			if (pie.options.effects.highlightSegmentOnMouseover) {
+    				var segColor = d.color;
+    				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+    			}
+
+                if (pie.options.tooltips.enabled) {
+                    if (pie.groupLabelGroupData[i].hide) {
+                        index = segment.attr("data-index");
+                        tt.showTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+                    }
                 }
-            }
 
-			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
-			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded);
-		});
+    			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+    			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded);
+    		});
 
-        garc.on("mousemove", function() {
-            var index = d3.select(this).select("path").attr("data-index");
-            tt.moveTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
-        });
+            garc.on("mousemove", function() {
+                var index = d3.select(this).select("path").attr("data-index");
+                tt.moveTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+            });
 
-		garc.on("mouseout", function(d, i) {
-			var currentEl = d3.select(this);
-			var segment, index;
-			segment = currentEl.select("path");
+    		garc.on("mouseout", function(d, i) {
+    			var currentEl = d3.select(this);
+    			var segment, index;
+    			segment = currentEl.select("path");
 
-			if (pie.options.effects.highlightSegmentOnMouseover) {
-				//index = segment.attr("data-index");
-				var color = d.color;
-				//if (pie.options.misc.gradient.enabled) {
-				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
-				//}
-				segment.style("fill", color);
-			}
+    			if (pie.options.effects.highlightSegmentOnMouseover) {
+    				//index = segment.attr("data-index");
+    				var color = d.color;
+    				//if (pie.options.misc.gradient.enabled) {
+    				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+    				//}
+    				segment.style("fill", color);
+    			}
 
-            if (pie.options.tooltips.enabled) {
+                if (pie.options.tooltips.enabled) {
 
-                index = segment.attr("data-index");
-                tt.hideTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
+                    index = segment.attr("data-index");
+                    tt.hideTooltip(pie, "#" + pie.cssPrefix + "gtooltip" + index);
 
-            }
+                }
 
-			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
-			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
-		});
+    			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
+    			segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoutSegment, segment, isExpanded);
+    		});
+        }
+
 	},
 
 	// helper function used to call the click, mouseover, mouseout segment callback functions
