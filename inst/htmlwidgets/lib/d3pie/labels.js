@@ -631,7 +631,7 @@ var labels = {
     // puts the group labels
 	positionGroupLabels: function(pie) {
 
-	    var checkBounds = function(bb, stAngle, d, i) {
+	    var checkBounds = function(bb, stAngle, edAngle, i) {
             var center = {},
                 pts = [];
             center.x = pie.groupLabelGroupData[i].x - pie.pieCenter.x;
@@ -642,8 +642,6 @@ var labels = {
             pts.push({ x : pts[0].x,            y : pts[0].y + bb.height});  // bottom left point
             pts.push({ x : pts[0].x + bb.width, y : pts[0].y + bb.height});  // bottom right point
 
-            var dtAngle = pie.groupArc.endAngle()(d)/Math.PI*180;
-            var edAngle = stAngle + dtAngle;
             var r1 = 0;
             var r2 = pie.innerRadius;
 
@@ -653,7 +651,6 @@ var labels = {
                 labels.ptInArc(pts[2], r1, r2, stAngle, edAngle) &&
                 labels.ptInArc(pts[3], r1, r2, stAngle, edAngle));
 
-            return edAngle;
 	    };
 
 		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-group")
@@ -662,6 +659,7 @@ var labels = {
 			});
 
         var stAngle = 0;
+        var groupSize = pie.options.groups.fontSize;
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-group")
 			.attr("transform", function(d, i) {
 				var x, y;
@@ -672,7 +670,10 @@ var labels = {
 		    .each(function(d,i) {
 		        var bb = this.getBBox();
 
-                var stAngleTemp = checkBounds(bb, stAngle, d, i);
+		        pie.groupLabelGroupData[i].stAngle = stAngle;
+		        pie.groupLabelGroupData[i].edAngle = stAngle + pie.groupArc.endAngle()(d)/Math.PI*180;
+
+                checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
 
                 if (pie.groupLabelGroupData[i].hide) {
 
@@ -691,13 +692,53 @@ var labels = {
                         });
 
     		        bb = this.getBBox();
-    		        stAngleTemp = checkBounds(bb, stAngle, d, i);
+    		        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
                 }
 
-                stAngle = stAngleTemp;
+                stAngle = pie.groupLabelGroupData[i].edAngle;
 		    })
 		    .style("display", function(d,i) {
 		        return pie.groupLabelGroupData[i].hide ? "none" : "inline";
+		    })
+		    .each(function(d,i) {
+
+		        if (!pie.groupLabelGroupData[i].hide) {
+
+		            var thisText = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-group");
+		            var currSize = parseFloat(thisText.style("font-size"));
+
+		            while (currSize < groupSize) {
+		                currSize += 1;
+		                thisText.style("font-size", currSize + "px");
+		                var bb = this.getBBox();
+                        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+		                if (pie.groupLabelGroupData[i].hide){
+
+                            thisText.selectAll("tspan")
+                                .attr("x", 0)
+                                .attr("dy", function(d,i) {
+                                    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+                                    if (i == tspans.length - 1) {
+                                        var tspanLast = tspans[tspans.length-2];
+                                        return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+                                    } else {
+                                        return this.getAttribute("dy");
+                                    }
+                                });
+
+            		        bb = this.getBBox();
+            		        checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+
+		                    if (pie.groupLabelGroupData[i].hide){
+    		                    currSize -= 1;
+        		                thisText.style("font-size", currSize + "px");
+        		                var bb = this.getBBox();
+                                checkBounds(bb, pie.groupLabelGroupData[i].stAngle, pie.groupLabelGroupData[i].edAngle, i);
+    		                    break;
+		                    }
+		                }
+		            }
+		        }
 		    });
 
 		    //console.log(pie.groupLabelGroupData);

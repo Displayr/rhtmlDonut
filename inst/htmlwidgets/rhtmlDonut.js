@@ -277,7 +277,6 @@ function DetailedDonutPlot() {
             	},
             	groups: {
             	    content: groupData,
-            	    color: settings.groupsColor ? settings.groupsColor : "#333333",
             	    font: settings.groupsFont ? settings.groupsFont : "arial",
             	    fontSize: settings.groupsSize ? settings.groupsSize : 10,
             	    fontWeight: "bold"
