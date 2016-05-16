@@ -257,6 +257,7 @@ var defaultSettings = {
 		d3.selectAll("." + this.cssPrefix + "lineGroups").remove();
         d3.selectAll("." + this.cssPrefix + "tooltips").remove();
         d3.selectAll("." + this.cssPrefix + "gtooltips").remove();
+
 		_initNoLoading.call(this);
 	};
 
@@ -485,8 +486,8 @@ var defaultSettings = {
 	var _initNoLoading = function() {
 
 		// prep-work
-		this.outerLabelGroupData = [];
-		this.groupLabelGroupData = [];
+		//this.outerLabelGroupData = [];
+		//this.groupLabelGroupData = [];
 		/* this.svg = helpers.addSVGSpace(this);
 
 		// store info about the main text components as part of the d3pie object instance
@@ -598,6 +599,7 @@ var defaultSettings = {
 
     		// 2. now adjust those positions to try to accommodate conflicts
     		labels.resolveOuterLabelCollisionsNew(self);
+
 			// we use the label line positions for many other calculations, so ALWAYS compute them
 			labels.computeLabelLinePositions(self);
 
@@ -606,10 +608,8 @@ var defaultSettings = {
 				labels.addLabelLines(self);
 			}
 
-			//labels.positionLabelGroups(self, "inner");
-			//labels.fadeInLabelsAndLines(self);
-
             // add and position the tooltips
+
             if (self.options.tooltips.enabled) {
                 tt.addTooltips(self);
             }

@@ -46,16 +46,13 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 # order
 rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
                   labels = labels, labels.size = 10, labels.inner = FALSE,
-                  prefix = "", suffix = "%", order = "default",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%", order = "default")
 rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "initial",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%", order = "initial")
 rhtmlDonut::Donut(values = values, values.color = qColors, value.thres = 0,
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "alphabetical",
-                  max.label.length = 150)
+                  prefix = "", suffix = "%", order = "alphabetical")
 
 rhtmlDonut::Donut(values = values, values.size = 10, border.color = "none",
                   labels = labels, labels.size = 10,

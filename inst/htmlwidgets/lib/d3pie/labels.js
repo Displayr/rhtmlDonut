@@ -13,6 +13,8 @@ var labels = {
 		var include = labels.getIncludes(sectionDisplayType);
 		var settings = pie.options.labels;
 
+        d3.selectAll("." + pie.cssPrefix + "labels-" + section).remove();
+
 		// group the label groups (label, percentage, value) into a single element for simpler positioning
 		var outerLabel = pie.svg.insert("g", "." + pie.cssPrefix + "labels-" + section)
 			.attr("class", pie.cssPrefix + "labels-" + section);
@@ -272,6 +274,23 @@ var labels = {
 		};
 	},
 
+
+	/**
+	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
+	 * 1. Make a first pass and position them in the ideal positions, based on the pie sizes
+	 * 2. Do some basic collision avoidance.
+	 */
+	computeOuterLabelCoords: function(pie) {
+
+		// 1. figure out the ideal positions for the outer labels
+		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
+			.each(function(d, i) {
+				return labels.getIdealOuterLabelPositions(pie, i);
+			});
+        //console.log(pie.outerLabelGroupData);
+	},
+
+
 	getGroupLabelPositions: function(pie, i) {
         var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-group").node();
         if (!labelGroupNode) {
@@ -293,6 +312,7 @@ var labels = {
 			h: labelGroupDims.height
 		};
 	},
+
 
 
     wrap: function(text, width) {
@@ -574,13 +594,20 @@ var labels = {
             labelData[i].y += labelData[i].oy;
         }
 
+        var labelGroups = d3.selectAll("." + this.cssPrefix + "labels-outer");
+
+        if (labelGroups.length > 1) {
+
+        }
+
+
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-" + section)
 			.style("opacity", 1)
 			.attr("transform", function(d, i) {
 				var x, y;
 				if (section === "outer") {
-					x = pie.outerLabelGroupData[i].x;
-					y = pie.outerLabelGroupData[i].y;
+    				x = pie.outerLabelGroupData[i].x;
+    				y = pie.outerLabelGroupData[i].y;
 				} else {
 					var pieCenterCopy = extend(true, {}, pie.pieCenter);
 
@@ -835,20 +862,6 @@ var labels = {
 		};
 	},
 
-	/**
-	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
-	 * 1. Make a first pass and position them in the ideal positions, based on the pie sizes
-	 * 2. Do some basic collision avoidance.
-	 */
-	computeOuterLabelCoords: function(pie) {
-
-		// 1. figure out the ideal positions for the outer labels
-		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
-			.each(function(d, i) {
-				return labels.getIdealOuterLabelPositions(pie, i);
-			});
-
-	},
 
 	/**
 	 * This attempts to resolve label positioning collisions.
@@ -1469,7 +1482,7 @@ var labels = {
                     return "inline";
                 }
             });*/
-        console.log(labelData);
+        //console.log(labelData);
         //console.log(nItr);
         //console.log(collisions);
 	},
