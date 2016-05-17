@@ -16,6 +16,9 @@ function DetailedDonutPlot() {
         if (height < 200) {
             return;
         }
+
+        d3.select(".menuBox").attr("transform", "translate(" + (width - 33 - 10) + "," + 5 + ")");
+
         pie.options.size.canvasWidth = width;
         pie.options.size.canvasHeight = height;
 
@@ -111,17 +114,16 @@ function DetailedDonutPlot() {
 
 
             for (i = 0; i < settings.groupsSums.length; i++) {
-                groupData.push({ label: settings.groupsLab[i], value: settings.groupsSums[i],
-                                 color: settings.groupsColor[i], num: settings.groupsBins[i]});
+                groupData.push({ label: settings.groupsNames[i], value: settings.groupsSums[i],
+                                 color: settings.groupsColor[i], count: settings.groupsCounts[i]});
             }
 
 
             for (i = 0; i < n; i++) {
-                pieData.push({ label: labels[i], value: values[i], index: i,
-                                group: settings.groups[i], groupSum: settings.groupsSumsEach[i], groupSize: settings.groupsSizeEach[i]});
+                pieData.push({ label: labels[i], value: values[i], index: i, group: settings.groups[i]});
             }
 
-    		switch (settings.order) {
+    		/*switch (settings.order) {
     		    case "default":
                     // group descending
                     groupData.sort(function(a, b) { return (a.value <= b.value) ?
@@ -129,19 +131,20 @@ function DetailedDonutPlot() {
                                                             ((a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1) : 1) : -1; });
                     pieData.sort(function(a, b) { return (a.groupSum < b.groupSum) ? 1 : -1; });
     		        break;
-    			case "none":
+    			case "initial":
     				// show non-contiguous groups
     				break;
     			case "descending":
     			    // same as group descending
-    				pieData.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
+    			    //pieData.sort(function(a, b) { return (a.groupSum < b.groupSum) ? 1 : -1; });
+    				//pieData.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
     				break;
     			case "alphabetical":
     			    // group alphabetical
-                    groupData.sort(function(a, b) { return (a.label > b.label) ? 1 : -1; });
-    				pieData.sort(function(a, b) { return (a.groupSum > b.groupSum) ? 1 : -1; });
+                    // groupData.sort(function(a, b) { return (a.label > b.label) ? 1 : -1; });
+    				//pieData.sort(function(a, b) { return (a.groupSum > b.groupSum) ? 1 : -1; });
     				break;
-    		}
+    		}*/
 
             for (i = 0; i < settings.groupsSums.length; i++) {
                 hash[groupData[i].label] = i;
@@ -153,7 +156,7 @@ function DetailedDonutPlot() {
                 for (i = 0; i < n; i++) {
                     idx = hash[pieData[i].group];
                     baseColor = groupData[idx].color;
-                    deltaLum = 0.7 / groupData[idx].num;
+                    deltaLum = 0.3 / groupData[idx].count;
                     if (deltaLum > 0.2) {
                         deltaLum = 0.2;
                     }
@@ -166,7 +169,20 @@ function DetailedDonutPlot() {
         } else {
 
             if (!settings.valuesColor) {
-                settings.valuesColor = d3.scale.category20().range();
+
+                if (settings.gradient) {
+                    var colGrad = new Rainbow();
+                    colGrad.setSpectrum("444444", "gold");
+                    colGrad.setNumberRange(0, n-1);
+                    settings.valuesColor = [];
+
+                    for (i = 0; i < n; i++) {
+                        settings.valuesColor.push("#"+ colGrad.colourAt(i));
+                    }
+                } else {
+                    settings.valuesColor = d3.scale.category20().range();
+                }
+
             }
 
             var colors = [];
@@ -205,6 +221,169 @@ function DetailedDonutPlot() {
 
         var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
 
+        var menuBox = selection.select("svg").append("g").attr("class", "menuBox");
+
+        var menuBoxW = 33,
+            menuBoxH = 28;
+
+        menuBox.attr("transform", "translate(" + (width - menuBoxW - 10) + "," + 5 + ")");
+
+
+        var menuRect = menuBox.append("rect")
+                                .attr("class", "menuRect")
+                                .attr("width", menuBoxW)
+                                .attr("height", menuBoxH)
+                                .attr("x", 0)
+                                .attr("y", 0)
+                                .style("fill", "white")
+                                .style("stroke-width", "1px")
+                                .style("stroke", "#000")
+                                .style("opacity", 0.5)
+                                .style("cursor", "pointer");
+
+        var linesY = [7, 14, 21];
+        var lines = menuBox.selectAll("line")
+                            .data(linesY)
+                            .enter()
+                            .append("line")
+                            .attr("x1", "6px")
+                            .attr("x2", "27px")
+                            .attr("y1", function(d) { return d + "px"})
+                            .attr("y2", function(d) { return d + "px"})
+                            .style("stroke", "#000")
+                            .style("stroke-width", 1)
+                            .style("cursor", "pointer")
+                            .style("opacity", 0.5);
+
+        var valuesOrder = ["Descending", "Alphabetical", "Initial"];
+        var groupOrder = ["Descending", "Alphabetical", "Initial"];
+
+        var menuTextSize = 11;
+        var valuesSortHeadingSpace = menuTextSize*1.5;
+
+        var valuesSortHeading = menuBox
+                            .append("text")
+                            .text("Values order")
+                            .attr("x", 0)
+                            .attr("y", valuesSortHeadingSpace/2)
+                            .attr("dy", "0.35em")
+                            .style("cursor", "pointer")
+                            .style("font-family", "Arial")
+                            .style("font-size", menuTextSize + "px")
+                            .style("opacity", 0);
+
+        var valuesSortText = menuBox.selectAll("t")
+                            .data(valuesOrder)
+                            .enter()
+                            .append("text")
+                            .text(function(d) { return d})
+                            .attr("x", 0)
+                            .attr("y", function(d,i) { return linesY[i]})
+                            .attr("dy", "0.35em")
+                            .style("cursor", "pointer")
+                            .style("font-family", "Arial")
+                            .style("font-size", menuTextSize + "px")
+                            .style("opacity", 0);
+
+        var groupsSortHeading = menuBox
+                            .append("text")
+                            .text("Groups order")
+                            .attr("x", 0)
+                            .attr("y", 28)
+                            .attr("dy", "0.35em")
+                            .style("cursor", "pointer")
+                            .style("font-family", "Arial")
+                            .style("font-size", menuTextSize + "px")
+                            .style("opacity", 0);
+
+        var groupsSortText = menuBox.selectAll("t")
+                            .data(groupOrder)
+                            .enter()
+                            .append("text")
+                            .text(function(d) { return d})
+                            .attr("x", 0)
+                            .attr("y", function(d,i) { return linesY[i]})
+                            .attr("dy", "0.35em")
+                            .style("cursor", "pointer")
+                            .style("font-family", "Arial")
+                            .style("font-size", menuTextSize + "px")
+                            .style("opacity", 0);
+
+        menuBox.on("mouseover", function(d) {
+            menuBox.transition()
+                    .duration(200)
+                    .attr("transform", "translate(" + (width - menuBoxW - 50 - 10) + "," + 5 + ")");
+
+            menuRect.transition()
+                    .duration(200)
+                    .attr("width", menuBoxW + 50)
+                    .attr("height", 8*menuTextSize*1.5);
+
+            valuesSortHeading.transition()
+                    .duration(200)
+                    .style("opacity", 1)
+                    .attr("x", 2);
+
+            valuesSortText.transition()
+                    .duration(200)
+                    .style("opacity", 1)
+                    .attr("x", 20)
+                    .attr("y", function(d,i) { return menuTextSize*1.5*i + valuesSortHeadingSpace + menuTextSize*1.5/2});
+
+            groupsSortHeading.transition()
+                    .duration(200)
+                    .style("opacity", 1)
+                    .attr("y", function(d,i) { return menuTextSize*1.5*3 + valuesSortHeadingSpace*1.5})
+                    .attr("x", 2);
+
+            groupsSortText.transition()
+                    .duration(200)
+                    .style("opacity", 1)
+                    .attr("x", 20)
+                    .attr("y", function(d,i) { return menuTextSize*1.5*i + valuesSortHeadingSpace*2 + menuTextSize*1.5*3 + menuTextSize*1.5/2});
+
+            lines.transition()
+                    .duration(200)
+                    .style("opacity", 0);
+        })
+        .on("mouseout", function(d) {
+            menuBox.transition()
+                    .duration(200)
+                    .attr("transform", "translate(" + (width - menuBoxW - 10) + "," + 5 + ")");
+
+            menuRect.transition()
+                    .duration(200)
+                    .attr("width", menuBoxW)
+                    .attr("height", menuBoxH);
+
+            valuesSortHeading.transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .attr("x", 0);
+
+            valuesSortText.transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .attr("x", 0)
+                    .attr("y", function(d,i) { return linesY[i]});
+
+            groupsSortHeading.transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .attr("y", 28)
+                    .attr("x", 0);
+
+            groupsSortText.transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                    .attr("x", 0)
+                    .attr("y", function(d,i) { return linesY[i]});
+
+            lines.transition()
+                    .duration(200)
+                    .style("opacity", 0.5);
+        });
+
         // create the pie chart instance
         pie  = new d3pie(svgEl, {
         		size: {
@@ -235,6 +414,11 @@ function DetailedDonutPlot() {
             				"#807ece", "#8db27c", "#be66a2", "#9ed3c6", "#00644b", "#005064", "#77979f", "#77e079", "#9c73ab", "#1f79a7"
             			],
             			segmentStroke: settings.borderColor ? settings.borderColor : "#ffffff"
+            		},
+            		gradient: {
+            			enabled: false,
+            			percentage: 95,
+            			color: "#000000"
             		}
             	},
             	labels: {

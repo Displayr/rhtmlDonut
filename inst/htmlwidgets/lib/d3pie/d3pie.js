@@ -251,12 +251,6 @@ var defaultSettings = {
 	};
 
 	d3pie.prototype.redrawWithoutLoading = function() {
-		d3.selectAll("." + this.cssPrefix + "labels-outer").remove();
-		d3.selectAll("." + this.cssPrefix + "labels-extra").remove();
-		d3.selectAll("." + this.cssPrefix + "labels-group").remove();
-		d3.selectAll("." + this.cssPrefix + "lineGroups").remove();
-        d3.selectAll("." + this.cssPrefix + "tooltips").remove();
-        d3.selectAll("." + this.cssPrefix + "gtooltips").remove();
 
 		_initNoLoading.call(this);
 	};

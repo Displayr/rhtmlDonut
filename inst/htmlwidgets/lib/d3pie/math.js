@@ -105,7 +105,7 @@ var math = {
     		}
 		} else {
 
-    		switch (sortOrder) {
+    		/*switch (sortOrder) {
     		    case "default":
                     // group descending
                     data.sort(function(a, b) { return (a.value < b.value) ? 1 : -1; });
@@ -119,7 +119,7 @@ var math = {
     			case "alphabetical":
     				data.sort(function(a, b) { return (a.label.toLowerCase() > b.label.toLowerCase()) ? 1 : -1; });
     				break;
-    		}
+    		}*/
 		}
 
 		return data;

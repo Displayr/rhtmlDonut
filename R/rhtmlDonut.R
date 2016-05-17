@@ -2,7 +2,7 @@
 #' @param values.display choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
 #' @param order ordering of the plot = c("default", "initial", "alphabetical", "descending")
 #' @param border.color c("white", "none", hex colors)
-#' @param value.thres threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3
+#' @param values.thres threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3
 
 #' @return a donut plot
 #' @export
@@ -13,7 +13,8 @@ Donut <- function(
     values.size = 10,
     values.color = NULL,
     values.display = "percentage",
-    value.thres = NULL,
+    values.thres = NULL,
+    values.order = "descending",
     labels,
     labels.font = NULL,
     labels.size = 10,
@@ -24,11 +25,12 @@ Donut <- function(
     groups.font = NULL,
     groups.size = 10,
     groups.color = NULL,
+    groups.order = "descending",
     prefix = NULL,
     suffix = NULL,
-    order = "default",
     order.control = TRUE,
     border.color = "white",
+    gradient = FALSE,
     max.label.length = NULL,
     width = NULL,
     height = NULL) {
@@ -42,21 +44,37 @@ Donut <- function(
     }
 
     if (!is.null(groups)) {
-        groups.temp = table(groups)
-        groups.num = as.numeric(as.factor(groups))
-        groups.bins = as.vector(groups.temp)
-        groups.lab = names(groups.temp)
-        ng = length(groups.lab)
+        groups.names = unique(groups)
+        groups.sums = rep(0, length(groups.names))
+        ng = length(groups.names)
+        g.order = 1:ng
 
-        hash = new.env(hash=TRUE, parent=emptyenv(), size=ng)
-        for (i in 1:ng) {
-            assign(groups.lab[i], i, hash)
+        # order the group variable
+        if (groups.order == "initial") {
+            # a linear scan search, might be slow if data is too large
+            for (i in 1:ng) {
+                groups.sums[i] = sum(values[groups == groups.names[i]])
+            }
+
+        } else if (groups.order == "descending"){
+            # a linear scan search, might be slow if data is too large
+            for (i in 1:ng) {
+                groups.sums[i] = sum(values[groups == groups.names[i]])
+            }
+            out = sort(groups.sums, decreasing = T, index.return = T)
+            groups.sums = out[[1]]
+            g.order = out[[2]]
+            groups.names = groups.names[out[[2]]]
+
+        } else if (groups.order == "alphabetical") {
+            out = sort(groups.names, index.return = T)
+            groups.names = out[[1]]
+            g.order = out[[2]]
+            # a linear scan search, might be slow if data is too large
+            for (i in 1:ng) {
+                groups.sums[i] = sum(values[groups == groups.names[i]])
+            }
         }
-
-        gnmax = max(groups.num)
-        groups.sums = rep(0, length(groups.lab))
-        groups.sums.each = rep(0, length(groups))
-        groups.size.each = rep(0, length(groups))
 
         if (!is.null(groups.color)) {
             if (length(groups.color) < ng) {
@@ -64,53 +82,148 @@ Donut <- function(
                     groups.color = c(groups.color, groups.color[i])
                 }
             }
-            groups.color = groups.color[sort(unique(groups), index.return = T)$ix]
+            groups.color = groups.color[g.order]
         }
-        # a linear scan search, might be slow if data is too large
+
+        hash = new.env(hash=TRUE, parent=emptyenv(), size=ng)
         for (i in 1:ng) {
-            groups.sums[i] = sum(values[groups == groups.lab[i]])
+            assign(groups.names[i], i, hash)
         }
-        groups.sums.perc = groups.sums/sum(values)
-        if (order == "default" || order == "descending") {
 
-            # group.num[i] * vmax * 10 >> values[i]
-            # groups.sums[idx] * gnmax * vmax * 10000 should be >> group.num[i] * vmax * 10
+        groups.counts.temp = table(groups)
+        groups.lab = names(groups.counts.temp)
+        groups.counts = rep(0, ng)
+        for (i in 1:ng) {
+            idx = get(groups.lab[i], hash)
+            groups.counts[idx] = groups.counts.temp[i]
+        }
+
+        groups.perc = groups.sums/sum(values)
+
+        groups.sums.each = rep(0, length(groups))
+        groups.size.each = rep(0, length(groups))
+
+        if (values.order == "descending"){
             for (i in 1:n) {
                 idx = get(groups[i], hash)
-                groups.sums.each[i] = groups.sums.perc[idx] * gnmax * vmax * 10000 + groups.num[i] * vmax * 2 + val.perc[i]
-                groups.size.each[i] = groups.bins[idx];
+                groups.sums.each[i] = idx * (vmax+1) * 10 - val.perc[i]
+                # groups.size.each[i] = groups.bins[idx]
             }
+            v.order = sort(groups.sums.each, decreasing = F, index.return = T)
+            values = values[v.order[[2]]]
+            labels = labels[v.order[[2]]]
+            groups = groups[v.order[[2]]]
+        } else if (values.order == "alphabetical") {
+            values.group.idx = rep(0, n)
+            labels.group.mat = matrix(rep("", n*ng), nrow = ng)
+            values.group.mat = matrix(rep(-1, n*ng), nrow = ng)
+            groups.mat = matrix(rep("", n*ng), nrow = ng)
+            c = rep(1, ng)
 
-        } else if (order == "alphabetical") {
             for (i in 1:n) {
-                idx = get(groups[i], hash)
-                groups.size.each[i] = groups.bins[idx];
-                if (values[i] == 0) {
-                    groups.sums.each[i] = groups.num[i] * vmax * 10
-                } else {
-                    groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
-                }
-                if (is.null(values.color)) {
-
-                }
+                values.group.idx[i] = get(groups[i], hash)
+                labels.group.mat[values.group.idx[i], c[values.group.idx[i]]] = labels[i]
+                values.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values[i]
+                groups.mat[values.group.idx[i], c[values.group.idx[i]]] = groups[i]
+                c[values.group.idx[i]] = c[values.group.idx[i]] + 1
             }
+
+            values = c()
+            labels = c()
+            groups = c()
+            for (i in 1:ng) {
+                labels.group.v = labels.group.mat[i, labels.group.mat[i,] != ""]
+                values.group.v = values.group.mat[i, values.group.mat[i,] != -1]
+                groups.v = groups.mat[i, groups.mat[i,] != ""]
+                out = sort(labels.group.v, index.return = T)
+                labels.group.v = out[[1]]
+                values.group.v = values.group.v[out[[2]]]
+                groups.v = groups.v[out[[2]]]
+                values = c(values, values.group.v)
+                labels = c(labels, labels.group.v)
+                groups = c(groups, groups.v)
+            }
+        } else if (values.order == "initial") {
+
         }
+
+        # order the values in the groups
+#         if (groups.order == "initial") {
+#             if (values.order == "initial") {
+#                 # do nothing
+#             } else  else if (values.order == "alphabetical") {
+#                 for (i in 1:n) {
+#                     idx = get(groups[i], hash)
+#                     # groups.size.each[i] = groups.bins[idx];
+#                     if (values[i] == 0) {
+#                         groups.sums.each[i] = groups.num[i] * vmax * 10
+#                     } else {
+#                         groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
+#                     }
+#                 }
+#             }
+#         } else if (groups.order == "descending"){
+#
+#         } else if (groups.order == "alphabetical") {
+#
+#         }
+#
+#         # groups.bins = as.vector(groups.temp)
+#         groups.lab = names(groups.temp)
+
+
+
+#         if (order == "default" || order == "descending") {
+#
+#             # group.num[i] * vmax * 10 >> values[i]
+#             # groups.sums[idx] * gnmax * vmax * 10000 should be >> group.num[i] * vmax * 10
+#             for (i in 1:n) {
+#                 idx = get(groups[i], hash)
+#                 groups.sums.each[i] = groups.perc[idx] * gnmax * vmax * 10000 + groups.num[i] * vmax * 2 + val.perc[i]
+#                 groups.size.each[i] = groups.bins[idx];
+#             }
+#
+#         } else if (order == "alphabetical") {
+#             for (i in 1:n) {
+#                 idx = get(groups[i], hash)
+#                 groups.size.each[i] = groups.bins[idx];
+#                 if (values[i] == 0) {
+#                     groups.sums.each[i] = groups.num[i] * vmax * 10
+#                 } else {
+#                     groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
+#                 }
+#                 if (is.null(values.color)) {
+#
+#                 }
+#             }
+#         }
 
     } else {
-        groups.lab = NULL
-        groups.bins = NULL
+
+        if (values.order == "initial") {
+            # do nothing
+        } else if (values.order == "descending"){
+            v.order = sort(values, decreasing = T, index.return = T)
+            values = v.order[[1]]
+            labels = labels[v.order[[2]]]
+        } else if (values.order == "alphabetical") {
+            v.order = sort(labels, decreasing = F, index.return = T)
+            labels = v.order[[1]]
+            values = values[v.order[[2]]]
+        }
+
+        groups.names = NULL
+        groups.counts = NULL
         groups.sums = NULL
-        groups.sums.each = NULL
-        groups.size.each = NULL
     }
 
-    if (is.null(value.thres)) {
-        value.thres = 0.3 / 100
+    if (is.null(values.thres)) {
+        values.thres = 0.3 / 100
     } else {
-        if (value.thres > 100) {
-            value.thres = 100
+        if (values.thres > 100) {
+            values.thres = 100
         }
-        value.thres = value.thres / 100
+        values.thres = values.thres / 100
     }
 
 #     if (is.null(large.angle)) {
@@ -137,17 +250,20 @@ Donut <- function(
         groupsFont = groups.font, # string
         groupsSize = groups.size, # scalar
         groupsColor = groups.color, # length = length(unique(groups))
-        groupsLab = groups.lab, # sorted unique labels
-        groupsBins = groups.bins, # number of items in each group
+        #groupsLab = groups.lab, # sorted unique labels
+
+        groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
-        groupsSumsEach = groups.sums.each, # length = n
-        groupsSizeEach = groups.size.each, # length = n
+        groupsCounts = groups.counts, # number of items in each group
+        # groupsSumsEach = groups.sums.each, # length = n
+        # groupsSizeEach = groups.size.each, # length = n
         prefix = prefix,
         suffix = suffix,
         order = order,
         orderControl = order.control,
+        gradient = gradient,
         maxLabelLength = max.label.length,
-        minAngle = value.thres,
+        minAngle = values.thres,
         minFontSize = labels.minFontSize,
         borderColor = border.color
     )

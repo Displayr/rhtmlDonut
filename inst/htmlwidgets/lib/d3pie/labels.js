@@ -13,7 +13,12 @@ var labels = {
 		var include = labels.getIncludes(sectionDisplayType);
 		var settings = pie.options.labels;
 
-        d3.selectAll("." + pie.cssPrefix + "labels-" + section).remove();
+		d3.selectAll("." + pie.cssPrefix + "labels-outer").remove();
+		d3.selectAll("." + pie.cssPrefix + "labels-extra").remove();
+		d3.selectAll("." + pie.cssPrefix + "labels-group").remove();
+		d3.selectAll("." + pie.cssPrefix + "lineGroups").remove();
+        d3.selectAll("." + pie.cssPrefix + "tooltips").remove();
+        d3.selectAll("." + pie.cssPrefix + "gtooltips").remove();
 
 		// group the label groups (label, percentage, value) into a single element for simpler positioning
 		var outerLabel = pie.svg.insert("g", "." + pie.cssPrefix + "labels-" + section)
@@ -1102,10 +1107,10 @@ var labels = {
             //labelData[i].xlim = {max: labelData[i].x + pie.options.data.fontSize, min: labelData[i].x - pie.options.data.fontSize};
             labelData[i].ylim = {max: labelData[i].y + pie.options.data.fontSize*2, min: labelData[i].y - pie.options.data.fontSize*2};
 
-            if (pie.options.groups.content) {
+            /*if (pie.options.groups.content) {
                 labelData[i].group = pie.options.data.content[i].group;
                 labelData[i].groupSize = pie.options.data.content[i].groupSize;
-            }
+            }*/
 
             if (labelData[i].x > center.x) {
                 labelData[i].anchorPt = {x: labelData[i].x, y: labelData[i].y};

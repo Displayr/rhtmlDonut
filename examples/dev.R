@@ -44,15 +44,15 @@ DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = gro
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups)
 
 # order
-rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
+rhtmlDonut::Donut(values = values, values.size = 10, values.thres = 0, values.order = "descending",
                   labels = labels, labels.size = 10, labels.inner = FALSE,
-                  prefix = "", suffix = "%", order = "default")
-rhtmlDonut::Donut(values = values, values.size = 10, value.thres = 0,
+                  prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values, values.size = 10, values.thres = 0, values.order = "initial",
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "initial")
-rhtmlDonut::Donut(values = values, values.color = qColors, value.thres = 0,
+                  prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values, values.thres = 0, values.order = "alphabetical",
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "alphabetical")
+                  prefix = "", suffix = "%")
 
 rhtmlDonut::Donut(values = values, values.size = 10, border.color = "none",
                   labels = labels, labels.size = 10,
@@ -63,5 +63,42 @@ rhtmlDonut::Donut(values = values, values.size = 10,
 rhtmlDonut::Donut(values = values, values.size = 10,
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%", order = "alphabetical")
+### order
+
+
+rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "descending",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "descending",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "alphabetical",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "alphabetical",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "initial",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "initial",
+                  labels = labels, groups = groups, groups.color = qColors)
+
+### gradient
+out = sort(values, decreasing = T, index.return = T)
+values1 = out[[1]]
+labels1 = labels[out[[2]]]
+groups1 = groups[out[[2]]]
+values1 = values1[1:30]
+labels1 = labels1[1:30]
+groups1 = groups1[1:30]
+
+rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending",
+                  labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
+                  prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "initial",
+                  labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = F, border.color = "white",
+                  prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "alphabetical",
+                  labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
+                  prefix = "", suffix = "%")
+
+
+rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, groups.color = qColors)
 
 htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")

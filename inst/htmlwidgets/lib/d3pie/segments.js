@@ -36,12 +36,12 @@ var segments = {
     		g.append("path")
     		    .attr("class", pie.cssPrefix + "arcEl")
     			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
-    			.attr("fill", function(d, i) { return d.color;
-    				/*var color = colors[i];
+    			.attr("fill", function(d, i) {
+    				var color = d.color;
     				if (pie.options.misc.gradient.enabled) {
     					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
     				}
-    				return color;*/
+    				return color;
     			})
     			.style("stroke", segmentStroke)
     			.style("stroke-width", 1)
@@ -53,12 +53,12 @@ var segments = {
     		g.append("path")
     		    .attr("class", pie.cssPrefix + "arcEl")
     			.attr("id", function(d, i) { return pie.cssPrefix + "segment" + i; })
-    			.attr("fill", function(d, i) { return d.color;
-    				/*var color = colors[i];
+    			.attr("fill", function(d, i) {
+    				var color = d.color;
     				if (pie.options.misc.gradient.enabled) {
     					color = "url(#" + pie.cssPrefix + "grad" + i + ")";
     				}
-    				return color;*/
+    				return color;
     			})
     			.style("stroke", segmentStroke)
     			.style("stroke-width", 1)
@@ -210,7 +210,7 @@ var segments = {
 			.attr("r", "120%")
 			.attr("id", function(d, i) { return pie.cssPrefix + "grad" + i; });
 
-		grads.append("stop").attr("offset", "0%").style("stop-color", function(d, i) { return pie.options.colors[i]; });
+		grads.append("stop").attr("offset", "0%").style("stop-color", function(d, i) { return pie.options.data.content[i].color; });
 		grads.append("stop").attr("offset", pie.options.misc.gradient.percentage + "%").style("stop-color", pie.options.misc.gradient.color);
 	},
 
@@ -223,7 +223,6 @@ var segments = {
         var groupLb = d3.selectAll("." + pie.cssPrefix + "labelGroup-group");
         arc.style("cursor", "pointer");
 
-
         lb.style("cursor", "pointer")
             .style('-webkit-touch-callout', 'none')
             .style('-webkit-user-select', 'none')
@@ -232,7 +231,7 @@ var segments = {
             .style('-ms-user-select', 'none')
             .style('user-select', 'none');
 
-        lb.on("click", function() {
+        /*lb.on("click", function() {
 			var currentEl = d3.select(this);
 			var segment;
 
@@ -252,7 +251,7 @@ var segments = {
 					segments.openSegment(pie, segment.node());
 				}
 			}
-		});
+		});*/
 
 		lb.on("mouseover", function(d, i) {
 			var currentEl = d3.select(this);
@@ -289,9 +288,9 @@ var segments = {
 			if (pie.options.effects.highlightSegmentOnMouseover) {
 				index = segment.attr("data-index");
 				var color = d.color;
-				//if (pie.options.misc.gradient.enabled) {
-				//	color = "url(#" + pie.cssPrefix + "grad" + index + ")";
-				//}
+				if (pie.options.misc.gradient.enabled) {
+					color = "url(#" + pie.cssPrefix + "grad" + index + ")";
+				}
 				segment.style("fill", color);
 			}
 
@@ -301,7 +300,7 @@ var segments = {
 
 
 
-		arc.on("click", function() {
+		/*arc.on("click", function() {
 			var currentEl = d3.select(this);
 			var segment;
 
@@ -321,7 +320,7 @@ var segments = {
 					segments.openSegment(pie, segment.node());
 				}
 			}
-		});
+		});*/
 
 		arc.on("mouseover", function(d, i) {
 			var currentEl = d3.select(this);
@@ -389,8 +388,8 @@ var segments = {
 
 
         if (garc) {
-            garc.style("cursor", "default");
-            groupLb.style("cursor", "default")
+            garc.style("cursor", "pointer");
+            groupLb.style("cursor", "pointer")
                 .style('-webkit-touch-callout', 'none')
                 .style('-webkit-user-select', 'none')
                 .style('-khtml-user-select', 'none')

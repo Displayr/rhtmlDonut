@@ -10,3 +10,9 @@
     -ms-user-select: none;
     user-select: none;
 }
+
+.menuRect {
+    fill: #eee;
+    stroke-width: 0;
+    cursor: pointer;
+}

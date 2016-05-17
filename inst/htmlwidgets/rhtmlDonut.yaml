@@ -15,6 +15,7 @@ dependencies:
         - segments.js
         - text.js
         - tooltip.js
+        - rainbowvis.js
     stylesheet: d3pie.css
   - name: rhtmlDonut
     version: 0.0.1
