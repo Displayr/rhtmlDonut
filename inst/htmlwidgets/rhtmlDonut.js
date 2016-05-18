@@ -35,7 +35,7 @@ function DetailedDonutPlot() {
 		h = (h < 0) ? 0 : h;
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 60)/2;
         pie.options.labels.mainLabel.maxLabelLength = settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength;
         pie.redrawWithoutLoading();
     }
@@ -219,7 +219,7 @@ function DetailedDonutPlot() {
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
 
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 50)/2;
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 60)/2;
 
         var menuBox = selection.select("svg").append("g").attr("class", "menuBox");
 

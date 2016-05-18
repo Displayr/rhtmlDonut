@@ -5,27 +5,78 @@
 \title{Create a Donut plot}
 \usage{
 Donut(values, values.font = NULL, values.size = 10, values.color = NULL,
-  values.display = "percentage", value.thres = NULL, labels,
-  labels.font = NULL, labels.size = 10, labels.color = NULL,
-  labels.minFontSize = 8, labels.inner = FALSE, groups = NULL,
-  groups.font = NULL, groups.size = 10, groups.color = NULL,
-  prefix = NULL, suffix = NULL, order = "default", order.control = TRUE,
-  border.color = "white", max.label.length = NULL, width = NULL,
-  height = NULL)
+  values.display = "percentage", values.thres = NULL,
+  values.order = "descending", labels, labels.font = NULL,
+  labels.size = 10, labels.color = NULL, labels.minFontSize = 8,
+  labels.inner = FALSE, groups = NULL, groups.font = NULL,
+  groups.size = 10, groups.color = NULL, groups.order = "descending",
+  prefix = NULL, suffix = NULL, order.control = TRUE,
+  border.color = "white", gradient = FALSE, max.label.length = NULL,
+  width = NULL, height = NULL)
 }
 \arguments{
-\item{values.display}{choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".}
+\item{values}{vector of real numbers}
 
-\item{value.thres}{threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3}
+\item{values.font}{(optional) font for \code{values}. Default is "Arial".}
 
-\item{order}{ordering of the plot = c("default", "initial", "alphabetical", "descending")}
+\item{values.size}{(optional) desired font size in pixels for \code{values}. Default is 10.}
 
-\item{border.color}{c("white", "none", hex colors)}
+\item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{group} is provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{group} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
+
+\item{values.display}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".}
+
+\item{values.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.}
+
+\item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".}
+
+\item{labels}{character vector, length must be the same as \code{values}}
+
+\item{labels.font}{(optional) font for \code{labels}. Default is "Arial"}
+
+\item{labels.size}{(optional) desired font size in pixels for \code{labels}. Default is 10.}
+
+\item{labels.color}{(optional) a hex value to set the label color for \code{labels}. Default is "#333333".}
+
+\item{labels.minFontSize}{(optional) the minimum font size in pixels for labels. Default is 8.}
+
+\item{groups}{(optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.}
+
+\item{groups.font}{(optional) font for \code{groups}. Default is "Arial".}
+
+\item{groups.size}{(optional) desired font size in pixels for \code{groups}. Default is 10.}
+
+\item{groups.color}{(optional) colors for \code{groups}. If not provided then D3 colors are generated.}
+
+\item{groups.order}{(optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). Default is "descending".}
+
+\item{prefix}{(optional) character, prefix for \code{labels}}
+
+\item{suffix}{(optional) character, suffix for \code{labels}}
+
+\item{border.color}{(optional) c("white", "none", hex colors)}
+
+\item{gradient}{(optional) if \code{group} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
+
+\item{max.label.length}{(optional) sets custom label length constraint. Usually this does not need to be set and auto wrapping will apply.}
 }
 \value{
 a donut plot
 }
 \description{
 Create a Donut plot
+}
+\examples{
+# load example data
+data("browser", package = "rhtmlDonut")
+# select a smaller subset
+out = sort(values, decreasing = T, index.return = T)
+values1 = out[[1]][1:30]
+labels1 = labels[out[[2]]][1:30]
+groups1 = groups[out[[2]]][1:30]
+# a donut plot
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "\%")
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", gradient = T, border.color = "none", prefix = "", suffix = "\%")
+# a donut plot with groups
+rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, prefix = "", suffix = "\%")
 }
 

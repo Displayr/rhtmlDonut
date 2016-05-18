@@ -81,12 +81,15 @@ rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order =
 
 ### gradient
 out = sort(values, decreasing = T, index.return = T)
-values1 = out[[1]]
-labels1 = labels[out[[2]]]
-groups1 = groups[out[[2]]]
-values1 = values1[1:30]
-labels1 = labels1[1:30]
-groups1 = groups1[1:30]
+values1 = out[[1]][1:30]
+labels1 = labels[out[[2]]][1:30]
+groups1 = groups[out[[2]]][1:30]
+# a donut plot
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", gradient = T, border.color = "none", prefix = "", suffix = "%")
+# a donut plot with groups
+rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, prefix = "", suffix = "%")
+
 
 rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending",
                   labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
@@ -98,7 +101,7 @@ rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.o
                   labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
                   prefix = "", suffix = "%")
 
-
+devtools::document()
 rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, groups.color = qColors)
 
 htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")
