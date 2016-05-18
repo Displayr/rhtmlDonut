@@ -400,7 +400,7 @@ function DetailedDonutPlot() {
         		size: {
         		    canvasWidth: width,
         		    canvasHeight: height,
-        			pieInnerRadius: "80%"
+        			pieInnerRadius: settings.innerRadius ? settings.innerRadius : "80%"
         		},
         		data: {
         			sortOrder: settings.groups ? "none" : settings.order,

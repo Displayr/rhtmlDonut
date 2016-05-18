@@ -20,6 +20,7 @@
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex colors)
 #' @param gradient (optional) if \code{group} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
+#' @param inner.radius (optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".
 #' @param max.label.length (optional) sets custom label length constraint. Usually this does not need to be set and auto wrapping will apply.
 
 #' @examples
@@ -63,6 +64,7 @@ Donut <- function(
     order.control = FALSE,
     border.color = "white",
     gradient = FALSE,
+    inner.radius = "80%",
     max.label.length = NULL,
     width = NULL,
     height = NULL) {
@@ -318,6 +320,7 @@ Donut <- function(
         order = order,
         orderControl = order.control,
         gradient = gradient,
+        innerRadius = inner.radius,
         maxLabelLength = max.label.length,
         minAngle = values.thres,
         minFontSize = labels.minFontSize,

@@ -11,8 +11,8 @@ Donut(values, labels, values.font = NULL, values.size = 10,
   groups = NULL, groups.font = NULL, groups.size = 10,
   groups.color = NULL, groups.order = "descending", prefix = NULL,
   suffix = NULL, order.control = FALSE, border.color = "white",
-  gradient = FALSE, max.label.length = NULL, width = NULL,
-  height = NULL)
+  gradient = FALSE, inner.radius = "80\%", max.label.length = NULL,
+  width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -56,6 +56,8 @@ Donut(values, labels, values.font = NULL, values.size = 10,
 \item{border.color}{(optional) c("white", "none", hex colors)}
 
 \item{gradient}{(optional) if \code{group} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
+
+\item{inner.radius}{(optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".}
 
 \item{max.label.length}{(optional) sets custom label length constraint. Usually this does not need to be set and auto wrapping will apply.}
 }
