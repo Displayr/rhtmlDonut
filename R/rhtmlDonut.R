@@ -176,7 +176,31 @@ Donut <- function(
                 groups = c(groups, groups.v)
             }
         } else if (values.order == "initial") {
+            values.group.idx = rep(0, n)
+            labels.group.mat = matrix(rep("", n*ng), nrow = ng)
+            values.group.mat = matrix(rep(-1, n*ng), nrow = ng)
+            groups.mat = matrix(rep("", n*ng), nrow = ng)
+            c = rep(1, ng)
 
+            for (i in 1:n) {
+                values.group.idx[i] = get(groups[i], hash)
+                labels.group.mat[values.group.idx[i], c[values.group.idx[i]]] = labels[i]
+                values.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values[i]
+                groups.mat[values.group.idx[i], c[values.group.idx[i]]] = groups[i]
+                c[values.group.idx[i]] = c[values.group.idx[i]] + 1
+            }
+
+            values = c()
+            labels = c()
+            groups = c()
+            for (i in 1:ng) {
+                labels.group.v = labels.group.mat[i, labels.group.mat[i,] != ""]
+                values.group.v = values.group.mat[i, values.group.mat[i,] != -1]
+                groups.v = groups.mat[i, groups.mat[i,] != ""]
+                values = c(values, values.group.v)
+                labels = c(labels, labels.group.v)
+                groups = c(groups, groups.v)
+            }
         }
 
         # order the values in the groups

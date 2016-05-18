@@ -70,13 +70,19 @@ rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "
                   labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "descending",
                   labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "initial", groups.order = "descending",
+                  labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "alphabetical",
                   labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "alphabetical",
                   labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "initial", groups.order = "alphabetical",
+                  labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "initial",
                   labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, values.order = "alphabetical", groups.order = "initial",
+                  labels = labels, groups = groups, groups.color = qColors)
+rhtmlDonut::Donut(values = values, values.order = "initial", groups.order = "initial",
                   labels = labels, groups = groups, groups.color = qColors)
 
 ### gradient
