@@ -4,18 +4,20 @@
 \alias{Donut}
 \title{Create a Donut plot}
 \usage{
-Donut(values, values.font = NULL, values.size = 10, values.color = NULL,
-  values.display = "percentage", values.thres = NULL,
-  values.order = "descending", labels, labels.font = NULL,
-  labels.size = 10, labels.color = NULL, labels.minFontSize = 8,
-  labels.inner = FALSE, groups = NULL, groups.font = NULL,
-  groups.size = 10, groups.color = NULL, groups.order = "descending",
-  prefix = NULL, suffix = NULL, order.control = TRUE,
-  border.color = "white", gradient = FALSE, max.label.length = NULL,
-  width = NULL, height = NULL)
+Donut(values, labels, values.font = NULL, values.size = 10,
+  values.color = NULL, values.display = "percentage", values.thres = NULL,
+  values.order = "descending", labels.font = NULL, labels.size = 10,
+  labels.color = NULL, labels.minFontSize = 8, labels.inner = FALSE,
+  groups = NULL, groups.font = NULL, groups.size = 10,
+  groups.color = NULL, groups.order = "descending", prefix = NULL,
+  suffix = NULL, order.control = FALSE, border.color = "white",
+  gradient = FALSE, max.label.length = NULL, width = NULL,
+  height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
+
+\item{labels}{character vector, length must be the same as \code{values}}
 
 \item{values.font}{(optional) font for \code{values}. Default is "Arial".}
 
@@ -28,8 +30,6 @@ Donut(values, values.font = NULL, values.size = 10, values.color = NULL,
 \item{values.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.}
 
 \item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".}
-
-\item{labels}{character vector, length must be the same as \code{values}}
 
 \item{labels.font}{(optional) font for \code{labels}. Default is "Arial"}
 

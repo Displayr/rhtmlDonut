@@ -41,13 +41,13 @@
 #'
 Donut <- function(
     values,
+    labels,
     values.font = NULL,
     values.size = 10,
     values.color = NULL,
     values.display = "percentage",
     values.thres = NULL,
     values.order = "descending",
-    labels,
     labels.font = NULL,
     labels.size = 10,
     labels.color = NULL,
