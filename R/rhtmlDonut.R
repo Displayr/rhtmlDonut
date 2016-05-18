@@ -60,7 +60,7 @@ Donut <- function(
     groups.order = "descending",
     prefix = NULL,
     suffix = NULL,
-    order.control = TRUE,
+    order.control = FALSE,
     border.color = "white",
     gradient = FALSE,
     max.label.length = NULL,

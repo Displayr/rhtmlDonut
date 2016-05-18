@@ -221,6 +221,8 @@ function DetailedDonutPlot() {
 
         var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 60)/2;
 
+        if (settings.orderControl) {
+
         var menuBox = selection.select("svg").append("g").attr("class", "menuBox");
 
         var menuBoxW = 33,
@@ -383,6 +385,7 @@ function DetailedDonutPlot() {
                     .duration(200)
                     .style("opacity", 0.5);
         });
+        }
 
         // create the pie chart instance
         pie  = new d3pie(svgEl, {
