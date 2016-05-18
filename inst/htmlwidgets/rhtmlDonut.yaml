@@ -17,7 +17,3 @@ dependencies:
         - tooltip.js
         - rainbowvis.js
     stylesheet: d3pie.css
-  - name: rhtmlDonut
-    version: 0.0.1
-    scr: htmlwidgets/lib/rhtmlDonut
-    stylesheet: rhtmlDonut.css

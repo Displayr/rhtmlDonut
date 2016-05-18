@@ -223,7 +223,15 @@ function DetailedDonutPlot() {
 
         if (settings.orderControl) {
 
-        var menuBox = selection.select("svg").append("g").attr("class", "menuBox");
+        var menuBox = selection.select("svg")
+                        .append("g")
+                        .attr("class", "menuBox")
+                        .style('-webkit-touch-callout', 'none')
+                        .style('-webkit-user-select', 'none')
+                        .style('-khtml-user-select', 'none')
+                        .style('-moz-user-select', 'none')
+                        .style('-ms-user-select', 'none')
+                        .style('user-select', 'none');
 
         var menuBoxW = 33,
             menuBoxH = 28;
