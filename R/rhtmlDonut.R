@@ -239,6 +239,7 @@ Donut <- function(
         valuesSize = values.size,
         valuesColor = values.color,
         valuesDisplay = values.display,
+        valuesOrder = values.order,
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,

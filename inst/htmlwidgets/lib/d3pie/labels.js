@@ -109,7 +109,7 @@ var labels = {
 
         var extraLabelGroup;
         // no group and labels.inner == TRUE
-        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner) {
+        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
             extraLabelGroup = pie.svg.append("g")
 			    .attr("class", pie.cssPrefix + "labels-extra")
 			    .selectAll("." + pie.cssPrefix + "labelGroup-extra")
@@ -119,6 +119,7 @@ var labels = {
                 .attr("id", function(d, i) { return pie.cssPrefix + "labelGroup" + i + "-extra"; })
                 .attr("data-index", function(d, i) { return i; })
                 .attr("class", pie.cssPrefix + "labelGroup-extra")
+                //.style("display", "none")
                 .style("opacity", 0)
                 .append("text")
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-extra"; })
@@ -279,6 +280,39 @@ var labels = {
 		};
 	},
 
+	getIdealInnerLabelPositions: function(pie, i) {
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-extra").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
+		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+
+		var originalX = pie.pieCenter.x;
+		var originalY = pie.pieCenter.y - (pie.innerRadius - pie.options.labels.inner.pieDistance);
+		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
+
+		// if the label is on the left half of the pie, adjust the values
+		var hemisphere = "left"; // hemisphere
+
+        if (angle > 270 || angle < 90) {
+			newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
+		} else {
+			newCoords.x -= (labelGroupDims.width + pie.options.labels.mainLabel.horizontalPadding);
+			hemisphere = "right";
+		}
+		/*if (angle > 180) {
+			newCoords.x -= (labelGroupDims.width + 8);
+			hemisphere = "left";
+		} else {
+			newCoords.x += 8;
+		}*/
+
+		pie.outerLabelGroupData[i].innerX = newCoords.x;
+		pie.outerLabelGroupData[i].innerY = newCoords.y;
+		pie.outerLabelGroupData[i].innerhs = hemisphere;
+	},
+
 
 	/**
 	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
@@ -394,6 +428,13 @@ var labels = {
 		pie.lineCoordGroups = [];
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-outer")
 			.each(function(d, i) { return labels.computeLinePosition(pie, i); });
+
+		if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
+
+    		pie.extraLineCoordGroups = [];
+    		d3.selectAll("." + pie.cssPrefix + "labelGroup-extra")
+    			.each(function(d, i) { return labels.computeExtraLinePosition(pie, i); });
+		}
 	},
 
 	computeLinePosition: function(pie, i) {
@@ -401,7 +442,6 @@ var labels = {
 	    var pieDistance = pie.options.labels.outer.pieDistance + pie.options.labels.outer.offsetSize/2;
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 		var originCoords = math.rotate(pie.pieCenter.x - pie.outerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
-		//console.log(pie.outerLabelGroupData[i]);
 		var heightOffset = pie.outerLabelGroupData[i].h / 5; // TODO check
 		var labelXMargin = 6; // the x-distance of the label from the end of the line [TODO configurable]
 
@@ -457,41 +497,6 @@ var labels = {
 			quarter = 1;
 		}
 
-		switch (quarter) {
-			case 0:
-				x2 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) / 2);
-				y2 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) / midPoint);
-				x4 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) * 0.7);
-				y4 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) * 0.7);
-				x5 = pie.outerLabelGroupData[i].x - labelXMargin - ((pie.outerLabelGroupData[i].x - labelXMargin - originCoords.x) * 0.3);
-				y5 = pie.outerLabelGroupData[i].y + ((originCoords.y - pie.outerLabelGroupData[i].y) * 0.3);
-				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
-				break;
-			case 1:
-				x2 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
-				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
-				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
-				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
-				x5 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) / midPoint;
-				y5 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
-				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
-				break;
-			case 2:
-				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				x2 = originCoords.x + (startOfLabelX - originCoords.x) / midPoint;
-				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
-				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
-				break;
-			case 3:
-				var startOfLabelX = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				x2 = originCoords.x + (startOfLabelX - originCoords.x) / midPoint;
-				y2 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) / midPoint;
-				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
-				break;
 		}*/
 
 		/*
@@ -514,6 +519,86 @@ var labels = {
 			];
 		} else {
 			pie.lineCoordGroups[i] = [
+				{ x: originCoords.x, y: originCoords.y },
+				{ x: x2, y: y2 },
+				{ x: x3, y: y3 }
+			];
+		}
+	},
+
+
+	computeExtraLinePosition: function(pie, i) {
+
+		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+		var originCoords = math.rotate(pie.pieCenter.x - pie.innerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
+		var heightOffset = pie.outerLabelGroupData[i].h / 5; // TODO check
+		var labelXMargin = 3; // the x-distance of the label from the end of the line [TODO configurable]
+
+		var quarter = Math.floor(angle / 90);
+		var midPoint = 4;
+		var x2, y2, x3, y3, x4, x5, y4, y5;
+
+		angle = angle - 90;
+		if (angle < 0) {
+		    quarter = 3;
+		} else if (angle < 90) {
+		    quarter = 0;
+		} else if (angle < 180) {
+		    quarter = 1;
+		} else {
+		    quarter = 2;
+		}
+
+		switch (quarter) {
+			case 0:
+			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
+				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
+				if (x4 > x3) { x4 = x3; }
+				break;
+			case 1:
+			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
+				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
+				if (x4 > x3) { x4 = x3; }
+				break;
+			case 2:
+				var startOfLabelX = pie.outerLabelGroupData[i].innerX - labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].innerX - labelXMargin;
+				y3 = pie.outerLabelGroupData[i].innerY + heightOffset;
+				if (x4 < x3) { x4 = x3; }
+				break;
+			case 3:
+				var startOfLabelX = pie.outerLabelGroupData[i].innerX - labelXMargin;
+				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
+				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
+				x3 = pie.outerLabelGroupData[i].innerX - labelXMargin;
+				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
+				if (x4 < x3) { x4 = x3; }
+				break;
+		}
+
+		if (pie.options.labels.lines.style === "straight") {
+			pie.extraLineCoordGroups[i] = [
+				{ x: originCoords.x, y: originCoords.y },
+				{ x: x3, y: y3 }
+			];
+		} else if (pie.options.labels.lines.style === "aligned") {
+		    pie.extraLineCoordGroups[i] = [
+				{ x: originCoords.x, y: originCoords.y },
+				//{ x: x2, y: y2 },
+				{ x: x4, y: y4 },
+				//{ x: x5, y: y5 },
+				{ x: x3, y: y3 }
+			];
+		} else {
+			pie.extraLineCoordGroups[i] = [
 				{ x: originCoords.x, y: originCoords.y },
 				{ x: x2, y: y2 },
 				{ x: x3, y: y3 }
@@ -560,6 +645,38 @@ var labels = {
     				return isHidden ? 0 : 1;
 			    }
 			});
+
+		if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
+    		var extralineGroups = pie.svg.insert("g", "." + pie.cssPrefix + "pieChart") // meaning, BEFORE .pieChart
+    			.attr("class", pie.cssPrefix + "extraLineGroups")
+    			.style("opacity", 1);
+
+    		var extralineGroup = lineGroups.selectAll("." + pie.cssPrefix + "extraLineGroup")
+    			.data(pie.extraLineCoordGroups)
+    			.enter()
+    			.append("g")
+    			.attr("class", pie.cssPrefix + "extraLineGroup");
+
+    		extralineGroup.append("path")
+    			.attr("d", lineFunction)
+    			.attr("stroke", function(d, i) {
+    			    return pie.options.data.content[i].color;
+    				//return (pie.options.labels.lines.color === "segment") ? pie.options.colors[i] : pie.options.labels.lines.color;
+    			})
+    			.attr("stroke-width", 1)
+    			.attr("fill", "none")
+    			.style("opacity", function(d, i) {
+    			    if (pie.outerLabelGroupData[i].hideMiddle === 1) {
+    			        return 0;
+    			    } else {
+        				var percentage = pie.options.labels.outer.hideWhenLessThanPercentage;
+        				var segmentPercentage = segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces);
+        				var isHidden = (percentage !== null && segmentPercentage < percentage) || pie.options.data.content[i].label === "";
+        				return isHidden ? 0 : 1;
+    			    }
+    			});
+
+		}
 	},
 
 	positionLabelGroups: function(pie, section) {
@@ -657,6 +774,32 @@ var labels = {
 
       return (innerR * innerR <= dist) && (dist <= outerR * outerR) &&
              (stAngle <= angle) && (angle <= edAngle);
+    },
+
+    ptInCircle: function(pt, r) {
+        var dist = pt.x * pt.x + pt.y * pt.y;
+        return dist <= r * r;
+    },
+
+    checkInnerLabelWithEdges: function(pie, node, i) {
+
+        var bb = node.getBBox();
+        var center = {},
+            pts = [];
+        var r = pie.innerRadius - 1;
+
+        center.x = pie.outerLabelGroupData[i].innerX - pie.pieCenter.x;
+        center.y = pie.outerLabelGroupData[i].innerY - pie.pieCenter.y;
+
+        pts.push({ x : center.x + bb.x,     y : center.y + bb.y});       // top left point
+        pts.push({ x : pts[0].x + bb.width, y : pts[0].y});              // top right point
+        pts.push({ x : pts[0].x,            y : pts[0].y + bb.height});  // bottom left point
+        pts.push({ x : pts[0].x + bb.width, y : pts[0].y + bb.height});  // bottom right point
+
+        return labels.ptInCircle(pts[0], r) &&
+                labels.ptInCircle(pts[1], r) &&
+                labels.ptInCircle(pts[2], r) &&
+                labels.ptInCircle(pts[3], r);
     },
 
 
@@ -950,6 +1093,24 @@ var labels = {
 		return !returnVal;
 	},
 
+	rectIntersectInner: function(r1, r2) {
+		var returnVal = (
+			// r2.left > r1.right
+			(r2.innerX > (r1.innerX + r1.w)) ||
+
+			// r2.right < r1.left
+			((r2.innerX + r2.w) < r1.innerX) ||
+
+			// r2.bottom < r1.top
+			((r2.innerY + r2.h) < r1.innerY) ||
+
+			// r2.top > r1.bottom
+			(r2.innerY > (r1.innerY + r1.h))
+		);
+
+		return !returnVal;
+	},
+
     // sort and return with indices
     sortWithIndices: function(toSort, mode) {
             for (var i = 0; i < toSort.length; i++) {
@@ -1145,7 +1306,7 @@ var labels = {
             labels.hideLabel(pie, labelData[0]);
         }
 
-        var curr, prev, next;
+        var curr, prev, next, currIdx;
         // TODO: still buggy when texts are dense
         for (var i = 1; i < objs.length; i++) {
 
@@ -1218,29 +1379,6 @@ var labels = {
             }
         }
 
-        // put stuff in the middle
-        /*if (!pie.options.groups.content) {
-            for (var i = 0; i < objs.length; i++) {
-                currIdx = sortedValues.sortIndices[i];
-                curr = labelData[currIdx];
-                if (curr.hide === 0) {
-                    d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-extra")
-                        .style("display", "none");
-                    continue;
-                }
-
-                // set text position and check collision
-                curr.hide = 2;
-
-
-
-                // place text
-                d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-extra")
-                .attr("transform", function() {
-                    return "translate(" + curr.x + "," + curr.y + ")";
-                });
-            }
-        }*/
 
         // increase font size
         var itr = minFontSize;
@@ -1290,6 +1428,89 @@ var labels = {
         }
 
 
+        // put stuff in the middle
+        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
+
+
+    		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-extra")
+    			.each(function(d, i) {
+    				return labels.getIdealInnerLabelPositions(pie, i);
+    			})
+                .attr("transform", function(d,i) {
+                    return "translate(" + labelData[i].innerX + "," + labelData[i].innerY + ")";
+                })
+                .style("opacity", function(d,i) {
+                    return labelData[i].hide === 0 ? 0 : 1;
+                });
+
+
+            for (var i = 0; i < objs.length; i++) {
+
+                labelData[i].hideMiddle = labelData[i].hide === 0 ? 1 : 0;
+                labelData[i].innerYlim = {max: labelData[i].innerY + pie.options.data.fontSize*2, min: labelData[i].innerY - pie.options.data.fontSize*2};
+                if (labelData[i].innerX <= center.x) {
+                    labelData[i].innerAnchorPt = {x: labelData[i].innerX, y: labelData[i].innerY};
+                } else {
+                    labelData[i].innerAnchorPt = {x: labelData[i].innerX + labelData[i].w, y: labelData[i].innerY};
+                }
+                labelData[i].innerR = labels.getDist(labelData[i].innerAnchorPt.x, labelData[i].innerAnchorPt.y, pie.pieCenter.x, pie.pieCenter.y)
+
+            }
+
+
+            for (var i = 0; i < objs.length; i++) {
+                currIdx = i;
+                curr = labelData[currIdx];
+
+                if (curr.hide === 0) {
+                    labels.hideExtraLabel(pie, curr);
+                    continue;
+                }
+
+                var currEl = d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-extra")[0][0];
+                if (labels.checkInnerLabelWithEdges(pie, currEl, curr.i)) {
+                    for (var j = currIdx-1; j >= 0; j--) {
+                        prev = labelData[j];
+                        if (prev.hideMiddle === 0) {
+                            if (labels.rectIntersectInner(curr, prev)) {
+                        		if (currIdx === objs.length-1) {
+                        		    next = labelData[0];
+                        		} else {
+                        		    next = labelData[currIdx+1];
+                        		}
+                        		labels.adjustInnerLabelPosNew(pie, curr, prev, next, pie.pieCenter);
+
+                        		if (labels.checkInnerLabelWithEdges(pie, currEl, curr.i)) {
+                                    for (var k = currIdx-1; k >= 0; k--) {
+                                        if (labelData[k].hideMiddle === 0 && curr.hideMiddle === 0 && labels.rectIntersectInner(curr, labelData[k])) {
+                                            if (curr.arcFrac < labelData[k].arcFrac) {
+                                                labels.hideExtraLabel(pie, curr);
+                                            } else {
+                                                labels.hideExtraLabel(pie, labelData[k]);
+                                            }
+                                            break;
+                                        }
+                                    }
+
+                                    if (curr.hideMiddle === 1) {
+                                        break;
+                                    }
+                        		} else {
+                        		    labels.hideExtraLabel(pie, curr);
+                        		}
+                            }
+                        }
+                    }
+                } else {
+                    labels.hideExtraLabel(pie, curr);
+                }
+            }
+
+            d3.selectAll("." + pie.cssPrefix + "labelGroup-extra")
+                .attr("transform", function(d,i) {
+                    return "translate(" + labelData[i].innerX + "," + labelData[i].innerY + ")";
+                });
+        }
         // TODO
 /*        for (var i = 0; i < objs.length; i++) {
             currIdx = sortedValues.sortIndices[i];
@@ -1633,6 +1854,13 @@ var labels = {
             .style("display", "none");
 	},
 
+	hideExtraLabel: function(pie, curr) {
+	    curr.hideMiddle = 1;
+
+        d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-extra")
+            .style("display", "none");
+	},
+
 	// does a little math to shift a label into a new position based on the last properly placed one
 	adjustOuterLabelPosNew: function(pie, colliding, correct, next, center) {
 		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange;
@@ -1714,6 +1942,77 @@ var labels = {
 
 
 	},
+
+	adjustInnerLabelPosNew: function(pie, colliding, correct, next, center) {
+		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange;
+        heightChange = correct.h + 1;
+		if (colliding.innerhs === "left") {
+
+		    if (colliding.innerY >= correct.innerY) {
+                if (colliding.arcFrac > correct.arcFrac) {
+                    labels.hideExtraLabel(pie, correct);
+                } else {
+                    labels.hideExtraLabel(pie, colliding);
+                }
+		        return;
+		    } else {
+    		    if (correct.innerY - heightChange >= colliding.innerYlim.min) {
+    		        newYPos = correct.innerY - heightChange;
+    		    } else {
+    		        newYPos = colliding.innerYlim.min;
+    		    }
+		    }
+
+		} else {
+
+    		if (colliding.innerY >= correct.innerY) {
+    		    if (correct.innerY + heightChange <= colliding.innerYlim.max) {
+    		        newYPos = correct.innerY + heightChange;
+    		    } else {
+    		        newYPos = colliding.innerYlim.max;
+    		    }
+    		} else {
+                if (colliding.arcFrac > correct.arcFrac) {
+                    labels.hideExtraLabel(pie, correct);
+                } else {
+                    labels.hideExtraLabel(pie, colliding);
+                }
+    		    return;
+    		}
+		}
+
+		yDiff = center.y - newYPos;
+
+        // rotate colliding element with radius equal to its computed radius
+		if (Math.abs(colliding.innerR) > Math.abs(yDiff)) {
+			xDiff = Math.sqrt((colliding.innerR * colliding.innerR) - (yDiff * yDiff));
+
+            var padding = pie.options.labels.mainLabel.horizontalPadding;
+            // possibly need to do some more shifting
+    		if (correct.innerhs === "right") {
+    			newXPos = center.x + xDiff - colliding.w;
+    		} else {
+    			newXPos = center.x - xDiff;
+    		}
+
+
+    		colliding.innerX = newXPos;
+
+		}
+
+		colliding.innerY = newYPos;
+
+		if (colliding.innerhs === "right") {
+		    colliding.innerAnchorPt.x = colliding.innerX + colliding.w;
+		} else {
+		    colliding.innerAnchorPt.x = colliding.innerX;
+		}
+		colliding.innerAnchorPt.y = colliding.innerY;
+		colliding.innerR = labels.getDist(colliding.innerAnchorPt.x, colliding.innerAnchorPt.y, center.x, center.y)
+
+
+	},
+
 
 	// does a little math to shift a label into a new position based on the last properly placed one
 	adjustLabelPos: function(pie, nextIndex, lastCorrectlyPositionedLabel, info) {

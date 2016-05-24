@@ -172,7 +172,7 @@ function DetailedDonutPlot() {
 
                 if (settings.gradient) {
                     var colGrad = new Rainbow();
-                    colGrad.setSpectrum("444444", "gold");
+                    colGrad.setSpectrum("darkblue", "yellow");
                     colGrad.setNumberRange(0, n-1);
                     settings.valuesColor = [];
 
@@ -441,6 +441,9 @@ function DetailedDonutPlot() {
             			hideWhenLessThanPercentage: null,
             			pieDistance: pieDist,
             			offsetSize: offsetSize
+            		},
+            		inner: {
+            		    pieDistance: 10
             		},
             		mainLabel: {
             			color: settings.labelsColor ? settings.labelsColor : "#333333",
