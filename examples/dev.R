@@ -111,3 +111,13 @@ devtools::document()
 rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, groups.color = qColors)
 
 htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")
+
+library(rhtmlDonut)
+data("browser", package = "rhtmlDonut")
+
+out = sort(values, decreasing = T, index.return = T)
+# select a smaller subset, too many segments will cause rendering to become slow
+values1 = out[[1]][1:30]
+labels1 = labels[out[[2]]][1:30]
+groups1 = groups[out[[2]]][1:30]
+Donut(values = values1, labels = labels1, groups = groups1, values.order = "descending", groups.order = "alphabetical", groups.color = qColors,prefix = "", suffix = "%")

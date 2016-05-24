@@ -205,57 +205,6 @@ Donut <- function(
             }
         }
 
-        # order the values in the groups
-#         if (groups.order == "initial") {
-#             if (values.order == "initial") {
-#                 # do nothing
-#             } else  else if (values.order == "alphabetical") {
-#                 for (i in 1:n) {
-#                     idx = get(groups[i], hash)
-#                     # groups.size.each[i] = groups.bins[idx];
-#                     if (values[i] == 0) {
-#                         groups.sums.each[i] = groups.num[i] * vmax * 10
-#                     } else {
-#                         groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
-#                     }
-#                 }
-#             }
-#         } else if (groups.order == "descending"){
-#
-#         } else if (groups.order == "alphabetical") {
-#
-#         }
-#
-#         # groups.bins = as.vector(groups.temp)
-#         groups.lab = names(groups.temp)
-
-
-
-#         if (order == "default" || order == "descending") {
-#
-#             # group.num[i] * vmax * 10 >> values[i]
-#             # groups.sums[idx] * gnmax * vmax * 10000 should be >> group.num[i] * vmax * 10
-#             for (i in 1:n) {
-#                 idx = get(groups[i], hash)
-#                 groups.sums.each[i] = groups.perc[idx] * gnmax * vmax * 10000 + groups.num[i] * vmax * 2 + val.perc[i]
-#                 groups.size.each[i] = groups.bins[idx];
-#             }
-#
-#         } else if (order == "alphabetical") {
-#             for (i in 1:n) {
-#                 idx = get(groups[i], hash)
-#                 groups.size.each[i] = groups.bins[idx];
-#                 if (values[i] == 0) {
-#                     groups.sums.each[i] = groups.num[i] * vmax * 10
-#                 } else {
-#                     groups.sums.each[i] = groups.num[i] * vmax * 10 + 1/values[i]
-#                 }
-#                 if (is.null(values.color)) {
-#
-#                 }
-#             }
-#         }
-
     } else {
 
         if (values.order == "initial") {
@@ -284,16 +233,6 @@ Donut <- function(
         values.thres = values.thres / 100
     }
 
-#     if (is.null(large.angle)) {
-#         large.angle = 2 / 100
-#     } else {
-#         large.angle = large.angle / 100
-#     }
-#
-#     if (small.angle > large.angle) {
-#         small.angle = large.angle
-#     }
-
     # create a list that contains the settings
     settings <- list(
         valuesFont = values.font,
@@ -308,16 +247,11 @@ Donut <- function(
         groupsFont = groups.font, # string
         groupsSize = groups.size, # scalar
         groupsColor = groups.color, # length = length(unique(groups))
-        #groupsLab = groups.lab, # sorted unique labels
-
         groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsCounts = groups.counts, # number of items in each group
-        # groupsSumsEach = groups.sums.each, # length = n
-        # groupsSizeEach = groups.size.each, # length = n
         prefix = prefix,
         suffix = suffix,
-        order = order,
         orderControl = order.control,
         gradient = gradient,
         innerRadius = inner.radius,
