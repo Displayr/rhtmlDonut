@@ -125,7 +125,21 @@ var labels = {
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-extra"; })
 				.attr("class", pie.cssPrefix + "segmentMainLabel-extra")
 				.text(function(d, i) {
-				    var val;
+					return d.label + ":  ";
+				})
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("dy", ".35em")
+				.style("font-size", settings.mainLabel.minFontSize + "px")
+				.style("font-family", settings.mainLabel.font)
+				.style("fill", settings.mainLabel.color)
+				.style("font-weight", settings.mainLabel.fontWeight)
+				.append("tspan")
+				.style("font-weight", "normal")
+				.style("font-family", pie.options.data.font)
+				.style("font-size", settings.mainLabel.minFontSize + "px")
+				.text(function(d,i) {
+                    var val;
 				    if (pie.options.data.display == "percentage") {
 				        val = dataFormatter(d.value / pie.totalSize * 100);
 				    } else {
@@ -137,15 +151,8 @@ var labels = {
 				    if (pie.options.data.suffix) {
 				        val = val + pie.options.data.suffix;
 				    }
-					return d.label + ":  " + val;
-				})
-				.attr("x", 0)
-				.attr("y", 0)
-				.attr("dy", ".35em")
-				.style("font-size", settings.mainLabel.minFontSize + "px")
-				.style("font-family", settings.mainLabel.font)
-				.style("fill", settings.mainLabel.color)
-				.style("font-weight", settings.mainLabel.fontWeight);
+				    return val;
+				});
         }
 
         // add the group label

@@ -403,7 +403,7 @@ function DetailedDonutPlot() {
         			pieInnerRadius: settings.innerRadius ? settings.innerRadius : "80%"
         		},
         		data: {
-        			sortOrder: "none",
+        			sortOrder: settings.valuesOrder,
             		font: settings.valuesFont ? settings.valuesFont : "arial",
             		fontSize: settings.valuesSize ? settings.valuesSize : 10,
             		prefix: settings.prefix,
