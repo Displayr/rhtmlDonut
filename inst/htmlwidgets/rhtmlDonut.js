@@ -403,7 +403,7 @@ function DetailedDonutPlot() {
         			pieInnerRadius: settings.innerRadius ? settings.innerRadius : "80%"
         		},
         		data: {
-        			sortOrder: settings.groups ? "none" : settings.order,
+        			sortOrder: settings.valuesOrder,
             		font: settings.valuesFont ? settings.valuesFont : "arial",
             		fontSize: settings.valuesSize ? settings.valuesSize : 10,
             		prefix: settings.prefix,
@@ -441,6 +441,9 @@ function DetailedDonutPlot() {
             			hideWhenLessThanPercentage: null,
             			pieDistance: pieDist,
             			offsetSize: offsetSize
+            		},
+            		inner: {
+            		    pieDistance: 10
             		},
             		mainLabel: {
             			color: settings.labelsColor ? settings.labelsColor : "#333333",

@@ -97,8 +97,8 @@ rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending
 rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, inner.radius = "90%", prefix = "", suffix = "%")
 
 
-rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending", inner.radius = "0%",
-                  labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
+rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending", inner.radius = "80%",
+                  labels = labels1, labels.size = 10, labels.inner = TRUE, gradient = T, border.color = "none",
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "initial", inner.radius = "0%",
                   labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = F, border.color = "white",

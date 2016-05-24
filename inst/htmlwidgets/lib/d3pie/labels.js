@@ -109,7 +109,7 @@ var labels = {
 
         var extraLabelGroup;
         // no group and labels.inner == TRUE
-        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner) {
+        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
             extraLabelGroup = pie.svg.append("g")
 			    .attr("class", pie.cssPrefix + "labels-extra")
 			    .selectAll("." + pie.cssPrefix + "labelGroup-extra")
@@ -119,6 +119,7 @@ var labels = {
                 .attr("id", function(d, i) { return pie.cssPrefix + "labelGroup" + i + "-extra"; })
                 .attr("data-index", function(d, i) { return i; })
                 .attr("class", pie.cssPrefix + "labelGroup-extra")
+                //.style("display", "none")
                 .style("opacity", 0)
                 .append("text")
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-extra"; })
@@ -277,6 +278,39 @@ var labels = {
 			h: labelGroupDims.height,
 			hs: hemisphere
 		};
+	},
+
+	getIdealInnerLabelPositions: function(pie, i) {
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-extra").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
+		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+
+		var originalX = pie.pieCenter.x;
+		var originalY = pie.pieCenter.y - (pie.innerRadius - pie.options.labels.inner.pieDistance);
+		var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90);
+
+		// if the label is on the left half of the pie, adjust the values
+		var hemisphere = "left"; // hemisphere
+
+        if (angle > 270 || angle < 90) {
+			newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
+		} else {
+			newCoords.x -= (labelGroupDims.width + pie.options.labels.mainLabel.horizontalPadding);
+			hemisphere = "right";
+		}
+		/*if (angle > 180) {
+			newCoords.x -= (labelGroupDims.width + 8);
+			hemisphere = "left";
+		} else {
+			newCoords.x += 8;
+		}*/
+
+		pie.outerLabelGroupData[i].innerX = newCoords.x;
+		pie.outerLabelGroupData[i].innerY = newCoords.y;
+		pie.outerLabelGroupData[i].innerhs = newCoords.hemisphere;
 	},
 
 
@@ -1103,6 +1137,7 @@ var labels = {
             labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 0;
             labelData[i].hide = 0;
+            labelData[i].middle = 0;
             labelData[i].stop = 0;
             //labelData[i].xlim = {max: labelData[i].x + pie.options.data.fontSize, min: labelData[i].x - pie.options.data.fontSize};
             labelData[i].ylim = {max: labelData[i].y + pie.options.data.fontSize*2, min: labelData[i].y - pie.options.data.fontSize*2};
@@ -1219,28 +1254,31 @@ var labels = {
         }
 
         // put stuff in the middle
-        /*if (!pie.options.groups.content) {
+        if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
+
+    		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-extra")
+    			.each(function(d, i) {
+    				return labels.getIdealInnerLabelPositions(pie, i);
+    			});
+
             for (var i = 0; i < objs.length; i++) {
                 currIdx = sortedValues.sortIndices[i];
                 curr = labelData[currIdx];
                 if (curr.hide === 0) {
-                    d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-extra")
-                        .style("display", "none");
                     continue;
                 }
 
                 // set text position and check collision
-                curr.hide = 2;
-
-
+                curr.middle = 1;
 
                 // place text
                 d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-extra")
                 .attr("transform", function() {
-                    return "translate(" + curr.x + "," + curr.y + ")";
-                });
+                    return "translate(" + curr.innerX + "," + curr.innerY + ")";
+                })
+                .style("opacity", 1);
             }
-        }*/
+        }
 
         // increase font size
         var itr = minFontSize;

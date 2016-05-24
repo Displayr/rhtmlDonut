@@ -220,7 +220,7 @@ var defaultSettings = {
 		d3.select(this.element).attr(_scriptName, _version);
 
 		// things that are done once
-		this.options.data.content = math.sortPieData(this);
+		//this.options.data.content = math.sortPieData(this);
 		if (this.options.data.smallSegmentGrouping.enabled) {
 			this.options.data.content = helpers.applySmallSegmentGrouping(this.options.data.content, this.options.data.smallSegmentGrouping);
 		}
@@ -235,7 +235,7 @@ var defaultSettings = {
 		if (!validate.initialCheck(this)) {
 			return;
 		}
-		this.options.data.content = math.sortPieData(this);
+		//this.options.data.content = math.sortPieData(this);
 		if (this.options.data.smallSegmentGrouping.enabled) {
 			this.options.data.content = helpers.applySmallSegmentGrouping(this.options.data.content, this.options.data.smallSegmentGrouping);
 		}
