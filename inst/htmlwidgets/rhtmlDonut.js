@@ -35,7 +35,7 @@ function DetailedDonutPlot() {
 		h = (h < 0) ? 0 : h;
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 60)/2;
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
         pie.options.labels.mainLabel.maxLabelLength = settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength;
         pie.redrawWithoutLoading();
     }
@@ -219,7 +219,7 @@ function DetailedDonutPlot() {
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
 
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 60)/2;
+        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
 
         if (settings.orderControl) {
 
@@ -403,7 +403,7 @@ function DetailedDonutPlot() {
         			pieInnerRadius: settings.innerRadius ? settings.innerRadius : "80%"
         		},
         		data: {
-        			sortOrder: settings.groups ? "none" : settings.order,
+        			sortOrder: "none",
             		font: settings.valuesFont ? settings.valuesFont : "arial",
             		fontSize: settings.valuesSize ? settings.valuesSize : 10,
             		prefix: settings.prefix,
