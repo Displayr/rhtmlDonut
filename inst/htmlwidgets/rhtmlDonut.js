@@ -172,7 +172,7 @@ function DetailedDonutPlot() {
 
                 if (settings.gradient) {
                     var colGrad = new Rainbow();
-                    colGrad.setSpectrum("444444", "gold");
+                    colGrad.setSpectrum("darkblue", "yellow");
                     colGrad.setNumberRange(0, n-1);
                     settings.valuesColor = [];
 

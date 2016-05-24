@@ -110,4 +110,7 @@ rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.o
 devtools::document()
 rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, groups.color = qColors)
 
+v = rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending", inner.radius = "80%",
+                      labels = labels1, labels.size = 10, labels.inner = TRUE, gradient = T, border.color = "none",
+                      prefix = "", suffix = "%")
 htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = TRUE, background = "white")
