@@ -3,13 +3,14 @@
 #' @param labels character vector, length must be the same as \code{values}
 #' @param values.font (optional) font for \code{values}. Default is "Arial".
 #' @param values.size (optional) desired font size in pixels for \code{values}. Default is 10.
-#' @param values.color (optional) colors for \code{values}. If not provided then default colors are generated. If \code{group} is provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{group} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.
+#' @param values.color (optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.
 #' @param values.display (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
 #' @param values.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.
 #' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".
 #' @param labels.font (optional) font for \code{labels}. Default is "Arial"
 #' @param labels.size (optional) desired font size in pixels for \code{labels}. Default is 10.
 #' @param labels.color (optional) a hex value to set the label color for \code{labels}. Default is "#333333".
+#' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". Defaults to \code{FALSE}.
 #' @param labels.minFontSize (optional) the minimum font size in pixels for labels. Default is 8.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
 #' @param groups.font (optional) font for \code{groups}. Default is "Arial".
@@ -19,7 +20,7 @@
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex colors)
-#' @param gradient (optional) if \code{group} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
+#' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".
 #' @param max.label.length (optional) sets custom label length constraint. Usually this does not need to be set and auto wrapping will apply.
 

@@ -23,7 +23,7 @@ Donut(values, labels, values.font = NULL, values.size = 10,
 
 \item{values.size}{(optional) desired font size in pixels for \code{values}. Default is 10.}
 
-\item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{group} is provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{group} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
+\item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
 
 \item{values.display}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".}
 
@@ -38,6 +38,8 @@ Donut(values, labels, values.font = NULL, values.size = 10,
 \item{labels.color}{(optional) a hex value to set the label color for \code{labels}. Default is "#333333".}
 
 \item{labels.minFontSize}{(optional) the minimum font size in pixels for labels. Default is 8.}
+
+\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". Defaults to \code{FALSE}.}
 
 \item{groups}{(optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.}
 
@@ -55,7 +57,7 @@ Donut(values, labels, values.font = NULL, values.size = 10,
 
 \item{border.color}{(optional) c("white", "none", hex colors)}
 
-\item{gradient}{(optional) if \code{group} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
+\item{gradient}{(optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
 
 \item{inner.radius}{(optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".}
 
