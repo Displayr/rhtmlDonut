@@ -94,17 +94,17 @@ groups1 = groups[out[[2]]][1:30]
 rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", gradient = T, border.color = "none", prefix = "", suffix = "%")
 # a donut plot with groups
-rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, inner.radius = "90%", prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, inner.radius = "80%", prefix = "", suffix = "%")
 
 
-rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "descending", inner.radius = "80%",
-                  labels = labels1, labels.size = 10, labels.inner = TRUE, gradient = T, border.color = "none",
+rhtmlDonut::Donut(values = values1, values.size = 10, values.order = "descending", inner.radius = "80%",
+                  labels = labels1, labels.size = 10, labels.inner = TRUE,
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "initial", inner.radius = "0%",
                   labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = F, border.color = "white",
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values1, values.size = 10, values.thres = 0, values.order = "alphabetical", inner.radius = "90%",
-                  labels = labels1, labels.size = 10, labels.inner = FALSE, gradient = T, border.color = "none",
+                  labels = labels1, labels.size = 10, labels.inner = TRUE, gradient = T, border.color = "none",
                   prefix = "", suffix = "%")
 
 devtools::document()

@@ -341,9 +341,16 @@ var segments = {
 			}
 
             if (pie.options.tooltips.enabled) {
-                if (pie.outerLabelGroupData[i].hide === 1 || d.value < pie.options.data.minAngle) {
-                    index = segment.attr("data-index");
-                    tt.showTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
+                if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
+                    if (pie.outerLabelGroupData[i].hide === 1 && pie.outerLabelGroupData[i].hideMiddle === 1 || d.value < pie.options.data.minAngle) {
+                        index = segment.attr("data-index");
+                        tt.showTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
+                    }
+                } else {
+                    if (pie.outerLabelGroupData[i].hide === 1 || d.value < pie.options.data.minAngle) {
+                        index = segment.attr("data-index");
+                        tt.showTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
+                    }
                 }
             }
 
