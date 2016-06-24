@@ -164,6 +164,10 @@ function DetailedDonutPlot() {
                     pieData[i].color = increaseBrightness(baseColor, lum * 100);
                     nInGroups[idx] += 1;
                 }
+            } else {
+                for (i = 0; i < n; i++) {
+                    pieData[i].color = settings.valuesColor[i];
+                }
             }
 
         } else {
