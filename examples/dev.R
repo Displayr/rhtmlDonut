@@ -124,3 +124,21 @@ values1 = out[[1]][1:30]
 labels1 = labels[out[[2]]][1:30]
 groups1 = groups[out[[2]]][1:30]
 Donut(values = values1, labels = labels1, groups = groups1, values.order = "descending", groups.order = "alphabetical", groups.color = qColors,prefix = "", suffix = "%")
+
+values <- c(10, 60, 30)
+labels <- c("A","B","C")
+values.color <- c("red", "blue", "green")
+rhtmlDonut::Donut(values = values, labels = labels, values.color = values.color, values.order = "descending")
+
+values <- c(10, 60, 30, 45, 25, 30, 25, 25, 50)
+groups <- c("Male","Male", "Male", "Female","Female","Female","Undecided","Undecided","Undecided")
+labels <- c("A","B","C","A","B","C","A","B","C")
+values.color <- c("#E3D37C", "#F49F9A", "#E27DC3", "#E3D37C", "#F49F9A", "#E27DC3", "#E3D37C", "#F49F9A", "#E27DC3")
+group.color <- c("#222222", "#999999", "#DDDDDD")
+
+rhtmlDonut::Donut(values = values,
+                  labels = labels,
+                  values.color = values.color,
+                  groups.color = group.color,
+                  groups = groups,
+                  values.order = "descending")

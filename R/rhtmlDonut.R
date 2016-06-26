@@ -148,10 +148,17 @@ Donut <- function(
             values = values[v.order[[2]]]
             labels = labels[v.order[[2]]]
             groups = groups[v.order[[2]]]
+            if (!is.null(values.color)) {
+                values.color = values.color[v.order[[2]]]
+            }
         } else if (values.order == "alphabetical") {
             values.group.idx = rep(0, n)
             labels.group.mat = matrix(rep("", n*ng), nrow = ng)
             values.group.mat = matrix(rep(-1, n*ng), nrow = ng)
+            if (!is.null(values.color)) {
+                values.col.group.mat = matrix(rep("", n*ng), nrow = ng)
+            }
+
             groups.mat = matrix(rep("", n*ng), nrow = ng)
             c = rep(1, ng)
 
@@ -159,17 +166,29 @@ Donut <- function(
                 values.group.idx[i] = get(groups[i], hash)
                 labels.group.mat[values.group.idx[i], c[values.group.idx[i]]] = labels[i]
                 values.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values[i]
+                if (!is.null(values.color)) {
+                    values.col.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values.color[i]
+                }
                 groups.mat[values.group.idx[i], c[values.group.idx[i]]] = groups[i]
                 c[values.group.idx[i]] = c[values.group.idx[i]] + 1
             }
 
+
             values = c()
             labels = c()
             groups = c()
+            if (!is.null(values.color)) {
+                values.color = c()
+                vc.not.null = TRUE
+            } else {
+                vc.not.null = FALSE
+            }
+
             for (i in 1:ng) {
                 labels.group.v = labels.group.mat[i, labels.group.mat[i,] != ""]
                 values.group.v = values.group.mat[i, values.group.mat[i,] != -1]
                 groups.v = groups.mat[i, groups.mat[i,] != ""]
+
                 out = sort(labels.group.v, index.return = T)
                 labels.group.v = out[[1]]
                 values.group.v = values.group.v[out[[2]]]
@@ -177,12 +196,21 @@ Donut <- function(
                 values = c(values, values.group.v)
                 labels = c(labels, labels.group.v)
                 groups = c(groups, groups.v)
+                if (vc.not.null) {
+                    values.col.group.v = values.col.group.mat[i, values.col.group.mat[i,] != ""]
+                    values.col.group.v = values.col.group.v[out[[2]]]
+                    values.color = c(values.color, values.col.group.v)
+                }
+
             }
         } else if (values.order == "initial") {
             values.group.idx = rep(0, n)
             labels.group.mat = matrix(rep("", n*ng), nrow = ng)
             values.group.mat = matrix(rep(-1, n*ng), nrow = ng)
             groups.mat = matrix(rep("", n*ng), nrow = ng)
+            if (!is.null(values.color)) {
+                values.col.group.mat = matrix(rep("", n*ng), nrow = ng)
+            }
             c = rep(1, ng)
 
             for (i in 1:n) {
@@ -190,12 +218,22 @@ Donut <- function(
                 labels.group.mat[values.group.idx[i], c[values.group.idx[i]]] = labels[i]
                 values.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values[i]
                 groups.mat[values.group.idx[i], c[values.group.idx[i]]] = groups[i]
+                if (!is.null(values.color)) {
+                    values.col.group.mat[values.group.idx[i], c[values.group.idx[i]]] = values.color[i]
+                }
                 c[values.group.idx[i]] = c[values.group.idx[i]] + 1
             }
 
             values = c()
             labels = c()
             groups = c()
+            if (!is.null(values.color)) {
+                values.color = c()
+                vc.not.null = TRUE
+            } else {
+                vc.not.null = FALSE
+            }
+
             for (i in 1:ng) {
                 labels.group.v = labels.group.mat[i, labels.group.mat[i,] != ""]
                 values.group.v = values.group.mat[i, values.group.mat[i,] != -1]
@@ -203,6 +241,10 @@ Donut <- function(
                 values = c(values, values.group.v)
                 labels = c(labels, labels.group.v)
                 groups = c(groups, groups.v)
+                if (vc.not.null) {
+                    values.col.group.v = values.col.group.mat[i, values.col.group.mat[i,] != ""]
+                    values.color = c(values.color, values.col.group.v)
+                }
             }
         }
 
@@ -210,14 +252,21 @@ Donut <- function(
 
         if (values.order == "initial") {
             # do nothing
+            order.index = 1:length(values)
         } else if (values.order == "descending"){
             v.order = sort(values, decreasing = T, index.return = T)
             values = v.order[[1]]
+            order.index = v.order[[2]]
             labels = labels[v.order[[2]]]
         } else if (values.order == "alphabetical") {
             v.order = sort(labels, decreasing = F, index.return = T)
             labels = v.order[[1]]
+            order.index = v.order[[2]]
             values = values[v.order[[2]]]
+        }
+
+        if (!is.null(values.color)) {
+            values.color = values.color[order.index]
         }
 
         groups.names = NULL
