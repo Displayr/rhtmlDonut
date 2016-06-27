@@ -455,8 +455,23 @@ var labels = {
 		var quarter = Math.floor(angle / 90);
 		var midPoint = 4;
 		var x2, y2, x3, y3, x4, x5, y4, y5;
+		var labelData = pie.outerLabelGroupData;
 
-		angle = angle - 90;
+        if (labelData[i].x > pie.pieCenter.x) {
+            if (labelData[i].y < pie.pieCenter.y) {
+                quarter = 0;
+            } else {
+                quarter = 1;
+            }
+        } else {
+            if (labelData[i].y > pie.pieCenter.y) {
+                quarter = 2;
+            } else {
+                quarter = 3;
+            }
+        }
+
+		/*angle = angle - 90;
 		if (angle < 0) {
 		    quarter = 3;
 		} else if (angle < 90) {
@@ -465,7 +480,7 @@ var labels = {
 		    quarter = 1;
 		} else {
 		    quarter = 2;
-		}
+		}*/
 
 		switch (quarter) {
 			case 0:
@@ -545,16 +560,21 @@ var labels = {
 		var midPoint = 4;
 		var x2, y2, x3, y3, x4, x5, y4, y5;
 
-		angle = angle - 90;
-		if (angle < 0) {
-		    quarter = 3;
-		} else if (angle < 90) {
-		    quarter = 0;
-		} else if (angle < 180) {
-		    quarter = 1;
-		} else {
-		    quarter = 2;
-		}
+		var labelData = pie.outerLabelGroupData;
+
+        if (labelData[i].x > pie.pieCenter.x) {
+            if (labelData[i].y < pie.pieCenter.y) {
+                quarter = 0;
+            } else {
+                quarter = 1;
+            }
+        } else {
+            if (labelData[i].y > pie.pieCenter.y) {
+                quarter = 2;
+            } else {
+                quarter = 3;
+            }
+        }
 
 		switch (quarter) {
 			case 0:
