@@ -25,6 +25,7 @@
 data("browser", package = "rhtmlDonut")
 labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
+rhtmlDonut::Donut(values = rep(1, length(labels)), labels = labels)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.size = 10,
@@ -142,3 +143,30 @@ rhtmlDonut::Donut(values = values,
                   groups.color = group.color,
                   groups = groups,
                   values.order = "descending")
+
+rhtmlDonut::Donut(values = values,
+                  labels = labels,
+                  values.color = values.color,
+                  groups.color = group.color,
+                  groups = groups,
+                  values.order = "initial")
+
+rhtmlDonut::Donut(values = values,
+                  labels = labels,
+                  values.color = values.color,
+                  groups.color = group.color,
+                  groups = groups,
+                  values.order = "alphabetical")
+
+values = rep(1, 26*6)
+labels = rep(paste0(letters, letters, letters), times = 6)
+rhtmlDonut::Donut(values = values,
+                  labels = labels,
+                  values.order = "initial")
+
+
+# v = rhtmlDonut::Donut(values = values,
+#                   labels = labels,
+#                   values.order = "initial")
+
+# htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")

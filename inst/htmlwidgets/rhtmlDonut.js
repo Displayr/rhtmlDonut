@@ -22,8 +22,8 @@ function DetailedDonutPlot() {
         pie.options.size.canvasWidth = width;
         pie.options.size.canvasHeight = height;
 
-        var pieDist = Math.min(width/30, height/25, 15);
-        var offsetSize = Math.min(width/25, height/20, 25);
+        var pieDist = Math.min(width/30, height/25, 10);
+        var offsetSize = Math.min(width/25, height/20, 20);
         pie.options.labels.outer.pieDistance = pieDist;
         pie.options.labels.outer.offsetSize = offsetSize;
 
@@ -206,8 +206,8 @@ function DetailedDonutPlot() {
 
         dataFormatter = d3.format(",.1f");
 
-        var pieDist = Math.min(width/30, height/25, 15);
-        var offsetSize = Math.min(width/25, height/20, 25);
+        var pieDist = Math.min(width/30, height/25, 10);
+        var offsetSize = Math.min(width/25, height/20, 20);
 
         var canvasPadding = {
 			top: 5,

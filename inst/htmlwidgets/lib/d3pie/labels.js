@@ -723,8 +723,27 @@ var labels = {
             }
         }*/
         var offsetSize = pie.options.labels.outer.offsetSize;
-        var yOffsetScale = d3.scale.pow().exponent(3).domain([0, pie.pieCenter.y]).range([0, offsetSize * 1.5]);
-        var xOffsetScale = d3.scale.pow().exponent(3).domain([0, pie.pieCenter.x]).range([offsetSize, 0]);
+        var verticalSpace = (pie.options.size.canvasHeight - pie.outerRadius * 2 - pie.options.labels.outer.pieDistance * 2 - pie.options.labels.mainLabel.fontSize*3) / 2;
+
+        //var xOffsetScale = d3.scale.pow().exponent(3).domain([0, pie.pieCenter.x]).range([offsetSize, 0]);
+        //var yOffset1 = d3.scale.linear().domain([0, pie.pieCenter.y/2]).range([verticalSpace, 0]);
+
+        var sortedYval = [];
+        for (var i = 0; i < labelData.length; i++) {
+            sortedYval.push(labelData[i].y);
+        }
+        labels.sortWithIndices(sortedYval);
+
+        var sortedXval = [];
+        for (var i = 0; i < labelData.length; i++) {
+            sortedXval.push(labelData[i].x);
+        }
+        labels.sortWithIndices(sortedXval);
+        var maxYDiff = Math.max(Math.abs(sortedYval[0] - pie.pieCenter.y), Math.abs(sortedYval[labelData.length-1] - pie.pieCenter.y));
+		var maxXDiff = Math.max(Math.abs(sortedXval[0] - pie.pieCenter.x), Math.abs(sortedXval[labelData.length-1] - pie.pieCenter.x));
+
+		var yOffsetScale = d3.scale.pow().exponent(5).domain([0, maxYDiff]).range([0, offsetSize*1.5]);
+		var xOffsetScale = d3.scale.pow().exponent(3).domain([0, maxXDiff]).range([offsetSize, 0]);
 
         for (var i = 0; i < labelData.length; i++) {
             if (labelData[i].y > pie.pieCenter.y) {
@@ -734,9 +753,9 @@ var labels = {
             }
 
             if (labelData[i].x > pie.pieCenter.x) {
-                labelData[i].ox = xOffsetScale(labelData[i].x - pie.pieCenter.x);
+                labelData[i].ox = offsetSize/2;
             } else {
-                labelData[i].ox = -xOffsetScale(pie.pieCenter.x - labelData[i].x);
+                labelData[i].ox = -offsetSize/2;
             }
 
             labelData[i].x += labelData[i].ox;
@@ -1370,42 +1389,83 @@ var labels = {
                     }
                 }
             }*/
-
+			var boundary = true;
             if (curr.hide === 0) {
                 for (var j = i-1; j >= 0; j--) {
                     prev = labelData[j];
-                    if (prev.hide === 0) {
-                        if (labels.rectIntersect(curr, prev)) {
+                    if (prev.hide === 0){
+                    	var triggered = 0;
+                    	// check position shift of the current element if
+                    	// 1) it intersects with previously placed element
+                    	// 2) it is crossed by previously placed element
+                    	// 		- if angle smaller than threshold
+                    	// 			- if it is the last element in the semi-sphere
+                    	//			- if it is not the last in the semi-sphere
+                    	// 		- if angle bigger than threshold
+                    	// 3) it is the first elemtn in the semi-sphere
+                    	if (labels.rectIntersect(curr, prev)) {
+                    		triggered = 1;
+                    	} else if (curr.hs === "left" && curr.y >= prev.y && curr.quadrant === prev.quadrant) {
+							triggered = 2;
+                    	} else if (curr.hs === "right" && curr.y <= prev.y && curr.hs === prev.hs) {
+							triggered = 3;
+                    	} else if (curr.hs != prev.hs && boundary) {
+                    		// boundary makes sure it is the boundary
+							triggered = 4;
+                    	}
+                    	boundary = false;
 
-                    		if (i === objs.length-1) {
-                    		    next = labelData[0];
-                    		} else {
-                    		    next = labelData[i+1];
-                    		}
+                    	/*if (curr.hs != prev.hs) {
+                    		adj = true;
+                    		curr.y = prev.y;
+                    		curr.anchorPt.y = curr.y;
+							curr.r = labels.getDist(curr.anchorPt.x, curr.anchorPt.y, pie.pieCenter.x, pie.pieCenter.y);
+                    	}*/
+                    	if (triggered === 0) {
+                    		continue;
+                    	}
+                 		labels.adjustOuterLabelPosNew(pie, curr, prev, next, pie.pieCenter, triggered);
 
-                            labels.adjustOuterLabelPosNew(pie, curr, prev, next, pie.pieCenter);
-
-                            for (var k = i-1; k >= 0; k--) {
-                                if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
-                                    if (curr.arcFrac < labelData[k].arcFrac) {
-                                        labels.hideLabel(pie, curr);
-                                    } else {
-                                        labels.hideLabel(pie, labelData[k]);
-                                    }
-
-                                    break;
+                        for (var k = i-1; k >= 0; k--) {
+                            if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                                if (curr.arcFrac < labelData[k].arcFrac) {
+                                    labels.hideLabel(pie, curr);
+                                } else {
+                                    labels.hideLabel(pie, labelData[k]);
                                 }
-                            }
-
-                            if (curr.hide === 1) {
                                 break;
                             }
+                        }
+
+                        if (curr.hide === 1) {
+         	               break;
                         }
                     }
                 }
             }
         }
 
+        // for elements near the top/bottom of the pie, try a different approach
+
+        /*var sortedYval = [];
+        for (var i = 0; i < objs.length; i++) {
+            sortedYval.push(labelData[i].y);
+        }
+        labels.sortWithIndices(sortedYval);
+
+        for (var i = 0; i < objs.length; i++) {
+
+            currIdx = sortedYval.sortIndices[i];
+            curr = labelData[currIdx];
+
+            if (curr.hide === 1) {
+                // for the labels with the highest or lowest 10 y values
+                if (i <= 10 || i >= objs.length - 10) {
+
+                }
+            }
+
+        }*/
 
         // increase font size
         var itr = minFontSize;
@@ -1453,7 +1513,6 @@ var labels = {
                 }
             }
         }
-
 
         // put stuff in the middle
         if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
@@ -1538,6 +1597,9 @@ var labels = {
                     return "translate(" + labelData[i].innerX + "," + labelData[i].innerY + ")";
                 });
         }
+
+
+
         // TODO
 /*        for (var i = 0; i < objs.length; i++) {
             currIdx = sortedValues.sortIndices[i];
@@ -1889,12 +1951,109 @@ var labels = {
 	},
 
 	// does a little math to shift a label into a new position based on the last properly placed one
-	adjustOuterLabelPosNew: function(pie, colliding, correct, next, center) {
-		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange;
-        heightChange = correct.h + 1;
-		if (colliding.hs === "left") {
+	adjustOuterLabelPosNew: function(pie, colliding, correct, next, center, triggered) {
+		var labelData = pie.outerLabelGroupData;
+		var last = labelData[correct.i - 1];
+		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange, pieDist;
+        heightChange = colliding.h + 1;
+        pieDist = pie.options.labels.outer.pieDistance;
+        var angThres = 45;
+    	var angle = Math.acos(Math.abs(center.y - colliding.y)/Math.abs(colliding.r))*180/Math.PI;
 
-		    if (colliding.y >= correct.y) {
+    	console.log("correct.y = " + correct.y + "angle = " + angle + "label = " + colliding.label);
+
+		var compareAndHide = function (pie, colliding, correct) {
+			if (colliding.arcFrac > correct.arcFrac) {
+				labels.hideLabel(pie, correct);
+			} else {
+				labels.hideLabel(pie, colliding);
+			}
+		};
+
+		if (triggered <= 3) {
+
+			if (angle <= angThres) {
+				// small angle elements
+				if (colliding.hs != next.hs) {
+					// last element in the hemisphere
+					if (colliding.hs === "left") {
+						newYPos = correct.y - heightChange;
+					} else {
+						newYPos = correct.y + heightChange;
+					}
+				} else {
+					// not the last element
+					if (correct.y < heightChange ||
+						correct.y > pie.options.size.canvasHeight - 2 * heightChange) {
+						labels.hideLabel(pie, colliding);
+						return;
+					} else {
+						// enough vertical space
+						if (triggered === 1) {
+							if (colliding.hs === "left") {
+								if (correct.y - heightChange >= colliding.ylim.min) {
+									newYPos = correct.y - heightChange;
+								} else {
+									compareAndHide(pie, colliding, correct);
+									return;
+								}
+							} else {
+								if (correct.y + heightChange <= colliding.ylim.max) {
+									newYPos = correct.y + heightChange;
+								} else {
+									compareAndHide(pie, colliding, correct);
+									return;
+								}
+							}
+						} else if (triggered === 2) {
+							compareAndHide(pie, colliding, correct);
+							return;
+						} else {
+							compareAndHide(pie, colliding, correct);
+							return;
+						}
+					}
+				}
+			} else {
+				// large angle elements
+				if (triggered === 1) {
+					if (colliding.hs === "left") {
+						if (correct.y - heightChange >= colliding.ylim.min) {
+							newYPos = correct.y - heightChange;
+						} else {
+							compareAndHide(pie, colliding, correct);
+							return;
+						}
+					} else {
+						if (correct.y + heightChange <= colliding.ylim.max) {
+							newYPos = correct.y + heightChange;
+						} else {
+							compareAndHide(pie, colliding, correct);
+							return;
+						}
+					}
+				} else if (triggered === 2) {
+					// always at the left hemisphere
+					// when large angle, just hide
+					compareAndHide(pie, colliding, correct);
+					return;
+				} else {
+					// always at the right hemisphere
+					// when large angle, just hide
+					compareAndHide(pie, colliding, correct);
+					return;
+				}
+			}
+
+		} else if (triggered === 4){
+			// first element in the hemisphere
+			// implies it collides with the next element
+			newYPos = colliding.y;
+		}
+
+		/*if (colliding.hs === "left") {
+
+		    if (colliding.y >= correct.y && angle > angThres) {
                 if (colliding.arcFrac > correct.arcFrac) {
                     labels.hideLabel(pie, correct);
                 } else {
@@ -1902,62 +2061,152 @@ var labels = {
                 }
 		        return;
 		    } else {
-    		    if (correct.y - heightChange >= colliding.ylim.min) {
-    		        newYPos = correct.y - heightChange;
-    		    } else {
-    		        newYPos = colliding.ylim.min;
+				if (angle <= angThres) {
+					// if this element is the last elemnt in the quadrant or
+					// has not reached its maximum height, shift it
+					if (colliding.quadrant != next.quadrant ||
+					correct.y - heightChange >= colliding.ylim.min) {
+						if (colliding.hs != correct.hs) {
+							newYPos = colliding.y;
+						} else {
+							newYPos = correct.y - heightChange;
+						}
+
+					} else {
+						labels.hideLabel(pie, colliding);
+						return;
+					}
+
+				}
+    		    else {
+					if (correct.y - heightChange >= colliding.ylim.min) {
+						newYPos = correct.y - heightChange;
+					} else {
+						labels.hideLabel(pie, colliding);
+						return;
+					}
     		    }
 		    }
 
 		} else {
 
-    		if (colliding.y >= correct.y) {
-    		    if (correct.y + heightChange <= colliding.ylim.max) {
-    		        newYPos = correct.y + heightChange;
-    		    } else {
-    		        newYPos = colliding.ylim.max;
-    		    }
-    		} else {
+    		if (colliding.y <= correct.y && angle > angThres) {
                 if (colliding.arcFrac > correct.arcFrac) {
                     labels.hideLabel(pie, correct);
                 } else {
                     labels.hideLabel(pie, colliding);
                 }
     		    return;
+    		} else {
+    		    if (angle <= angThres) {
+    		    	if (colliding.quadrant != next.quadrant ||
+    		    	 correct.y + heightChange <= colliding.ylim.max) {
+						if (colliding.hs != correct.hs) {
+							newYPos = colliding.y;
+						} else {
+							newYPos = correct.y + heightChange;
+						}
+    		    	} else {
+						labels.hideLabel(pie, colliding);
+						return;
+    		    	}
+
+				}
+    		    else {
+					if (correct.y + heightChange <= colliding.ylim.max) {
+						newYPos = correct.y + heightChange;
+					} else {
+						labels.hideLabel(pie, colliding);
+						return;
+					}
+    		    }
+
     		}
-		}
+		}*/
 
 		yDiff = center.y - newYPos;
 
+
         // rotate colliding element with radius equal to its computed radius
-		if (Math.abs(colliding.r) > Math.abs(yDiff)) {
-			xDiff = Math.sqrt((colliding.r * colliding.r) - (yDiff * yDiff));
+        if (triggered != 4) {
+			if (Math.abs(colliding.r) > Math.abs(yDiff) && (angle > angThres || colliding.quadrant % 2 === 1)) {
+				xDiff = Math.sqrt((colliding.r * colliding.r) - (yDiff * yDiff));
+				//console.log(xDiff);
 
-            var padding = pie.options.labels.mainLabel.horizontalPadding;
-            // possibly need to do some more shifting
-    		if (correct.hs === "right") {
-    			newXPos = center.x + xDiff;
-    		} else {
-    			newXPos = center.x - xDiff - colliding.w;
-    		}
+				//xDiff = Math.max(xDiff, pie.outerRadius * 0.2);
 
-    		/*if (next.quadrant === colliding.quadrant) {
-    		    if (colliding.quadrant === 1) {
-    		        if (next.anchorPt.x < newXAnchor) {newXPos = next.anchorPt.x;}
-    		    } else if (colliding.quadrant === 2) {
-    		        if (next.anchorPt.x > newXAnchor) {newXPos = next.anchorPt.x;}
-    		    } else if (colliding.quadrant === 3) {
-                    if (next.anchorPt.x > newXAnchor) {newXPos = next.anchorPt.x - colliding.w;}
-    		    } else if (colliding.quadrant === 4){
-                    if (next.anchorPt.x < newXAnchor) {newXPos = next.anchorPt.x - colliding.w;}
-    		    }
-    		}*/
+				//var padding = pie.options.labels.mainLabel.horizontalPadding;
+				// possibly need to do some more shifting
+				if (correct.hs === "right") {
+					newXPos = center.x + xDiff;
+				} else {
+					newXPos = center.x - xDiff - colliding.w;
+				}
 
-    		colliding.x = newXPos;
+				/*if (next.quadrant === colliding.quadrant) {
+					if (colliding.quadrant === 1) {
+						if (next.anchorPt.x < newXAnchor) {newXPos = next.anchorPt.x;}
+					} else if (colliding.quadrant === 2) {
+						if (next.anchorPt.x > newXAnchor) {newXPos = next.anchorPt.x;}
+					} else if (colliding.quadrant === 3) {
+						if (next.anchorPt.x > newXAnchor) {newXPos = next.anchorPt.x - colliding.w;}
+					} else if (colliding.quadrant === 4){
+						if (next.anchorPt.x < newXAnchor) {newXPos = next.anchorPt.x - colliding.w;}
+					}
+				}*/
 
-		}
+				colliding.x = newXPos;
 
+			} else {
+				//angle = Math.acos(Math.abs(colliding.r) / Math.abs(yDiff))*180/Math.PI;
+				if (correct.i != 0) {
+					if (last.hs === correct.hs) {
+						xDiff = Math.abs(last.x - correct.x);
+					} else {
+						xDiff = 5;
+					}
+				} else {
+					xDiff = 5;
+				}
+
+				if (newYPos <= center.y) {
+					if (correct.hs === "left") {
+						newXPos = correct.x + correct.w - colliding.w
+								+ pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+					} else {
+						newXPos = correct.x + pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+					}
+
+				} else {
+					if (correct.hs === "left") {
+						newXPos = correct.x + correct.w - colliding.w
+								- pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+					} else {
+						newXPos = correct.x - pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+					}
+
+				}
+				colliding.x = newXPos;
+
+			}
+        } else {
+
+        }
+
+
+    	/*if (correct.hs === "right") {
+    		newXPos = center.x + xDiff;
+    	} else {
+    		newXPos = center.x - xDiff - colliding.w;
+    	}
+    	colliding.x = newXPos;*/
 		colliding.y = newYPos;
+
+		if (colliding.x <= center.x) {
+			colliding.hs = "left";
+		} else {
+			colliding.hs = "right";
+		}
 
 		if (colliding.hs === "right") {
 		    colliding.anchorPt.x = colliding.x;
