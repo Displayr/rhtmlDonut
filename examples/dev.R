@@ -21,11 +21,13 @@
 #              grDevices::rgb(255, 35, 35, 255, max = 255)) # red
 # qColors = substring(qColors1,1,7)
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
-
+library(devtools)
+install_github("NumbersInternational/rhtmlDonut@VIS-57")
 data("browser", package = "rhtmlDonut")
 labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
-rhtmlDonut::Donut(values = rep(1, length(labels)), labels = labels)
+set.seed(1)
+rhtmlDonut::Donut(values = runif(length(labels)), labels = labels)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.size = 10,
