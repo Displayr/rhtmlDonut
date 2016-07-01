@@ -172,3 +172,11 @@ rhtmlDonut::Donut(values = values,
 #                   values.order = "initial")
 
 # htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")
+data = read.table("/Users/MichaelW/Work/rhtmlDonut/data/data1.txt", sep = "\t", stringsAsFactors = FALSE)
+values = data$V1
+labels = data$V2
+rhtmlDonut::Donut(values = values,
+                             values.display = "original",
+                             labels = labels,
+                             prefix = "$",
+                             values.thres = .3)
