@@ -62,6 +62,9 @@ var segments = {
     			})
     			.style("stroke", segmentStroke)
     			.style("stroke-width", 1)
+    			.attr("d", function(d) {
+    				return arc(d);
+    			})
     			.transition()
     			.ease("cubic-in-out")
     			.duration(loadSpeed)
@@ -199,6 +202,49 @@ var segments = {
 	    }
 	},
 
+	shiftPlot: function(pie) {
+        // pie.svg is the main element group excluding tooltips
+        pie.svg.attr("transform", "translate(0,0)scale(1)");
+	    var box = pie.svg.node().getBoundingClientRect();
+	    var y, scale, ytrans;
+	    var height = pie.options.size.canvasHeight;
+	    // set y position to 0
+        y = -box.top;
+        pie.svg.attr("transform", "translate(0," + y + ")");
+        box = pie.svg.node().getBoundingClientRect();
+
+	    if (box.height > height) {
+	        // the plot cannot be fit into the window
+	        scale = height/box.height;
+	        pie.svg.attr("transform", "translate(0," + y + ")scale(" + scale + ")");
+	        box = pie.svg.node().getBoundingClientRect();
+	        pie.svg.attr("transform", "translate(0," + (y - box.top) + ")scale(" + scale + ")");
+	    } else {
+	        // the plot can be fit into the window, center it
+	        pie.svg.attr("transform", "translate(0," + (y + (height - box.height)/2) + ")");
+	    }
+
+
+	    /*if (box.y < 0) {
+
+
+	    } else {
+            y = -box.top;
+            pie.svg.attr("transform", "translate(0," + y + ")");
+            box = pie.svg.node().getBoundingClientRect();
+
+	        if (box.bottom > height) {
+	            scale = height/box.bottom;
+	            pie.svg.attr("transform", "translate(0," + y + ")scale(" + scale + ")");
+	            box = pie.svg.node().getBoundingClientRect();
+	            pie.svg.attr("transform", "translate(0," + (y - box.top) + ")scale(" + scale + ")");
+	        } else {
+                pie.svg.attr("transform", "translate(0," + (y + (height - box.height)/2) + ")");
+	        }
+	    }*/
+
+	},
+
 	addGradients: function(pie) {
 		var grads = pie.svg.append("defs")
 			.selectAll("radialGradient")
@@ -256,19 +302,26 @@ var segments = {
 
 		lb.on("mouseover", function(d, i) {
 			var currentEl = d3.select(this);
-			var segment, index;
+			var segment, label, index;
 
 			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
 				segment = currentEl.select("path");
+				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer");
 			} else {
 				index = currentEl.attr("data-index");
-				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+				label = currentEl.select("text");
 			}
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
 				index = segment.attr("data-index");
 				var segColor = d.color;
-				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+				segment.style("fill", helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity));
+			}
+
+			if (pie.options.effects.highlightLabelOnMouseover) {
+			    var lbColor = helpers.increaseBrightness(pie.options.labels.mainLabel.color, pie.options.effects.highlightTextLuminosity);
+			    label.style("fill", lbColor);
 			}
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
@@ -277,13 +330,15 @@ var segments = {
 
 		lb.on("mouseout", function(d, i) {
 			var currentEl = d3.select(this);
-			var segment, index;
+			var segment, index, label;
 
 			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
 				segment = currentEl.select("path");
+				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer");
 			} else {
 				index = currentEl.attr("data-index");
-				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+				label = currentEl.select("text");
 			}
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
@@ -293,6 +348,10 @@ var segments = {
 					color = "url(#" + pie.cssPrefix + "grad" + index + ")";
 				}
 				segment.style("fill", color);
+			}
+
+			if (pie.options.effects.highlightLabelOnMouseover) {
+			    label.style("fill", pie.options.labels.mainLabel.color);
 			}
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
@@ -325,21 +384,26 @@ var segments = {
 
 		arc.on("mouseover", function(d, i) {
 			var currentEl = d3.select(this);
-			var segment, index;
+			var segment, index, label;
 
 			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
 				segment = currentEl.select("path");
+				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer");
 			} else {
 				index = currentEl.attr("data-index");
-				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+				label = currentEl.select("text");
 			}
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
 				index = segment.attr("data-index");
 				var segColor = d.color;
-				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+				segment.style("fill", helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity));
 			}
-
+			if (pie.options.effects.highlightLabelOnMouseover) {
+			    var lbColor = helpers.increaseBrightness(pie.options.labels.mainLabel.color, pie.options.effects.highlightTextLuminosity);
+			    label.style("fill", lbColor);
+			}
             if (pie.options.tooltips.enabled) {
                 if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
                     if (pie.outerLabelGroupData[i].hide === 1 && pie.outerLabelGroupData[i].hideMiddle === 1 || d.value < pie.options.data.minAngle) {
@@ -365,13 +429,15 @@ var segments = {
 
 		arc.on("mouseout", function(d, i) {
 			var currentEl = d3.select(this);
-			var segment, index;
+			var segment, index, label;
 
 			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
 				segment = currentEl.select("path");
+				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer");
 			} else {
 				index = currentEl.attr("data-index");
-				segment = d3.select("#" + pie.cssPrefix + "segment" + index);
+				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+				label = currentEl.select("text");
 			}
 
 			if (pie.options.effects.highlightSegmentOnMouseover) {
@@ -382,12 +448,13 @@ var segments = {
 				//}
 				segment.style("fill", color);
 			}
+			if (pie.options.effects.highlightLabelOnMouseover) {
+			    label.style("fill", pie.options.labels.mainLabel.color);
+			}
 
             if (pie.options.tooltips.enabled) {
-
                 index = segment.attr("data-index");
                 tt.hideTooltip(pie, "#" + pie.cssPrefix + "tooltip" + index);
-
             }
 
 			var isExpanded = segment.attr("class") === pie.cssPrefix + "expanded";
@@ -405,25 +472,50 @@ var segments = {
 
             extraLb.on("mouseover", function(d, i) {
     			var currentEl = d3.select(this);
-    			var segment, index;
-    			segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+    			var segment, label, index;
+
+    			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
+    				segment = currentEl.select("path");
+    				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-extra");
+    			} else {
+    				index = currentEl.attr("data-index");
+    				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+    				label = currentEl.select("text");
+    			}
 
     			if (pie.options.effects.highlightSegmentOnMouseover) {
     				index = segment.attr("data-index");
     				var segColor = d.color;
-    				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+    				segment.style("fill", helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity));
+    			}
+
+    			if (pie.options.effects.highlightLabelOnMouseover) {
+    			    var lbColor = helpers.increaseBrightness(pie.options.labels.mainLabel.color, pie.options.effects.highlightTextLuminosity);
+    			    label.style("fill", lbColor);
     			}
     		});
 
     		extraLb.on("mouseout", function(d, i) {
     			var currentEl = d3.select(this);
-    			var segment, index;
-    			segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+    			var segment, label, index;
+
+    			if (currentEl.attr("class") === pie.cssPrefix + "arc") {
+    				segment = currentEl.select("path");
+    				label = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-extra");
+    			} else {
+    				index = currentEl.attr("data-index");
+    				segment = d3.select("#" + pie.cssPrefix + "segment" + i);
+    				label = currentEl.select("text");
+    			}
 
     			if (pie.options.effects.highlightSegmentOnMouseover) {
     				index = segment.attr("data-index");
     				var color = d.color;
     				segment.style("fill", color);
+    			}
+
+    			if (pie.options.effects.highlightLabelOnMouseover) {
+    			    label.style("fill", pie.options.labels.mainLabel.color);
     			}
     		});
 		}
@@ -447,7 +539,7 @@ var segments = {
     			if (pie.options.effects.highlightSegmentOnMouseover) {
     				index = segment.attr("data-index");
     				var segColor = d.color;
-    				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+    				segment.style("fill", helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity));
     			}
 
     		});
@@ -474,7 +566,7 @@ var segments = {
 
     			if (pie.options.effects.highlightSegmentOnMouseover) {
     				var segColor = d.color;
-    				segment.style("fill", helpers.getColorShade(segColor, pie.options.effects.highlightLuminosity));
+    				segment.style("fill", helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity));
     			}
 
                 if (pie.options.tooltips.enabled) {

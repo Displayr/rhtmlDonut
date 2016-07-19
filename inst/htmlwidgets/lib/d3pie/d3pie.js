@@ -131,7 +131,9 @@ var defaultSettings = {
 			size: 10
 		},
 		highlightSegmentOnMouseover: true,
-		highlightLuminosity: 0.2
+		highlightLabelOnMouseover: true,
+		highlightLuminosity: 40,
+		highlightTextLuminosity: 40,
 	},
 	tooltips: {
 		enabled: false,
@@ -352,6 +354,8 @@ var defaultSettings = {
 		// prep-work
 		this.svg = helpers.addSVGSpace(this);
 
+		this.outerLabelGroupData = [];
+		this.groupLabelGroupData = [];
 		// store info about the main text components as part of the d3pie object instance
 		this.textComponents = {
 			headerHeight: 0,
@@ -372,8 +376,6 @@ var defaultSettings = {
 			}
 		};
 
-		this.outerLabelGroupData = [];
-		this.groupLabelGroupData = [];
 
 		// add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
 		if (this.textComponents.title.exists) {
@@ -382,25 +384,25 @@ var defaultSettings = {
 		if (this.textComponents.subtitle.exists) {
 			text.addSubtitle(this);
 		}
-		text.addFooter(this);
+		//text.addFooter(this);*/
 
 		// the footer never moves. Put it in place now
 		var self = this;
-		helpers.whenIdExists(this.cssPrefix + "footer", function() {
+		/*helpers.whenIdExists(this.cssPrefix + "footer", function() {
 			text.positionFooter(self);
 			var d3 = helpers.getDimensions(self.cssPrefix + "footer");
 			self.textComponents.footer.h = d3.h;
 			self.textComponents.footer.w = d3.w;
-		});
+		});*/
 
 		// now create the pie chart and position everything accordingly
 		var reqEls = [];
-		if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
+		/*if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
 		if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
-		if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }
+		if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }*/
 
 		helpers.whenElementsExist(reqEls, function() {
-			if (self.textComponents.title.exists) {
+			/*if (self.textComponents.title.exists) {
 				var d1 = helpers.getDimensions(self.cssPrefix + "title");
 				self.textComponents.title.h = d1.h;
 				self.textComponents.title.w = d1.w;
@@ -423,7 +425,7 @@ var defaultSettings = {
 					headerHeight += self.textComponents.subtitle.h;
 				}
 				self.textComponents.headerHeight = headerHeight;
-			}
+			}*/
 
 			// at this point, all main text component dimensions have been calculated
 			math.computePieRadius(self);
@@ -442,15 +444,18 @@ var defaultSettings = {
 			}
 			segments.create(self); // also creates this.arc
 			//labels.add(self, "inner", self.options.labels.inner.format);
+
 			labels.add(self, "outer", self.options.labels.outer.format);
+			labels.computeOuterLabelCoords(self);
+            labels.calculateLabelGroupPosition(self, "outer");
 
 			if (self.options.groups.content) {
 			    labels.positionGroupLabels(self);
 			}
 			// position the label elements relatively within their individual group (label, percentage, value)
 			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
-			labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
-			labels.computeOuterLabelCoords(self);
+			//labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
+			//labels.computeOuterLabelCoords(self);
 
 			// this is (and should be) dumb. It just places the outer groups at their calculated, collision-free positions
 			labels.positionLabelGroups(self, "outer");
@@ -474,7 +479,10 @@ var defaultSettings = {
           }
 
           segments.addSegmentEventHandlers(self);
+          segments.shiftPlot(self);
 		});
+
+
 	};
 
 	var _initNoLoading = function() {
@@ -578,6 +586,8 @@ var defaultSettings = {
 			//labels.add(self, "inner", self.options.labels.inner.format);
 
 			labels.add(self, "outer", self.options.labels.outer.format);
+			labels.computeOuterLabelCoords(self);
+            labels.calculateLabelGroupPosition(self, "outer");
 
 			if (self.options.groups.content) {
 			    labels.positionGroupLabels(self);
@@ -585,8 +595,8 @@ var defaultSettings = {
 
 			// position the label elements relatively within their individual group (label, percentage, value)
 			//labels.positionLabelElements(self, "inner", self.options.labels.inner.format);
-			labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
-			labels.computeOuterLabelCoords(self);
+			//labels.positionLabelElements(self, "outer", self.options.labels.outer.format);
+
 
 			// this is (and should be) dumb. It just places the outer groups at their calculated, collision-free positions
 			labels.positionLabelGroups(self, "outer");
@@ -609,7 +619,10 @@ var defaultSettings = {
             }
 
             segments.addSegmentEventHandlers(self);
+            segments.shiftPlot(self);
 		});
+
+
 	};
 
   return d3pie;

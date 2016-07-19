@@ -46,6 +46,7 @@ Donut <- function(
     labels,
     values.font = NULL,
     values.size = 10,
+    values.dec = 1,
     values.color = NULL,
     values.display = "percentage",
     values.thres = NULL,

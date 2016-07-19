@@ -3,7 +3,7 @@ var tt = {
 	addTooltips: function(pie) {
 
 		// group the label groups (label, percentage, value) into a single element for simpler positioning
-		var tooltips = pie.svg.insert("g")
+		var tooltips = d3.select(pie.element).append("g")
 			.attr("class", pie.cssPrefix + "tooltips");
 
     tooltips.selectAll("." + pie.cssPrefix + "tooltip")
@@ -70,7 +70,7 @@ var tt = {
 			});
 
 		if (pie.options.groups.content) {
-    		var groupTips = pie.svg.insert("g")
+    		var groupTips = d3.select(pie.element).append("g")
     			.attr("class", pie.cssPrefix + "gtooltips");
 
             groupTips.selectAll("." + pie.cssPrefix + "gtooltip")

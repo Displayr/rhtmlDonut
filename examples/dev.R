@@ -56,16 +56,16 @@ rhtmlDonut::Donut(values = values, values.size = 10, values.thres = 0, values.or
 rhtmlDonut::Donut(values = values, values.thres = 0, values.order = "alphabetical",
                   labels = labels, labels.size = 10,
                   prefix = "", suffix = "%")
-
-rhtmlDonut::Donut(values = values, values.size = 10, border.color = "none",
+library(rhtmlDonut)
+Donut(values = values, values.size = 10, border.color = "none",values.order = "descending",
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "default")
-rhtmlDonut::Donut(values = values, values.size = 10,
+                  prefix = "", suffix = "%")
+Donut(values = values, values.size = 10,values.order = "initial",
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "initial")
-rhtmlDonut::Donut(values = values, values.size = 10,
+                  prefix = "", suffix = "%")
+Donut(values = values, values.size = 10, values.order = "alphabetical",
                   labels = labels, labels.size = 10,
-                  prefix = "", suffix = "%", order = "alphabetical")
+                  prefix = "", suffix = "%")
 ### order
 
 
@@ -162,9 +162,9 @@ rhtmlDonut::Donut(values = values,
 
 values = rep(1, 26*6)
 labels = rep(paste0(letters, letters, letters), times = 6)
-rhtmlDonut::Donut(values = values,
-                  labels = labels,
-                  values.order = "initial")
+rhtmlDonut::Donut(values = rep(1, 26*6),
+                  labels = rep(paste0(letters, letters, letters), times = 6),
+                  values.order = "descending")
 
 
 # v = rhtmlDonut::Donut(values = values,
@@ -172,11 +172,23 @@ rhtmlDonut::Donut(values = values,
 #                   values.order = "initial")
 
 # htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")
-data = read.table("/Users/MichaelW/Work/rhtmlDonut/data/data1.txt", sep = "\t", stringsAsFactors = FALSE)
-values = data$V1
-labels = data$V2
-rhtmlDonut::Donut(values = values,
-                             values.display = "original",
-                             labels = labels,
+data = read.table("/Users/MichaelW/Work/rhtmlDonut/data1.txt", sep = "\t", stringsAsFactors = FALSE)
+rhtmlDonut::Donut(values = data$V1,values.order = "descending",
+                             values.display = "original", values.size = 11,
+                             labels = data$V2, labels.minFontSize = 8, labels.size = 11,
                              prefix = "$",
-                             values.thres = .3)
+                             values.thres = 0.3)
+
+# v = rhtmlDonut::Donut(values = data$V1,
+#                   values.display = "original",
+#                   labels = data$V2,labels.minFontSize = 10,
+#                   prefix = "$",
+#                   values.thres = 0.3)
+# Issues
+# wrapping texts: done
+# Font size should go from high to low
+# too much space at the bottom when order is descending: done
+# left right labels not balanced at the boundary: done
+# htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")
+
+# change angle of tangent as a function of the width of the plot

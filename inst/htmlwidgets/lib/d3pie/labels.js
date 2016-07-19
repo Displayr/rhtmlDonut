@@ -37,11 +37,23 @@ var labels = {
 
 		// 1. Add the main label
 		if (include.mainLabel) {
-			labelGroup.append("text")
+		    var textGroups = labelGroup.append("text")
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-" + section; })
 				.attr("class", pie.cssPrefix + "segmentMainLabel-" + section)
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("dy", 0)
+			    .style("fill", pie.options.labels.mainLabel.color);
+
+			textGroups.append("tspan")
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("dy", 0)
+				.style("font-size", settings.mainLabel.minFontSize + "px")
+				.style("font-family", settings.mainLabel.font)
+				.style("font-weight", settings.mainLabel.fontWeight)
 				.text(function(d, i) {
-					var str = d.label + ":";
+					var str = d.label + ":  ";
 
                   // if a custom formatter has been defined, pass it the raw label string - it can do whatever it wants with it.
                   // we only apply truncation if it's not defined
@@ -55,20 +67,13 @@ var labels = {
                         str = d.label.substring(0, settings.truncation.truncateLength) + "...";
                       }*/
                   return str;
-				})
-				.attr("x", 0)
-				.attr("y", 0)
-				.attr("dy", 0)
-				.style("font-size", settings.mainLabel.minFontSize + "px")
-				.style("font-family", settings.mainLabel.font)
-				.style("fill", settings.mainLabel.color)
-				.style("font-weight", settings.mainLabel.fontWeight)
-				.call(labels.wrap, settings.mainLabel.maxLabelLength)
-				.append("tspan")
+				});
+				//.call(labels.wrap, settings.mainLabel.maxLabelLength)
+			textGroups.append("tspan")
+			    .attr("id", function(d,i) { return "tsValue";})
 				.style("font-weight", "normal")
 				.style("font-family", pie.options.data.font)
 				.style("font-size", settings.mainLabel.minFontSize + "px")
-				.attr("y", 0)
 				.text(function(d,i) {
                     var val;
 				    if (pie.options.data.display == "percentage") {
@@ -84,7 +89,9 @@ var labels = {
 				    }
 				    return val;
 				})
-				.attr("x", function() {
+				.attr("y", 0)
+				.attr("dy", 0);
+				/*.attr("x", function() {
 				    var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
 				    var tspanLast = tspans[tspans.length-2];
 				    var tspanLastLength = tspanLast.getComputedTextLength();
@@ -103,7 +110,7 @@ var labels = {
 				    } else {
 				        return tspanLast.getAttribute("dy");
 				    }
-				});
+				});*/
 
 		}
 
@@ -247,6 +254,116 @@ var labels = {
 	},
 
 	/**
+	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
+	 * 1. Make a first pass and position them in the ideal positions, based on the pie sizes
+	 * 2. Do some basic collision avoidance.
+	 */
+	computeOuterLabelCoords: function(pie) {
+	    pie.options.labels.outer.quadCount = [0,0,0,0];
+	    pie.options.labels.outer.quadHeight = [0,0,0,0];
+		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
+			.each(function(d, i) {
+				return labels.getOuterLabelPara(pie, i);
+			});
+
+		// 1. figure out the ideal positions for the outer labels
+		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
+			.each(function(d, i) {
+				return labels.getInitialOuterLabelPositions(pie, i);
+			});
+		//pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
+		//	.each(function(d, i) {
+		//		return labels.getIdealOuterLabelPositions(pie, i);
+		//	});
+        //console.log(pie.outerLabelGroupData);
+	},
+
+	getOuterLabelPara: function(pie, i) {
+        var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
+        if (!labelGroupNode) {
+          return;
+        }
+        var labelGroupDims = labelGroupNode.getBBox();
+	    var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+		var hemisphere, quadrant; // hemisphere
+
+        if (angle < 90) {
+			hemisphere = "left";
+			quadrant = 4;
+		} else if (90 <= angle && angle < 180) {
+			hemisphere = "right";
+			quadrant = 1;
+		} else if (180 <= angle && angle <= 270) {
+			hemisphere = "right";
+			quadrant = 2;
+		} else {
+			hemisphere = "left";
+			quadrant = 3;
+		}
+		pie.options.labels.outer.quadCount[quadrant-1] = pie.options.labels.outer.quadCount[quadrant-1] + 1;
+		pie.options.labels.outer.quadHeight[quadrant-1] = pie.options.labels.outer.quadHeight[quadrant-1] + labelGroupDims.height;
+
+	    pie.outerLabelGroupData[i] = {
+		    i: i,
+			w: labelGroupDims.width,
+			h: labelGroupDims.height,
+	        hs: hemisphere,
+	        quadrant: quadrant,
+	        arcFrac: pie.options.data.content[i].value/pie.totalSize,
+	        segAngle: angle
+	    };
+	},
+
+	getInitialOuterLabelPositions: function(pie, i) {
+	    // Initialize the x y position of the labels, regardless of whether there is collision or not
+	    var curr = pie.outerLabelGroupData[i];
+	    var yangle = 0;
+		var r = pie.outerRadius + pie.options.labels.outer.pieDistance;
+		//var yscale = d3.scale.pow().exponent(0.5).domain([0, 45]).range([r * Math.sqrt(2), r]);
+
+        var originalX, originalY, newCoords;
+
+        if (curr.segAngle > 45 && curr.segAngle <= 90) {
+	        yangle = curr.segAngle - 45;
+	    } else if (curr.segAngle > 90 && curr.segAngle <= 135) {
+	        yangle = 135 - curr.segAngle;
+	    } else if (curr.segAngle > 225 && curr.segAngle <= 270) {
+	        yangle = curr.segAngle - 225;
+	    } else if (curr.segAngle > 270 && curr.segAngle <= 315) {
+	        yangle = 315 - curr.segAngle;
+	    }
+	    // since the pie is centered initially, only have to compare each quadrant with half of the height
+	    //if (pie.options.labels.outer.quadHeight[curr.quadrant-1] > pie.options.size.canvasHeight/2 && curr.arcFrac < 0.05) {
+	        // place first elements of the 1st, 4th quadrant at the top of the plot
+	        // place last elements of the 2nd, 3rd quadrant at the bottom of the plot
+	    //} else {
+	        // place each element at their designated angular position
+	        if (curr.segAngle > 45 && curr.segAngle < 135 ||
+	            curr.segAngle > 225 && curr.segAngle < 315) {
+	            // angle with vertical axis less than 45 degrees
+	            // distance between current element and center of pie changes with its angle
+        		originalX = pie.pieCenter.x;
+        		//originalY = pie.pieCenter.y - yscale(yangle);
+        		originalY = pie.pieCenter.y - r/Math.cos(yangle/180*Math.PI);
+        		newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, curr.segAngle - 90);
+
+            } else {
+        		originalX = pie.pieCenter.x;
+        		originalY = pie.pieCenter.y - r;
+        		newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, curr.segAngle - 90);
+            }
+
+            if (curr.hs === "left") {
+        		newCoords.x -= (curr.w + pie.options.labels.mainLabel.horizontalPadding);
+        	} else {
+        		newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
+        	}
+        	curr.x = newCoords.x;
+        	curr.y = newCoords.y;
+	    //}
+	},
+
+	/**
 	 * @param i 0-N where N is the dataset size - 1.
 	 */
 	getIdealOuterLabelPositions: function(pie, i) {
@@ -255,7 +372,7 @@ var labels = {
           return;
         }
         var labelGroupDims = labelGroupNode.getBBox();
-		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
+		var angle = pie.outerLabelGroupData[i].angle;
 
 		var originalX = pie.pieCenter.x;
 		var originalY = pie.pieCenter.y - (pie.outerRadius + pie.options.labels.outer.pieDistance);
@@ -321,21 +438,6 @@ var labels = {
 	},
 
 
-	/**
-	 * This does the heavy-lifting to compute the actual coordinates for the outer label groups. It does two things:
-	 * 1. Make a first pass and position them in the ideal positions, based on the pie sizes
-	 * 2. Do some basic collision avoidance.
-	 */
-	computeOuterLabelCoords: function(pie) {
-
-		// 1. figure out the ideal positions for the outer labels
-		pie.svg.selectAll("." + pie.cssPrefix + "labelGroup-outer")
-			.each(function(d, i) {
-				return labels.getIdealOuterLabelPositions(pie, i);
-			});
-        //console.log(pie.outerLabelGroupData);
-	},
-
 
 	getGroupLabelPositions: function(pie, i) {
         var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-group").node();
@@ -390,7 +492,7 @@ var labels = {
 
 	/**
 	 * @param section "inner" / "outer"
-	 */
+
 	positionLabelElements: function(pie, section, sectionDisplayType) {
 		labels["dimensions-" + section] = [];
 
@@ -429,7 +531,7 @@ var labels = {
 					.attr("dy", function(d, i) { return dims[i].mainLabel.height; });
 				break;
 	 	}
-	},
+	},*/
 
 	computeLabelLinePositions: function(pie) {
 		pie.lineCoordGroups = [];
@@ -671,6 +773,13 @@ var labels = {
     				var isHidden = (percentage !== null && segmentPercentage < percentage) || pie.options.data.content[i].label === "";
     				return isHidden ? 0 : 1;
 			    }
+			})
+			.style("display", function(d,i) {
+			    if (pie.outerLabelGroupData[i].hide === 1) {
+			        return "none";
+			    } else {
+			        return "inline";
+			    }
 			});
 
 		if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
@@ -706,7 +815,8 @@ var labels = {
 		}
 	},
 
-	positionLabelGroups: function(pie, section) {
+	calculateLabelGroupPosition: function(pie, section) {
+
         if (pie.options.labels[section].format === "none") {
           return;
         }
@@ -758,16 +868,19 @@ var labels = {
                 labelData[i].ox = -offsetSize/2;
             }
 
-            labelData[i].x += labelData[i].ox;
-            labelData[i].y += labelData[i].oy;
+            //labelData[i].x += labelData[i].ox;
+            //labelData[i].y += labelData[i].oy;
         }
 
+
+	},
+
+	positionLabelGroups: function(pie, section) {
         var labelGroups = d3.selectAll("." + this.cssPrefix + "labels-outer");
 
         if (labelGroups.length > 1) {
 
         }
-
 
 		d3.selectAll("." + pie.cssPrefix + "labelGroup-" + section)
 			.style("opacity", 1)
@@ -1309,8 +1422,10 @@ var labels = {
             labelData[i].arcFrac = pie.options.data.content[i].value/pie.totalSize;
             labelData[i].arcLen = labelData[i].arcFrac * 2 * Math.PI * (pie.outerRadius + pie.options.labels.outer.pieDistance);
             labelData[i].collide = 0;
+            labelData[i].Xchanged = 0;
             labelData[i].hide = 0;
             labelData[i].stop = 0;
+            labelData[i].textLength = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer").node().getComputedTextLength();
             //labelData[i].xlim = {max: labelData[i].x + pie.options.data.fontSize, min: labelData[i].x - pie.options.data.fontSize};
             labelData[i].ylim = {max: labelData[i].y + pie.options.data.fontSize*2, min: labelData[i].y - pie.options.data.fontSize*2};
 
@@ -1326,7 +1441,7 @@ var labels = {
             }
             labelData[i].r = labels.getDist(labelData[i].anchorPt.x, labelData[i].anchorPt.y, center.x, center.y)
 
-            if (labelData[i].x > center.x) {
+            /*if (labelData[i].x > center.x) {
                 if (labelData[i].y < center.y) {
                     labelData[i].quadrant = 1;
                 } else {
@@ -1338,8 +1453,9 @@ var labels = {
                 } else {
                     labelData[i].quadrant = 4;
                 }
-            }
+            }*/
         }
+        //console.log(labelData);
 
         var sortedValues = [];
         for (var i = 0; i < objs.length; i++) {
@@ -1354,7 +1470,7 @@ var labels = {
 
         var curr, prev, next, currIdx;
         // TODO: still buggy when texts are dense
-        for (var i = 1; i < objs.length; i++) {
+        for (var i = 0; i < objs.length; i++) {
 
             curr = labelData[i];
 
@@ -1443,6 +1559,91 @@ var labels = {
                     }
                 }
             }
+
+            if (curr.hide === 0 && curr.Xchanged === 0) {
+                // check if this element needs wrapping
+                if (curr.hs === "left") {
+                    if (curr.x < 5) {
+    				    var space = curr.x + curr.w - 5;
+    					var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer");
+    					labels.wrapSelectedLabel(selection, space);
+
+            			var newDims = selection.node().getBBox();
+            			curr.x = curr.x + curr.w - newDims.width;
+            			curr.w = newDims.width;
+            			curr.h = newDims.height;
+                    }
+                } else {
+					if (curr.x + curr.w > pie.options.size.canvasWidth - 5) {
+					    // wrap label
+					    var space = pie.options.size.canvasWidth - curr.x - 5;
+					    var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer");
+					    labels.wrapSelectedLabel(selection, space);
+
+        				var newDims = selection.node().getBBox();
+        				curr.w = newDims.width;
+        				curr.h = newDims.height;
+					}
+                }
+
+
+                // check collision again only if it's on the right hand side
+                if (curr.hs === "right") {
+                    for (var j = i-1; j >= 0; j--) {
+                        prev = labelData[j];
+                        if (prev.hide === 0){
+                        	var triggered = 0;
+                        	// check position shift of the current element if
+                        	// 1) it intersects with previously placed element
+                        	// 2) it is crossed by previously placed element
+                        	// 		- if angle smaller than threshold
+                        	// 			- if it is the last element in the semi-sphere
+                        	//			- if it is not the last in the semi-sphere
+                        	// 		- if angle bigger than threshold
+                        	// 3) it is the first elemtn in the semi-sphere
+                        	if (labels.rectIntersect(curr, prev)) {
+                        		triggered = 1;
+                        	} else if (curr.hs === "left" && curr.y >= prev.y && curr.quadrant === prev.quadrant) {
+    							triggered = 2;
+                        	} else if (curr.hs === "right" && curr.y <= prev.y && curr.hs === prev.hs) {
+    							triggered = 3;
+                        	} else if (curr.hs != prev.hs && boundary) {
+                        		// boundary makes sure it is the boundary
+    							triggered = 4;
+                        	}
+                        	boundary = false;
+
+                        	/*if (curr.hs != prev.hs) {
+                        		adj = true;
+                        		curr.y = prev.y;
+                        		curr.anchorPt.y = curr.y;
+    							curr.r = labels.getDist(curr.anchorPt.x, curr.anchorPt.y, pie.pieCenter.x, pie.pieCenter.y);
+                        	}*/
+                        	if (triggered === 0) {
+                        		continue;
+                        	}
+                     		labels.adjustOuterLabelPosNew(pie, curr, prev, next, pie.pieCenter, triggered);
+
+                            for (var k = i-1; k >= 0; k--) {
+                                if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                                    if (curr.arcFrac < labelData[k].arcFrac) {
+                                        labels.hideLabel(pie, curr);
+                                    } else {
+                                        labels.hideLabel(pie, labelData[k]);
+                                    }
+                                    break;
+                                }
+                            }
+
+                            if (curr.hide === 1) {
+             	               break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
         }
 
         // for elements near the top/bottom of the pie, try a different approach
@@ -1467,20 +1668,64 @@ var labels = {
 
         }*/
 
-        // increase font size
         var itr = minFontSize;
         var maxValueSize = pie.options.data.fontSize;
         var maxLabelSize = pie.options.labels.mainLabel.fontSize;
-        while (itr < Math.max(maxLabelSize, maxValueSize)) {
+        var itrMaxLabelSize = maxLabelSize;
+        var itrMaxValueSize = maxValueSize;
+        var stoppedLabels = 0;
+        while (itr < Math.max(maxLabelSize, maxValueSize) && stoppedLabels < objs.length) {
+            itr++;
+            stoppedLabels = 0;
+            for (var i = 0; i < objs.length; i++) {
+                currIdx = sortedValues.sortIndices[i];
+                curr = labelData[currIdx];
+                if (curr.hide === 0 && curr.Xchanged === 0) {
+                    curr.fontSize = itr > maxLabelSize ? maxLabelSize : itr;
+                    curr.valueSize = itr > maxValueSize ? maxValueSize : itr;   // TODO update this to the font setting
+
+                    labels.updateLabelText(pie, curr); // update both font size and wrapping
+
+                    for (var j = 0; j < objs.length; j++) {
+                        next = labelData[j];
+                        if (next.hide === 0 && j != currIdx) {
+                            if (labels.rectIntersect(curr, next)) {
+                            	var _currFontSize = curr.fontSize;
+                                curr.fontSize -= _currFontSize >= curr.valueSize ? 1 : 0;
+                                curr.valueSize -= curr.valueSize >= _currFontSize ? 1 : 0;
+                                curr.Xchanged = 1;
+                                labels.updateLabelText(pie, curr);
+                                break;
+                            }
+                        }
+                    }
+
+                } else {
+                    curr.Xchanged = 1;
+                }
+                stoppedLabels += curr.Xchanged;
+            }
+        }
+        // increase font size
+        /*
+        var itr = minFontSize;
+        var maxValueSize = pie.options.data.fontSize;
+        var maxLabelSize = pie.options.labels.mainLabel.fontSize;
+        var itrMaxLabelSize = maxLabelSize;
+        var itrMaxValueSize = maxValueSize;
+        var stoppedLabels = 0;
+        while (itr < Math.max(maxLabelSize, maxValueSize) && stoppedLabels < objs.length) {
 
             itr++;
-
+            stoppedLabels = 0;
+            itrMaxLabelSize = maxLabelSize;
+            itrMaxValueSize = maxValueSize;
             for (var i = 0; i < objs.length; i++) {
                 currIdx = sortedValues.sortIndices[i];
                 curr = labelData[currIdx];
                 if (curr.hide === 0 && curr.stop === 0) {
-                    curr.fontSize = itr > maxLabelSize ? maxLabelSize : itr;
-                    curr.valueSize = itr > maxValueSize ? maxValueSize : itr;   // TODO update this to the font setting
+                    curr.fontSize = itr > itrMaxLabelSize ? itrMaxLabelSize : itr;
+                    curr.valueSize = itr > itrMaxValueSize ? itrMaxValueSize : itr;   // TODO update this to the font setting
                     labels.updateLabelText(pie, curr);
 
                     for (var j = currIdx+1; j < objs.length; j++) {
@@ -1510,9 +1755,25 @@ var labels = {
                             }
                         }
                     }
+                } else {
+                    curr.stop = 1;
+                }
+                stoppedLabels += curr.stop;
+            }
+        }*/
+
+        // if some labels have exceeded viewer width, wrap them
+        /*for (var i = 0; i < labelData.length; i++) {
+            var text = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + i + "-outer");
+            if (labelData[i].hs === "left") {
+
+            } else {
+                if (labelData[i].x + text.node().getComputedTextLength() > pie.options.size.canvasWidth) {
+
                 }
             }
-        }
+
+        }*/
 
         // put stuff in the middle
         if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == "descending") {
@@ -1846,23 +2107,86 @@ var labels = {
             });
         },
 
+    unwrapSelectedLabel: function(pie, text) {
+            // combine all tspans except the last to one tspan
+        text.selectAll("tspan").remove();
+		text.append("tspan")
+			.attr("x", 0)
+			.attr("y", 0)
+			.attr("dy", 0)
+            .style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
+			.style("font-family", pie.options.labels.mainLabel.font)
+			.style("font-weight", pie.options.labels.mainLabel.fontWeight)
+			.text(function(d, i) {
+				var str = d.label + ":  ";
+              return str;
+			});
+			//.call(labels.wrap, settings.mainLabel.maxLabelLength)
+		text.append("tspan")
+		    .attr("id", function(d,i) { return "tsValue";})
+			.style("font-weight", "normal")
+			.style("font-family", pie.options.data.font)
+			.style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
+			.text(function(d,i) {
+                var val;
+			    if (pie.options.data.display == "percentage") {
+			        val = dataFormatter(d.value / pie.totalSize * 100);
+			    } else {
+			        val = dataFormatter(d.value);
+			    }
+			    if (pie.options.data.prefix) {
+			        val = pie.options.data.prefix + val;
+			    }
+			    if (pie.options.data.suffix) {
+			        val = val + pie.options.data.suffix;
+			    }
+			    return val;
+			})
+			.attr("y", 0)
+			.attr("dy", 0);
+
+            /*var _label = "";
+            var _value;
+            for (var i = 0;i < count - 1; i++) {
+                if (i === 0) {
+                    _label = d3.select(text.selectAll("tspan")[0][i]).text();
+                } else {
+                    _label = _label + " " + d3.select(text.selectAll("tspan")[0][i]).text();
+                }
+            }
+            _value = d3.select(text.selectAll("tspan")[0][count - 1]).text();*/
+
+    },
+
 	updateLabelText: function(pie, curr) {
 
-        var sel = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer");
-        var nodeSel = d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-outer");
-        var node = nodeSel.node();
+        var textEl = d3.select("#" + pie.cssPrefix + "segmentMainLabel" + curr.i + "-outer"); // text element
+        //var nodeSel = d3.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-outer");
+        //var node = nodeSel.node();
 
-        sel.style("font-size", curr.fontSize);
-        labels.wrapTspan(pie, sel, curr.fontSize, curr.valueSize);
+        var space;
+        if (curr.hs === "left") {
+    		space = curr.x + curr.w - 5;
+        } else {
+			space = pie.options.size.canvasWidth - curr.x - 5;
+        }
 
-        var nodeDim = node.getBBox();
+        labels.unwrapSelectedLabel(pie, textEl);
+
+        textEl.select("tspan").style("font-size", curr.fontSize);
+        textEl.select("#tsValue").style("font-size", curr.valueSize);
+
+	    labels.wrapSelectedLabel(textEl, space);
+        var nodeDim = textEl.node().getBBox();
         var originalW = curr.w;
         curr.w = nodeDim.width;
         curr.h = nodeDim.height;
         if (curr.hs === "left") {
             curr.x = curr.x + originalW - curr.w;
         }
-        nodeSel.attr("transform", function(d) {
+
+        pie.svg.select("#" + pie.cssPrefix + "labelGroup" + curr.i + "-outer")
+        .attr("transform", function(d) {
             return "translate(" + curr.x + "," + curr.y + ")";
         });
 	},
@@ -1950,6 +2274,35 @@ var labels = {
             .style("display", "none");
 	},
 
+	wrapSelectedLabel: function(selection, space) {
+
+		selection.select("tspan").call(labels.wrap, space);
+
+        // wrapping value
+        selection.select("#tsValue")
+        .attr("x", function() {
+            var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+            var tspanLast = tspans[tspans.length-2];
+            var tspanLastLength = tspanLast.getComputedTextLength();
+            if (tspanLastLength + this.getComputedTextLength() > space) {
+                return 0;
+            } else {
+                return tspanLastLength + 5 + "px";
+            }
+        })
+        .attr("dy", function() {
+            var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
+            var tspanLast = tspans[tspans.length-2];
+            var tspanLastLength = tspanLast.getComputedTextLength();
+            if (tspanLastLength + this.getComputedTextLength() > space) {
+                return parseFloat(tspanLast.getAttribute("dy")) + 1.1 + "em";
+            } else {
+                return tspanLast.getAttribute("dy");
+            }
+        });
+
+	},
+
 	// does a little math to shift a label into a new position based on the last properly placed one
 	adjustOuterLabelPosNew: function(pie, colliding, correct, next, center, triggered) {
 		var labelData = pie.outerLabelGroupData;
@@ -1960,7 +2313,7 @@ var labels = {
         var angThres = 45;
     	var angle = Math.acos(Math.abs(center.y - colliding.y)/Math.abs(colliding.r))*180/Math.PI;
 
-    	console.log("correct.y = " + correct.y + "angle = " + angle + "label = " + colliding.label);
+    	//console.log("correct.y = " + correct.y + "angle = " + angle + "label = " + colliding.label);
 
 		var compareAndHide = function (pie, colliding, correct) {
 			if (colliding.arcFrac > correct.arcFrac) {
@@ -1974,45 +2327,107 @@ var labels = {
 
 			if (angle <= angThres) {
 				// small angle elements
-				if (colliding.hs != next.hs) {
-					// last element in the hemisphere
-					if (colliding.hs === "left") {
-						newYPos = correct.y - heightChange;
-					} else {
-						newYPos = correct.y + heightChange;
-					}
+
+				if (pie.options.data.sortOrder === "descending") {
+				    // when order is descending, the 4th quadrant are the first elements and contain largest slices
+				    // always display these slices
+    				if (colliding.quadrant === 4) {
+    				    newYPos = correct.y - heightChange;
+    				    /*if (center.x < correct.x) {
+
+    				    } else {
+                            labels.hideLabel(pie, colliding);
+        					return;
+    				    }*/
+    				} else if (colliding.quadrant === 2) {
+    				    newYPos = correct.y + heightChange;
+    				    if (newYPos > pie.options.size.canvasWidth - 20) {
+                            labels.hideLabel(pie, colliding);
+        					return;
+    				    }
+    				} else {
+        				if (colliding.hs != next.hs) {
+        					// last element in the hemisphere
+        					if (colliding.hs === "left") {
+        						newYPos = correct.y - heightChange;
+        					} else {
+        						newYPos = correct.y + heightChange;
+        					}
+        				} else {
+        					// not the last element
+        					if (correct.y < heightChange ||
+        						correct.y > pie.options.size.canvasHeight - 2 * heightChange) {
+        						labels.hideLabel(pie, colliding);
+        						return;
+        					} else {
+        						// enough vertical space
+        						if (triggered === 1) {
+        							if (colliding.hs === "left") {
+        								if (correct.y - heightChange >= colliding.ylim.min) {
+        									newYPos = correct.y - heightChange;
+        								} else {
+        									compareAndHide(pie, colliding, correct);
+        									return;
+        								}
+        							} else {
+        								if (correct.y + heightChange <= colliding.ylim.max) {
+        									newYPos = correct.y + heightChange;
+        								} else {
+        									compareAndHide(pie, colliding, correct);
+        									return;
+        								}
+        							}
+        						} else if (triggered === 2) {
+        							compareAndHide(pie, colliding, correct);
+        							return;
+        						} else {
+        							compareAndHide(pie, colliding, correct);
+        							return;
+        						}
+        					}
+        				}
+    				}
 				} else {
-					// not the last element
-					if (correct.y < heightChange ||
-						correct.y > pie.options.size.canvasHeight - 2 * heightChange) {
-						labels.hideLabel(pie, colliding);
-						return;
-					} else {
-						// enough vertical space
-						if (triggered === 1) {
-							if (colliding.hs === "left") {
-								if (correct.y - heightChange >= colliding.ylim.min) {
-									newYPos = correct.y - heightChange;
-								} else {
-									compareAndHide(pie, colliding, correct);
-									return;
-								}
-							} else {
-								if (correct.y + heightChange <= colliding.ylim.max) {
-									newYPos = correct.y + heightChange;
-								} else {
-									compareAndHide(pie, colliding, correct);
-									return;
-								}
-							}
-						} else if (triggered === 2) {
-							compareAndHide(pie, colliding, correct);
-							return;
-						} else {
-							compareAndHide(pie, colliding, correct);
-							return;
-						}
-					}
+    				if (colliding.hs != next.hs) {
+    					// last element in the hemisphere
+    					if (colliding.hs === "left") {
+    						newYPos = correct.y - heightChange;
+    					} else {
+    						newYPos = correct.y + heightChange;
+    					}
+    				} else {
+    					// not the last element
+    					if (correct.y < heightChange ||
+    						correct.y > pie.options.size.canvasHeight - 2 * heightChange) {
+    						labels.hideLabel(pie, colliding);
+    						return;
+    					} else {
+    						// enough vertical space
+    						if (triggered === 1) {
+    							if (colliding.hs === "left") {
+    								if (correct.y - heightChange >= colliding.ylim.min) {
+    									newYPos = correct.y - heightChange;
+    								} else {
+    									compareAndHide(pie, colliding, correct);
+    									return;
+    								}
+    							} else {
+    								if (correct.y + heightChange <= colliding.ylim.max) {
+    									newYPos = correct.y + heightChange;
+    								} else {
+    									compareAndHide(pie, colliding, correct);
+    									return;
+    								}
+    							}
+    						} else if (triggered === 2) {
+    							compareAndHide(pie, colliding, correct);
+    							return;
+    						} else {
+    							compareAndHide(pie, colliding, correct);
+    							return;
+    						}
+    					}
+    				}
 				}
 			} else {
 				// large angle elements
@@ -2049,6 +2464,12 @@ var labels = {
 			// first element in the hemisphere
 			// implies it collides with the next element
 			newYPos = colliding.y;
+			/*if (pie.options.data.sortOrder === "descending") {
+
+			} else {
+			    newYPos = colliding.y;
+			}*/
+
 		}
 
 		/*if (colliding.hs === "left") {
@@ -2124,12 +2545,18 @@ var labels = {
     		}
 		}*/
 
+        if (Math.abs(newYPos - center.y) > (pie.outerRadius + pie.options.labels.outer.pieDistance) * 1.5) {
+            labels.hideLabel(pie, colliding);
+			return;
+        }
 		yDiff = center.y - newYPos;
+
 
 
         // rotate colliding element with radius equal to its computed radius
         if (triggered != 4) {
-			if (Math.abs(colliding.r) > Math.abs(yDiff) && (angle > angThres || colliding.quadrant % 2 === 1)) {
+            colliding.Xchanged = 1;
+			if (Math.abs(colliding.r) > Math.abs(yDiff) && (angle > angThres)) {
 				xDiff = Math.sqrt((colliding.r * colliding.r) - (yDiff * yDiff));
 				//console.log(xDiff);
 
@@ -2139,8 +2566,39 @@ var labels = {
 				// possibly need to do some more shifting
 				if (correct.hs === "right") {
 					newXPos = center.x + xDiff;
+					if (newXPos + colliding.w > pie.options.size.canvasWidth - 5) {
+					    // wrap label
+					    var space = pie.options.size.canvasWidth - newXPos - 5;
+					    var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + colliding.i + "-outer");
+					    labels.wrapSelectedLabel(selection, space);
+
+        				var newDims = selection.node().getBBox();
+        				colliding.w = newDims.width;
+        				colliding.h = newDims.height;
+					}// else if (newXPos < center.x) {
+					//	labels.hideLabel(pie, colliding);
+					//	return;
+					//}
 				} else {
 					newXPos = center.x - xDiff - colliding.w;
+
+					if (newXPos < 5) {
+					    var space = center.x - xDiff - 5;
+					    var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + colliding.i + "-outer");
+					    labels.wrapSelectedLabel(selection, space);
+
+        				var newDims = selection.node().getBBox();
+        				colliding.w = newDims.width;
+        				colliding.h = newDims.height;
+
+        				heightChange = colliding.h + 1;
+        				newYPos = correct.y - heightChange;
+        				xDiff = Math.sqrt((colliding.r * colliding.r) - (yDiff * yDiff));
+        				newXPos = center.x - xDiff - colliding.w;
+					}// else if (newXPos + colliding.w > center.x) {
+					//	labels.hideLabel(pie, colliding);
+					//	return;
+					//}
 				}
 
 				/*if (next.quadrant === colliding.quadrant) {
@@ -2159,7 +2617,7 @@ var labels = {
 
 			} else {
 				//angle = Math.acos(Math.abs(colliding.r) / Math.abs(yDiff))*180/Math.PI;
-				if (correct.i != 0) {
+				/*if (correct.i != 0) {
 					if (last.hs === correct.hs) {
 						xDiff = Math.abs(last.x - correct.x);
 					} else {
@@ -2167,23 +2625,68 @@ var labels = {
 					}
 				} else {
 					xDiff = 5;
-				}
+				}*/
 
-				if (newYPos <= center.y) {
-					if (correct.hs === "left") {
-						newXPos = correct.x + correct.w - colliding.w
-								+ pieDist * 1.1 * Math.cos(angle/180*Math.PI);
-					} else {
-						newXPos = correct.x + pieDist * 1.1 * Math.cos(angle/180*Math.PI);
-					}
+				if (correct.hs === "left") {
+
+				    if (newYPos <= center.y) {
+						//newXPos = correct.x + correct.w - colliding.w
+						//		+ pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+						newXPos = correct.x + correct.w - colliding.w + Math.abs(newYPos - correct.y);
+				    } else {
+						//newXPos = correct.x + correct.w - colliding.w
+						//		- pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+						newXPos = correct.x + correct.w - colliding.w - Math.abs(newYPos - correct.y);
+				    }
+
+					if (newXPos < 5) {
+					    var space = newXPos + colliding.w - 5;
+					    var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + colliding.i + "-outer");
+					    labels.wrapSelectedLabel(selection, space);
+
+        				var newDims = selection.node().getBBox();
+        				colliding.w = newDims.width;
+        				colliding.h = newDims.height;
+
+        				heightChange = colliding.h + 1;
+        				newYPos = correct.y - heightChange;
+    				    if (newYPos <= center.y) {
+    						//newXPos = correct.x + correct.w - colliding.w
+    						//		+ pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+    						newXPos = correct.x + correct.w - colliding.w + Math.abs(newYPos - correct.y);
+    				    } else {
+    						//newXPos = correct.x + correct.w - colliding.w
+    						//		- pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+    						newXPos = correct.x + correct.w - colliding.w - Math.abs(newYPos - correct.y);
+    				    }
+					}// else if (newXPos + colliding.w > center.x) {
+					//	labels.hideLabel(pie, colliding);
+					//	return;
+					//}
 
 				} else {
-					if (correct.hs === "left") {
-						newXPos = correct.x + correct.w - colliding.w
-								- pieDist * 1.1 * Math.cos(angle/180*Math.PI);
-					} else {
-						newXPos = correct.x - pieDist * 1.1 * Math.cos(angle/180*Math.PI);
-					}
+
+				    if (newYPos <= center.y) {
+				        //newXPos = correct.x + pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+				        newXPos = correct.x + Math.abs(newYPos - correct.y);
+				    } else {
+				        //newXPos = correct.x - pieDist * 1.1 * Math.cos(angle/180*Math.PI);
+				        newXPos = correct.x - Math.abs(newYPos - correct.y);
+				    }
+
+					if (newXPos + colliding.w > pie.options.size.canvasWidth - 5) {
+					    // wrap label
+					    var space = pie.options.size.canvasWidth - newXPos - 5;
+					    var selection = pie.svg.select("#" + pie.cssPrefix + "segmentMainLabel" + colliding.i + "-outer");
+					    labels.wrapSelectedLabel(selection, space);
+
+        				var newDims = selection.node().getBBox();
+        				colliding.w = newDims.width;
+        				colliding.h = newDims.height;
+					}// else if (newXPos < center.x) {
+					//	labels.hideLabel(pie, colliding);
+					//	return;
+					//}
 
 				}
 				colliding.x = newXPos;

@@ -21,8 +21,9 @@ function DetailedDonutPlot() {
 
         pie.options.size.canvasWidth = width;
         pie.options.size.canvasHeight = height;
-
-        var pieDist = Math.min(width/30, height/25, 10);
+        //var pieDist = Math.min(width/30, height/25, 10);
+        //var offsetSize = Math.min(width/25, height/20, 20);
+        var pieDist = Math.min(width/30, height/25, 25);
         var offsetSize = Math.min(width/25, height/20, 20);
         pie.options.labels.outer.pieDistance = pieDist;
         pie.options.labels.outer.offsetSize = offsetSize;
@@ -206,7 +207,9 @@ function DetailedDonutPlot() {
 
         dataFormatter = d3.format(",.1f");
 
-        var pieDist = Math.min(width/30, height/25, 10);
+        //var pieDist = Math.min(width/30, height/25, 10);
+        //var offsetSize = Math.min(width/25, height/20, 20);
+        var pieDist = Math.min(width/30, height/25, 25);
         var offsetSize = Math.min(width/25, height/20, 20);
 
         var canvasPadding = {
@@ -225,7 +228,7 @@ function DetailedDonutPlot() {
 
         var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
 
-        if (settings.orderControl) {
+        if (settings.orderControl === "visible") {
 
         var menuBox = selection.select("svg")
                         .append("g")
