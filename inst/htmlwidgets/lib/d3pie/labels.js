@@ -1527,6 +1527,12 @@ var labels = {
 							triggered = 3;
                     	} else if (curr.hs != prev.hs && boundary) {
                     		// boundary makes sure it is the boundary
+                        	for (var k = i+1; k < objs.length; k++) {
+                        	    if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                        	        curr.Xchanged = 1;
+                        	        break;
+                        	    }
+                        	}
 							triggered = 4;
                     	}
                     	boundary = false;
@@ -1609,6 +1615,12 @@ var labels = {
     							triggered = 3;
                         	} else if (curr.hs != prev.hs && boundary) {
                         		// boundary makes sure it is the boundary
+                        		for (var k = i+1; k < objs.length; k++) {
+                        		    if (labelData[k].hide === 0 && curr.hide === 0 && labels.rectIntersect(curr, labelData[k])) {
+                        		        curr.Xchanged = 1;
+                        		        break;
+                        		    }
+                        		}
     							triggered = 4;
                         	}
                         	boundary = false;
