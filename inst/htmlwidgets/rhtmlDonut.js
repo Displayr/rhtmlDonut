@@ -205,7 +205,12 @@ function DetailedDonutPlot() {
 
         }
 
-        dataFormatter = d3.format(",.1f");
+        if (settings.valuesDec >= 0) {
+            dataFormatter = d3.format(",." + settings.valuesDec + "f");
+        } else {
+            dataFormatter = d3.format(",.1f");
+        }
+
 
         //var pieDist = Math.min(width/30, height/25, 10);
         //var offsetSize = Math.min(width/25, height/20, 20);

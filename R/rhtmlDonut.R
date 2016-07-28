@@ -7,6 +7,7 @@
 #' @param values.display (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
 #' @param values.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.
 #' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".
+#' @param values.dec (optional) non-negative integer. number of decimal places for \code{values} and group values (if \code{groups} exists).
 #' @param labels.font (optional) font for \code{labels}. Default is "Arial"
 #' @param labels.size (optional) desired font size in pixels for \code{labels}. Default is 10.
 #' @param labels.color (optional) a hex value to set the label color for \code{labels}. Default is "#333333".
@@ -291,6 +292,7 @@ Donut <- function(
         valuesColor = values.color,
         valuesDisplay = values.display,
         valuesOrder = values.order,
+        valuesDec = values.dec,
         labelsFont = labels.font,
         labelsSize = labels.size,
         labelsColor = labels.color,

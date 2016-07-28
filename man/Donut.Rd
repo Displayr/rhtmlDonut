@@ -5,14 +5,14 @@
 \title{Create a Donut plot}
 \usage{
 Donut(values, labels, values.font = NULL, values.size = 10,
-  values.color = NULL, values.display = "percentage", values.thres = NULL,
-  values.order = "descending", labels.font = NULL, labels.size = 10,
-  labels.color = NULL, labels.minFontSize = 8, labels.inner = FALSE,
-  groups = NULL, groups.font = NULL, groups.size = 10,
-  groups.color = NULL, groups.order = "descending", prefix = NULL,
-  suffix = NULL, order.control = FALSE, border.color = "white",
-  gradient = FALSE, inner.radius = "80\%", max.label.length = NULL,
-  width = NULL, height = NULL)
+  values.dec = 1, values.color = NULL, values.display = "percentage",
+  values.thres = NULL, values.order = "descending", labels.font = NULL,
+  labels.size = 10, labels.color = NULL, labels.minFontSize = 8,
+  labels.inner = FALSE, groups = NULL, groups.font = NULL,
+  groups.size = 10, groups.color = NULL, groups.order = "descending",
+  prefix = NULL, suffix = NULL, order.control = FALSE,
+  border.color = "white", gradient = FALSE, inner.radius = "80\%",
+  max.label.length = NULL, width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -22,6 +22,8 @@ Donut(values, labels, values.font = NULL, values.size = 10,
 \item{values.font}{(optional) font for \code{values}. Default is "Arial".}
 
 \item{values.size}{(optional) desired font size in pixels for \code{values}. Default is 10.}
+
+\item{values.dec}{(optional) non-negative integer. number of decimal places for \code{values} and group values (if \code{groups} exists).}
 
 \item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
 
