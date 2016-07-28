@@ -434,6 +434,8 @@ var labels = {
 
 		pie.outerLabelGroupData[i].innerX = newCoords.x;
 		pie.outerLabelGroupData[i].innerY = newCoords.y;
+		pie.outerLabelGroupData[i].innerW = labelGroupDims.width;
+		pie.outerLabelGroupData[i].innerH = labelGroupDims.height;
 		pie.outerLabelGroupData[i].innerhs = hemisphere;
 	},
 
@@ -596,7 +598,7 @@ var labels = {
 				x4 = originCoords.x + (pie.outerLabelGroupData[i].x - originCoords.x) * 0.5;
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x - labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				y3 = pie.outerLabelGroupData[i].y + heightOffset;
 				if (x4 > x3) { x4 = x3; }
 				break;
 			case 2:
@@ -604,7 +606,7 @@ var labels = {
 				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
 				y4 = originCoords.y + (pie.outerLabelGroupData[i].y - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].y - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].x + pie.outerLabelGroupData[i].w + labelXMargin;
-				y3 = pie.outerLabelGroupData[i].y - heightOffset;
+				y3 = pie.outerLabelGroupData[i].y + heightOffset;
 				if (x4 < x3) { x4 = x3; }
 				break;
 			case 3:
@@ -655,16 +657,16 @@ var labels = {
 
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 		var originCoords = math.rotate(pie.pieCenter.x - pie.innerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
-		var heightOffset = pie.outerLabelGroupData[i].h / 5; // TODO check
+		var heightOffset = pie.outerLabelGroupData[i].innerH / 5; // TODO check
 		var labelXMargin = 3; // the x-distance of the label from the end of the line [TODO configurable]
 
 		var quarter = Math.floor(angle / 90);
 		var midPoint = 4;
-		var x2, y2, x3, y3, x4, x5, y4, y5;
+		var x3, y3;
 
 		var labelData = pie.outerLabelGroupData;
 
-        if (labelData[i].x > pie.pieCenter.x) {
+        if (labelData[i].innerhs === "right") {
             if (labelData[i].y < pie.pieCenter.y) {
                 quarter = 0;
             } else {
@@ -680,59 +682,31 @@ var labels = {
 
 		switch (quarter) {
 			case 0:
-			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
-				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
-				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
-				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
+			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].innerW + labelXMargin;
+				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].innerW + labelXMargin;
 				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
-				if (x4 > x3) { x4 = x3; }
 				break;
 			case 1:
-			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
-				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
-				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
-				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].w + labelXMargin;
-				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
-				if (x4 > x3) { x4 = x3; }
+			    var startOfLabelX = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].innerW + labelXMargin;
+				x3 = pie.outerLabelGroupData[i].innerX + pie.outerLabelGroupData[i].innerW + labelXMargin;
+				y3 = pie.outerLabelGroupData[i].innerY + heightOffset;
 				break;
 			case 2:
 				var startOfLabelX = pie.outerLabelGroupData[i].innerX - labelXMargin;
-				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
-				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 - Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].innerX - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].innerY + heightOffset;
-				if (x4 < x3) { x4 = x3; }
 				break;
 			case 3:
 				var startOfLabelX = pie.outerLabelGroupData[i].innerX - labelXMargin;
-				x4 = originCoords.x + (startOfLabelX - originCoords.x) * 0.5;
-				y4 = originCoords.y + (pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.5 + Math.abs(pie.outerLabelGroupData[i].innerY - originCoords.y) * 0.25;
 				x3 = pie.outerLabelGroupData[i].innerX - labelXMargin;
 				y3 = pie.outerLabelGroupData[i].innerY - heightOffset;
-				if (x4 < x3) { x4 = x3; }
 				break;
 		}
 
-		if (pie.options.labels.lines.style === "straight") {
 			pie.extraLineCoordGroups[i] = [
 				{ x: originCoords.x, y: originCoords.y },
 				{ x: x3, y: y3 }
 			];
-		} else if (pie.options.labels.lines.style === "aligned") {
-		    pie.extraLineCoordGroups[i] = [
-				{ x: originCoords.x, y: originCoords.y },
-				//{ x: x2, y: y2 },
-				{ x: x4, y: y4 },
-				//{ x: x5, y: y5 },
-				{ x: x3, y: y3 }
-			];
-		} else {
-			pie.extraLineCoordGroups[i] = [
-				{ x: originCoords.x, y: originCoords.y },
-				{ x: x2, y: y2 },
-				{ x: x3, y: y3 }
-			];
-		}
 	},
 
 	addLabelLines: function(pie) {
@@ -1255,16 +1229,16 @@ var labels = {
 	rectIntersectInner: function(r1, r2) {
 		var returnVal = (
 			// r2.left > r1.right
-			(r2.innerX > (r1.innerX + r1.w)) ||
+			(r2.innerX > (r1.innerX + r1.innerW)) ||
 
 			// r2.right < r1.left
-			((r2.innerX + r2.w) < r1.innerX) ||
+			((r2.innerX + r2.innerW) < r1.innerX) ||
 
 			// r2.bottom < r1.top
-			((r2.innerY + r2.h) < r1.innerY) ||
+			((r2.innerY + r2.innerH) < r1.innerY) ||
 
 			// r2.top > r1.bottom
-			(r2.innerY > (r1.innerY + r1.h))
+			(r2.innerY > (r1.innerY + r1.innerH))
 		);
 
 		return !returnVal;
@@ -1807,10 +1781,10 @@ var labels = {
 
                 labelData[i].hideMiddle = labelData[i].hide === 0 ? 1 : 0;
                 labelData[i].innerYlim = {max: labelData[i].innerY + pie.options.data.fontSize*2, min: labelData[i].innerY - pie.options.data.fontSize*2};
-                if (labelData[i].innerX <= center.x) {
+                if (labelData[i].innerhs === "left") {
                     labelData[i].innerAnchorPt = {x: labelData[i].innerX, y: labelData[i].innerY};
                 } else {
-                    labelData[i].innerAnchorPt = {x: labelData[i].innerX + labelData[i].w, y: labelData[i].innerY};
+                    labelData[i].innerAnchorPt = {x: labelData[i].innerX + labelData[i].innerW, y: labelData[i].innerY};
                 }
                 labelData[i].innerR = labels.getDist(labelData[i].innerAnchorPt.x, labelData[i].innerAnchorPt.y, pie.pieCenter.x, pie.pieCenter.y)
 
@@ -2736,7 +2710,7 @@ var labels = {
 
 	adjustInnerLabelPosNew: function(pie, colliding, correct, next, center) {
 		var xDiff, yDiff, newXPos, newYPos, newXAnchor, heightChange;
-        heightChange = correct.h + 1;
+        heightChange = correct.innerH + 1;
 		if (colliding.innerhs === "left") {
 
 		    if (colliding.innerY >= correct.innerY) {
@@ -2781,7 +2755,7 @@ var labels = {
             var padding = pie.options.labels.mainLabel.horizontalPadding;
             // possibly need to do some more shifting
     		if (correct.innerhs === "right") {
-    			newXPos = center.x + xDiff - colliding.w;
+    			newXPos = center.x + xDiff - colliding.innerW;
     		} else {
     			newXPos = center.x - xDiff;
     		}
@@ -2794,7 +2768,7 @@ var labels = {
 		colliding.innerY = newYPos;
 
 		if (colliding.innerhs === "right") {
-		    colliding.innerAnchorPt.x = colliding.innerX + colliding.w;
+		    colliding.innerAnchorPt.x = colliding.innerX + colliding.innerW;
 		} else {
 		    colliding.innerAnchorPt.x = colliding.innerX;
 		}
@@ -2806,7 +2780,7 @@ var labels = {
 
 
 	// does a little math to shift a label into a new position based on the last properly placed one
-	adjustLabelPos: function(pie, nextIndex, lastCorrectlyPositionedLabel, info) {
+	/*adjustLabelPos: function(pie, nextIndex, lastCorrectlyPositionedLabel, info) {
 		var xDiff, yDiff, newXPos, newYPos;
 		newYPos = lastCorrectlyPositionedLabel.y + info.heightChange;
 		yDiff = info.center.y - newYPos;
@@ -2825,6 +2799,6 @@ var labels = {
 
 		pie.outerLabelGroupData[nextIndex].x = newXPos;
 		pie.outerLabelGroupData[nextIndex].y = newYPos;
-	}
+	}*/
 
 };

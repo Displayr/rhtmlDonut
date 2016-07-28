@@ -179,6 +179,11 @@ rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
                              prefix = "$",
                              values.thres = 0.3)
 
+rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
+                  values.display = "original", values.size = 11,
+                  labels = data$V2, labels.minFontSize = 8, labels.size = 11,labels.inner = TRUE,
+                  prefix = "$",
+                  values.thres = 0.3)
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",
 #                   labels = data$V2,labels.minFontSize = 10,
