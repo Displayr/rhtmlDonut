@@ -178,9 +178,9 @@ var labels = {
 				.attr("x", 0)
 				.attr("y", 0)
                 .attr("text-anchor", "middle")
-				.style("font-size", pie.options.labels.mainLabel.minFontSize + "px")
+				.style("font-size", pie.options.groups.minFontSize + "px")
 				.style("font-family", pie.options.groups.font)
-				.style("fill", pie.options.labels.mainLabel.color)
+				.style("fill", pie.options.groups.fontColor)
 				.style("font-weight", pie.options.groups.fontWeight)
 				.attr("id", function(d, i) { return pie.cssPrefix + "segmentMainLabel" + i + "-group"; })
 				.attr("class", pie.cssPrefix + "segmentMainLabel-group")
@@ -2049,7 +2049,7 @@ var labels = {
         //console.log(collisions);
 	},
 
-    wrapTspan: function(pie, sel, fontSize, maxSize) {
+    /*wrapTspan: function(pie, sel, fontSize, maxSize) {
         sel.selectAll("tspan")
             .style("font-size", function(d,i) {
                 var tspans = d3.select(this.parentNode).selectAll("tspan")[0];
@@ -2091,7 +2091,7 @@ var labels = {
                     return this.getAttribute("dy");
                 }
             });
-        },
+        },*/
 
     unwrapSelectedLabel: function(pie, text) {
             // combine all tspans except the last to one tspan

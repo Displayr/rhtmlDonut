@@ -28,7 +28,7 @@ labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
 set.seed(1)
 rhtmlDonut::Donut(values = runif(length(labels)), labels = labels)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, values.dec = 3, groups.color = qColors)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
 rhtmlDonut::Donut(values = values, values.size = 10,
                   labels = labels, labels.size = 10,
@@ -179,11 +179,10 @@ rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
                              prefix = "$",
                              values.thres = 0.3)
 
-rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
-                  values.display = "original", values.size = 11,
-                  labels = data$V2, labels.minFontSize = 8, labels.size = 11,labels.inner = TRUE,
-                  prefix = "$",
-                  values.thres = 0.3)
+rhtmlDonut::Donut(values = data$V1, values.order = "descending", values.decimal.places = 0,
+                  values.display.as = "original", values.font.size = 11, values.display.thres = 0.3,
+                  labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,labels.inner = TRUE,
+                  prefix = "$")
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",
 #                   labels = data$V2,labels.minFontSize = 10,
@@ -197,3 +196,4 @@ rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
 # htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")
 
 # change angle of tangent as a function of the width of the plot
+# specify color change

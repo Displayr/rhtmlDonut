@@ -1,29 +1,30 @@
 #' Create a Donut plot
 #' @param values vector of real numbers
 #' @param labels character vector, length must be the same as \code{values}
-#' @param values.font (optional) font for \code{values}. Default is "Arial".
-#' @param values.size (optional) desired font size in pixels for \code{values}. Default is 10.
+#' @param values.font.family (optional) font family for \code{values}. Default is "Arial".
+#' @param values.font.size (optional) desired font size in pixels for \code{values}. Default is 10.
 #' @param values.color (optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.
-#' @param values.display (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
-#' @param values.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.
+#' @param values.display.as (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
+#' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.
 #' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".
-#' @param values.dec (optional) non-negative integer. number of decimal places for \code{values} and group values (if \code{groups} exists).
-#' @param labels.font (optional) font for \code{labels}. Default is "Arial"
-#' @param labels.size (optional) desired font size in pixels for \code{labels}. Default is 10.
-#' @param labels.color (optional) a hex value to set the label color for \code{labels}. Default is "#333333".
+#' @param values.decimal.places (optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).
+#' @param labels.font.family (optional) font family for \code{labels}. Default is "Arial"
+#' @param labels.font.size (optional) desired font size in pixels for \code{labels}. Default is 10.
+#' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. Default is "#333333".
 #' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". Defaults to \code{FALSE}.
-#' @param labels.minFontSize (optional) the minimum font size in pixels for labels. Default is 8.
+#' @param labels.min.font.size (optional) the minimum font size in pixels for labels. Default is 8.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
-#' @param groups.font (optional) font for \code{groups}. Default is "Arial".
-#' @param groups.size (optional) desired font size in pixels for \code{groups}. Default is 10.
+#' @param groups.font.family (optional) font family for \code{groups}. Default is "Arial".
+#' @param groups.font.size (optional) desired font size in pixels for \code{groups}. Default is 10.
+#' @param groups.font.color (optional) a hex value to set the font color for \code{groups}. Default is "#333333".
+#' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. Default is 8.
 #' @param groups.color (optional) colors for \code{groups}. If not provided then D3 colors are generated.
 #' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). Default is "descending".
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
-#' @param border.color (optional) c("white", "none", hex colors)
+#' @param border.color (optional) c("white", "none", hex value)
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".
-#' @param max.label.length (optional) sets custom label length constraint. Usually this does not need to be set and auto wrapping will apply.
 
 #' @examples
 #' # load example data
@@ -34,10 +35,21 @@
 #' labels1 = labels[out[[2]]][1:30]
 #' groups1 = groups[out[[2]]][1:30]
 #' # a donut plot
-#' rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%")
-#' rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", gradient = T, border.color = "none", prefix = "", suffix = "%")
+#' rhtmlDonut::Donut(values = values1,
+#'                  labels = labels1,
+#'                  values.order = "descending",
+#'                  prefix = "", suffix = "%")
+#' rhtmlDonut::Donut(values = values1,
+#'                  labels = labels1,
+#'                  values.order = "descending",
+#'                  gradient = T,
+#'                  border.color = "none",
+#'                  prefix = "", suffix = "%")
 #' # a donut plot with groups
-#' rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, prefix = "", suffix = "%")
+#' rhtmlDonut::Donut(values = values1,
+#'                  labels = labels1,
+#'                  groups = groups1,
+#'                  prefix = "", suffix = "%")
 
 #' @return a donut plot
 #' @export
@@ -45,30 +57,34 @@
 Donut <- function(
     values,
     labels,
-    values.font = NULL,
-    values.size = 10,
-    values.dec = 1,
     values.color = NULL,
-    values.display = "percentage",
-    values.thres = NULL,
     values.order = "descending",
-    labels.font = NULL,
-    labels.size = 10,
-    labels.color = NULL,
-    labels.minFontSize = 8,
+    values.font.family = "arial",
+    values.font.size = 10,
+    values.decimal.places = 1,
+    values.display.as = "percentage",
+    values.display.thres = 0.3,
+    labels.font.family = "arial",
+    labels.font.color = "#333333",
+    labels.font.size = 10,
+    labels.min.font.size = 8,
     labels.inner = FALSE,
     groups = NULL,
-    groups.font = NULL,
-    groups.size = 10,
     groups.color = NULL,
     groups.order = "descending",
+    groups.font.family = "arial",
+    groups.font.color = "#333333",
+    groups.font.size = 10,
+    groups.min.font.size = 8,
+    title = NULL,
+    title.font.family = "arial",
+    title.font.size = 12,
+    title.font.color = "#333333",
     prefix = NULL,
     suffix = NULL,
-    order.control = FALSE,
     border.color = "white",
     gradient = FALSE,
     inner.radius = "80%",
-    max.label.length = NULL,
     width = NULL,
     height = NULL) {
 
@@ -276,42 +292,41 @@ Donut <- function(
         groups.sums = NULL
     }
 
-    if (is.null(values.thres)) {
-        values.thres = 0.3 / 100
-    } else {
-        if (values.thres > 100) {
-            values.thres = 100
-        }
-        values.thres = values.thres / 100
+
+    if (values.display.thres > 100) {
+        values.display.thres = 100
     }
+    values.display.thres = values.display.thres / 100
+
 
     # create a list that contains the settings
     settings <- list(
-        valuesFont = values.font,
-        valuesSize = values.size,
+        valuesFont = values.font.family,
+        valuesSize = values.font.size,
         valuesColor = values.color,
-        valuesDisplay = values.display,
+        valuesDisplay = values.display.as,
         valuesOrder = values.order,
-        valuesDec = values.dec,
-        labelsFont = labels.font,
-        labelsSize = labels.size,
-        labelsColor = labels.color,
+        valuesDec = values.decimal.places,
+        labelsFont = labels.font.family,
+        labelsSize = labels.font.size,
+        labelsColor = labels.font.color,
         labelsInner = labels.inner,
+        labelsMinFontSize = labels.min.font.size,
         groups = groups, # length = n
-        groupsFont = groups.font, # string
-        groupsSize = groups.size, # scalar
+        groupsFont = groups.font.family, # string
+        groupsFontColor = groups.font.color,
+        groupsSize = groups.font.size, # scalar
         groupsColor = groups.color, # length = length(unique(groups))
         groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsCounts = groups.counts, # number of items in each group
+        groupLabelsMinFontSize = groups.min.font.size,
         prefix = prefix,
         suffix = suffix,
-        orderControl = order.control,
+        orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart
         gradient = gradient,
         innerRadius = inner.radius,
-        maxLabelLength = max.label.length,
-        minAngle = values.thres,
-        minFontSize = labels.minFontSize,
+        minAngle = values.display.thres,
         borderColor = border.color
     )
 

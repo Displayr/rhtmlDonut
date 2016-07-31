@@ -36,8 +36,8 @@ function DetailedDonutPlot() {
 		h = (h < 0) ? 0 : h;
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
-        pie.options.labels.mainLabel.maxLabelLength = settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength;
+        //var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
+        //pie.options.labels.mainLabel.maxLabelLength = settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength;
         pie.redrawWithoutLoading();
     }
 
@@ -231,7 +231,7 @@ function DetailedDonutPlot() {
 
 		var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3;
 
-        var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
+        //var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
 
         if (settings.orderControl === "visible") {
 
@@ -461,8 +461,8 @@ function DetailedDonutPlot() {
             			color: settings.labelsColor ? settings.labelsColor : "#333333",
             			font: settings.labelsFont ? settings.labelsFont : "arial",
             			fontSize: settings.labelsSize ? settings.labelsSize : 10,
-            			maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
-            			minFontSize: settings.minFontSize,
+            			minFontSize: settings.labelsMinFontSize,
+            			//maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
             			labelsInner: settings.labelsInner,
             			horizontalPadding: 8,
             			fontWeight: "bold"
@@ -489,6 +489,8 @@ function DetailedDonutPlot() {
             	    content: groupData,
             	    font: settings.groupsFont ? settings.groupsFont : "arial",
             	    fontSize: settings.groupsSize ? settings.groupsSize : 10,
+            	    fontColor: settings.groupsFontColor ? settings.groupsFontColor : "#333333",
+            	    minFontSize: settings.groupLabelsMinFontSize,
             	    fontWeight: "bold"
             	}
             });
