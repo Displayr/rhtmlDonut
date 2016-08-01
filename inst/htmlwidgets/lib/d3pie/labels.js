@@ -553,7 +553,7 @@ var labels = {
 	    var pieDistance = pie.options.labels.outer.pieDistance + pie.options.labels.outer.offsetSize/2;
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 		var originCoords = math.rotate(pie.pieCenter.x - pie.outerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
-		var heightOffset = pie.outerLabelGroupData[i].h / 5; // TODO check
+		var heightOffset = pie.outerLabelGroupData[i].fontSize / 5; // TODO check
 		var labelXMargin = 6; // the x-distance of the label from the end of the line [TODO configurable]
 
 		var quarter = Math.floor(angle / 90);
@@ -657,7 +657,7 @@ var labels = {
 
 		var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, { midpoint: true });
 		var originCoords = math.rotate(pie.pieCenter.x - pie.innerRadius, pie.pieCenter.y, pie.pieCenter.x, pie.pieCenter.y, angle);
-		var heightOffset = pie.outerLabelGroupData[i].innerH / 5; // TODO check
+		var heightOffset = pie.outerLabelGroupData[i].fontSize / 5; // TODO check
 		var labelXMargin = 3; // the x-distance of the label from the end of the line [TODO configurable]
 
 		var quarter = Math.floor(angle / 90);
