@@ -89,6 +89,7 @@ rhtmlDonut::Donut(values = values, values.order = "initial", groups.order = "ini
                   labels = labels, groups = groups, groups.color = qColors, prefix = "", suffix = "%")
 
 ### gradient
+data("browser", package = "rhtmlDonut")
 out = sort(values, decreasing = T, index.return = T)
 values1 = out[[1]][1:30]
 labels1 = labels[out[[2]]][1:30]
@@ -188,7 +189,7 @@ rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
 rhtmlDonut::Donut(values = data$V1, values.order = "descending", values.decimal.places = 0,
                   values.display.as = "original", values.font.size = 11, values.display.thres = 0.3,
                   labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,
-                  title = "This is a good title", title.horizontal.align = "left",title.vertical.align = "bottom",
+                  title = "This is a good title",
                   prefix = "$")
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",
