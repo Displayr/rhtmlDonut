@@ -12,9 +12,12 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.min.font.size = 8, labels.inner = FALSE, groups = NULL,
   groups.color = NULL, groups.order = "descending",
   groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8, prefix = NULL,
-  suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = "80\%", width = NULL, height = NULL)
+  groups.font.size = 10, groups.min.font.size = 8, title = NULL,
+  title.font.family = "arial", title.font.size = 12,
+  title.font.color = "#333333", title.vertical.align = "top",
+  title.horizontal.align = "center", prefix = NULL, suffix = NULL,
+  border.color = "white", gradient = FALSE, inner.radius = "80\%",
+  width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -23,41 +26,53 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
 
-\item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".}
+\item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".}
 
-\item{values.font.family}{(optional) font family for \code{values}. Default is "Arial".}
+\item{values.font.family}{(optional) font family for \code{values}. The default is "Arial".}
 
-\item{values.font.size}{(optional) desired font size in pixels for \code{values}. Default is 10.}
+\item{values.font.size}{(optional) desired font size in pixels for \code{values}. The default is 10.}
 
 \item{values.decimal.places}{(optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).}
 
-\item{values.display.as}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".}
+\item{values.display.as}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".}
 
-\item{values.display.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.}
+\item{values.display.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and he default is 0.3.}
 
-\item{labels.font.family}{(optional) font family for \code{labels}. Default is "Arial"}
+\item{labels.font.family}{(optional) font family for \code{labels}. The default is "Arial"}
 
-\item{labels.font.color}{(optional) a hex value to set the font color for \code{labels}. Default is "#333333".}
+\item{labels.font.color}{(optional) a hex value to set the font color for \code{labels}. The default is "#333333".}
 
-\item{labels.font.size}{(optional) desired font size in pixels for \code{labels}. Default is 10.}
+\item{labels.font.size}{(optional) desired font size in pixels for \code{labels}. The default is 10.}
 
-\item{labels.min.font.size}{(optional) the minimum font size in pixels for labels. Default is 8.}
+\item{labels.min.font.size}{(optional) the minimum font size in pixels for labels. The default is 8.}
 
-\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". Defaults to \code{FALSE}.}
+\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
 
 \item{groups}{(optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.}
 
 \item{groups.color}{(optional) colors for \code{groups}. If not provided then D3 colors are generated.}
 
-\item{groups.order}{(optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). Default is "descending".}
+\item{groups.order}{(optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".}
 
-\item{groups.font.family}{(optional) font family for \code{groups}. Default is "Arial".}
+\item{groups.font.family}{(optional) font family for \code{groups}. The default is "Arial".}
 
-\item{groups.font.color}{(optional) a hex value to set the font color for \code{groups}. Default is "#333333".}
+\item{groups.font.color}{(optional) a hex value to set the font color for \code{groups}. The default is "#333333".}
 
-\item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. Default is 10.}
+\item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. The default is 10.}
 
-\item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. Default is 8.}
+\item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
+
+\item{title}{(optional) specifies the title text.}
+
+\item{title.font.family}{(optional) specifies the font family of the title. The default is "arial".}
+
+\item{title.font.size}{(optional) specifies the font size of the title in pixels. The default is 12.}
+
+\item{title.font.color}{(optional) a hex value to specify the color of the title. The default is "#333333".}
+
+\item{title.vertical.align}{(optional) character which specifies the vertical alignment of the title. Options are c("top", "bottom") and the default is "top".}
+
+\item{title.horizontal.align}{(optional) character which specifies the horizontal alignment of the title. Options are c("left", "center", "right") and the default is "center".}
 
 \item{prefix}{(optional) character, prefix for \code{labels}}
 

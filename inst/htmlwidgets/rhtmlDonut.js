@@ -409,6 +409,20 @@ function DetailedDonutPlot() {
 
         // create the pie chart instance
         pie  = new d3pie(svgEl, {
+                header : {
+            		title: {
+            			text:     settings.title,
+            			color:    settings.titleFontColor,
+            			fontSize: settings.titleFontSize,
+            			font:     settings.titleFontFamily,
+            			verticalAlign:    settings.titleVerticalAlign,
+            			horizontalAlign:    settings.titleHorizontalAlign,
+                        topPadding: 20,
+                        bottomPadding: 20,
+                        leftPadding: 10,
+                        rightPadding: 10
+            		}
+                },
         		size: {
         		    canvasWidth: width,
         		    canvasHeight: height,
@@ -437,6 +451,12 @@ function DetailedDonutPlot() {
             				"#807ece", "#8db27c", "#be66a2", "#9ed3c6", "#00644b", "#005064", "#77979f", "#77e079", "#9c73ab", "#1f79a7"
             			],
             			segmentStroke: settings.borderColor ? settings.borderColor : "#ffffff"
+            		},
+            		canvasPadding: {
+            			top: 5,
+            			right: 5,
+            			bottom: 5,
+            			left: 5
             		},
             		gradient: {
             			enabled: false,

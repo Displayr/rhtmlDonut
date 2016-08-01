@@ -8,7 +8,7 @@ var helpers = {
 		var canvasHeight = pie.options.size.canvasHeight;
 		var backgroundColor = pie.options.misc.colors.background;
 
-        var svg = d3.select(element).append("g").attr("class", "mainPlot");
+        var svg = d3.select(element).append("g").attr("id", "svgContainer");
 		//var svg = d3.select(element).append("svg:svg")
 		//	.attr("width", canvasWidth)
 		//	.attr("height", canvasHeight);

@@ -1,25 +1,31 @@
 #' Create a Donut plot
 #' @param values vector of real numbers
 #' @param labels character vector, length must be the same as \code{values}
-#' @param values.font.family (optional) font family for \code{values}. Default is "Arial".
-#' @param values.font.size (optional) desired font size in pixels for \code{values}. Default is 10.
+#' @param values.font.family (optional) font family for \code{values}. The default is "Arial".
+#' @param values.font.size (optional) desired font size in pixels for \code{values}. The default is 10.
 #' @param values.color (optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.
-#' @param values.display.as (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. Default is "percentage".
-#' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and default is 0.3.
-#' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). Default is "descending".
+#' @param values.display.as (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".
+#' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and he default is 0.3.
+#' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".
 #' @param values.decimal.places (optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).
-#' @param labels.font.family (optional) font family for \code{labels}. Default is "Arial"
-#' @param labels.font.size (optional) desired font size in pixels for \code{labels}. Default is 10.
-#' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. Default is "#333333".
-#' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". Defaults to \code{FALSE}.
-#' @param labels.min.font.size (optional) the minimum font size in pixels for labels. Default is 8.
+#' @param labels.font.family (optional) font family for \code{labels}. The default is "Arial"
+#' @param labels.font.size (optional) desired font size in pixels for \code{labels}. The default is 10.
+#' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. The default is "#333333".
+#' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
+#' @param labels.min.font.size (optional) the minimum font size in pixels for labels. The default is 8.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
-#' @param groups.font.family (optional) font family for \code{groups}. Default is "Arial".
-#' @param groups.font.size (optional) desired font size in pixels for \code{groups}. Default is 10.
-#' @param groups.font.color (optional) a hex value to set the font color for \code{groups}. Default is "#333333".
-#' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. Default is 8.
+#' @param groups.font.family (optional) font family for \code{groups}. The default is "Arial".
+#' @param groups.font.size (optional) desired font size in pixels for \code{groups}. The default is 10.
+#' @param groups.font.color (optional) a hex value to set the font color for \code{groups}. The default is "#333333".
+#' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. The default is 8.
 #' @param groups.color (optional) colors for \code{groups}. If not provided then D3 colors are generated.
-#' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). Default is "descending".
+#' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".
+#' @param title (optional) specifies the title text.
+#' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
+#' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 12.
+#' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
+#' @param title.vertical.align (optional) character which specifies the vertical alignment of the title. Options are c("top", "bottom") and the default is "top".
+#' @param title.horizontal.align (optional) character which specifies the horizontal alignment of the title. Options are c("left", "center", "right") and the default is "center".
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex value)
@@ -80,6 +86,8 @@ Donut <- function(
     title.font.family = "arial",
     title.font.size = 12,
     title.font.color = "#333333",
+    title.vertical.align = "top",
+    title.horizontal.align = "center",
     prefix = NULL,
     suffix = NULL,
     border.color = "white",
@@ -321,6 +329,12 @@ Donut <- function(
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsCounts = groups.counts, # number of items in each group
         groupLabelsMinFontSize = groups.min.font.size,
+        title = title,
+        titleFontFamily = title.font.family,
+        titleFontSize = title.font.size,
+        titleFontColor = title.font.color,
+        titleVerticalAlign = title.vertical.align,
+        titleHorizontalAlign = title.horizontal.align,
         prefix = prefix,
         suffix = suffix,
         orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart

@@ -94,7 +94,13 @@ values1 = out[[1]][1:30]
 labels1 = labels[out[[2]]][1:30]
 groups1 = groups[out[[2]]][1:30]
 # a donut plot
-rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%")
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%",
+                  title = "Browser Market Share Feb/2016", title.horizontal.align = "center",title.vertical.align = "top")
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%",
+                  title = "Browser Market Share Feb/2016", title.horizontal.align = "center",title.vertical.align = "bottom")
+rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%",
+                  title = "Browser Market Share Feb/2016", title.horizontal.align = "right",title.vertical.align = "top")
+
 rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", gradient = T, border.color = "none", prefix = "", suffix = "%")
 # a donut plot with groups
 rhtmlDonut::Donut(values = values1, labels = labels1, groups = groups1, inner.radius = "80%", prefix = "", suffix = "%")
@@ -181,7 +187,8 @@ rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
 
 rhtmlDonut::Donut(values = data$V1, values.order = "descending", values.decimal.places = 0,
                   values.display.as = "original", values.font.size = 11, values.display.thres = 0.3,
-                  labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,labels.inner = TRUE,
+                  labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,
+                  title = "This is a good title", title.horizontal.align = "left",title.vertical.align = "bottom",
                   prefix = "$")
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",

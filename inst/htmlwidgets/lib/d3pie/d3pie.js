@@ -352,7 +352,9 @@ var defaultSettings = {
 	var _init = function() {
 
 		// prep-work
-		this.svg = helpers.addSVGSpace(this);
+		this.svgContainer = helpers.addSVGSpace(this);
+		this.svg = this.svgContainer.append("g").attr("class", "mainPlot");
+		this.floating = this.svgContainer.append("g").attr("class", "floating");
 
 		this.outerLabelGroupData = [];
 		this.groupLabelGroupData = [];
@@ -376,14 +378,6 @@ var defaultSettings = {
 			}
 		};
 
-
-		// add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
-		if (this.textComponents.title.exists) {
-			text.addTitle(this);
-		}
-		if (this.textComponents.subtitle.exists) {
-			text.addSubtitle(this);
-		}
 		//text.addFooter(this);*/
 
 		// the footer never moves. Put it in place now
@@ -396,36 +390,12 @@ var defaultSettings = {
 		});*/
 
 		// now create the pie chart and position everything accordingly
-		var reqEls = [];
-		/*if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
-		if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
-		if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }*/
+		//var reqEls = [];
+		//if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
+		//if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
+		//if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }
 
-		helpers.whenElementsExist(reqEls, function() {
-			/*if (self.textComponents.title.exists) {
-				var d1 = helpers.getDimensions(self.cssPrefix + "title");
-				self.textComponents.title.h = d1.h;
-				self.textComponents.title.w = d1.w;
-			}
-			if (self.textComponents.subtitle.exists) {
-				var d2 = helpers.getDimensions(self.cssPrefix + "subtitle");
-				self.textComponents.subtitle.h = d2.h;
-				self.textComponents.subtitle.w = d2.w;
-			}
-			// now compute the full header height
-			if (self.textComponents.title.exists || self.textComponents.subtitle.exists) {
-				var headerHeight = 0;
-				if (self.textComponents.title.exists) {
-					headerHeight += self.textComponents.title.h;
-					if (self.textComponents.subtitle.exists) {
-						headerHeight += self.options.header.titleSubtitlePadding;
-					}
-				}
-				if (self.textComponents.subtitle.exists) {
-					headerHeight += self.textComponents.subtitle.h;
-				}
-				self.textComponents.headerHeight = headerHeight;
-			}*/
+		//helpers.whenElementsExist(reqEls, function() {
 
 			// at this point, all main text component dimensions have been calculated
 			math.computePieRadius(self);
@@ -433,10 +403,6 @@ var defaultSettings = {
 			// this value is used all over the place for placing things and calculating locations. We figure it out ONCE
 			// and store it as part of the object
 			math.calculatePieCenter(self);
-
-			// position the title and subtitle
-			text.positionTitle(self);
-			text.positionSubtitle(self);
 
 			// now create the pie chart segments, and gradients if the user desired
 			if (self.options.misc.gradient.enabled) {
@@ -473,14 +439,59 @@ var defaultSettings = {
 			//labels.positionLabelGroups(self, "inner");
 			labels.fadeInLabelsAndLines(self);
 
-          // add and position the tooltips
-          if (self.options.tooltips.enabled) {
-            tt.addTooltips(self);
-          }
+            // add and position the tooltips
+            if (self.options.tooltips.enabled) {
+                tt.addTooltips(self);
+            }
 
-          segments.addSegmentEventHandlers(self);
-          segments.shiftPlot(self);
-		});
+
+            segments.shiftPlot(self);
+
+
+    		// add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
+    		if (this.textComponents.title.exists) {
+    			text.addTitle(this);
+    		}
+    		if (this.textComponents.subtitle.exists) {
+    			text.addSubtitle(this);
+    		}
+
+			if (self.textComponents.title.exists) {
+				var d1 = helpers.getDimensions(self.cssPrefix + "title");
+				self.textComponents.title.h = d1.h;
+				self.textComponents.title.w = d1.w;
+			}
+			if (self.textComponents.subtitle.exists) {
+				var d2 = helpers.getDimensions(self.cssPrefix + "subtitle");
+				self.textComponents.subtitle.h = d2.h;
+				self.textComponents.subtitle.w = d2.w;
+			}
+			// now compute the full header height
+			if (self.textComponents.title.exists || self.textComponents.subtitle.exists) {
+				var headerHeight = 0;
+				if (self.textComponents.title.exists) {
+					headerHeight += self.textComponents.title.h;
+					if (self.textComponents.subtitle.exists) {
+						headerHeight += self.options.header.titleSubtitlePadding;
+					}
+				}
+				if (self.textComponents.subtitle.exists) {
+					headerHeight += self.textComponents.subtitle.h;
+				}
+				self.textComponents.headerHeight = headerHeight;
+			}
+
+			segments.addSegmentEventHandlers(self);
+			// position the title and subtitle
+    		if (this.textComponents.title.exists) {
+    			text.positionTitle(this);
+    		}
+    		if (this.textComponents.subtitle.exists) {
+    			text.positionSubtitle(this);
+    		}
+			//text.positionTitle(self);
+			//text.positionSubtitle(self);
+	//	});
 
 
 	};
@@ -533,12 +544,12 @@ var defaultSettings = {
 		});*/
 
 		// now create the pie chart and position everything accordingly
-		var reqEls = [];
-		if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
-		if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
-		if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }
+		//var reqEls = [];
+		//if (this.textComponents.title.exists)    { reqEls.push(this.cssPrefix + "title"); }
+		//if (this.textComponents.subtitle.exists) { reqEls.push(this.cssPrefix + "subtitle"); }
+		//if (this.textComponents.footer.exists)   { reqEls.push(this.cssPrefix + "footer"); }
 
-		helpers.whenElementsExist(reqEls, function() {
+		//helpers.whenElementsExist(reqEls, function() {
 		    /*
 			if (self.textComponents.title.exists) {
 				var d1 = helpers.getDimensions(self.cssPrefix + "title");
@@ -620,7 +631,15 @@ var defaultSettings = {
 
             segments.addSegmentEventHandlers(self);
             segments.shiftPlot(self);
-		});
+
+			// position the title and subtitle
+    		if (this.textComponents.title.exists) {
+    			text.positionTitle(this);
+    		}
+    		if (this.textComponents.subtitle.exists) {
+    			text.positionSubtitle(this);
+    		}
+		//});
 
 
 	};

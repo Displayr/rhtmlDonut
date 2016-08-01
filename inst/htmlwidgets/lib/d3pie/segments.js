@@ -268,6 +268,16 @@ var segments = {
         var lb = d3.selectAll("." + pie.cssPrefix + "labelGroup-outer");
         var groupLb = d3.selectAll("." + pie.cssPrefix + "labelGroup-group");
         var extraLb = d3.selectAll("." + pie.cssPrefix + "labelGroup-extra");
+        var title = d3.select("." + pie.cssPrefix + "title");
+
+        title.style("cursor", "default")
+            .style('-webkit-touch-callout', 'none')
+            .style('-webkit-user-select', 'none')
+            .style('-khtml-user-select', 'none')
+            .style('-moz-user-select', 'none')
+            .style('-ms-user-select', 'none')
+            .style('user-select', 'none');
+
         arc.style("cursor", "pointer");
 
         lb.style("cursor", "pointer")

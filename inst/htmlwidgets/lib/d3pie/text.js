@@ -4,7 +4,7 @@ var text = {
 	offscreenCoord: -10000,
 
 	addTitle: function(pie) {
-		var title = pie.svg.selectAll("." + pie.cssPrefix + "title")
+		var title = pie.floating.selectAll("." + pie.cssPrefix + "title")
 			.data([pie.options.header.title])
 			.enter()
 			.append("text")
@@ -12,41 +12,57 @@ var text = {
 			.attr({
                 id: pie.cssPrefix + "title",
                 class: pie.cssPrefix + "title",
-                x: text.offscreenCoord,
-                y: text.offscreenCoord
+                x: pie.pieCenter.x,
+                y: pie.pieCenter.y
               })
-			.attr("text-anchor", function() {
+			.attr("text-anchor", function(d) {
 				var location;
-				if (pie.options.header.location === "top-center" || pie.options.header.location === "pie-center") {
+				if (d.horizontalAlign === "center") {
 					location = "middle";
+				} else if (d.horizontalAlign === "left") {
+					location = "start";
 				} else {
-					location = "left";
+				    location = "end";
 				}
 				return location;
 			})
 			.attr("fill", function(d) { return d.color; })
+			.style("font-weight", "bold")
 			.style("font-size", function(d) { return d.fontSize + "px"; })
 			.style("font-family", function(d) { return d.font; });
 	},
 
 	positionTitle: function(pie) {
 		var textComponents = pie.textComponents;
-		var headerLocation = pie.options.header.location;
+		var horizontalAlign = pie.options.header.title.horizontalAlign;
+		var verticalAlign = pie.options.header.title.verticalAlign;
+
 		var canvasPadding = pie.options.misc.canvasPadding;
 		var canvasWidth = pie.options.size.canvasWidth;
+		var canvasHeight = pie.options.size.canvasHeight;
 		var titleSubtitlePadding = pie.options.header.titleSubtitlePadding;
 
-		var x;
-		if (headerLocation === "top-left") {
-			x = canvasPadding.left;
+		var x, y;
+		if (horizontalAlign === "left") {
+			x = pie.options.header.title.leftPadding;
+		} else if (horizontalAlign === "center") {
+			x = pie.pieCenter.x;
 		} else {
-			x = ((canvasWidth - canvasPadding.right) / 2) + canvasPadding.left;
+		    x = canvasWidth - pie.options.header.title.rightPadding;
 		}
 
     // add whatever offset has been added by user
-    x += pie.options.misc.pieCenterOffset.x;
+    //x += pie.options.misc.pieCenterOffset.x;
+        var box = pie.svg.node().getBoundingClientRect();
+        if (verticalAlign === "top") {
+            y = box.top / 2 + textComponents.title.h / 2;
+            y = y < pie.options.header.title.topPadding ? pie.options.header.title.topPadding : y;
+        } else {
+            y = box.bottom + (canvasHeight - box.bottom)/2 + textComponents.title.h / 2;
+            y = canvasHeight - y < pie.options.header.title.bottomPadding ? canvasHeight - pie.options.header.title.bottomPadding + textComponents.title.h / 2 : y;
+        }
 
-		var y = canvasPadding.top + textComponents.title.h;
+		/*y = canvasPadding.top + textComponents.title.h;
 
 		if (headerLocation === "pie-center") {
 			y = pie.pieCenter.y;
@@ -58,9 +74,9 @@ var text = {
 			} else {
 				y += (textComponents.title.h / 4);
 			}
-		}
+		}*/
 
-		pie.svg.select("#" + pie.cssPrefix + "title")
+		pie.floating.select("#" + pie.cssPrefix + "title")
 			.attr("x", x)
 			.attr("y", y);
 	},
