@@ -100,8 +100,16 @@ Donut <- function(
     vmax = max(val.perc)
     n = length(values)
 
+    if (n == 0) {
+        stop("no data")
+    } else if (n == 1) {
+        values = as.array(values)
+    }
+
     if (is.null(labels)) {
         labels = paste0("label", 1:n)
+    } else if (length(values) == length(labels) && n == 1) {
+        labels = as.array(labels)
     }
 
     if (!is.null(groups)) {
