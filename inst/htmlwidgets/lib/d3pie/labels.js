@@ -1275,117 +1275,6 @@ var labels = {
 	placeObj: function(pie, objs, center) {
 
         var minFontSize = pie.options.labels.mainLabel.minFontSize;
-        if (objs.length <= 1) {
-            return;
-        }
-
-        /*
-        // reference point, all directions clockwise
-        // default starting quadrant should be 4
-        var refPt;
-        switch (startQuad) {
-            case 4:
-                refPt = {x:0, y:center.y};
-                break;
-            case 1:
-                refPt = {x:center.x, y:0};
-                break;
-            case 2:
-                refPt = {x:center.x*2, y:center.y};
-                break;
-            case 3:
-                refPt = {x:center.x*2, y:center.y*2};
-                break;
-        }
-
-        // Find the angle of the object relative to the center of the circle
-        // Have to be very careful about the coordinate system of the objects and the center
-        // Make sure that the objects are in global coordinate system by checking transforms
-        // Not supporting rotation at the moment
-        objsInfo = [];
-        for (var i = 0; i < objs.length; i++) {
-
-            var objInfo = {};
-            // local coordinate system
-            var bbox = objs[i].getBBox();
-            objInfo.localX = bbox.x;
-            objInfo.localY = bbox.y;
-            objInfo.w = bbox.width;
-            objInfo.h = bbox.height;
-
-            // transform, only checking one layer
-            var xforms = objs[i].getAttribute("transform");
-            var parts;
-            if (xforms) {
-                parts  = /translate\(\s*([^\s,)]+)[ ,]([^\s,)]+)/.exec(xforms);
-                objInfo.translateX = Number(parts[1]);
-                objInfo.translateY = Number(parts[2]);
-                objInfo.x = objInfo.localX + objInfo.translateX;
-                objInfo.y = objInfo.localY + objInfo.translateY;
-            } else {
-                objInfo.x = objInfo.localX;
-                objInfo.y = objInfo.localY;
-            }
-
-            // get quadrant of text
-            if (objInfo.x > center.x) {
-                objInfo.anchorPt = {x: objInfo.x, y: objInfo.y};
-                if (objInfo.y < center.y) {
-                    objInfo.quadrant = 1;
-                } else {
-                    objInfo.quadrant = 2;
-                }
-            } else {
-                objInfo.anchorPt = {x: objInfo.x + objInfo.w, y: objInfo.y};
-                if (objInfo.y < center.y) {
-                    objInfo.quadrant = 3;
-                } else {
-                    objInfo.quadrant = 4;
-                }
-            }
-
-            // get radius of text
-            //objInfo.radius = labels.getDist(objInfo.anchorPt, center);
-
-            // get angle of text
-            //objInfo.angle = labels.getAngle(objInfo.anchorPt, center);
-            objInfo.collide = 0;
-            objsInfo.push(objInfo);
-        }*/
-
-
-        /*var updateTextDims = function(v, sel, selGroup, node, minFontSize) {
-            sel.style("font-size", function() {
-                if (v.fontSize < minFontSize) {
-                    v.hide = 1;
-                    return 0;
-                } else {
-                    return v.fontSize + "px";
-                }
-            })
-            .style("display", function() {
-                if (v.fontSize < minFontSize) {
-                    return "none";
-                } else {
-                    return "inline";
-                }
-            });
-
-            wrapTspan(sel);
-
-            if (v.fontSize >=  minFontSize) {
-                var nodeDim = node.getBBox();
-                var originalW = v.w;
-                v.w = nodeDim.width;
-                v.h = nodeDim.height;
-                if (v.hs == "left") {
-                    v.x = v.x + originalW - v.w;
-                }
-                selGroup.attr("transform", function(d) {
-                    return "translate(" + v.x + "," + v.y + ")";
-                });
-            }
-        };*/
 
         // starting font size is always small, later increased
         var labelData = pie.outerLabelGroupData;
@@ -1415,21 +1304,7 @@ var labels = {
             }
             labelData[i].r = labels.getDist(labelData[i].anchorPt.x, labelData[i].anchorPt.y, center.x, center.y)
 
-            /*if (labelData[i].x > center.x) {
-                if (labelData[i].y < center.y) {
-                    labelData[i].quadrant = 1;
-                } else {
-                    labelData[i].quadrant = 2;
-                }
-            } else {
-                if (labelData[i].y > center.y) {
-                    labelData[i].quadrant = 3;
-                } else {
-                    labelData[i].quadrant = 4;
-                }
-            }*/
         }
-        //console.log(labelData);
 
         var sortedValues = [];
         for (var i = 0; i < objs.length; i++) {
@@ -1442,8 +1317,11 @@ var labels = {
             labels.hideLabel(pie, labelData[0]);
         }
 
+        if (objs.length <= 1) {
+            return;
+        }
+
         var curr, prev, next, currIdx;
-        // TODO: still buggy when texts are dense
         for (var i = 0; i < objs.length; i++) {
 
             curr = labelData[i];

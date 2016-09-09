@@ -96,21 +96,20 @@ Donut <- function(
     width = NULL,
     height = NULL) {
 
+    if (!is.null(values))
+        values = as.array(values)
+    if (!is.null(labels))
+        labels = as.array(labels)
+    if (!is.null(values.color))
+        values.color = as.array(values.color)
+    if (!is.null(groups))
+        groups = as.array(groups)
+    if (!is.null(groups.color))
+        groups.color = as.array(groups.color)
+
     val.perc = values/sum(values)
     vmax = max(val.perc)
     n = length(values)
-
-    if (n == 0) {
-        stop("no data")
-    } else if (n == 1) {
-        values = as.array(values)
-    }
-
-    if (is.null(labels)) {
-        labels = paste0("label", 1:n)
-    } else if (length(values) == length(labels) && n == 1) {
-        labels = as.array(labels)
-    }
 
     if (!is.null(groups)) {
         groups.names = unique(groups)
@@ -313,6 +312,23 @@ Donut <- function(
         values.display.thres = 100
     }
     values.display.thres = values.display.thres / 100
+
+    if (!is.null(values))
+        values = as.array(values)
+    if (!is.null(labels))
+        labels = as.array(labels)
+    if (!is.null(values.color))
+        values.color = as.array(values.color)
+    if (!is.null(groups))
+        groups = as.array(groups)
+    if (!is.null(groups.color))
+        groups.color = as.array(groups.color)
+    if (!is.null(groups.sums))
+        groups.sums = as.array(groups.sums)
+    if (!is.null(groups.counts))
+        groups.counts = as.array(groups.counts)
+    if (!is.null(groups.names))
+        groups.names = as.array(groups.names)
 
 
     # create a list that contains the settings
