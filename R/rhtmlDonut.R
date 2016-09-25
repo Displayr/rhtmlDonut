@@ -22,7 +22,7 @@
 #' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".
 #' @param title (optional) specifies the title text.
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
-#' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 12.
+#' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 16.
 #' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
 #' @param title.top.padding (optional) integer to set padding for the title. Defults to 0.
 #' @param prefix (optional) character, prefix for \code{labels}

@@ -13,7 +13,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   groups.color = NULL, groups.order = "descending",
   groups.font.family = "arial", groups.font.color = "#333333",
   groups.font.size = 10, groups.min.font.size = 8, title = NULL,
-  title.font.family = "arial", title.font.size = 12,
+  title.font.family = "arial", title.font.size = 16,
   title.font.color = "#333333", title.top.padding = 0, prefix = NULL,
   suffix = NULL, border.color = "white", gradient = FALSE,
   inner.radius = "80\%", width = NULL, height = NULL)
@@ -65,7 +65,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{title.font.family}{(optional) specifies the font family of the title. The default is "arial".}
 
-\item{title.font.size}{(optional) specifies the font size of the title in pixels. The default is 12.}
+\item{title.font.size}{(optional) specifies the font size of the title in pixels. The default is 16.}
 
 \item{title.font.color}{(optional) a hex value to specify the color of the title. The default is "#333333".}
 
