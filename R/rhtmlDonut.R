@@ -83,7 +83,7 @@ Donut <- function(
     groups.min.font.size = 8,
     title = NULL,
     title.font.family = "arial",
-    title.font.size = 12,
+    title.font.size = 16,
     title.font.color = "#333333",
     title.top.padding = 0,
     prefix = NULL,

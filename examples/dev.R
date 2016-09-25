@@ -93,6 +93,7 @@ values1 = out[[1]][1:30]
 labels1 = labels[out[[2]]][1:30]
 groups1 = groups[out[[2]]][1:30]
 # a donut plot
+rhtmlDonut::Donut(values = values1, labels = labels1, title = "This is a title")
 rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%",
                   title = "Browser Market Share Feb/2016", title.horizontal.align = "center",title.vertical.align = "top")
 rhtmlDonut::Donut(values = values1, labels = labels1, values.order = "descending", prefix = "", suffix = "%",
