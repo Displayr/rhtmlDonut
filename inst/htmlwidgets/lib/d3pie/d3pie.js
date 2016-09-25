@@ -478,6 +478,9 @@ var defaultSettings = {
                 tt.addTooltips(self);
             }
 
+
+            segments.shiftPlot(self);
+
 			// position the title and subtitle
     		if (this.textComponents.title.exists) {
     			text.positionTitle(this);
@@ -485,9 +488,6 @@ var defaultSettings = {
     		if (this.textComponents.subtitle.exists) {
     			text.positionSubtitle(this);
     		}
-
-            segments.shiftPlot(self);
-
 			segments.addSegmentEventHandlers(self);
 			//text.positionTitle(self);
 			//text.positionSubtitle(self);
@@ -625,6 +625,12 @@ var defaultSettings = {
 
             // add and position the tooltips
 
+            if (self.options.tooltips.enabled) {
+                tt.addTooltips(self);
+            }
+
+            segments.shiftPlot(self);
+
 			// position the title and subtitle
     		if (this.textComponents.title.exists) {
     			text.positionTitle(this);
@@ -632,11 +638,6 @@ var defaultSettings = {
     		if (this.textComponents.subtitle.exists) {
     			text.positionSubtitle(this);
     		}
-            if (self.options.tooltips.enabled) {
-                tt.addTooltips(self);
-            }
-
-            segments.shiftPlot(self);
             segments.addSegmentEventHandlers(self);
 
 		//});

@@ -191,6 +191,8 @@ rhtmlDonut::Donut(values = data$V1, values.order = "descending", values.decimal.
 
 rhtmlDonut::Donut(values = c(3,3,3,3,3,3), labels = c("Coke Zero", "Coca Cola", "Diet Coke", "Pepsi", "Pepsi Max", "Pepsi Light"),
                   values.display.as = "original", values.font.size = 11, title = "This is a good title",title.font.size = 18,title.top.padding = 5)
+rhtmlDonut::Donut(values = c(3,3,3,3,3,3), labels = c("Coke Zero", "Coca Cola", "Diet Coke", "Pepsi", "Pepsi Max", "Pepsi Light"),
+                  values.display.as = "original", values.font.size = 11)
 
 rhtmlDonut::Donut(values = c(100),
                   labels = c("Asiatic Dominions"),

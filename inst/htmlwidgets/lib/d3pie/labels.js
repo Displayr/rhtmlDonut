@@ -2407,7 +2407,7 @@ var labels = {
     		}
 		}*/
 
-        if (Math.abs(newYPos - center.y) > (pie.outerRadius + pie.options.labels.outer.pieDistance) * 1.5) {
+        if (Math.abs(newYPos - center.y) > (pie.outerRadius + pie.options.labels.outer.pieDistance) * 1.6) {
             labels.hideLabel(pie, colliding);
 			return;
         }
