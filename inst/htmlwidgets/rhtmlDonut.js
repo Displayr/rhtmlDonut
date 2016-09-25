@@ -417,10 +417,10 @@ function DetailedDonutPlot() {
             			font:     settings.titleFontFamily,
             			verticalAlign:    settings.titleVerticalAlign,
             			horizontalAlign:    settings.titleHorizontalAlign,
-                        topPadding: 20,
-                        bottomPadding: 20,
-                        leftPadding: 10,
-                        rightPadding: 10
+                        topPadding: settings.titleTopPadding,
+                        bottomPadding: 5,
+                        leftPadding: 5,
+                        rightPadding: 5
             		}
                 },
         		size: {

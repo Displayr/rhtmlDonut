@@ -346,6 +346,10 @@ var labels = {
         		//originalY = pie.pieCenter.y - yscale(yangle);
         		originalY = pie.pieCenter.y - r/Math.cos(yangle/180*Math.PI);
         		newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, curr.segAngle - 90);
+        		if (pie.textComponents.title.exists && newCoords.y - pie.options.data.fontSize - 5 < pie.textComponents.title.h + pie.options.header.title.topPadding)
+        		{
+        		    newCoords.y = pie.textComponents.title.h + pie.options.header.title.topPadding + 5;
+        		}
 
             } else {
         		originalX = pie.pieCenter.x;
@@ -365,7 +369,7 @@ var labels = {
 
 	/**
 	 * @param i 0-N where N is the dataset size - 1.
-	 */
+
 	getIdealOuterLabelPositions: function(pie, i) {
         var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-outer").node();
         if (!labelGroupNode) {
@@ -387,12 +391,6 @@ var labels = {
 		} else {
 			newCoords.x += pie.options.labels.mainLabel.horizontalPadding;
 		}
-		/*if (angle > 180) {
-			newCoords.x -= (labelGroupDims.width + 8);
-			hemisphere = "left";
-		} else {
-			newCoords.x += 8;
-		}*/
 
 		pie.outerLabelGroupData[i] = {
 		    i: i,
@@ -402,7 +400,7 @@ var labels = {
 			h: labelGroupDims.height,
 			hs: hemisphere
 		};
-	},
+	},*/
 
 	getIdealInnerLabelPositions: function(pie, i) {
         var labelGroupNode = d3.select("#" + pie.cssPrefix + "labelGroup" + i + "-extra").node();
@@ -480,7 +478,7 @@ var labels = {
             while (word = words.pop()) {
                 line.push(word);
                 tspan.text(line.join(" "));
-                if (tspan.node().getComputedTextLength() > width) {
+                if (tspan.node().getComputedTextLength() > width && line.length > 1) {
                     line.pop();
                     tspan.text(line.join(" "));
                     line = [word];

@@ -12,18 +12,18 @@ var text = {
 			.attr({
                 id: pie.cssPrefix + "title",
                 class: pie.cssPrefix + "title",
-                x: pie.pieCenter.x,
-                y: pie.pieCenter.y
+                x: 0,
+                y: 0
               })
 			.attr("text-anchor", function(d) {
-				var location;
-				if (d.horizontalAlign === "center") {
+				var location = "middle";
+				/*if (d.horizontalAlign === "center") {
 					location = "middle";
 				} else if (d.horizontalAlign === "left") {
 					location = "start";
 				} else {
 				    location = "end";
-				}
+				}*/
 				return location;
 			})
 			.attr("fill", function(d) { return d.color; })
@@ -43,24 +43,26 @@ var text = {
 		var titleSubtitlePadding = pie.options.header.titleSubtitlePadding;
 
 		var x, y;
-		if (horizontalAlign === "left") {
+		x = pie.pieCenter.x;
+		/*if (horizontalAlign === "left") {
 			x = pie.options.header.title.leftPadding;
 		} else if (horizontalAlign === "center") {
 			x = pie.pieCenter.x;
 		} else {
 		    x = canvasWidth - pie.options.header.title.rightPadding;
-		}
+		}*/
 
     // add whatever offset has been added by user
     //x += pie.options.misc.pieCenterOffset.x;
-        var box = pie.svg.node().getBoundingClientRect();
+        /*var box = pie.svg.node().getBoundingClientRect();
         if (verticalAlign === "top") {
             y = box.top / 2 + textComponents.title.h / 2;
             y = y < pie.options.header.title.topPadding ? pie.options.header.title.topPadding : y;
         } else {
             y = box.bottom + (canvasHeight - box.bottom)/2 + textComponents.title.h / 2;
             y = canvasHeight - y < pie.options.header.title.bottomPadding ? canvasHeight - pie.options.header.title.bottomPadding + textComponents.title.h / 2 : y;
-        }
+        }*/
+        y = textComponents.title.h + pie.options.header.title.topPadding;
 
 		/*y = canvasPadding.top + textComponents.title.h;
 

@@ -28,16 +28,14 @@ labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
 set.seed(1)
 rhtmlDonut::Donut(values = runif(length(labels)), labels = labels)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, max.label.length = 150)
-rhtmlDonut::Donut(values = values, values.size = 10,
-                  labels = labels, labels.size = 10,
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors,title = "This is a good title",title.top.padding = 0,title.font.size = 18)
+rhtmlDonut::Donut(values = values, values.font.size = 10,
+                  labels = labels, labels.font.size = 10,
                   groups = groups, groups.color = qColors,
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values,
-                  labels = labels, labels.size = 11,
-                  prefix = "", suffix = "%",
-                  max.label.length = 120)
+                  labels = labels, labels.font.size = 11,
+                  prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
 
 # load("data/browser.rda")
@@ -167,10 +165,8 @@ rhtmlDonut::Donut(values = values,
                   groups = groups,
                   values.order = "alphabetical")
 
-values = rep(1, 26*6)
-labels = rep(paste0(letters, letters, letters), times = 6)
-rhtmlDonut::Donut(values = rep(1, 26*6),
-                  labels = rep(paste0(letters, letters, letters), times = 6),
+rhtmlDonut::Donut(values = runif(26*3),values.display.thres = 0.3,
+                  labels = rep(paste0(letters, letters, letters), times = 3),labels.inner = TRUE,
                   values.order = "descending")
 
 
@@ -180,17 +176,70 @@ rhtmlDonut::Donut(values = rep(1, 26*6),
 
 # htmlwidgets::saveWidget(v, "/Users/MichaelW/Work/rhtmlDonut/index.html", selfcontained = FALSE, background = "white")
 data = read.table("/Users/MichaelW/Work/rhtmlDonut/data1.txt", sep = "\t", stringsAsFactors = FALSE)
-rhtmlDonut::Donut(values = data$V1,values.order = "descending",values.dec = 0,
-                             values.display = "original", values.size = 11,
-                             labels = data$V2, labels.minFontSize = 8, labels.size = 11,
-                             prefix = "$",
-                             values.thres = 0.3)
+rhtmlDonut::Donut(values = data$V1, values.order = "descending",values.decimal.places = 0,
+                             values.display.as = "original", values.font.size = 11,
+                             labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,
+                             prefix = "$",title = "This is a good title",title.top.padding = 6,title.font.size = 18,
+                  values.display.thres = 0.3)
 
 rhtmlDonut::Donut(values = data$V1, values.order = "descending", values.decimal.places = 0,
                   values.display.as = "original", values.font.size = 11, values.display.thres = 0.3,
-                  labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,
-                  title = "This is a good title",
+                  labels = data$V2, labels.min.font.size = 8, labels.font.size = 11,labels.inner = TRUE,
+                  title = "This is a good title", inner.radius = "80%",title.font.size = 24,
                   prefix = "$")
+
+rhtmlDonut::Donut(values = c(3,3,3,3,3,3), labels = c("Coke Zero", "Coca Cola", "Diet Coke", "Pepsi", "Pepsi Max", "Pepsi Light"),
+                  values.display.as = "original", values.font.size = 11, title = "This is a good title",title.font.size = 18,title.top.padding = 5)
+
+rhtmlDonut::Donut(values = c(100),
+                  labels = c("Asiatic Dominions"),
+                  values.order = "initial",
+                  inner.radius = "45%",
+                  values.decimal.places = 0,
+                  title = "Russian Empire",
+                  title.font.size = 24,
+                  border.color = "black")
+rhtmlDonut::Donut(values = c(100),
+                  labels = c("Asiatic Dominions"),
+                  values.order = "initial",
+                  inner.radius = "45%",
+                  values.decimal.places = 0,
+                  title = "Russian Empire",
+                  title.font.size = 24,
+                  border.color = "black")
+playfair.segment.colors <- c(grDevices::rgb(218, 232, 199, max = 255))
+playfair.groups.colors <- c(grDevices::rgb(229, 190, 190, max = 255))
+
+rhtmlDonut::Donut(values = c(100),
+                  labels = c("Asiatic Dominions"),
+                  values.color = playfair.segment.colors,
+                  values.order = "initial",
+                  inner.radius = "45%",
+                  values.decimal.places = 0,
+                  title = "Russian Empire",
+                  title.font.size = 24,
+                  border.color = "black")
+rhtmlDonut::Donut(values = c(100),
+                  labels = c("Asiatic Dominions"),
+                  values.color = playfair.segment.colors,
+                  values.order = "initial",
+                  groups = "group1",
+                  inner.radius = "45%",
+                  values.decimal.places = 0,
+                  title = "Russian Empire",
+                  title.font.size = 24,
+                  border.color = "black")
+rhtmlDonut::Donut(values = c(100),
+                  labels = c("Asiatic Dominions"),
+                  values.color = playfair.segment.colors,
+                  values.order = "initial",
+                  groups = "group1",
+                  groups.color = playfair.groups.colors,
+                  inner.radius = "45%",
+                  values.decimal.places = 0,
+                  title = "Russian Empire",
+                  title.font.size = 24,
+                  border.color = "black")
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",
 #                   labels = data$V2,labels.minFontSize = 10,

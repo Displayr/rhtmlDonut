@@ -14,10 +14,9 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   groups.font.family = "arial", groups.font.color = "#333333",
   groups.font.size = 10, groups.min.font.size = 8, title = NULL,
   title.font.family = "arial", title.font.size = 12,
-  title.font.color = "#333333", title.vertical.align = "top",
-  title.horizontal.align = "center", prefix = NULL, suffix = NULL,
-  border.color = "white", gradient = FALSE, inner.radius = "80\%",
-  width = NULL, height = NULL)
+  title.font.color = "#333333", title.top.padding = 0, prefix = NULL,
+  suffix = NULL, border.color = "white", gradient = FALSE,
+  inner.radius = "80\%", width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -70,9 +69,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{title.font.color}{(optional) a hex value to specify the color of the title. The default is "#333333".}
 
-\item{title.vertical.align}{(optional) character which specifies the vertical alignment of the title. Options are c("top", "bottom") and the default is "top".}
-
-\item{title.horizontal.align}{(optional) character which specifies the horizontal alignment of the title. Options are c("left", "center", "right") and the default is "center".}
+\item{title.top.padding}{(optional) integer to set padding for the title. Defults to 0.}
 
 \item{prefix}{(optional) character, prefix for \code{labels}}
 

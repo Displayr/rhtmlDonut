@@ -24,8 +24,7 @@
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
 #' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 12.
 #' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
-#' @param title.vertical.align (optional) character which specifies the vertical alignment of the title. Options are c("top", "bottom") and the default is "top".
-#' @param title.horizontal.align (optional) character which specifies the horizontal alignment of the title. Options are c("left", "center", "right") and the default is "center".
+#' @param title.top.padding (optional) integer to set padding for the title. Defults to 0.
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex value)
@@ -86,8 +85,7 @@ Donut <- function(
     title.font.family = "arial",
     title.font.size = 12,
     title.font.color = "#333333",
-    title.vertical.align = "top",
-    title.horizontal.align = "center",
+    title.top.padding = 0,
     prefix = NULL,
     suffix = NULL,
     border.color = "white",
@@ -357,8 +355,7 @@ Donut <- function(
         titleFontFamily = title.font.family,
         titleFontSize = title.font.size,
         titleFontColor = title.font.color,
-        titleVerticalAlign = title.vertical.align,
-        titleHorizontalAlign = title.horizontal.align,
+        titleTopPadding = title.top.padding,
         prefix = prefix,
         suffix = suffix,
         orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart
