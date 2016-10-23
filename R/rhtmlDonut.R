@@ -94,10 +94,33 @@ Donut <- function(
     width = NULL,
     height = NULL) {
 
-    if (!is.null(values))
-        values = as.array(values)
-    if (!is.null(labels))
-        labels = as.array(labels)
+    if (is.null(values))
+        stop("values must not be empty")
+    if (!is.vector(values)) {
+        if (is.matrix(values) || is.data.frame(values))
+            stop("values must be a vector-like object")
+        if (is.list(values))
+            values <- unlist(values)
+        else
+            stop("Data type of values is not recognized")
+    }
+
+    if (is.null(labels))
+        stop("labels must not be empty")
+    if (!is.vector(labels)) {
+        if (is.matrix(labels) || is.data.frame(labels))
+            stop("labels must be a vector-like object")
+        if (is.list(labels))
+            labels <- unlist(labels)
+        else if (is.factor(labels))
+            labels <- as.character(labels)
+        else
+            stop("Data type of labels is not recognized")
+    }
+
+    if (length(labels) != length(values))
+        stop("length of labels and values must be equal")
+
     if (!is.null(values.color))
         values.color = as.array(values.color)
     if (!is.null(groups))
@@ -110,6 +133,8 @@ Donut <- function(
     n = length(values)
 
     if (!is.null(groups)) {
+        if (is.factor(groups))
+            groups <- as.character(groups)
         groups.names = unique(groups)
         groups.sums = rep(0, length(groups.names))
         ng = length(groups.names)

@@ -37,6 +37,8 @@ rhtmlDonut::Donut(values = values,
                   labels = labels, labels.font.size = 11,
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
+data("browser", package = "rhtmlDonut")
+Donut(values = values, labels = labels, groups = groups)
 
 # load("data/browser.rda")
 # DetailedDonutPlot::detailed.donut(values = values, labels = labels, groups = groups, groups.color = qColors)
@@ -261,3 +263,14 @@ rhtmlDonut::Donut(values = vals, labels = labs, title = title, suffix = "%", inn
 
 # change angle of tangent as a function of the width of the plot
 # specify color change
+library(rhtmlDonut)
+data("browser", package = "rhtmlDonut")
+labels <- labels[values > 0.01]
+groups <- groups[values > 0.01]
+values <- values[values > 0.01]
+browser.data <- data.frame(groups, labels, values)#, stringsAsFactors = FALSE)
+values <- browser.data$values
+labels <- browser.data$labels
+groups <- browser.data$groups
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, prefix = "", suffix = "%")
+
