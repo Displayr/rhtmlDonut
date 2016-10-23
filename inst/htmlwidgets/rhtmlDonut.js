@@ -108,8 +108,10 @@ function DetailedDonutPlot() {
             }
 
             if (settings.groupsSums.length > settings.groupsColor.length) {
-                for (i = 0; i < settings.groupsSums.length-settings.groupsColor.length; i++) {
-                    settings.groupsColor.push(settings.groupsColor[i]);
+                var colLen = settings.groupsColor.length;
+                for (i = 0; i < settings.groupsSums.length - colLen; i++) {
+                    var newColor = settings.groupsColor[i % colLen];
+                    settings.groupsColor.push(newColor);
                 }
             }
 
@@ -162,7 +164,12 @@ function DetailedDonutPlot() {
                         deltaLum = 0.2;
                     }
                     lum = deltaLum * (1 + nInGroups[idx]);
-                    pieData[i].color = increaseBrightness(baseColor, lum * 100);
+                    try {
+                        pieData[i].color = increaseBrightness(baseColor, lum * 100);
+                    } catch (e) {
+                        console.log("color error, baseColor is" + baseColor);
+                    }
+
                     nInGroups[idx] += 1;
                 }
             } else {
@@ -190,10 +197,11 @@ function DetailedDonutPlot() {
 
             }
 
-            var colors = [];
-            if (values.length > settings.valuesColor.length) {
+            var colors = [], valColLen = settings.valuesColor.length;
+            if (values.length > valColLen) {
                 for (i = 0; i < n; i++) {
-                    colors.push(settings.valuesColor[i % settings.valuesColor.length]);
+                    var newCol = settings.valuesColor[i % valColLen];
+                    colors.push(newCol);
                 }
                 settings.valuesColor = colors;
             }

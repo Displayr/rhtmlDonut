@@ -28,7 +28,7 @@ labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
 set.seed(1)
 rhtmlDonut::Donut(values = runif(length(labels)), labels = labels)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors,title = "This is a good title",title.top.padding = 0,title.font.size = 18)
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups)
 rhtmlDonut::Donut(values = values, values.font.size = 10,
                   labels = labels, labels.font.size = 10,
                   groups = groups, groups.color = qColors,
@@ -243,6 +243,10 @@ rhtmlDonut::Donut(values = c(100),
                   title = "Russian Empire",
                   title.font.size = 24,
                   border.color = "black")
+vals = c(44,10,11,1,5,5,2,2,1,19)
+labs = c("Electronics", "Clothing & Apparel", "Sports & Outdoors", "Auto Parts", "Tools & Garden", "Shoes & Accessories", "Pharmacy", "Office Supplies", "Health & Beauty", "Physical & Electronic media")
+title = "Amazon Australia - category share estimate"
+rhtmlDonut::Donut(values = vals, labels = labs, title = title, suffix = "%", inner.radius = "0%", labels.font.size = 12, values.font.size = 12, labels.min.font.size = 10, values.decimal.places = 0, border.color = "none")
 # v = rhtmlDonut::Donut(values = data$V1,
 #                   values.display = "original",
 #                   labels = data$V2,labels.minFontSize = 10,
