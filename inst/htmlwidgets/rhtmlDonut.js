@@ -600,6 +600,7 @@ HTMLWidgets.widget({
         instance = instance.values(x.values);
         instance = instance.labels(x.labels);
 
+        d3.select(el).select('g').remove();
         d3.select(el).call(instance);
 
     }
