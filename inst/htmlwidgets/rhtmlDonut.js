@@ -423,6 +423,7 @@ function DetailedDonutPlot() {
             			color:    settings.titleFontColor,
             			fontSize: settings.titleFontSize,
             			font:     settings.titleFontFamily,
+            			weight:   settings.titleBold ? "bold" : "normal",
             			verticalAlign:    settings.titleVerticalAlign,
             			horizontalAlign:    settings.titleHorizontalAlign,
                         topPadding: settings.titleTopPadding,
@@ -493,7 +494,7 @@ function DetailedDonutPlot() {
             			//maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
             			labelsInner: settings.labelsInner,
             			horizontalPadding: 8,
-            			fontWeight: "bold"
+            			fontWeight: settings.labelsBold ? "bold" : "normal",
             		}
 
             	},
@@ -519,7 +520,7 @@ function DetailedDonutPlot() {
             	    fontSize: settings.groupsSize ? settings.groupsSize : 10,
             	    fontColor: settings.groupsFontColor ? settings.groupsFontColor : "#333333",
             	    minFontSize: settings.groupLabelsMinFontSize,
-            	    fontWeight: "bold"
+            	    fontWeight: settings.groupsBold ? "bold" : "normal"
             	}
             });
 

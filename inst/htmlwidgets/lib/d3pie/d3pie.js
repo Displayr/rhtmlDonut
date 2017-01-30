@@ -42,13 +42,15 @@ var defaultSettings = {
 			text:     "",
 			color:    "#333333",
 			fontSize: 18,
-			font:     "arial"
+			font:     "arial",
+			weight:   "normal",
 		},
 		subtitle: {
 			text:     "",
 			color:    "#666666",
 			fontSize: 14,
-			font:     "arial"
+			font:     "arial",
+			weight:   "normal",
 		},
 		location: "top-center",
 		titleSubtitlePadding: 8

@@ -11,12 +11,14 @@
 #' @param labels.font.family (optional) font family for \code{labels}. The default is "Arial"
 #' @param labels.font.size (optional) desired font size in pixels for \code{labels}. The default is 10.
 #' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. The default is "#333333".
+#' @param labels.font.bold (optional) if the label should be bold. Defaults to FALSE.
 #' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
 #' @param labels.min.font.size (optional) the minimum font size in pixels for labels. The default is 8.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
 #' @param groups.font.family (optional) font family for \code{groups}. The default is "Arial".
 #' @param groups.font.size (optional) desired font size in pixels for \code{groups}. The default is 10.
 #' @param groups.font.color (optional) a hex value to set the font color for \code{groups}. The default is "#333333".
+#' @param groups.font.bold (optional) if the group labels should be bold. Defaults to FALSE.
 #' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. The default is 8.
 #' @param groups.color (optional) colors for \code{groups}. If not provided then D3 colors are generated.
 #' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".
@@ -24,6 +26,7 @@
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
 #' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 16.
 #' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
+#' @param title.font.bold (optional) if the title should be bold. Defaults to FALSE.
 #' @param title.top.padding (optional) integer to set padding for the title. Defults to 0.
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
@@ -72,6 +75,7 @@ Donut <- function(
     labels.font.family = "arial",
     labels.font.color = "#333333",
     labels.font.size = 10,
+    labels.font.bold = FALSE,
     labels.min.font.size = 8,
     labels.inner = FALSE,
     groups = NULL,
@@ -80,8 +84,10 @@ Donut <- function(
     groups.font.family = "arial",
     groups.font.color = "#333333",
     groups.font.size = 10,
+    groups.font.bold = FALSE,
     groups.min.font.size = 8,
     title = NULL,
+    title.font.bold = FALSE,
     title.font.family = "arial",
     title.font.size = 16,
     title.font.color = "#333333",
@@ -366,11 +372,13 @@ Donut <- function(
         labelsSize = labels.font.size,
         labelsColor = labels.font.color,
         labelsInner = labels.inner,
+        labelsBold = labels.font.bold,
         labelsMinFontSize = labels.min.font.size,
         groups = groups, # length = n
         groupsFont = groups.font.family, # string
         groupsFontColor = groups.font.color,
         groupsSize = groups.font.size, # scalar
+        groupsBold = groups.font.bold,
         groupsColor = groups.color, # length = length(unique(groups))
         groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
@@ -381,6 +389,7 @@ Donut <- function(
         titleFontSize = title.font.size,
         titleFontColor = title.font.color,
         titleTopPadding = title.top.padding,
+        titleBold = title.font.bold,
         prefix = prefix,
         suffix = suffix,
         orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart

@@ -27,7 +27,7 @@ var text = {
 				return location;
 			})
 			.attr("fill", function(d) { return d.color; })
-			.style("font-weight", "bold")
+			.style("font-weight", pie.options.header.title.weight)
 			.style("font-size", function(d) { return d.fontSize + "px"; })
 			.style("font-family", function(d) { return d.font; });
 	},

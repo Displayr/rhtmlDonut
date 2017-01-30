@@ -9,14 +9,16 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   values.decimal.places = 1, values.display.as = "percentage",
   values.display.thres = 0.3, labels.font.family = "arial",
   labels.font.color = "#333333", labels.font.size = 10,
-  labels.min.font.size = 8, labels.inner = FALSE, groups = NULL,
-  groups.color = NULL, groups.order = "descending",
-  groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8, title = NULL,
-  title.font.family = "arial", title.font.size = 16,
-  title.font.color = "#333333", title.top.padding = 0, prefix = NULL,
-  suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = "80\%", width = NULL, height = NULL)
+  labels.font.bold = FALSE, labels.min.font.size = 8,
+  labels.inner = FALSE, groups = NULL, groups.color = NULL,
+  groups.order = "descending", groups.font.family = "arial",
+  groups.font.color = "#333333", groups.font.size = 10,
+  groups.font.bold = FALSE, groups.min.font.size = 8, title = NULL,
+  title.font.bold = FALSE, title.font.family = "arial",
+  title.font.size = 16, title.font.color = "#333333",
+  title.top.padding = 0, prefix = NULL, suffix = NULL,
+  border.color = "white", gradient = FALSE, inner.radius = "80\%",
+  width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -43,6 +45,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.font.size}{(optional) desired font size in pixels for \code{labels}. The default is 10.}
 
+\item{labels.font.bold}{(optional) if the label should be bold. Defaults to FALSE.}
+
 \item{labels.min.font.size}{(optional) the minimum font size in pixels for labels. The default is 8.}
 
 \item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
@@ -59,9 +63,13 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. The default is 10.}
 
+\item{groups.font.bold}{(optional) if the group labels should be bold. Defaults to FALSE.}
+
 \item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
 
 \item{title}{(optional) specifies the title text.}
+
+\item{title.font.bold}{(optional) if the title should be bold. Defaults to FALSE.}
 
 \item{title.font.family}{(optional) specifies the font family of the title. The default is "arial".}
 

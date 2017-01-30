@@ -32,6 +32,7 @@ rhtmlDonut::Donut(values = values, labels = labels, groups = groups)
 rhtmlDonut::Donut(values = values, values.font.size = 10,
                   labels = labels, labels.font.size = 10,
                   groups = groups, groups.color = qColors,
+                  title = "Russian Empire",
                   prefix = "", suffix = "%")
 rhtmlDonut::Donut(values = values,
                   labels = labels, labels.font.size = 11,
@@ -268,9 +269,8 @@ data("browser", package = "rhtmlDonut")
 labels <- labels[values > 0.01]
 groups <- groups[values > 0.01]
 values <- values[values > 0.01]
-browser.data <- data.frame(groups, labels, values)#, stringsAsFactors = FALSE)
+browser.data <- data.frame(groups, labels, values, stringsAsFactors = FALSE)
 values <- browser.data$values
 labels <- browser.data$labels
 groups <- browser.data$groups
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, prefix = "", suffix = "%")
-
