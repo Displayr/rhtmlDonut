@@ -22,7 +22,7 @@
 # qColors = substring(qColors1,1,7)
 # save(values, labels, groups, qColors, file = 'data/browser.rda')
 library(devtools)
-install_github("NumbersInternational/rhtmlDonut@VIS-57")
+install_github("Displayr/rhtmlDonut@VIS-57")
 data("browser", package = "rhtmlDonut")
 labels[1] = "IE xcsdsds TTDF 11.0"
 labels[labels == "Chrome for Android"] = "Chrome for Android dfwer ijo 2323d fddfdfe53sdsdsdsdsdsdsds"
