@@ -6,5 +6,5 @@ Date: 2016-03-19
 Author: Xiaoting Wang
 Maintainer: Xiaoting Wang <xtmwang@gmail.com>
 Description: R htmlwidget package for creating a detailed donut plot
-License:
+License: MIT
 LazyData: TRUE
