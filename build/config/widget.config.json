@@ -1,0 +1,6 @@
+{
+  "widgetClassFile": "theSrc/scripts/lib/d3pie/d3pie.js",
+  "widgetEntryPoint": "theSrc/scripts/rhtmlDonut.js",
+  "widgetName": "rhtmlDonut",
+  "rFunction": "rhtmlDonut::Donut"
+}
