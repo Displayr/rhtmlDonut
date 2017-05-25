@@ -3,12 +3,13 @@ install_github("Displayr/rhtmlDonut")
 
 data("browser", package = "rhtmlDonut")
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups)
-rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
+rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "white")
 
 # order
-rhtmlDonut::Donut(values = values,labels = labels, values.order = "descending")
+idx = sort(values, decreasing = TRUE, index.return = TRUE)
+rhtmlDonut::Donut(values = values[idx$ix[1:30]],labels = labels[idx$ix[1:30]], values.order = "descending")
 rhtmlDonut::Donut(values = values,labels = labels, values.order = "initial")
-rhtmlDonut::Donut(values = values,labels = labels, values.order = "alphabetical")
+rhtmlDonut::Donut(values = values[idx$ix[1:30]],labels = labels[idx$ix[1:30]], values.order = "alphabetical")
 
 rhtmlDonut::Donut(values = values, values.order = "descending", groups.order = "descending",
                   labels = labels, groups = groups, groups.color = qColors, prefix = "", suffix = "%")
@@ -20,8 +21,8 @@ rhtmlDonut::Donut(values = values, labels = labels, values.color = qColors, bord
 rhtmlDonut::Donut(values = values, labels = labels, groups = groups, groups.color = qColors, border.color = "none")
 
 # gradient
-rhtmlDonut::Donut(values = values, values.font.size = 10, values.display.thres = 0, values.order = "descending", inner.radius = "80%",
-                  labels = labels, labels.font.size = 10, labels.inner = TRUE, gradient = T, border.color = "none",
+rhtmlDonut::Donut(values = values[idx$ix[1:30]], values.font.size = 11, values.display.thres = 0, values.order = "descending", inner.radius = "80%",
+                  labels = labels[idx$ix[1:30]], labels.font.size = 11, labels.inner = TRUE, gradient = T, border.color = "none",
                   prefix = "", suffix = "%")
 
 vals = c(44,10,11,1,5,5,2,2,1,19)
