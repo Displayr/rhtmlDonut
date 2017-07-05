@@ -576,13 +576,6 @@ HTMLWidgets.widget({
     type: "output",
 
     initialize: function(el, width, height) {
-
-        d3.select(el)
-            .append("svg")
-            .attr("class", "svgContent")
-            .attr("width", width)
-            .attr("height", height);
-
         return DetailedDonutPlot().width(width).height(height);
     },
 
@@ -596,6 +589,13 @@ HTMLWidgets.widget({
     },
 
     renderValue: function(el, x, instance) {
+        $(el).find('*').remove()
+
+        d3.select(el)
+          .append("svg")
+          .attr("class", "svgContent")
+          .attr("width", instance.width())
+          .attr("height", instance.height());
 
         instance = instance.settings(x.settings);
         instance = instance.values(x.values);
@@ -603,7 +603,6 @@ HTMLWidgets.widget({
 
         d3.select(el).select('g').remove();
         d3.select(el).call(instance);
-
     }
 });
 
