@@ -1,6 +1,15 @@
 {
-  "widgetClassFile": "theSrc/scripts/lib/d3pie/d3pie.js",
   "widgetEntryPoint": "theSrc/scripts/rhtmlDonut.js",
+  "widgetFactory": "theSrc/scripts/rhtmlDonut.factory.js",
   "widgetName": "rhtmlDonut",
-  "rFunction": "rhtmlDonut::Donut"
+  "internalWebSettings": {
+    "default_border": true,
+    "css": [
+      "/scripts/lib/d3pie/d3pie.css"
+    ]
+  },
+  "visualRegressionSuite": {
+    "isReadySelector": "svg.svgContent"
+  }
 }
+

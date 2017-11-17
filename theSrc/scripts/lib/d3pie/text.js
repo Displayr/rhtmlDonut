@@ -1,5 +1,4 @@
 
-	//// --------- text.js -----------
 var text = {
 	offscreenCoord: -10000,
 
@@ -195,4 +194,6 @@ var text = {
 		}
 		return h;
 	}
-};
+}
+
+module.exports = text

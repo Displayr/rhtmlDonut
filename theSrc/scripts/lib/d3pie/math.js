@@ -1,5 +1,4 @@
 
-	//// --------- math.js -----------
 var math = {
 
 	toRadians: function(degrees) {
@@ -231,3 +230,5 @@ var math = {
 			(theta1 <= angle) && (angle <= theta2);
 	}
 };
+
+module.exports = math
