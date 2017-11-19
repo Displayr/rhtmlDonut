@@ -41,7 +41,7 @@ In R:
 Developing / Contributing
 ------
 
-To install for local development: `npm install`
+To install for local development: `yarn install`
 
 To run local server: `gulp serve`
 

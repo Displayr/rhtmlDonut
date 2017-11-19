@@ -1,0 +1,45 @@
+{
+  "values": [
+    100
+  ],
+  "labels": [
+    "Asiatic Dominions"
+  ],
+  "settings": {
+    "valuesFont": "arial",
+    "valuesSize": 10,
+    "valuesColor": null,
+    "valuesDisplay": "percentage",
+    "valuesOrder": "initial",
+    "valuesDec": 0,
+    "labelsFont": "arial",
+    "labelsSize": 12,
+    "labelsColor": "#333333",
+    "labelsInner": false,
+    "labelsBold": false,
+    "labelsMinFontSize": 8,
+    "groups": null,
+    "groupsFont": "arial",
+    "groupsFontColor": "#333333",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsColor": null,
+    "groupsNames": null,
+    "groupsSums": null,
+    "groupsCounts": null,
+    "groupLabelsMinFontSize": 8,
+    "title": "Russian Empire",
+    "titleFontFamily": "arial",
+    "titleFontSize": 24,
+    "titleFontColor": "#333333",
+    "titleTopPadding": 0,
+    "titleBold": false,
+    "prefix": null,
+    "suffix": null,
+    "orderControl": false,
+    "gradient": false,
+    "innerRadius": "45%",
+    "minAngle": 0.003,
+    "borderColor": "black"
+  }
+}
