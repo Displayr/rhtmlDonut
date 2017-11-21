@@ -1,7 +1,6 @@
 import helpers from './helpers'
 import math from './math'
 import segments from './segments'
-import text from './text'
 import d3 from 'd3'
 
 var labels = {
@@ -265,10 +264,6 @@ var labels = {
       originalX = pie.pieCenter.x
       originalY = pie.pieCenter.y - r / Math.cos(yangle / 180 * Math.PI)
       newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, curr.segAngle - 90)
-      if (pie.textComponents.title.exists && newCoords.y - pie.options.data.fontSize - 5 < pie.textComponents.title.h + pie.options.header.title.topPadding) {
-        newCoords.y = pie.textComponents.title.h + pie.options.header.title.topPadding + 5
-      }
-
     } else {
       originalX = pie.pieCenter.x
       originalY = pie.pieCenter.y - r

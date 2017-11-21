@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "footer": "This is a <br>multiline footer",
+    "footerFontFamily": "arial",
+    "footerFontColor": "blue",
+    "footerFontSize": 48
+  }
+}

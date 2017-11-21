@@ -13,12 +13,15 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.inner = FALSE, groups = NULL, groups.color = NULL,
   groups.order = "descending", groups.font.family = "arial",
   groups.font.color = "#333333", groups.font.size = 10,
-  groups.font.bold = FALSE, groups.min.font.size = 8, title = NULL,
-  title.font.bold = FALSE, title.font.family = "arial",
-  title.font.size = 16, title.font.color = "#333333",
-  title.top.padding = 0, prefix = NULL, suffix = NULL,
-  border.color = "white", gradient = FALSE, inner.radius = "80\%",
-  width = NULL, height = NULL)
+  groups.font.bold = FALSE, groups.min.font.size = 8, footer = "",
+  footer.font.family = "Arial", footer.font.size = 8,
+  footer.font.color = rgb(44, 44, 44, maxColorValue = 255), title = NULL,
+  title.font.family = "arial", title.font.size = 16,
+  title.font.color = "#333333", title.top.padding = 0, subtitle = "",
+  subtitle.font.family = "Arial", subtitle.font.size = 12,
+  subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255), prefix = NULL,
+  suffix = NULL, border.color = "white", gradient = FALSE,
+  inner.radius = "80\%", width = NULL, height = NULL)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -67,9 +70,15 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
 
-\item{title}{(optional) specifies the title text.}
+\item{footer}{is the footer text given at the bottom at the plot}
 
-\item{title.font.bold}{(optional) if the title should be bold. Defaults to FALSE.}
+\item{footer.font.family}{is the font of the footer text}
+
+\item{footer.font.size}{is the font size of the footer text}
+
+\item{footer.font.color}{is the font color of the footer text}
+
+\item{title}{(optional) specifies the title text.}
 
 \item{title.font.family}{(optional) specifies the font family of the title. The default is "arial".}
 
@@ -78,6 +87,14 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{title.font.color}{(optional) a hex value to specify the color of the title. The default is "#333333".}
 
 \item{title.top.padding}{(optional) integer to set padding for the title. Defults to 0.}
+
+\item{subtitle}{is the subtitle text given to the plot}
+
+\item{subtitle.font.family}{is the font of the subtitle text}
+
+\item{subtitle.font.size}{is the font size of the subtitle text}
+
+\item{subtitle.font.color}{is the font color of the subtitle text}
 
 \item{prefix}{(optional) character, prefix for \code{labels}}
 

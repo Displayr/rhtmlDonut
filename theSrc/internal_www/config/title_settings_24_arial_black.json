@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "titleFontFamily": "arial",
+    "titleFontSize": 24,
+    "titleFontColor": "black",
+    "titleTopPadding": 0,
+    "titleBold": false
+  }
+}

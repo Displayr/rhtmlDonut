@@ -22,15 +22,6 @@ var math = {
 		var w = size.canvasWidth - canvasPadding.left - canvasPadding.right;
 		var h = size.canvasHeight - canvasPadding.top - canvasPadding.bottom;
 
-		// now factor in the footer, title & subtitle
-        if (pie.options.header.location !== "pie-center") {
-          h -= pie.textComponents.headerHeight;
-        }
-
-        if (pie.textComponents.footer.exists) {
-          h -= pie.textComponents.footer.h;
-        }
-
 		// for really teeny pies, h may be < 0. Adjust it back
 		h = (h < 0) ? 0 : h;
 
@@ -138,25 +129,11 @@ var math = {
 	 */
 	calculatePieCenter: function(pie) {
 		var pieCenterOffset = pie.options.misc.pieCenterOffset;
-		var hasTopTitle    = (pie.textComponents.title.exists && pie.options.header.location !== "pie-center");
-		var hasTopSubtitle = (pie.textComponents.subtitle.exists && pie.options.header.location !== "pie-center");
 
 		var headerOffset = pie.options.misc.canvasPadding.top;
-		if (hasTopTitle && hasTopSubtitle) {
-			headerOffset += pie.textComponents.title.h + pie.options.header.titleSubtitlePadding + pie.textComponents.subtitle.h;
-		} else if (hasTopTitle) {
-			headerOffset += pie.textComponents.title.h;
-		} else if (hasTopSubtitle) {
-			headerOffset += pie.textComponents.subtitle.h;
-		}
-
-		var footerOffset = 0;
-		if (pie.textComponents.footer.exists) {
-			footerOffset = pie.textComponents.footer.h + pie.options.misc.canvasPadding.bottom;
-		}
 
 		var x = ((pie.options.size.canvasWidth - pie.options.misc.canvasPadding.left - pie.options.misc.canvasPadding.right) / 2) + pie.options.misc.canvasPadding.left;
-		var y = ((pie.options.size.canvasHeight - footerOffset - headerOffset) / 2) + headerOffset;
+		var y = ((pie.options.size.canvasHeight - headerOffset) / 2) + headerOffset;
 
 		x += pieCenterOffset.x;
 		y += pieCenterOffset.y;

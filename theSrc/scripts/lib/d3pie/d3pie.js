@@ -5,7 +5,6 @@ import helpers from './helpers'
 import labels from './labels'
 import math from './math'
 import segments from './segments'
-import text from './text'
 import tt from './tooltip'
 import validate from './validate'
 
@@ -20,9 +19,6 @@ import validate from './validate'
 var _scriptName = 'd3pie'
 var _version = '0.1.6'
 
-// used to uniquely generate IDs and classes, ensuring no conflict between multiple pies on the same page
-var _uniqueIDCounter = 0
-
 // this section includes all helper libs on the d3pie object. They're populated via grunt-template. Note: to keep
 // the syntax highlighting from getting all messed up, I commented out each line. That REQUIRES each of the files
 // to have an empty first line. Crumby, yes, but acceptable.
@@ -32,31 +28,6 @@ var _uniqueIDCounter = 0
  * d3pie instance will inherit from these. This is also included on the main website for use in the generation script.
  */
 var defaultSettings = {
-  header: {
-    title: {
-      text: '',
-      color: '#333333',
-      fontSize: 18,
-      font: 'arial',
-      weight: 'normal',
-    },
-    subtitle: {
-      text: '',
-      color: '#666666',
-      fontSize: 14,
-      font: 'arial',
-      weight: 'normal',
-    },
-    location: 'top-center',
-    titleSubtitlePadding: 8
-  },
-  footer: {
-    text: '',
-    color: '#666666',
-    fontSize: 14,
-    font: 'arial',
-    location: 'left'
-  },
   size: {
     canvasHeight: 500,
     canvasWidth: 500,
@@ -201,8 +172,8 @@ var d3pie = function (element, options) {
   if (this.options.misc.cssPrefix !== null) {
     this.cssPrefix = this.options.misc.cssPrefix
   } else {
-    this.cssPrefix = 'p' + _uniqueIDCounter + '_'
-    _uniqueIDCounter++
+    console.log(`warn: need this.options.misc.cssPrefix`)
+    this.cssPrefix = 'missing-prefix'
   }
 
   // now run some validation on the user-defined info
@@ -214,7 +185,6 @@ var d3pie = function (element, options) {
   d3.select(this.element).attr(_scriptName, _version)
 
   // things that are done once
-  //this.options.data.content = math.sortPieData(this);
   if (this.options.data.smallSegmentGrouping.enabled) {
     this.options.data.content = helpers.applySmallSegmentGrouping(this.options.data.content, this.options.data.smallSegmentGrouping)
   }
@@ -297,24 +267,6 @@ d3pie.prototype.closeSegment = function () {
 // just redraw the single element
 d3pie.prototype.updateProp = function (propKey, value) {
   switch (propKey) {
-    case 'header.title.text':
-      var oldVal = helpers.processObj(this.options, propKey)
-      helpers.processObj(this.options, propKey, value)
-      d3.select('#' + this.cssPrefix + 'title').html(value)
-      if ((oldVal === '' && value !== '') || (oldVal !== '' && value === '')) {
-        this.redraw()
-      }
-      break
-
-    case 'header.subtitle.text':
-      var oldValue = helpers.processObj(this.options, propKey)
-      helpers.processObj(this.options, propKey, value)
-      d3.select('#' + this.cssPrefix + 'subtitle').html(value)
-      if ((oldValue === '' && value !== '') || (oldValue !== '' && value === '')) {
-        this.redraw()
-      }
-      break
-
     case 'callbacks.onload':
     case 'callbacks.onMouseoverSegment':
     case 'callbacks.onMouseoutSegment':
@@ -348,62 +300,8 @@ var _init = function () {
 
   this.outerLabelGroupData = []
   this.groupLabelGroupData = []
-  // store info about the main text components as part of the d3pie object instance
-  this.textComponents = {
-    headerHeight: 0,
-    title: {
-      exists: this.options.header.title.text !== '',
-      h: 0,
-      w: 0
-    },
-    subtitle: {
-      exists: this.options.header.subtitle.text !== '',
-      h: 0,
-      w: 0
-    },
-    footer: {
-      exists: this.options.footer.text !== '',
-      h: 0,
-      w: 0
-    }
-  }
 
-  // the footer never moves. Put it in place now
   var self = this
-
-  // add the key text components offscreen (title, subtitle, footer). We need to know their widths/heights for later computation
-  if (this.textComponents.title.exists) {
-    text.addTitle(this)
-  }
-  if (this.textComponents.subtitle.exists) {
-    text.addSubtitle(this)
-  }
-
-  if (self.textComponents.title.exists) {
-    var d1 = helpers.getDimensions(self.cssPrefix + 'title')
-    self.textComponents.title.h = d1.h
-    self.textComponents.title.w = d1.w
-  }
-  if (self.textComponents.subtitle.exists) {
-    var d2 = helpers.getDimensions(self.cssPrefix + 'subtitle')
-    self.textComponents.subtitle.h = d2.h
-    self.textComponents.subtitle.w = d2.w
-  }
-
-  // now compute the full header height
-  if (self.textComponents.title.exists || self.textComponents.subtitle.exists) {
-    var headerHeight = 0
-    if (self.textComponents.title.exists) {
-      headerHeight += self.textComponents.title.h
-      if (self.textComponents.subtitle.exists) {
-        headerHeight += self.options.header.titleSubtitlePadding
-      }
-    }
-    if (self.textComponents.subtitle.exists) {
-      headerHeight += self.textComponents.subtitle.h
-    }
-    self.textComponents.headerHeight = headerHeight
-  }
 
   // at this point, all main text component dimensions have been calculated
   math.computePieRadius(self)
@@ -446,15 +344,7 @@ var _init = function () {
     tt.addTooltips(self)
   }
 
-  segments.shiftPlot(self)
-
   // position the title and subtitle
-  if (this.textComponents.title.exists) {
-    text.positionTitle(this)
-  }
-  if (this.textComponents.subtitle.exists) {
-    text.positionSubtitle(this)
-  }
   segments.addSegmentEventHandlers(self)
 }
 
@@ -496,22 +386,12 @@ var _initNoLoading = function () {
   if (self.options.labels.lines.enabled && self.options.labels.outer.format !== 'none') {
     labels.addLabelLines(self)
   }
-
   // add and position the tooltips
 
   if (self.options.tooltips.enabled) {
     tt.addTooltips(self)
   }
 
-  segments.shiftPlot(self)
-
-  // position the title and subtitle
-  if (this.textComponents.title.exists) {
-    text.positionTitle(this)
-  }
-  if (this.textComponents.subtitle.exists) {
-    text.positionSubtitle(this)
-  }
   segments.addSegmentEventHandlers(self)
 }
 

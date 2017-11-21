@@ -204,29 +204,6 @@ var segments = {
     }
   },
 
-  shiftPlot: function (pie) {
-    // pie.svg is the main element group excluding tooltips
-    pie.svg.attr('transform', 'translate(0,0)scale(1)')
-    var box = pie.svg.node().getBoundingClientRect()
-    var y, scale
-    var height = pie.options.size.canvasHeight - pie.textComponents.headerHeight - pie.options.header.title.topPadding
-    // set y position to 0
-    y = -box.top
-    pie.svg.attr('transform', 'translate(0,' + y + ')')
-    box = pie.svg.node().getBoundingClientRect()
-
-    if (box.height + 10 > height) {
-      // the plot cannot be fit into the window
-      scale = height / (box.height + 15)
-      pie.svg.attr('transform', 'translate(0,' + y + ')scale(' + scale + ')')
-      box = pie.svg.node().getBoundingClientRect()
-      pie.svg.attr('transform', 'translate(0,' + (y - box.top + pie.textComponents.headerHeight + pie.options.header.title.topPadding + 5) + ')scale(' + scale + ')')
-    } else {
-      // the plot can be fit into the window, center it
-      pie.svg.attr('transform', 'translate(0,' + (y + (height - box.height) / 2 + pie.textComponents.headerHeight + pie.options.header.title.topPadding + 5) + ')')
-    }
-  },
-
   addGradients: function (pie) {
     var grads = pie.svg.append('defs')
       .selectAll('radialGradient')
