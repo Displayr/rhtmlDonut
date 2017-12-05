@@ -26,13 +26,21 @@
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
 #' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 16.
 #' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
-#' @param title.font.bold (optional) if the title should be bold. Defaults to FALSE.
 #' @param title.top.padding (optional) integer to set padding for the title. Defults to 0.
+#' @param subtitle is the subtitle text given to the plot
+#' @param subtitle.font.family is the font of the subtitle text
+#' @param subtitle.font.color is the font color of the subtitle text
+#' @param subtitle.font.size is the font size of the subtitle text
+#' @param footer is the footer text given at the bottom at the plot
+#' @param footer.font.family is the font of the footer text
+#' @param footer.font.color is the font color of the footer text
+#' @param footer.font.size is the font size of the footer text
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex value)
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".
+
 
 #' @examples
 #' # load example data
@@ -86,12 +94,19 @@ Donut <- function(
     groups.font.size = 10,
     groups.font.bold = FALSE,
     groups.min.font.size = 8,
+    footer = "",
+    footer.font.family = "Arial",
+    footer.font.size = 8,
+    footer.font.color = rgb(44, 44, 44, maxColorValue = 255),
     title = NULL,
-    title.font.bold = FALSE,
     title.font.family = "arial",
     title.font.size = 16,
     title.font.color = "#333333",
     title.top.padding = 0,
+    subtitle = "",
+    subtitle.font.family = "Arial",
+    subtitle.font.size = 12,
+    subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
     prefix = NULL,
     suffix = NULL,
     border.color = "white",
@@ -384,12 +399,19 @@ Donut <- function(
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsCounts = groups.counts, # number of items in each group
         groupLabelsMinFontSize = groups.min.font.size,
+        footer = footer,
+        footerFontFamily = footer.font.family,
+        footerFontSize = footer.font.size,
+        footerFontColor = footer.font.color,
         title = title,
         titleFontFamily = title.font.family,
         titleFontSize = title.font.size,
         titleFontColor = title.font.color,
         titleTopPadding = title.top.padding,
-        titleBold = title.font.bold,
+        subtitle = subtitle,
+        subtitleFontFamily = subtitle.font.family,
+        subtitleFontSize = subtitle.font.size,
+        subtitleFontColor = subtitle.font.color,
         prefix = prefix,
         suffix = suffix,
         orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart

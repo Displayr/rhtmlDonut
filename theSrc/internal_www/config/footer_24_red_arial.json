@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "footer": "This is a footer",
+    "footerFontFamily": "arial",
+    "footerFontColor": "red",
+    "footerFontSize": 24
+  }
+}

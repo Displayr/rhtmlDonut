@@ -2,9 +2,13 @@ import $ from 'jquery'
 import d3 from 'd3'
 import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
+import {Footer, Title, Subtitle} from 'rhtmlParts'
 
-function DetailedDonutPlot () {
-  var values,
+// support multiple donuts on screen by assigining unique cssPrefix
+let uniqueDonutIdentifier = 1
+
+function DetailedDonutPlot (uniqueId) {
+  let values,
     labels,
     settings,
     pie,
@@ -211,8 +215,6 @@ function DetailedDonutPlot () {
 
     var outerRadius = ((w * 0.67 < h) ? w * 0.67 : h) / 3
 
-    //var maxLabelLength = (width - outerRadius*2 - pieDist*2 - 65)/2;
-
     if (settings.orderControl === 'visible') {
 
       var menuBox = selection.select('svg')
@@ -388,21 +390,6 @@ function DetailedDonutPlot () {
 
     // create the pie chart instance
     pie = new d3pie(svgEl, {
-      header: {
-        title: {
-          text: settings.title,
-          color: settings.titleFontColor,
-          fontSize: settings.titleFontSize,
-          font: settings.titleFontFamily,
-          weight: settings.titleBold ? 'bold' : 'normal',
-          verticalAlign: settings.titleVerticalAlign,
-          horizontalAlign: settings.titleHorizontalAlign,
-          topPadding: settings.titleTopPadding,
-          bottomPadding: 5,
-          leftPadding: 5,
-          rightPadding: 5
-        }
-      },
       size: {
         canvasWidth: width,
         canvasHeight: height,
@@ -442,7 +429,8 @@ function DetailedDonutPlot () {
           enabled: false,
           percentage: 95,
           color: '#000000'
-        }
+        },
+        cssPrefix: uniqueId
       },
       labels: {
         lines: {
@@ -462,7 +450,6 @@ function DetailedDonutPlot () {
           font: settings.labelsFont ? settings.labelsFont : 'arial',
           fontSize: settings.labelsSize ? settings.labelsSize : 10,
           minFontSize: settings.labelsMinFontSize,
-          //maxLabelLength: settings.maxLabelLength ? settings.maxLabelLength : maxLabelLength,
           labelsInner: settings.labelsInner,
           horizontalPadding: 8,
           fontWeight: settings.labelsBold ? 'bold' : 'normal',
@@ -494,7 +481,6 @@ function DetailedDonutPlot () {
         fontWeight: settings.groupsBold ? 'bold' : 'normal'
       }
     })
-
   }
 
   // getter/setter
@@ -540,31 +526,81 @@ function DetailedDonutPlot () {
 }
 
 module.exports = function (element, width, height, stateChangedCallback) {
-  let instance = DetailedDonutPlot().width(width).height(height)
+  const uniqueId = `rhtmlDonut-${uniqueDonutIdentifier++}`
+  let outerSvg, title, subtitle, footer
+  let donutPlot = DetailedDonutPlot(uniqueId)
+
   return {
     renderValue (inputConfig, userState) {
       $(element).find('*').remove()
 
-      d3.select(element)
+      outerSvg = d3.select(element)
         .append('svg')
         .attr('class', 'svgContent')
-        .attr('width', instance.width())
-        .attr('height', instance.height())
+        .attr('width', width)
+        .attr('height', height)
 
-      instance = instance.settings(inputConfig.settings)
-      instance = instance.values(inputConfig.values)
-      instance = instance.labels(inputConfig.labels)
+      title = new Title(
+        inputConfig.settings.title,
+        inputConfig.settings.titleFontColor,
+        inputConfig.settings.titleFontSize,
+        inputConfig.settings.titleFontFamily,
+        null,
+        inputConfig.settings.titleTopPadding
+      )
 
-      d3.select(element).select('g').remove()
-      d3.select(element).call(instance)
+      subtitle = new Subtitle(
+        inputConfig.settings.subtitle,
+        inputConfig.settings.subtitleFontColor,
+        inputConfig.settings.subtitleFontSize,
+        inputConfig.settings.subtitleFontFamily,
+        inputConfig.settings.title
+      )
+
+      footer = new Footer(
+        inputConfig.settings.footer,
+        inputConfig.settings.footerFontColor,
+        inputConfig.settings.footerFontSize,
+        inputConfig.settings.footerFontFamily,
+        height
+      )
+
+      title.setX(width / 2)
+      subtitle.setY(title.getSubtitleY())
+      subtitle.setX(width / 2)
+      footer.setX(width / 2)
+
+      title.drawWith(uniqueId, outerSvg)
+      subtitle.drawWith(uniqueId, outerSvg)
+      footer.drawWith(uniqueId, outerSvg)
+
+      const titleHeight = title.getHeight()
+      const subtitleHeight = subtitle.getHeight()
+      const footerHeight = footer.getHeight()
+
+      donutPlot = donutPlot.width(width).height(height - titleHeight - subtitleHeight - footerHeight)
+      donutPlot = donutPlot.settings(inputConfig.settings)
+      donutPlot = donutPlot.values(inputConfig.values)
+      donutPlot = donutPlot.labels(inputConfig.labels)
+
+      d3.select(element).call(donutPlot)
     },
 
     resize (newWidth, newHeight) {
       d3.select(element).select('svg')
-        .attr('width', width)
-        .attr('height', height)
+        .attr('width', newWidth)
+        .attr('height', newHeight)
 
-      return instance.width(width).height(height).resize(element)
+      title.setX(newWidth / 2)
+      subtitle.setX(newWidth / 2)
+      footer.setX(newWidth / 2)
+      footer.setY(newHeight - footer.getHeight())
+
+      title.drawWith(uniqueId, outerSvg)
+      subtitle.drawWith(uniqueId, outerSvg)
+      footer.drawWith(uniqueId, outerSvg)
+
+      return donutPlot.width(newWidth).height(newHeight).resize(element)
     }
   }
 }

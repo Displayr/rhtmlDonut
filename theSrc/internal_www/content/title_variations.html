@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="abc_rbg">
+  <div class="row">
+    <div class="example" data-border="true" data-width="400" data-height="500" data-config='
+      data.abc_rbg'>
+    </div>
+
+    <div class="example" data-border="true" data-width="400" data-height="500" data-config='
+      { "settings" : { "title" : "simple black title" } }|
+      data.abc_rbg|
+      config.title_settings_24_arial_black'>
+    </div>
+
+    <div class="example" data-border="true" data-width="400" data-height="500" data-config='
+      { "settings" : { "title" : "simple BOLD black title" } }|
+      data.abc_rbg|
+      config.title_settings_24_arial_black|
+      { "settings" : { "titleBold": false } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="400" data-height="500" data-config='
+      { "settings" : { "title" : "simple black title topPadding=20" } }|
+      data.abc_rbg|
+      config.title_settings_24_arial_black|
+      { "settings" : { "titleTopPadding": 20 } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="400" data-height="500" data-config='
+      { "settings" : { "title" : "simple black title fontSize=18" } }|
+      data.abc_rbg|
+      config.title_settings_24_arial_black|
+      { "settings" : { "titleFontSize": 18 } }'>
+    </div>
+
+    <div class="example" data-resize-controls data-border="true" data-width="400" data-height="500" data-config='
+      { "settings" : { "title" : "A title" } }|
+      { "settings" : { "subtitle" : "and a subtitle" } }|
+      data.abc_rbg|
+      config.title_settings_24_arial_black|
+      config.subtitle_settings_24_arial_black'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>
