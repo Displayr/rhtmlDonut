@@ -46,3 +46,14 @@ To install for local development: `yarn install`
 To run local server: `gulp serve`
 
 To build the `inst` directory: `gulp build`
+
+Notes
+----
+
+## What logic is contained in the R wrapper?
+  * validate and enforce format of values and labels
+  * compute group sums
+  * ensure there are enough group colors
+  * compute group counts
+  * reorder values and groups depending on order "descending" v "alphabetical" v "initial"
+  

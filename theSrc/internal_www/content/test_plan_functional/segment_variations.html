@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="segment_variations">
+  <h2>Vary innerRadius</h2>
+  <div class="row">
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "innerRadius" : "0" } }|
+      { "settings" : { "title" : "innerRadius=0" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "innerRadius" : "25" } }|
+      { "settings" : { "title" : "innerRadius=25" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "innerRadius" : "50" } }|
+      { "settings" : { "title" : "innerRadius=50" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "innerRadius" : "75" } }|
+      { "settings" : { "title" : "innerRadius=75" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "innerRadius" : "98" } }|
+      { "settings" : { "title" : "innerRadius=98" } }'>
+    </div>
+  </div>
+
+  <h2>Vary borderColor</h2>
+  <div class="row">
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "borderColor" : "pink" } }|
+      { "settings" : { "title" : "borderColor=pink" } }'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<p>The two examples shows a challenging data set using the default settings vs a tuned config.</p>
+
+<p>Tuned Config:</p>
+<ul>
+  <li>max vertical offset restricted to 150 pixels</li>
+  <li>max label line angle restricted to 60 degrees</li>
+</ul>
+
+<div style="position:relative" snapshot-name="vis_405_label_disappear_redacted_tuned">
+  <div class="example" data-width="1200" data-height="1200" data-config="data.vis_405_label_disappear_redacted|config.labelMaxVerticalOffset_150|config.labelMaxLineAngle_60|config.debug">
+  </div>
+</div>
+
+<p>Original Config:</p>
+<div style="position:relative" snapshot-name="vis_405_label_disappear_redacted_defaults">
+  <div class="example" data-width="1200" data-height="1200" data-config="data.vis_405_label_disappear_redacted">
+  </div>
+</div>
+
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>

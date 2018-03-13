@@ -9,19 +9,24 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   values.decimal.places = 1, values.display.as = "percentage",
   values.display.thres = 0.3, labels.font.family = "arial",
   labels.font.color = "#333333", labels.font.size = 10,
-  labels.font.bold = FALSE, labels.min.font.size = 8,
-  labels.inner = FALSE, groups = NULL, groups.color = NULL,
-  groups.order = "descending", groups.font.family = "arial",
-  groups.font.color = "#333333", groups.font.size = 10,
-  groups.font.bold = FALSE, groups.min.font.size = 8, footer = "",
-  footer.font.family = "Arial", footer.font.size = 8,
+  labels.min.font.size = 8, labels.padding.inner = 1,
+  labels.padding.outer = 1, labels.max.width.percentage = "30\%",
+  labels.offset.percentage = "10\%",
+  labels.advanced.offset.yaxis.max = NULL,
+  labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
+  labels.advanced.min.increment = 1e-04,
+  labels.advanced.max.increment = 0.005, groups = NULL,
+  groups.color = NULL, groups.order = "initial",
+  groups.font.family = "arial", groups.font.color = "#333333",
+  groups.font.size = 10, groups.min.font.size = 8, labels.inner = FALSE,
+  footer = "", footer.font.family = "Arial", footer.font.size = 8,
   footer.font.color = rgb(44, 44, 44, maxColorValue = 255), title = NULL,
   title.font.family = "arial", title.font.size = 16,
   title.font.color = "#333333", title.top.padding = 0, subtitle = "",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255), prefix = NULL,
   suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = "80\%", width = NULL, height = NULL)
+  inner.radius = "80\%", log.level = "info")
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -31,10 +36,6 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{values.color}{(optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.}
 
 \item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".}
-
-\item{values.font.family}{(optional) font family for \code{values}. The default is "Arial".}
-
-\item{values.font.size}{(optional) desired font size in pixels for \code{values}. The default is 10.}
 
 \item{values.decimal.places}{(optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).}
 
@@ -48,11 +49,25 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.font.size}{(optional) desired font size in pixels for \code{labels}. The default is 10.}
 
-\item{labels.font.bold}{(optional) if the label should be bold. Defaults to FALSE.}
-
 \item{labels.min.font.size}{(optional) the minimum font size in pixels for labels. The default is 8.}
 
-\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
+\item{labels.padding.inner}{(optional) Exact Padding between rows in a multi line label. Default is 1.}
+
+\item{labels.padding.outer}{(optional) Padding between different labels. Default is 1.}
+
+\item{labels.max.width.percentage}{(optional) the maximum label width as a percentage of total width. The default is "25\%".}
+
+\item{labels.offset.percentage}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a percentage of the outer radius. The default is "10\%".}
+
+\item{labels.advanced.offset.yaxis.max}{(optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).}
+
+\item{labels.advanced.liftoff.angle}{(optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.}
+
+\item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.}
+
+\item{labels.advanced.min.increment}{(optional) During collision avoidance the algorithm runs iteratively, each iteration with fewer labels, until everything can be placed within the provided constraints. By default the minAngle threshold is set to the value of the label that caused the previous iteration to fail. labels.advanced.min.increment and labels.advanced.max.increment are applied to control the rate that the iterations advance. If the iterations advance too slow the chart draws slowly. If the iterations advance too quickly, labels are removed that could have been placed. labels.advanced.min.increment defaults to 0.0001 and labels.advanced.max.increment defaults to 0.005}
+
+\item{labels.advanced.max.increment}{(optional) See description of labels.advanced.min.increment.}
 
 \item{groups}{(optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.}
 
@@ -66,9 +81,9 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. The default is 10.}
 
-\item{groups.font.bold}{(optional) if the group labels should be bold. Defaults to FALSE.}
-
 \item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
+
+\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
 
 \item{footer}{is the footer text given at the bottom at the plot}
 
@@ -105,6 +120,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{gradient}{(optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
 
 \item{inner.radius}{(optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".}
+
+\item{log.level}{(optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].}
 }
 \value{
 a donut plot

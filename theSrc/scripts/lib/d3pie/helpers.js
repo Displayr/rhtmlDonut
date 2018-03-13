@@ -1,69 +1,15 @@
 import d3 from 'd3'
 import math from './math'
 
-var helpers = {
+let helpers = {
 
   // creates the SVG element
   addSVGSpace: function (pie) {
-    var element = pie.element
+    let element = pie.element
 
-    var svg = d3.select(element).append('g').attr('id', 'svgContainer')
+    let svg = d3.select(element).append('g').attr('id', 'pie-container')
 
     return svg
-  },
-
-  whenIdExists: function (id, callback) {
-    var inc = 1
-    var giveupIterationCount = 1000
-
-    var interval = setInterval(function () {
-      if (document.getElementById(id)) {
-        clearInterval(interval)
-        callback()
-      }
-      if (inc > giveupIterationCount) {
-        clearInterval(interval)
-      }
-      inc++
-    }, 1)
-  },
-
-  whenElementsExist: function (els, callback) {
-    var inc = 1
-    var giveupIterationCount = 1000
-
-    var interval = setInterval(function () {
-      var allExist = true
-      for (var i = 0; i < els.length; i++) {
-        if (!document.getElementById(els[i])) {
-          allExist = false
-          break
-        }
-      }
-      if (allExist) {
-        clearInterval(interval)
-        callback()
-      }
-      if (inc > giveupIterationCount) {
-        clearInterval(interval)
-      }
-      inc++
-    }, 1)
-  },
-
-  shuffleArray: function (array) {
-    var currentIndex = array.length, tmpVal, randomIndex
-
-    while (0 !== currentIndex) {
-      randomIndex = Math.floor(Math.random() * currentIndex)
-      currentIndex -= 1
-
-      // and swap it with the current element
-      tmpVal = array[currentIndex]
-      array[currentIndex] = array[randomIndex]
-      array[randomIndex] = tmpVal
-    }
-    return array
   },
 
   processObj: function (obj, is, value) {
@@ -80,14 +26,15 @@ var helpers = {
   },
 
   getDimensions: function (id) {
-    var el = document.getElementById(id)
-    var w = 0, h = 0
+    let el = document.getElementById(id)
+    let w = 0
+    let h = 0
     if (el) {
-      var dimensions = el.getBBox()
+      let dimensions = el.getBBox()
       w = dimensions.width
       h = dimensions.height
     } else {
-      console.log('error: getDimensions() ' + id + ' not found.')
+      console.error('error: getDimensions() ' + id + ' not found.')
     }
     return {w: w, h: h}
   },
@@ -99,7 +46,7 @@ var helpers = {
    * @returns {boolean}
    */
   rectIntersect: function (r1, r2) {
-    var returnVal = (
+    let returnVal = (
       // r2.left > r1.right
       (r2.x > (r1.x + r1.w)) ||
 
@@ -116,91 +63,38 @@ var helpers = {
     return !returnVal
   },
 
-  /**
-   * Returns a lighter/darker shade of a hex value, based on a luminance value passed.
-   * @param hex a hex color value such as “#abc” or “#123456″ (the hash is optional)
-   * @param lum the luminosity factor: -0.1 is 10% darker, 0.2 is 20% lighter, etc.
-   * @returns {string}
-   */
-  getColorShade: function (hex, lum) {
-
-    // validate hex string
-    hex = String(hex).replace(/[^0-9a-f]/gi, '')
-    if (hex.length < 6) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]
-    }
-    lum = lum || 0
-
-    // convert to decimal and change luminosity
-    var newHex = '#'
-    for (var i = 0; i < 3; i++) {
-      var c = parseInt(hex.substr(i * 2, 2), 16)
-      c = Math.round(Math.min(Math.max(0, c + (c * lum)), 255)).toString(16)
-      newHex += ('00' + c).substr(c.length)
-    }
-
-    return newHex
-  },
-
   increaseBrightness: function (hex, percent) {
     // strip the leading # if it's there
     hex = hex.replace(/^\s*#|\s*$/g, '')
 
     // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
-    if (hex.length == 3) {
+    if (hex.length === 3) {
       hex = hex.replace(/(.)/g, '$1$1')
     }
 
-    var r = parseInt(hex.substr(0, 2), 16),
-      g = parseInt(hex.substr(2, 2), 16),
-      b = parseInt(hex.substr(4, 2), 16)
+    let r = parseInt(hex.substr(0, 2), 16)
+    let g = parseInt(hex.substr(2, 2), 16)
+    let b = parseInt(hex.substr(4, 2), 16)
 
     return '#' +
       ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1)
   },
-  /**
-   * Users can choose to specify segment colors in three ways (in order of precedence):
-   *  1. include a "color" attribute for each row in data.content
-   *  2. include a misc.colors.segments property which contains an array of hex codes
-   *  3. specify nothing at all and rely on this lib provide some reasonable defaults
-   *
-   * This function sees what's included and populates this.options.colors with whatever's required
-   * for this pie chart.
-   * @param data
-   */
-  initSegmentColors: function (pie) {
-    var data = pie.options.data.content
-    var colors = pie.options.misc.colors.segments
-
-    // TODO this needs a ton of error handling
-
-    var finalColors = []
-    for (var i = 0; i < data.length; i++) {
-      if (data[i].hasOwnProperty('color')) {
-        finalColors.push(data[i].color)
-      } else {
-        finalColors.push(colors[i])
-      }
-    }
-
-    return finalColors
-  },
 
   applySmallSegmentGrouping: function (data, smallSegmentGrouping) {
-    var totalSize
+    let totalSize
     if (smallSegmentGrouping.valueType === 'percentage') {
-      totalSize = math.getTotalPieSize(data)
+      totalSize = math.getTotalPieSize(data) // TODO this is done in _init right after the fn call
     }
 
     // loop through each data item
-    var newData = []
-    var groupedData = []
-    var totalGroupedData = 0
-    for (var i = 0; i < data.length; i++) {
+    let newData = []
+    let groupedData = []
+    let totalGroupedData = 0
+    for (let i = 0; i < data.length; i++) {
       if (smallSegmentGrouping.valueType === 'percentage') {
-        var dataPercent = (data[i].value / totalSize) * 100
+        let dataPercent = (data[i].value / totalSize) * 100
         if (dataPercent <= smallSegmentGrouping.value) {
           groupedData.push(data[i])
           totalGroupedData += data[i].value
@@ -234,108 +128,25 @@ var helpers = {
   },
 
   // for debugging
-  showPoint: function (svg, x, y) {
-    svg.append('circle').attr('cx', x).attr('cy', y).attr('r', 2).style('fill', 'black')
+  showPoint: function (svg, coord, color = 'black', note = '') {
+    svg.append('circle')
+      .attr('cx', coord.x)
+      .attr('cy', coord.y)
+      .attr('r', 2)
+      .style('fill', color)
+      .attr('note', note)
   },
 
+  // TODO use _.isFunction
   isFunction: function (functionToCheck) {
-    var getType = {}
+    let getType = {}
     return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]'
   },
 
+  // TODO use _.isArray
   isArray: function (o) {
     return Object.prototype.toString.call(o) === '[object Array]'
   }
-}
-
-// taken from jQuery
-var extend = function () {
-  var options, name, src, copy, copyIsArray, clone, target = arguments[0] || {},
-    i = 1,
-    length = arguments.length,
-    deep = false,
-    toString = Object.prototype.toString,
-    hasOwn = Object.prototype.hasOwnProperty,
-    class2type = {
-      '[object Boolean]': 'boolean',
-      '[object Number]': 'number',
-      '[object String]': 'string',
-      '[object Function]': 'function',
-      '[object Array]': 'array',
-      '[object Date]': 'date',
-      '[object RegExp]': 'regexp',
-      '[object Object]': 'object'
-    },
-
-    jQuery = {
-      isFunction: function (obj) {
-        return jQuery.type(obj) === 'function'
-      },
-      isArray: Array.isArray ||
-      function (obj) {
-        return jQuery.type(obj) === 'array'
-      },
-      isWindow: function (obj) {
-        return obj !== null && obj === obj.window
-      },
-      isNumeric: function (obj) {
-        return !isNaN(parseFloat(obj)) && isFinite(obj)
-      },
-      type: function (obj) {
-        return obj === null ? String(obj) : class2type[toString.call(obj)] || 'object'
-      },
-      isPlainObject: function (obj) {
-        if (!obj || jQuery.type(obj) !== 'object' || obj.nodeType) {
-          return false
-        }
-        try {
-          if (obj.constructor && !hasOwn.call(obj, 'constructor') && !hasOwn.call(obj.constructor.prototype, 'isPrototypeOf')) {
-            return false
-          }
-        } catch (e) {
-          return false
-        }
-        var key
-        for (key in obj) {}
-        return key === undefined || hasOwn.call(obj, key)
-      }
-    }
-  if (typeof target === 'boolean') {
-    deep = target
-    target = arguments[1] || {}
-    i = 2
-  }
-  if (typeof target !== 'object' && !jQuery.isFunction(target)) {
-    target = {}
-  }
-  if (length === i) {
-    target = this
-    --i
-  }
-  for (i; i < length; i++) {
-    if ((options = arguments[i]) !== null) {
-      for (name in options) {
-        src = target[name]
-        copy = options[name]
-        if (target === copy) {
-          continue
-        }
-        if (deep && copy && (jQuery.isPlainObject(copy) || (copyIsArray = jQuery.isArray(copy)))) {
-          if (copyIsArray) {
-            copyIsArray = false
-            clone = src && jQuery.isArray(src) ? src : []
-          } else {
-            clone = src && jQuery.isPlainObject(src) ? src : {}
-          }
-          // WARNING: RECURSION
-          target[name] = extend(deep, clone, copy)
-        } else if (copy !== undefined) {
-          target[name] = copy
-        }
-      }
-    }
-  }
-  return target
 }
 
 module.exports = helpers

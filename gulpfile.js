@@ -1,7 +1,7 @@
 const gulp = require('gulp')
 const rhtmlBuildUtils = require('rhtmlBuildUtils')
 
-const dontRegisterTheseTasks = ['testSpecs', 'lint']
+const dontRegisterTheseTasks = ['testSpecs']
 rhtmlBuildUtils.registerGulpTasks({ gulp, exclusions: dontRegisterTheseTasks })
 
 gulp.task('testSpecs', function () {
@@ -9,7 +9,7 @@ gulp.task('testSpecs', function () {
   return true
 })
 
-gulp.task('lint', function () {
-  console.log('skipping lint')
-  return true
-})
+// gulp.task('lint', function () {
+//   console.log('skipping lint')
+//   return true
+// })
