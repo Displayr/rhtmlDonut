@@ -1,15 +1,17 @@
 const gulp = require('gulp')
 const rhtmlBuildUtils = require('rhtmlBuildUtils')
 
-const dontRegisterTheseTasks = ['testSpecs', 'lint']
-rhtmlBuildUtils.registerGulpTasks({ gulp, exclusions: dontRegisterTheseTasks })
+const dontRegisterTheseTasks = ['testSpecs', 'compileInternal']
+const runSequence = rhtmlBuildUtils.registerGulpTasks({ gulp, exclusions: dontRegisterTheseTasks })
 
 gulp.task('testSpecs', function () {
   console.log('skipping test')
   return true
 })
 
-gulp.task('lint', function () {
-  console.log('skipping lint')
-  return true
+const modifiedCompileInternalTaskSequence = rhtmlBuildUtils.taskSequences.compileInternal.concat(['parseTestPlan'])
+gulp.task('compileInternal', function (done) {
+  runSequence(...modifiedCompileInternalTaskSequence, done)
 })
+
+gulp.task('parseTestPlan', require('./build/tasks/parseTestPlan')(gulp))

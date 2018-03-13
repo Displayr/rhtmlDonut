@@ -1,0 +1,8 @@
+{
+  "settings": {
+    "stages": {
+      "downSweep": false,
+      "upSweep": false
+    }
+  }
+}

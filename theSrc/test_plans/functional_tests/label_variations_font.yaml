@@ -1,0 +1,24 @@
+version: 1
+tests:
+  - type: multi_widget_single_page
+    rowSize: 4
+    comments: []
+    widgets:
+      - height: 300
+        width: 250
+        config:
+          - '{ "settings" : { "title" : "default label settings" } }'
+          - data.test_plan.abc_rbg
+      - height: 500
+        width: 500
+        config:
+          - '{ "settings" : { "title" : "custom label settings" } }'
+          - data.test_plan.abc_rbg
+          - config.label_36_georgia_lightblue
+      - height: 500
+        width: 500
+        config:
+          - '{ "settings" : { "title" : "prefix and suffix" } }'
+          - data.test_plan.abc_rbg
+          - config.label_36_georgia_lightblue
+          - '{ "settings" : { "prefix" : "$", "suffix": "z" } }'

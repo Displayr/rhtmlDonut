@@ -1,0 +1,7 @@
+version: 1
+tests:
+  - type: single_widget_single_page
+    comments: []
+    width: 894
+    height: 610
+    data: data.issues.vis-434

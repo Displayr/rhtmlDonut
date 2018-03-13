@@ -3,13 +3,13 @@
   "widgetFactory": "theSrc/scripts/rhtmlDonut.factory.js",
   "widgetName": "rhtmlDonut",
   "internalWebSettings": {
+    "includeDimensionsOnWidgetDiv": true,
     "default_border": true,
     "css": [
-      "/scripts/lib/d3pie/d3pie.css"
-    ]
+      "/styles/main.css"
+    ],
+    "isReadySelector": "g[rhtmlDonut-status=ready]"
   },
-  "visualRegressionSuite": {
-    "isReadySelector": "svg.svgContent"
-  }
+  "visualRegressionSuite": {}
 }
 

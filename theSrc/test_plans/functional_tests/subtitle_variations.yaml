@@ -1,0 +1,11 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 250
+    height: 300
+    rowSize: 3
+    data: data.test_plan.abc_rbg
+    config:
+      - '{ "settings" : { "subtitle" : "default subtitle settings" } }'
+      - '{ "settings" : { "subtitle" : "custom subtitle settings" } }|config.subtitle_12_georgia_lightblue'
+      - '{ "settings" : { "subtitle" : "multiline<br>sub titles<br>are supported" } }'

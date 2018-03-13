@@ -1,0 +1,10 @@
+version: 1
+tests:
+  - type: single_widget_single_page
+    comments:
+      - location: 0
+        status: yellow
+        text: The top left quadrant labels 15 16 17 18 do not need to be pushed so far (VIS-440)
+    width: 650
+    height: 477
+    data: data.issues.label_adjusted_too_far
