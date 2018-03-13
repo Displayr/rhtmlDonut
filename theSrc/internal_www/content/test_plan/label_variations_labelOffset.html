@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="label_variations_labelOffset">
+  <p>LabelOffsetPercentage is calculated as a total of the outerRadius. So at a setting of labelOffsetPercentage=50%, if the outerRadius is 60, the labelOffset should be 30.</p>
+  <div class="row">
+    <div class="example" data-border="true" data-width="250" data-height="250" data-config=' data.test_plan.20_decreasing_values|
+      { "settings" : { "labelOffsetPercentage" : "1%" } }|
+      { "settings" : { "title" : "labelOffsetPercentage=1%" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="250" data-config=' data.test_plan.20_decreasing_values|
+      { "settings" : { "labelOffsetPercentage" : "5" } }|
+      { "settings" : { "title" : "labelOffsetPercentage=5", "subtitle": "(the % is optional)" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="250" data-config=' data.test_plan.20_decreasing_values|
+      { "settings" : { "labelOffsetPercentage" : "20%" } }|
+      { "settings" : { "title" : "labelOffsetPercentage=20%" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="250" data-config=' data.test_plan.20_decreasing_values|
+      { "settings" : { "labelOffsetPercentage" : "50%" } }|
+      { "settings" : { "title" : "labelOffsetPercentage=50%" } }'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>

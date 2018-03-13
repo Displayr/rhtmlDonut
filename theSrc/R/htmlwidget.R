@@ -1,8 +1,6 @@
 #' Create a Donut plot
 #' @param values vector of real numbers
 #' @param labels character vector, length must be the same as \code{values}
-#' @param values.font.family (optional) font family for \code{values}. The default is "Arial".
-#' @param values.font.size (optional) desired font size in pixels for \code{values}. The default is 10.
 #' @param values.color (optional) colors for \code{values}. If not provided then default colors are generated. If \code{groups} are provided or \code{gradient} set to \code{FALSE}, then generate colors using D3 library. If \code{groups} not provided, then can generate gradient colors when \code{gradient} is \code{TRUE}.
 #' @param values.display.as (optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".
 #' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and he default is 0.3.
@@ -11,14 +9,20 @@
 #' @param labels.font.family (optional) font family for \code{labels}. The default is "Arial"
 #' @param labels.font.size (optional) desired font size in pixels for \code{labels}. The default is 10.
 #' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. The default is "#333333".
-#' @param labels.font.bold (optional) if the label should be bold. Defaults to FALSE.
-#' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
 #' @param labels.min.font.size (optional) the minimum font size in pixels for labels. The default is 8.
+#' @param labels.padding.inner (optional) Exact Padding between rows in a multi line label. Default is 1.
+#' @param labels.padding.outer (optional) Padding between different labels. Default is 1.
+#' @param labels.max.width.percentage (optional) the maximum label width as a percentage of total width. The default is "25\%".
+#' @param labels.offset.percentage (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a percentage of the outer radius. The default is "10\%".
+#' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
+#' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
+#' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.
+#' @param labels.advanced.min.increment (optional) During collision avoidance the algorithm runs iteratively, each iteration with fewer labels, until everything can be placed within the provided constraints. By default the minAngle threshold is set to the value of the label that caused the previous iteration to fail. labels.advanced.min.increment and labels.advanced.max.increment are applied to control the rate that the iterations advance. If the iterations advance too slow the chart draws slowly. If the iterations advance too quickly, labels are removed that could have been placed. labels.advanced.min.increment defaults to 0.0001 and labels.advanced.max.increment defaults to 0.005
+#' @param labels.advanced.max.increment (optional) See description of labels.advanced.min.increment.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
 #' @param groups.font.family (optional) font family for \code{groups}. The default is "Arial".
 #' @param groups.font.size (optional) desired font size in pixels for \code{groups}. The default is 10.
 #' @param groups.font.color (optional) a hex value to set the font color for \code{groups}. The default is "#333333".
-#' @param groups.font.bold (optional) if the group labels should be bold. Defaults to FALSE.
 #' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. The default is 8.
 #' @param groups.color (optional) colors for \code{groups}. If not provided then D3 colors are generated.
 #' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".
@@ -40,6 +44,7 @@
 #' @param border.color (optional) c("white", "none", hex value)
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".
+#' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
 
 
 #' @examples
@@ -83,16 +88,22 @@ Donut <- function(
     labels.font.family = "arial",
     labels.font.color = "#333333",
     labels.font.size = 10,
-    labels.font.bold = FALSE,
     labels.min.font.size = 8,
-    labels.inner = FALSE,
+    labels.padding.inner = 1,
+    labels.padding.outer = 1,
+    labels.max.width.percentage = "25%",
+    labels.offset.percentage = "10%",
+    labels.advanced.offset.yaxis.max = 100,
+    labels.advanced.liftoff.angle = 30,
+    labels.advanced.line.max.angle = 60,
+    labels.advanced.min.increment = 0.0001,
+    labels.advanced.max.increment = 0.005,
     groups = NULL,
     groups.color = NULL,
-    groups.order = "descending",
+    groups.order = "initial",
     groups.font.family = "arial",
     groups.font.color = "#333333",
     groups.font.size = 10,
-    groups.font.bold = FALSE,
     groups.min.font.size = 8,
     footer = "",
     footer.font.family = "Arial",
@@ -110,10 +121,16 @@ Donut <- function(
     prefix = NULL,
     suffix = NULL,
     border.color = "white",
-    gradient = FALSE,
+    gradient = FALSE, # not used by pieChart.R
     inner.radius = "80%",
-    width = NULL,
-    height = NULL) {
+    log.level = "info") {
+
+    # What does the logic between here and rhtmlDonut do ?
+    #  * validate and enforce format of values and labels
+    #  * compute group sums
+    #  * ensure there are enough group colors
+    #  * compute group counts
+    #  * reorder values and groups depending on order "descending" v "alphabetical" v "initial"
 
     if (is.null(values))
         stop("values must not be empty")
@@ -377,8 +394,6 @@ Donut <- function(
 
     # create a list that contains the settings
     settings <- list(
-        valuesFont = values.font.family,
-        valuesSize = values.font.size,
         valuesColor = values.color,
         valuesDisplay = values.display.as,
         valuesOrder = values.order,
@@ -386,14 +401,20 @@ Donut <- function(
         labelsFont = labels.font.family,
         labelsSize = labels.font.size,
         labelsColor = labels.font.color,
-        labelsInner = labels.inner,
-        labelsBold = labels.font.bold,
         labelsMinFontSize = labels.min.font.size,
+        labelsInnerPadding = labels.padding.inner,
+        labelsOuterPadding = labels.padding.outer,
+        labelsMaxWidthPercentage = labels.max.width.percentage,
+        labelOffsetPercentage = labels.offset.percentage,
+        labelMaxVerticalOffset = labels.advanced.offset.yaxis.max,
+        labelLiftOffAngle = labels.advanced.liftoff.angle,
+        labelMaxLineAngle = labels.advanced.line.max.angle,
+        labelIterationMinIncrement = labels.advanced.min.increment,
+        labelIterationMaxIncrement = labels.advanced.max.increment,
         groups = groups, # length = n
         groupsFont = groups.font.family, # string
         groupsFontColor = groups.font.color,
         groupsSize = groups.font.size, # scalar
-        groupsBold = groups.font.bold,
         groupsColor = groups.color, # length = length(unique(groups))
         groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
@@ -414,11 +435,11 @@ Donut <- function(
         subtitleFontColor = subtitle.font.color,
         prefix = prefix,
         suffix = suffix,
-        orderControl = FALSE, # TODO in the future when ordering can be remembered. sets order as user clicks on chart
         gradient = gradient,
         innerRadius = inner.radius,
         minAngle = values.display.thres,
-        borderColor = border.color
+        borderColor = border.color,
+        logLevel = log.level
     )
 
     # pass the data and settings using 'x'
@@ -432,8 +453,6 @@ Donut <- function(
     htmlwidgets::createWidget(
         name = "rhtmlDonut",
         x,
-        width = width,
-        height = height,
         sizingPolicy = htmlwidgets::sizingPolicy(
             padding = 0,
             browser.fill = TRUE, # resizing will not work if FALSE

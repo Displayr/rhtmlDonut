@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="label_variations_labelOffset">
+  <p>LabelOffsetPercentage is calculated as a total of the outerRadius. So at a setting of labelOffsetPercentage=50%, if the outerRadius is 60, the labelOffset should be 30.</p>
+  <div class="row">
+
+    <div style="border:2px dashed red" class="example" data-border="true" data-width="300" data-height="400" data-config='data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|
+      { "settings" : { "labelLiftOffAngle" : "10", "minAngle" : "0", "labelMaxLineAngle" : "180" } }|
+      { "settings" : { "title" : "labelLiftOffAngle=10" } }'>
+    </div>
+
+    <div style="border:2px dashed red" class="example" data-border="true" data-width="300" data-height="400" data-config='data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|
+      { "settings" : { "labelLiftOffAngle" : "15", "minAngle" : "0", "labelMaxLineAngle" : "180" } }|
+      { "settings" : { "title" : "labelLiftOffAngle=15" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="300" data-height="400" data-config='data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|
+      { "settings" : { "labelLiftOffAngle" : "30", "minAngle" : "0", "labelMaxLineAngle" : "180" } }|
+      { "settings" : { "title" : "labelLiftOffAngle=30" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="300" data-height="400" data-config='data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|
+      { "settings" : { "labelLiftOffAngle" : "45", "minAngle" : "0", "labelMaxLineAngle" : "180" } }|
+      { "settings" : { "title" : "labelLiftOffAngle=45" } }'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>

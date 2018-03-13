@@ -1,0 +1,29 @@
+{
+  "values": [
+    90,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    10,
+    180
+  ],
+  "labels": [
+    "90: short",
+    "10: very long long long long long long long long long long long label",
+    "10: short",
+    "10: short",
+    "10: short",
+    "10: short",
+    "10: short",
+    "10: short",
+    "10: short",
+    "10: short",
+    "180: short"
+  ],
+  "settings": {}
+}

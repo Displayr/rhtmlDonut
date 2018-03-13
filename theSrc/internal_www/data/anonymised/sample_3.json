@@ -1,0 +1,93 @@
+{
+  "values": [
+    8.2177033492823,
+    13.3492822966507,
+    13.6124401913876,
+    10.5980861244019,
+    6.98564593301435,
+    11.7822966507177,
+    6.65071770334928,
+    6.38755980861244,
+    9.40191387559809,
+    13.0143540669856
+  ],
+  "labels": [
+    "Xx xx xxxxxxxxx xx xxxx xxxxxx",
+    "X xxxxxxxxxx xx xxxxxxxxx xxxxxxxxxxxxx xxxxx",
+    "Xxxxxxxxxxxxxx xxxxxxxxxx xx xxx xx xxx xxxxxxxx",
+    "X xx xxxxxxxxxx xx xxxxxxxxxxxxxx xxxxxxxxxx",
+    "Xxxxx xxx xxxxx xx xxxx xxxxxxxxx xx xx xxxx xxxxxxx xxx xxxx xxxxxxxxxx",
+    "Xx xx xxxxxxxxx xx xxxx xxxxxx",
+    "X xxxxxxxxxx xx xxxxxxxxx xxxxxxxxxxxxx xxxxx",
+    "Xxxxxxxxxxxxxx xxxxxxxxxx xx xxx xx xxx xxxxxxxx",
+    "X xx xxxxxxxxxx xx xxxxxxxxxxxxxx xxxxxxxxxx",
+    "Xxxxx xxx xxxxx xx xxxx xxxxxxxxx xx xx xxxx xxxxxxx xxx xxxx xxxxxxxxxx"
+  ],
+  "settings": {
+    "valuesFont": "Arial",
+    "valuesSize": 10,
+    "valuesColor": null,
+    "valuesDisplay": "original",
+    "valuesOrder": "initial",
+    "valuesDec": 0,
+    "labelsFont": "Arial",
+    "labelsSize": 10,
+    "labelsColor": "#2C2C2C",
+    "labelsInner": false,
+    "labelsBold": false,
+    "labelsMinFontSize": 10,
+    "groups": [
+      "Xxxxx",
+      "Xxxxx",
+      "Xxxxx",
+      "Xxxxx",
+      "Xxxxx",
+      "Xxxxxxxx",
+      "Xxxxxxxx",
+      "Xxxxxxxx",
+      "Xxxxxxxx",
+      "Xxxxxxxx"
+    ],
+    "groupsFont": "Arial",
+    "groupsFontColor": "#2C2C2C",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsColor": [
+      "#5C9AD3",
+      "#ED7D31"
+    ],
+    "groupsNames": [
+      "Xxxxx",
+      "Xxxxxxxx"
+    ],
+    "groupsSums": [
+      52.7631578947368,
+      47.2368421052632
+    ],
+    "groupsCounts": [
+      5,
+      5
+    ],
+    "groupLabelsMinFontSize": 10,
+    "footer": "",
+    "footerFontFamily": null,
+    "footerFontSize": null,
+    "footerFontColor": null,
+    "title": "Xxxxxxxxx xx xxxxxxxxxxxxxxxxxx",
+    "titleFontFamily": "Arial",
+    "titleFontSize": 16,
+    "titleFontColor": "#2C2C2C",
+    "titleTopPadding": 0,
+    "subtitle": "",
+    "subtitleFontFamily": null,
+    "subtitleFontSize": null,
+    "subtitleFontColor": null,
+    "prefix": "",
+    "suffix": "%",
+    "orderControl": false,
+    "gradient": false,
+    "innerRadius": "70%",
+    "minAngle": 0.003,
+    "borderColor": "#FFFFFF"
+  }
+}

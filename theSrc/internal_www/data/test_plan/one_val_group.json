@@ -1,0 +1,26 @@
+{
+  "values": [
+    100
+  ],
+  "labels": [
+    "label"
+  ],
+  "settings": {
+    "groups": [
+      "group1"
+    ],
+    "groupsFont": "arial",
+    "groupsFontColor": "#333333",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsNames": [
+      "group1"
+    ],
+    "groupsSums": [
+      100
+    ],
+    "groupsCounts": [
+      1
+    ]
+  }
+}

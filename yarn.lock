@@ -3958,6 +3958,10 @@ log4js@^0.6.31:
     readable-stream "~1.0.2"
     semver "~4.3.3"
 
+loglevel@^1.6.1:
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/loglevel/-/loglevel-1.6.1.tgz#e0fc95133b6ef276cdc8887cdaf24aa6f156f8fa"
+
 lolex@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/lolex/-/lolex-1.6.0.tgz#3a9a0283452a47d7439e72731b9e07d7386e49f6"
@@ -5118,9 +5122,9 @@ restore-cursor@^1.0.1:
     exit-hook "^1.0.0"
     onetime "^1.0.0"
 
-rhtmlBuildUtils@Displayr/rhtmlBuildUtils#2.0.4:
-  version "2.0.4"
-  resolved "https://codeload.github.com/Displayr/rhtmlBuildUtils/tar.gz/d4c74db863ebdeea8b663c87ef477a963229a573"
+rhtmlBuildUtils@Displayr/rhtmlBuildUtils#2.1.0:
+  version "2.1.0"
+  resolved "https://codeload.github.com/Displayr/rhtmlBuildUtils/tar.gz/96f8d43cfbf22e9716c5574140d27dae65951a2a"
   dependencies:
     app-root-dir "^1.0.2"
     babel-plugin-array-includes "^2.0.3"
@@ -5191,36 +5195,9 @@ rhtmlBuildUtils@Displayr/rhtmlBuildUtils#2.0.4:
     stream "0.0.2"
     yargs "^8.0.1"
 
-rhtmlParts@Displayr/rhtmlParts#1.0.1:
-  version "1.0.1"
-  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/ba3e044c9f36f2a7d9684208b76202a98460a3fa"
-  dependencies:
-    babel-plugin-array-includes "^2.0.3"
-    babel-plugin-transform-exponentiation-operator "^6.24.1"
-    babel-plugin-transform-object-assign "^6.8.0"
-    babel-preset-es2015-ie "^6.6.2"
-    babelify "^7.3.0"
-    browserify "^14.4.0"
-    eslint "^3.19.0"
-    eslint-config-airbnb "^15.0.1"
-    eslint-config-standard "^10.2.1"
-    eslint-plugin-import "^2.3.0"
-    eslint-plugin-jsx-a11y "^5.0.3"
-    eslint-plugin-node "^5.0.0"
-    eslint-plugin-promise "^3.5.0"
-    eslint-plugin-react "^7.0.1"
-    eslint-plugin-standard "^3.0.1"
-    gulp "^3.9.1"
-    gulp-buffer "0.0.2"
-    gulp-sourcemaps "^2.6.0"
-    gulp-tap "^1.0.1"
-    gulp-uglify "^3.0.0"
-    gulp-util "^3.0.8"
-    lodash "4.6.1"
-
-rhtmlParts@Displayr/rhtmlParts#1.0.2:
-  version "1.0.2"
-  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/ea0a426d59d5f08121f434c2d83609655fa55a05"
+rhtmlParts@Displayr/rhtmlParts#2.0.0:
+  version "2.0.0"
+  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/76168666f7eea743bc6e3a86349da76bfa556ff5"
   dependencies:
     lodash.isnumber "^3.0.3"
     lodash.isstring "^4.0.1"

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="label_variations">
+  <div class="row">
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "title" : "default label settings" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      config.label_36_georgia_lightblue|
+      { "settings" : { "title" : "custom label settings" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      config.label_36_georgia_lightblue|
+      { "settings" : { "prefix" : "$", "suffix": "z" } }|
+      { "settings" : { "title" : "prefix and suffix" } }'>
+    </div>
+  </div>
+  <div class="row">
+    <div style="border: 4px dashed red" class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.5_decreasing_values|
+      { "settings" : { "valuesDec": "0", "valuesDisplay": "percentage" } }|
+      { "settings" : { "subtitle": "valuesDisplay=percentage<br>does not work?" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings" : { "valuesDec": "3" } }|
+      { "settings" : { "title": "valuesDec=3" } }'>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 10 } }|
+      { "settings" : { "title" : "size=10" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 20 } }|
+      { "settings" : { "title" : "size=20" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 30 } }|
+      { "settings" : { "title" : "size=30" } }'>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 40 } }|
+      { "settings" : { "title" : "size=40" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 50, "labelsMaxWidthPercentage": "46%" } }|
+      { "settings" : { "title" : "size=50, labelsMaxWidthPercentage=46%" } }'>
+    </div>
+    <div class="example" data-border="true" data-width="500" data-height="500" data-config=' data.test_plan.abc_rbg|
+      { "settings": { "labelsSize": 60, "labelsMaxWidthPercentage": "46%" } }|
+      { "settings" : { "title" : "size=60, labelsMaxWidthPercentage=46%" } }'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>

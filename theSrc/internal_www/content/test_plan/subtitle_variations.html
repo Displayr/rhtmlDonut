@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+  <link href='/styles/main.css' rel='stylesheet' type='text/css'>
+</head>
+<body style="background-color:white">
+
+<div style="position:relative" snapshot-name="subtitle_variations">
+  <div class="row">
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config='
+      data.test_plan.abc_rbg|
+      { "settings" : { "subtitle" : "default subtitle settings" } }'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config='
+      data.test_plan.abc_rbg|
+      { "settings" : { "subtitle" : "custom subtitle settings" } }|
+      config.subtitle_12_georgia_lightblue'>
+    </div>
+
+    <div class="example" data-border="true" data-width="250" data-height="300" data-config='
+      data.test_plan.abc_rbg|
+      { "settings" : { "subtitle" : "multiline<br>sub titles<br>are supported" } }'>
+    </div>
+  </div>
+</div>
+
+<script src="/js/renderContentPage.js"></script>
+</body>
+</html>
