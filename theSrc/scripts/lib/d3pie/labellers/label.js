@@ -130,48 +130,28 @@ class Label {
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeLineConnectorCoord () {
-    const between = (a, b, c) => (b >= a && b < c)
-    const {labelAngle, height, width, hemisphere, topLeftCoord} = this
+    const {height, width, hemisphere, topLeftCoord} = this
 
     const lineConnectorCoord = {}
-    if (between(20, labelAngle, 160)) {
-      // top 1/2 of donut
-      lineConnectorCoord.y = topLeftCoord.y + height
-    } else if (between(200, labelAngle, 340)) {
-      // bottom 1/2 of donut
-      lineConnectorCoord.y = topLeftCoord.y
-    } else {
-      // mid range 1/2 of donut
-      lineConnectorCoord.y = topLeftCoord.y + 0.5 * height
-    }
+    lineConnectorCoord.y = topLeftCoord.y + 0.5 * height
 
     lineConnectorCoord.x = (hemisphere === 'left')
-      ? topLeftCoord.x + width
-      : topLeftCoord.x
+      ? topLeftCoord.x + width + 2
+      : topLeftCoord.x - 2
 
     return lineConnectorCoord
   }
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeTopLeftCoord () {
-    const between = (a, b, c) => (b >= a && b < c)
-    const {labelAngle, height, width, hemisphere, lineConnectorCoord} = this
-    const topLeftCoord = {}
+    const {height, width, hemisphere, lineConnectorCoord} = this
 
-    if (between(20, labelAngle, 160)) {
-      // top 1/2 of donut
-      topLeftCoord.y = lineConnectorCoord.y - height
-    } else if (between(200, labelAngle, 340)) {
-      // bottom 1/2 of donut
-      topLeftCoord.y = lineConnectorCoord.y
-    } else {
-      // mid range 1/2 of donut
-      topLeftCoord.y = lineConnectorCoord.y - 0.5 * height
-    }
+    const topLeftCoord = {}
+    topLeftCoord.y = lineConnectorCoord.y - 0.5 * height
 
     topLeftCoord.x = (hemisphere === 'left')
-      ? lineConnectorCoord.x - width
-      : lineConnectorCoord.x
+      ? lineConnectorCoord.x - width - 2
+      : lineConnectorCoord.x + 2
 
     return topLeftCoord
   }
@@ -259,6 +239,7 @@ class Label {
   get label () { return this._invariants.label }
   get labelText () { return this._invariants.labelText }
   get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
+  get segmentQuadrant () { return this._invariants.segmentQuadrant }
   get value () { return this._invariants.value }
 
   // accessors and mutators for variants
