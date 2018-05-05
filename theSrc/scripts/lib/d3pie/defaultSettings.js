@@ -29,6 +29,7 @@ const defaultSettings = {
   },                                        //
   labels: {                                 //
     outer: {
+      innerLabels: false,                   // pieWrapper: settings.labelsInner, R: labels.inner
       displayPercentage: false,             // pieWrapper: settings.valuesDisplay, R: values.display.as
       displayDecimals: 1,                   // pieWrapper: settings.valuesDec, R: values.decimal.places
       innerPadding: 1,                      // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
@@ -36,7 +37,7 @@ const defaultSettings = {
       minLabelOffset: 5,                    // TODO use these values and expose as configurable
       maxLabelOffset: 100,                  // TODO use these values and expose as configurable
       liftOffAngle: 30,                     // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
-      labelMaxLineAngle: 60,                // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
+      labelMaxLineAngle: 90,                // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       hideWhenLessThanPercentage: null,     // pieWrapper: null HARD CODE (minAngle is used instead) . TODO investigate this variable
       maxWidthPercentage: '25%',            // pieWrapper: settings.labelsMaxWidthPercentage. R: labels.max.width.percentage. wrap label text if label exceeds X% of canvasWidth
       iterationMinIncrement: 0.0001,        // pieWrapper: settings.labelIterationMinIncrement. R: labels.advanced.min.increment. Control labelling iterations step size

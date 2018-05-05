@@ -12,6 +12,7 @@
 #' @param labels.min.font.size (optional) the minimum font size in pixels for labels. The default is 8.
 #' @param labels.padding.inner (optional) Exact Padding between rows in a multi line label. Default is 1.
 #' @param labels.padding.outer (optional) Padding between different labels. Default is 1.
+#' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
 #' @param labels.max.width.percentage (optional) the maximum label width as a percentage of total width. The default is "25\%".
 #' @param labels.offset.percentage (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a percentage of the outer radius. The default is "10\%".
 #' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
@@ -105,6 +106,7 @@ Donut <- function(
     groups.font.color = "#333333",
     groups.font.size = 10,
     groups.min.font.size = 8,
+    labels.inner = FALSE,
     footer = "",
     footer.font.family = "Arial",
     footer.font.size = 8,
@@ -402,6 +404,7 @@ Donut <- function(
         labelsSize = labels.font.size,
         labelsColor = labels.font.color,
         labelsMinFontSize = labels.min.font.size,
+        labelsInner = labels.inner,
         labelsInnerPadding = labels.padding.inner,
         labelsOuterPadding = labels.padding.outer,
         labelsMaxWidthPercentage = labels.max.width.percentage,

@@ -108,4 +108,127 @@ General / Unsorted Notes:
   segement.js : Pie chart layout is a function of pie.pieCenter, and pie.innerRadius, pie.outerRadius.  
     
   
-  
+### inner label concerns
+
+conditions for adding them:
+
+```
+if (!pie.options.groups.content && pie.options.labels.mainLabel.labelsInner && pie.options.data.sortOrder == 'descending')
+```
+
+placement code:
+
+```
+      pie.svg.selectAll('.' + pie.cssPrefix + 'labelGroup-extra')
+        .each(function (d, i) {
+          return labels.getIdealInnerLabelPositions(pie, i)
+        })
+        .attr('transform', function (d, i) {
+          return 'translate(' + labelData[i].innerX + ',' + labelData[i].innerY + ')'
+        })
+        .style('opacity', function (d, i) {
+          return labelData[i].hide === 0 ? 0 : 1
+        })
+
+      for (var i = 0; i < objs.length; i++) {
+
+        labelData[i].hideMiddle = labelData[i].hide === 0 ? 1 : 0
+        labelData[i].innerYlim = {
+          max: labelData[i].innerY + pie.options.data.fontSize * 2,
+          min: labelData[i].innerY - pie.options.data.fontSize * 2
+        }
+        if (labelData[i].innerhs === 'left') {
+          labelData[i].innerAnchorPt = {x: labelData[i].innerX, y: labelData[i].innerY}
+        } else {
+          labelData[i].innerAnchorPt = {x: labelData[i].innerX + labelData[i].innerW, y: labelData[i].innerY}
+        }
+        labelData[i].innerR = labels.getDist(labelData[i].innerAnchorPt.x, labelData[i].innerAnchorPt.y, pie.pieCenter.x, pie.pieCenter.y)
+
+      }
+
+      for (var i = 0; i < objs.length; i++) {
+        currIdx = i
+        curr = labelData[currIdx]
+
+        if (curr.hide === 0) {
+          labels.hideExtraLabel(pie, curr)
+          continue
+        }
+
+        var currEl = d3.select('#' + pie.cssPrefix + 'labelGroup' + curr.i + '-extra')[0][0]
+        if (labels.checkInnerLabelWithEdges(pie, currEl, curr.i)) {
+          for (var j = currIdx - 1; j >= 0; j--) {
+            prev = labelData[j]
+            if (prev.hideMiddle === 0) {
+              if (labels.rectIntersectInner(curr, prev)) {
+                if (currIdx === objs.length - 1) {
+                  next = labelData[0]
+                } else {
+                  next = labelData[currIdx + 1]
+                }
+                labels.adjustInnerLabelPosNew(pie, curr, prev, next, pie.pieCenter)
+
+                if (labels.checkInnerLabelWithEdges(pie, currEl, curr.i)) {
+                  for (var k = currIdx - 1; k >= 0; k--) {
+                    if (labelData[k].hideMiddle === 0 && curr.hideMiddle === 0 && labels.rectIntersectInner(curr, labelData[k])) {
+                      if (curr.arcFrac < labelData[k].arcFrac) {
+                        labels.hideExtraLabel(pie, curr)
+                      } else {
+                        labels.hideExtraLabel(pie, labelData[k])
+                      }
+                      break
+                    }
+                  }
+
+                  if (curr.hideMiddle === 1) {
+                    break
+                  }
+                } else {
+                  labels.hideExtraLabel(pie, curr)
+                }
+              }
+            }
+          }
+        } else {
+          labels.hideExtraLabel(pie, curr)
+        }
+      }
+
+      d3.selectAll('.' + pie.cssPrefix + 'labelGroup-extra')
+        .attr('transform', function (d, i) {
+          return 'translate(' + labelData[i].innerX + ',' + labelData[i].innerY + ')'
+        })
+    }
+```
+
+```
+  getIdealInnerLabelPositions: function (pie, i) {
+    var labelGroupNode = d3.select('#' + pie.cssPrefix + 'labelGroup' + i + '-extra').node()
+    if (!labelGroupNode) {
+      return
+    }
+    var labelGroupDims = labelGroupNode.getBBox()
+    var angle = segments.getSegmentAngle(i, pie.options.data.content, pie.totalSize, {midpoint: true})
+
+    var originalX = pie.pieCenter.x
+    var originalY = pie.pieCenter.y - (pie.innerRadius - pie.options.labels.inner.pieDistance)
+    var newCoords = math.rotate(originalX, originalY, pie.pieCenter.x, pie.pieCenter.y, angle - 90)
+
+    // if the label is on the left half of the pie, adjust the values
+    var hemisphere = 'left' // hemisphere
+
+    if (angle > 270 || angle < 90) {
+      newCoords.x += pie.options.labels.mainLabel.horizontalPadding
+    } else {
+      newCoords.x -= (labelGroupDims.width + pie.options.labels.mainLabel.horizontalPadding)
+      hemisphere = 'right'
+    }
+
+    pie.outerLabelGroupData[i].innerX = newCoords.x
+    pie.outerLabelGroupData[i].innerY = newCoords.y
+    pie.outerLabelGroupData[i].innerW = labelGroupDims.width
+    pie.outerLabelGroupData[i].innerH = labelGroupDims.height
+    pie.outerLabelGroupData[i].innerhs = hemisphere
+  },
+```
+

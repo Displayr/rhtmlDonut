@@ -137,6 +137,7 @@ class PieWrapper {
       },
       labels: {
         outer: {
+          innerLabels: this._settings.labelsInner,
           displayPercentage: (this._settings.valuesDisplay === 'percentage'),
           displayDecimals: this._settings.valuesDec,
           innerPadding: this._settings.labelsInnerPadding,

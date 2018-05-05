@@ -7,7 +7,7 @@ import segments from './segments'
 import tt from './tooltip'
 import validate from './validate'
 import defaultSettings from './defaultSettings'
-import innerLabeller from './labellers/innerLabeller'
+import groupLabeller from './labellers/groupLabeller'
 import outerLabeller from './labellers/outerLabeller'
 
 import * as rootLog from 'loglevel'
@@ -173,7 +173,7 @@ class d3pie {
     }
 
     if (this.options.groups.content) {
-      innerLabeller.doLabelling(this)
+      groupLabeller.doLabelling(this)
     }
 
     // add and position the tooltips

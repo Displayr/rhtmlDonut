@@ -5,7 +5,7 @@ const _ = require('lodash')
 const quadrants = [4, 1, 2, 3]
 const math = require('../math')
 
-class Label {
+class OuterLabel {
   constructor ({
     angleExtent,
     angleStart,
@@ -56,7 +56,6 @@ class Label {
       angleBetweenLabelAndRadial: null,
       fontSize,
       height: null,
-      innerRadius: null,
       labelAngle: segmentAngleMidpoint,
       labelOffset: null,
       labelShown: true,
@@ -68,6 +67,7 @@ class Label {
       width: null
     }
 
+    // NB TODO useful for testing and verifying access patterns while refactoring, but ultimately not usable. Delete after archiving for later use
     // return new Proxy(this, {
     //   get (target, propertyName) {
     //     if (typeof propertyName === 'symbol') { return target[propertyName] }
@@ -79,10 +79,10 @@ class Label {
     //     if (!_.has(target.counts.get, propertyName)) { target.counts.get[propertyName] = 0 }
     //     target.counts.get[propertyName]++
     //
-    //     if (Label.isValidSetter(propertyName)) { return target._variants[propertyName] }
-    //     if (Label.isValidGetter(propertyName)) { return target._invariants[propertyName] }
-    //     if (Label.isValidMethod(propertyName)) { return target[propertyName] }
-    //     throw new Error(`Cannot get ${propertyName} from Label`)
+    //     if (OuterLabel.isValidSetter(propertyName)) { return target._variants[propertyName] }
+    //     if (OuterLabel.isValidGetter(propertyName)) { return target._invariants[propertyName] }
+    //     if (OuterLabel.isValidMethod(propertyName)) { return target[propertyName] }
+    //     throw new Error(`Cannot get ${propertyName} from OuterLabel`)
     //   },
     //   set (target, propertyName, value) {
     //     if (typeof propertyName === 'symbol') {
@@ -93,16 +93,17 @@ class Label {
     //     if (!_.has(target.counts.set, propertyName)) { target.counts.set[propertyName] = 0 }
     //     target.counts.set[propertyName]++
     //
-    //     if (Label.isValidSetter(propertyName)) {
+    //     if (OuterLabel.isValidSetter(propertyName)) {
     //       target._variants[propertyName] = value
     //       return true
     //     }
     //
-    //     throw new Error(`Cannot set ${propertyName} on Label`)
+    //     throw new Error(`Cannot set ${propertyName} on OuterLabel`)
     //   }
     // })
   }
 
+  // NB TODO dont think this works
   toString () {
     return this.label
   }
@@ -242,6 +243,8 @@ class Label {
   get segmentQuadrant () { return this._invariants.segmentQuadrant }
   get value () { return this._invariants.value }
 
+  get hide () { return !this._variants.labelShown } // convenience function
+
   // accessors and mutators for variants
 
   get fontSize () { return this._variants.fontSize }
@@ -269,4 +272,4 @@ class Label {
   set width (newValue) { this._variants.width = newValue }
 }
 
-module.exports = Label
+module.exports = OuterLabel
