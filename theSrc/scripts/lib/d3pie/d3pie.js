@@ -65,6 +65,7 @@ class d3pie {
     this.floating = this.svgContainer.append('g').attr('class', 'floating')
 
     this.outerLabelData = []
+    this.innerLabelData = []
     this.groupLabelData = []
 
     this._init()

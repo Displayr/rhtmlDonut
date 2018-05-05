@@ -73,7 +73,6 @@
     "labelsFont": "arial",
     "labelsSize": 11,
     "labelsColor": "#333333",
-    "labelsInner": true,
     "labelsBold": false,
     "labelsMinFontSize": 8,
     "groups": null,
