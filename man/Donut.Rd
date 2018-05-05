@@ -17,8 +17,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.advanced.max.increment = 0.005, groups = NULL,
   groups.color = NULL, groups.order = "initial",
   groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8, footer = "",
-  footer.font.family = "Arial", footer.font.size = 8,
+  groups.font.size = 10, groups.min.font.size = 8, labels.inner = FALSE,
+  footer = "", footer.font.family = "Arial", footer.font.size = 8,
   footer.font.color = rgb(44, 44, 44, maxColorValue = 255), title = NULL,
   title.font.family = "arial", title.font.size = 16,
   title.font.color = "#333333", title.top.padding = 0, subtitle = "",
@@ -81,6 +81,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. The default is 10.}
 
 \item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
+
+\item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
 
 \item{footer}{is the footer text given at the bottom at the plot}
 

@@ -1,12 +1,13 @@
 import _ from 'lodash'
 import d3 from 'd3'
-import { getLabelDimensionsUsingSvgApproximation, splitIntoLines } from './labelUtils'
+import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc } from './labelUtils'
 import helpers from '../helpers'
 import math from '../math'
 import segments from '../segments'
 import OuterLabel from './outerLabel'
 import InnerLabel from './innerLabel'
 import AngleThresholdExceeded from '../interrupts/angleThresholdExceeded'
+import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
 
@@ -497,9 +498,6 @@ let labels = {
 
     try {
       let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performCollisionResolutionAlgorithm(pie, clonedAndFilteredLabelSet, useInnerLabels)
-      candidateOuterLabelSet = candidateOuterLabelSet.filter(label => label.labelShown)
-      console.log('candidateInnerLabelSet')
-      console.log(JSON.stringify(candidateInnerLabelSet, {}, 2))
 
       if (candidateOuterLabelSet.length > 0) {
         pie.outerLabelData = candidateOuterLabelSet
@@ -562,6 +560,7 @@ let labels = {
       pieCenter: pie.pieCenter,
       canvasHeight: parseFloat(pie.options.size.canvasHeight),
       innerLabelRadius: pie.innerRadius - pie.labelOffset,
+      innerRadius: pie.innerRadius,
       outerLabelRadius: pie.outerRadius + pie.labelOffset,
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
@@ -577,12 +576,15 @@ let labels = {
       pieCenter: pie.pieCenter,
       canvasHeight: parseFloat(pie.options.size.canvasHeight),
       innerLabelRadius: pie.innerRadius - pie.labelOffset,
+      innerRadius: pie.innerRadius,
       outerLabelRadius: pie.outerRadius + pie.labelOffset,
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
       maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
       minGap: parseFloat(pie.options.labels.outer.outerPadding)
     })
+
+    outerLabelSet = outerLabelSet.filter(label => label.labelShown)
 
     return {
       candidateOuterLabelSet: outerLabelSet,
@@ -793,6 +795,7 @@ let labels = {
     pieCenter,
     canvasHeight,
     innerLabelRadius,
+    innerRadius,
     outerLabelRadius,
     labelLiftOffAngle,
     horizontalPadding,
@@ -850,6 +853,7 @@ let labels = {
               label: nextLabel,
               innerLabelSet,
               innerLabelRadius,
+              innerRadius,
               pieCenter
             })
             return continueLoop
@@ -939,6 +943,7 @@ let labels = {
                 label: nextLabel,
                 innerLabelSet,
                 innerLabelRadius,
+                innerRadius,
                 pieCenter
               })
               return continueLoop
@@ -1122,26 +1127,64 @@ let labels = {
     }
   },
 
+  // Current Assumptions / Limitations:
+  //   * assuming that inner labels are added in order of fractionalValue descending,
+  //       therefore if I cant place the current label, abort, leaving the existing inner labels as is (note this assumption is not valid, but in practice code works fine)
   moveToInnerLabel: function ({
     label,
     innerLabelSet,
     innerLabelRadius,
+    innerRadius,
     pieCenter
   }) {
-    const newInnerLabel = new InnerLabel.fromOuterLabel(label)
+    const newInnerLabel = InnerLabel.fromOuterLabel(label)
     const coordAtZeroDegreesAlongInnerPieDistance = {
       x: pieCenter.x - innerLabelRadius,
       y: pieCenter.y
     }
+
     const innerRadiusLabelCoord = math.rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
     newInnerLabel.placeAlongFitLine(innerRadiusLabelCoord)
 
-    // check if it fits in innerArea
-    // check if it collides with anything else
+    if (!_.isEmpty(innerLabelSet)) {
+      const previousLabel = _.last(innerLabelSet)
+      if (newInnerLabel.intersectsWith(previousLabel, 2)) {
+        if (newInnerLabel.isHigherThan(previousLabel)) {
+          innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
+          newInnerLabel.setBottomTouchPoint(innerRadiusLabelCoord)
+        } else {
+          innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y + previousLabel.height + 2 // TODO now have a couple hard coded 2's about
+          newInnerLabel.setTopTouchPoint(innerRadiusLabelCoord)
+        }
+      }
+    }
+
+    const relativeToCenter = ({x, y}) => { return { x: x - pieCenter.x, y: y - pieCenter.y } }
+
+    const topLeftCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.topLeftCoord), 0, innerRadius, 0, 360)
+    const topRightCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.topRightCoord), 0, innerRadius, 0, 360)
+    const bottomLeftCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.bottomLeftCoord), 0, innerRadius, 0, 360)
+    const bottomRightCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.bottomRightCoord), 0, innerRadius, 0, 360)
+
+    labelLogger.debug(`checkBounds on group label ${newInnerLabel.label}`)
+    labelLogger.debug(`  topLeftPointIsInsideArc: ${topLeftCoordIsInArc}`)
+    labelLogger.debug(`  topRightPointIsInsideArc: ${topRightCoordIsInArc}`)
+    labelLogger.debug(`  bottomLeftIsInsideArc: ${bottomLeftCoordIsInArc}`)
+    labelLogger.debug(`  bottomRightIsInsideArc: ${bottomRightCoordIsInArc}`)
+
+    const labelIsContainedWithinArc = (
+      topLeftCoordIsInArc &&
+      topRightCoordIsInArc &&
+      bottomLeftCoordIsInArc &&
+      bottomRightCoordIsInArc
+    )
+
+    if (!labelIsContainedWithinArc) {
+      throw new CannotMoveToInner(label)
+    }
 
     innerLabelSet.push(newInnerLabel)
     label.labelShown = false
-    return
   }
 }
 

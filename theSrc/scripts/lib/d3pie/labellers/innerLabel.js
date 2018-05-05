@@ -1,7 +1,6 @@
 import { labelIntersect } from './labelUtils'
 
 class InnerLabel {
-
   static fromOuterLabel (label) {
     return new InnerLabel({
       variants: label._variants,
@@ -13,7 +12,6 @@ class InnerLabel {
     variants,
     invariants
   }) {
-
     this._invariants = invariants
     this._variants = variants
   }
@@ -92,6 +90,31 @@ class InnerLabel {
     return this.topLeftCoord.y > anotherLabel.topLeftCoord.y + anotherLabel.height
   }
 
+  // convenience methods
+
+  get hide () { return !this._variants.labelShown }
+
+  get topRightCoord () {
+    return {
+      x: this.topLeftCoord.x + this.width,
+      y: this.topLeftCoord.y
+    }
+  }
+
+  get bottomLeftCoord () {
+    return {
+      x: this.topLeftCoord.x,
+      y: this.topLeftCoord.y + this.height
+    }
+  }
+
+  get bottomRightCoord () {
+    return {
+      x: this.topLeftCoord.x + this.width,
+      y: this.topLeftCoord.y + this.height
+    }
+  }
+
   // accessors for invariants
 
   get color () { return this._invariants.color }
@@ -104,8 +127,6 @@ class InnerLabel {
   get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
   get segmentQuadrant () { return this._invariants.segmentQuadrant }
   get value () { return this._invariants.value }
-
-  get hide () { return !this._variants.labelShown } // convenience function
 
   // accessors and mutators for variants
 
