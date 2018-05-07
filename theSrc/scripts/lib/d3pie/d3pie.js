@@ -116,13 +116,15 @@ class d3pie {
       ? 2 * maxLabelHeight
       : 0
 
+    const labelLinePadding = 2 // TODO pull from config
+
     const { innerRadius, outerRadius, constrained, labelOffset } = this.computePieLayoutDimensions({
       canvasWidth: this.options.size.canvasWidth,
       canvasHeight: this.options.size.canvasHeight,
       labelOffsetProportion: parseFloat(this.options.size.labelOffsetPercentage.replace('/%/', '')) / 100,
       innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius.replace('/%/', '')) / 100,
-      idealLeftWhiteSpaceSize: (maxLabelWidth || 0),
-      idealRightWhiteSpaceSize: (maxLabelWidth || 0),
+      idealLeftWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
+      idealRightWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
       idealTopWhiteSpaceSize: (maxLabelHeight || 0) + extraVerticalSpace,
       idealBottomWhiteSpaceSize: (maxLabelHeight || 0) + extraVerticalSpace
     })

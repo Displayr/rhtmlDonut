@@ -40,7 +40,7 @@ const defaultSettings = {
       liftOffAngle: 30,                     // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
       labelMaxLineAngle: 90,                // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       hideWhenLessThanPercentage: null,     // pieWrapper: null HARD CODE (minAngle is used instead) . TODO investigate this variable
-      maxWidthPercentage: '25%',            // pieWrapper: settings.labelsMaxWidthPercentage. R: labels.max.width.percentage. wrap label text if label exceeds X% of canvasWidth
+      maxWidthPercentage: '30%',            // pieWrapper: settings.labelsMaxWidthPercentage. R: labels.max.width.percentage. wrap label text if label exceeds X% of canvasWidth
       iterationMinIncrement: 0.0001,        // pieWrapper: settings.labelIterationMinIncrement. R: labels.advanced.min.increment. Control labelling iterations step size
       iterationMaxIncrement: 0.005,         // pieWrapper: settings.labelIterationMaxIncrement. R: labels.advanced.max.increment. Control labelling iterations step size
       maxVerticalOffset: 100                // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90 degree mark

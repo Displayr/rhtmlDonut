@@ -147,26 +147,14 @@ class OuterLabel {
     return lineConnectorCoord
   }
 
-  // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
-  _computeTopLeftCoord () {
-    const {height, width, hemisphere, lineConnectorCoord} = this
-
-    const topLeftCoord = {}
-    topLeftCoord.y = lineConnectorCoord.y - 0.5 * height
-
-    topLeftCoord.x = (hemisphere === 'left')
-      ? lineConnectorCoord.x - width - 2
-      : lineConnectorCoord.x + 2
-
-    return topLeftCoord
-  }
-
-  placeAlongFitLine (labelContactCoord) {
-    if (labelContactCoord.y <= this.pieCenter.y) {
-      this.setBottomTouchPoint(labelContactCoord)
-    } else {
-      this.setTopTouchPoint(labelContactCoord)
-    }
+  setLineConnector (lineConnectorCoord) {
+    const {width, height, linePadding, hemisphere} = this
+    this.topLeftCoord = (hemisphere === 'left')
+      ? { x: lineConnectorCoord.x - linePadding - width, y: lineConnectorCoord.y - 0.5 * height }
+      : { x: lineConnectorCoord.x + linePadding, y: lineConnectorCoord.y - 0.5 * height }
+    this.lineConnectorCoord = lineConnectorCoord
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   // the top left/right of the label should line up with this point, but the linePadding
@@ -175,7 +163,7 @@ class OuterLabel {
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y }
       : { x: coord.x + linePadding, y: coord.y }
-    this.lineConnectorCoord = this._computeLineConnectorCoord() // TODO NB this relies on previous value of labelAngle
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
@@ -185,7 +173,7 @@ class OuterLabel {
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y - height }
       : { x: coord.x + linePadding, y: coord.y - height }
-    this.lineConnectorCoord = this._computeLineConnectorCoord() // TODO NB this relies on previous value of labelAngle
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }

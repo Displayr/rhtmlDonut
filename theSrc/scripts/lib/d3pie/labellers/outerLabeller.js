@@ -250,7 +250,7 @@ let labels = {
       fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
     }
 
-    labelDatum.placeAlongFitLine(fitLineCoord)
+    labelDatum.setLineConnector(fitLineCoord)
   },
 
   drawOuterLabelLines: function (pie) {
@@ -303,16 +303,12 @@ let labels = {
 
     switch (labelData.segmentQuadrant) {
       case 4: // top left
-        mid.y += Math.abs(end.y - originCoords.y) * 0.25
+      case 1: // top right
+        mid.y -= Math.abs(end.y - originCoords.y) * 0.25
         break
       case 3: // bottom left
-        mid.y -= Math.abs(end.y - originCoords.y) * 0.25
-        break
-      case 1: // top right
-        mid.y += Math.abs(end.y - originCoords.y) * 0.25
-        break
       case 2: // bottom right
-        mid.y -= Math.abs(end.y - originCoords.y) * 0.25
+        mid.y += Math.abs(end.y - originCoords.y) * 0.25
         break
     }
 
@@ -867,6 +863,10 @@ let labels = {
         _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
           const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
           if (!alreadyAdjustedLabel) { return continueLoop }
+
+          const immediatePreviousNeighbor = outerLabelSet[gettingPushedIndex - 1]
+          const immediatePreviousNeighborIsInInside = !immediatePreviousNeighbor.labelShown
+
           const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
           if (gettingPushedLabel.hide) { return continueLoop }
 
@@ -880,6 +880,25 @@ let labels = {
           if (gettingPushedLabel.isLowerThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
             labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
             return terminateLoop
+          }
+
+          if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+            try {
+              labels.moveToInnerLabel({
+                label: gettingPushedLabel,
+                innerLabelSet,
+                innerLabelRadius,
+                innerRadius,
+                pieCenter
+              })
+              return continueLoop
+            } catch (error) {
+              if (error.isInterrupt && error.type === 'CannotMoveToInner') {
+                labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
+              } else {
+                throw error
+              }
+            }
           }
 
           const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
@@ -996,7 +1015,7 @@ let labels = {
                 return continueLoop
               } catch (error) {
                 if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                  labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
+                  labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
                 } else {
                   throw error
                 }
@@ -1264,8 +1283,9 @@ let labels = {
 
 // helper function to print label. TODO make toString work
 function pi (labelData) {
-  const labelName = (labelData.label.length > 6)
-    ? `${labelData.label.substr(0, 6)}...`
+  const ellipsisThreshold = 11
+  const labelName = (labelData.label.length > ellipsisThreshold)
+    ? `${labelData.label.substr(0, ellipsisThreshold - 3)}...`
     : labelData.label
   // return `${labelName}(${labelData.id})`
   return labelName
