@@ -549,6 +549,9 @@ let labels = {
     const canUseInnerLabelsInTheseQuadrants = (useInnerLabels)
       // NB I cannot handle 2,3 because 3 will get placed first, but two are smaller segments,
       // and the inner collision assumes larger gets placed first
+      // ? [4, 1,2,3]
+      // ? [1,2,3]
+      // ? [2,3]
       ? [3]
       : []
 
@@ -828,15 +831,9 @@ let labels = {
     const inBounds = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex >= 0 && candidateIndex < arrayLength
     const isLast = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex === arrayLength - 1
 
-    const pi = (labelOrIndex) => {
-      return (_.isNumber(labelOrIndex))
-        ? `${outerLabelSet[labelOrIndex].id}(${outerLabelSet[labelOrIndex].label.substr(0, 6)})`
-        : `${labelOrIndex.id}(${labelOrIndex.label.substr(0, 6)})`
-    }
-
     labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
     _(outerLabelSet).each((frontierLabel, frontierIndex) => {
-      labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierIndex)}`)
+      labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierLabel)}`)
       if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
       if (isLast(frontierIndex)) { return terminateLoop }
       if (frontierLabel.hide) { return continueLoop }
@@ -886,7 +883,7 @@ let labels = {
           const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
           const deltaY = newY - gettingPushedLabel.topLeftCoord.y
           if (newY + gettingPushedLabel.height > canvasHeight) {
-            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedIndex)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
+            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
             phase1HitBottom = true
 
             gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: canvasHeight - minGap })  // TODO can I use adjustLabelToNewY ?
@@ -907,7 +904,7 @@ let labels = {
           })
 
           const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
-          labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedIndex)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
+          labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             throw new AngleThresholdExceeded(gettingPushedLabel)
@@ -926,7 +923,7 @@ let labels = {
 
       labelLogger.debug(`${lp} start. Size ${reversedLabelSet.length}`)
       _(reversedLabelSet).each((frontierLabel, frontierIndex) => {
-        labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierIndex)}`)
+        labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
         if (frontierLabel.hide) { return continueLoop }
@@ -990,7 +987,7 @@ let labels = {
 
             const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
 
-            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedIndex)} up by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
+            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} up by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
             if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
               throw new AngleThresholdExceeded(gettingPushedLabel)
@@ -1183,9 +1180,19 @@ let labels = {
       throw new CannotMoveToInner(label)
     }
 
+    labelLogger.info(`placed ${pi(label)} inside`) // you are here
     innerLabelSet.push(newInnerLabel)
     label.labelShown = false
   }
+}
+
+// helper function to print label. TODO make toString work
+function pi (labelData) {
+  const labelName = (labelData.label.length > 6)
+    ? `${labelData.label.substr(0, 6)}...`
+    : labelData.label
+  // return `${labelName}(${labelData.id})`
+  return labelName
 }
 
 module.exports = labels
