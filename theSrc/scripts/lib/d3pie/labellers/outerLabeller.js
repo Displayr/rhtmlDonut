@@ -11,6 +11,10 @@ import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
 
+// const inclusiveBetween = (a, b, c) => (b >= a && b <= c)
+// const exclusiveBetween = (a, b, c) => (b > a && b < c)
+const between = (a, b, c) => (b >= a && b < c)
+
 let labels = {
   // TODO break into small phases and combine with buildLabelSet
   preprocessLabelSet ({
@@ -204,7 +208,6 @@ let labels = {
     const angle = labelDatum.segmentAngleMidpoint
     let fitLineCoord = null
 
-    const between = (a, b, c) => (b >= a && b < c)
     const highYOffSetAngle = (angle) => (between(90 - labelLiftOffAngle, angle, 90 + labelLiftOffAngle) || between(270 - labelLiftOffAngle, angle, 270 + labelLiftOffAngle))
     const pointAtZeroDegrees = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
 
@@ -377,7 +380,8 @@ let labels = {
         break
     }
 
-    return [originCoords, mid, end]
+    return [originCoords, end]
+    // return [originCoords, mid, end]
   },
 
   drawOuterLabels: function (pie) {
@@ -549,10 +553,10 @@ let labels = {
     const canUseInnerLabelsInTheseQuadrants = (useInnerLabels)
       // NB I cannot handle 2,3 because 3 will get placed first, but two are smaller segments,
       // and the inner collision assumes larger gets placed first
-      // ? [4, 1,2,3]
-      // ? [1,2,3]
-      // ? [2,3]
-      ? [3]
+      // ? [4, 1, 2, 3]
+      ? [1, 2, 3]
+      // ? [2, 3]
+      // ? [3]
       : []
 
     labels.performTwoPhaseLabelAdjustment({
@@ -612,7 +616,7 @@ let labels = {
     }
 
     let newLabelConnectorY = null
-    // the newY could be the lineConector coord or it could be the top of the label , in whic case the lineConnector is the bottom of the label
+    // the newY could be the lineConnector coord or it could be the top of the label , in which case the lineConnector is the bottom of the label
     if (anchor === 'top') {
       if (quadrant === 4 || quadrant === 1) {
         newLabelConnectorY = newY + labelDatum.height
@@ -831,9 +835,17 @@ let labels = {
     const inBounds = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex >= 0 && candidateIndex < arrayLength
     const isLast = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex === arrayLength - 1
 
+    const getPreviousShownLabel = (labelSet, startingIndex) => {
+      while (startingIndex - 1 >= 0) {
+        if (labelSet[startingIndex - 1].labelShown) { return labelSet[startingIndex - 1] }
+        startingIndex--
+      }
+      return null
+    }
+
     labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
     _(outerLabelSet).each((frontierLabel, frontierIndex) => {
-      labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierLabel)}`)
+      labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
       if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
       if (isLast(frontierIndex)) { return terminateLoop }
       if (frontierLabel.hide) { return continueLoop }
@@ -844,6 +856,7 @@ let labels = {
       if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyAbove(frontierLabel)) {
         labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
 
+        // NB this option is only used on the label immediately after the frontier. This achieves the alternating pattern
         if (canUseInnerLabelsInTheseQuadrants.includes(nextLabel.segmentQuadrant)) {
           try {
             labels.moveToInnerLabel({
@@ -853,10 +866,10 @@ let labels = {
               innerRadius,
               pieCenter
             })
-            return continueLoop
+            // return continueLoop
           } catch (error) {
             if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-              labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner. Proceed with adjustment`)
+              labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
             } else {
               throw error
             }
@@ -864,7 +877,8 @@ let labels = {
         }
 
         _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
-          const alreadyAdjustedLabel = outerLabelSet[gettingPushedIndex - 1]
+          const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
+          if (!alreadyAdjustedLabel) { return continueLoop }
           const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
           if (gettingPushedLabel.hide) { return continueLoop }
 
@@ -916,6 +930,21 @@ let labels = {
     })
 
     if (phase1HitBottom) {
+      // aww shit now we gotta throw away our attempt at inner labelling and start again !
+      // XXX NB TODO strictly speaking we can only throw out our quadrant worth of inner labels
+
+      console.log(`resetting labelShown for ${_(innerLabelSet).map('id').value()}`)
+      _(innerLabelSet).each(innerLabel => {
+        const matchingOuterLabel = _.find(outerLabelSet, ({id: outerLabelId}) => outerLabelId === innerLabel.id)
+        if (matchingOuterLabel) {
+          matchingOuterLabel.labelShown = true
+          matchingOuterLabel.setBottomTouchPoint({x: pieCenter.x, y: canvasHeight - minGap})  // TODO can I use adjustLabelToNewY ?
+        } else {
+          console.error(`should have found matching outer label for inner label ${pi(innerLabel)}`)
+        }
+      })
+      innerLabelSet.length = 0 // NB must preserve array references !
+
       // use the original sorted by Y list; when we hit bottom mid algorithm we just placed all the other labels at the bottom, so we can no longer use the label positions for ordering
       const reversedLabelSet = _.reverse(outerLabelSet)
       let lp = `${hemisphere}:UP` // lp = logPrefix
@@ -923,7 +952,7 @@ let labels = {
 
       labelLogger.debug(`${lp} start. Size ${reversedLabelSet.length}`)
       _(reversedLabelSet).each((frontierLabel, frontierIndex) => {
-        labelLogger.debug(`${lp} frontier(${frontierIndex}): ${pi(frontierLabel)}`)
+        labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
         if (frontierLabel.hide) { return continueLoop }
@@ -934,6 +963,7 @@ let labels = {
         if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyBelow(frontierLabel)) {
           labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
 
+          // NB this option is only used on the label immediately after the frontier. This achieves the alternating pattern
           if (canUseInnerLabelsInTheseQuadrants.includes(nextLabel.segmentQuadrant)) {
             try {
               labels.moveToInnerLabel({
@@ -943,10 +973,10 @@ let labels = {
                 innerRadius,
                 pieCenter
               })
-              return continueLoop
+              // return continueLoop
             } catch (error) {
               if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner. Proceed with adjustment`)
+                labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
               } else {
                 throw error
               }
@@ -954,13 +984,37 @@ let labels = {
           }
 
           _(_.range(frontierIndex + 1, reversedLabelSet.length)).each((gettingPushedIndex) => {
-            const alreadyAdjustedLabel = reversedLabelSet[gettingPushedIndex - 1]
+            const alreadyAdjustedLabel = getPreviousShownLabel(reversedLabelSet, gettingPushedIndex)
+            if (!alreadyAdjustedLabel) { return continueLoop }
+
+            const immediatePreviousNeighbor = reversedLabelSet[gettingPushedIndex - 1]
+            const immediatePreviousNeighborIsInInside = !immediatePreviousNeighbor.labelShown
+
             const gettingPushedLabel = reversedLabelSet[gettingPushedIndex]
             if (gettingPushedLabel.hide) { return continueLoop }
 
             if (gettingPushedLabel.isHigherThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
               labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
               return terminateLoop
+            }
+
+            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+              try {
+                labels.moveToInnerLabel({
+                  label: gettingPushedLabel,
+                  innerLabelSet,
+                  innerLabelRadius,
+                  innerRadius,
+                  pieCenter
+                })
+                return continueLoop
+              } catch (error) {
+                if (error.isInterrupt && error.type === 'CannotMoveToInner') {
+                  labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
+                } else {
+                  throw error
+                }
+              }
             }
 
             const newY = alreadyAdjustedLabel.topLeftCoord.y - (gettingPushedLabel.height + minGap)
@@ -1098,7 +1152,6 @@ let labels = {
 
     let fontSizeDistribution = _(labelSet).countBy('fontSize')
 
-    const between = (a, b, c) => (b >= a && b < c)
     let densities = _(labelSet)
       .countBy(labelDatum => {
         if (between(60, labelDatum.segmentAngleMidpoint, 120)) { return 'top' }
@@ -1135,6 +1188,9 @@ let labels = {
     pieCenter
   }) {
     const newInnerLabel = InnerLabel.fromOuterLabel(label)
+    newInnerLabel.innerLabelRadius = innerLabelRadius
+    newInnerLabel.innerRadius = innerRadius
+    newInnerLabel.pieCenter = pieCenter
     const coordAtZeroDegreesAlongInnerPieDistance = {
       x: pieCenter.x - innerLabelRadius,
       y: pieCenter.y
@@ -1145,13 +1201,47 @@ let labels = {
 
     if (!_.isEmpty(innerLabelSet)) {
       const previousLabel = _.last(innerLabelSet)
-      if (newInnerLabel.intersectsWith(previousLabel, 2)) {
-        if (newInnerLabel.isHigherThan(previousLabel)) {
-          innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
-          newInnerLabel.setBottomTouchPoint(innerRadiusLabelCoord)
-        } else {
+
+      const rightHemiAndNewShouldBeLower = (newInnerLabel.hemisphere === 'right' && newInnerLabel.segmentAngleMidpoint > previousLabel.segmentAngleMidpoint)
+      const topLeftHemiAndNewShouldBeLower = (newInnerLabel.hemisphere === 'left' && between(0, newInnerLabel.segmentAngleMidpoint, 90) && newInnerLabel.segmentAngleMidpoint < previousLabel.segmentAngleMidpoint)
+      const bottomLeftHemiAndNewShouldBeLower = (newInnerLabel.hemisphere === 'left' && between(270, newInnerLabel.segmentAngleMidpoint, 360) && newInnerLabel.segmentAngleMidpoint < previousLabel.segmentAngleMidpoint)
+
+      // ignore cross hemispheres
+      const newLabelShouldBeBelowPreviousLabel = (
+        rightHemiAndNewShouldBeLower ||
+        topLeftHemiAndNewShouldBeLower ||
+        bottomLeftHemiAndNewShouldBeLower
+      )
+
+      const newLabelIsInOrderVertically = (newLabelShouldBeBelowPreviousLabel)
+       ? newInnerLabel.isLowerThan(previousLabel)
+       : newInnerLabel.isHigherThan(previousLabel)
+
+      if (newInnerLabel.intersectsWith(previousLabel, 2) || !newLabelIsInOrderVertically) {
+        if (newLabelShouldBeBelowPreviousLabel) {
+          labelLogger.debug(`inner collision between ${pi(previousLabel)} v ${pi(newInnerLabel)}(new). Moving new down`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y + previousLabel.height + 2 // TODO now have a couple hard coded 2's about
+
+          // place X along innerLabelRadius based on new y position
+          // Given the yOffset and the labelRadius, use pythagorem to compute the xOffset that places label along labelRadius
+          const xOffset = Math.sqrt(Math.pow(innerLabelRadius, 2) - Math.pow(Math.abs(pieCenter.y - innerRadiusLabelCoord.y), 2))
+          innerRadiusLabelCoord.x = (newInnerLabel.hemisphere === 'left')
+            ? pieCenter.x - xOffset
+            : pieCenter.x + xOffset
+
           newInnerLabel.setTopTouchPoint(innerRadiusLabelCoord)
+        } else {
+          labelLogger.debug(`inner collision between ${pi(previousLabel)} v ${pi(newInnerLabel)}(new). Moving new up`)
+          innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
+
+          // place X along innerLabelRadius based on new y position
+          // Given the yOffset and the labelRadius, use pythagorem to compute the xOffset that places label along labelRadius
+          const xOffset = Math.sqrt(Math.pow(innerLabelRadius, 2) - Math.pow(Math.abs(pieCenter.y - innerRadiusLabelCoord.y), 2))
+          innerRadiusLabelCoord.x = (newInnerLabel.hemisphere === 'left')
+            ? pieCenter.x - xOffset
+            : pieCenter.x + xOffset
+
+          newInnerLabel.setBottomTouchPoint(innerRadiusLabelCoord)
         }
       }
     }
@@ -1163,12 +1253,6 @@ let labels = {
     const bottomLeftCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.bottomLeftCoord), 0, innerRadius, 0, 360)
     const bottomRightCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.bottomRightCoord), 0, innerRadius, 0, 360)
 
-    labelLogger.debug(`checkBounds on group label ${newInnerLabel.label}`)
-    labelLogger.debug(`  topLeftPointIsInsideArc: ${topLeftCoordIsInArc}`)
-    labelLogger.debug(`  topRightPointIsInsideArc: ${topRightCoordIsInArc}`)
-    labelLogger.debug(`  bottomLeftIsInsideArc: ${bottomLeftCoordIsInArc}`)
-    labelLogger.debug(`  bottomRightIsInsideArc: ${bottomRightCoordIsInArc}`)
-
     const labelIsContainedWithinArc = (
       topLeftCoordIsInArc &&
       topRightCoordIsInArc &&
@@ -1176,8 +1260,14 @@ let labels = {
       bottomRightCoordIsInArc
     )
 
+    labelLogger.debug(`attempt to move ${pi(newInnerLabel)} to inner : ${labelIsContainedWithinArc ? 'succeed' : 'fail'}`)
+
     if (!labelIsContainedWithinArc) {
-      throw new CannotMoveToInner(label)
+      throw new CannotMoveToInner(label, 'out of bounds after adjustment')
+    }
+
+    if (newInnerLabel.angleBetweenLabelAndRadial > 45) {
+      throw new CannotMoveToInner(label, `label line angle excceds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
     }
 
     labelLogger.info(`placed ${pi(label)} inside`) // you are here

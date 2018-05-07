@@ -5,6 +5,8 @@ const _ = require('lodash')
 const quadrants = [4, 1, 2, 3]
 const math = require('../math')
 
+// looks like some (e.g. pieCenter dont have get / set ) - same with innerlabel
+
 class OuterLabel {
   constructor ({
     angleExtent,

@@ -1,4 +1,8 @@
+import { lineLength } from '../../geometryUtils'
 import { labelIntersect } from './labelUtils'
+
+const _ = require('lodash')
+const math = require('../math')
 
 class InnerLabel {
   static fromOuterLabel (label) {
@@ -52,6 +56,8 @@ class InnerLabel {
   placeAlongFitLine (lineConnectorCoord) {
     this.lineConnectorCoord = lineConnectorCoord
     this.topLeftCoord = this._computeTopLeftCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setTopTouchPoint (coord) {
@@ -60,6 +66,8 @@ class InnerLabel {
       ? { x: coord.x - width, y: coord.y }
       : { x: coord.x, y: coord.y }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setBottomTouchPoint (coord) {
@@ -68,6 +76,34 @@ class InnerLabel {
       ? { y: coord.y - height, x: coord.x - width }
       : { y: coord.y - height, x: coord.x }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  // https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine (Cosine Rule)
+  _computeAngleBetweenLabelLineAndRadialLine () {
+    const {lineConnectorCoord, pieCenter, innerRadius, segmentAngleMidpoint} = this
+
+    const pointAtZeroDegrees = {x: pieCenter.x - innerRadius, y: pieCenter.y}
+    const innerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
+
+    // consider a triangle with three sides
+    // a : line from pieCenter to innerRadiusCoord
+    // b : line from innerRadiusCoord to lineConnectorCoord
+    // c : line from lineConnectorCoord to pieCenter
+
+    // we know all three coords, therefore can calculate lengths of each line
+    // we can use cosine rule to solve for angle C. We want the inverse angle of C, so just subtract from 180
+
+    const a = lineLength(pieCenter, innerRadiusCoord)
+    const b = lineLength(innerRadiusCoord, lineConnectorCoord)
+    const c = lineLength(lineConnectorCoord, pieCenter)
+
+    // Cosine rule : C = Arccos ((a2 + b2 - c2) / 2ab)
+    const angleCinRadians = Math.acos((Math.pow(a, 2) + Math.pow(b, 2) - Math.pow(c, 2)) / (2 * a * b))
+    const angleCInDegrees = math.toDegrees(angleCinRadians)
+
+    return (_.isNaN(angleCInDegrees)) ? 0 : angleCInDegrees
   }
 
   intersectsWith (anotherLabel) {
@@ -136,6 +172,12 @@ class InnerLabel {
   get height () { return this._variants.height }
   set height (newValue) { this._variants.height = newValue }
 
+  get innerLabelRadius () { return this._variants.innerLabelRadius }
+  set innerLabelRadius (newValue) { this._variants.innerLabelRadius = newValue }
+
+  get innerRadius () { return this._variants.innerRadius }
+  set innerRadius (newValue) { this._variants.innerRadius = newValue }
+
   get labelAngle () { return this._variants.labelAngle }
   set labelAngle (newValue) { this._variants.labelAngle = newValue }
 
@@ -147,6 +189,9 @@ class InnerLabel {
 
   get lineConnectorCoord () { return this._variants.lineConnectorCoord }
   set lineConnectorCoord (newValue) { this._variants.lineConnectorCoord = newValue }
+
+  get pieCenter () { return this._variants.pieCenter }
+  set pieCenter (newValue) { this._variants.pieCenter = newValue }
 
   get topLeftCoord () { return this._variants.topLeftCoord }
   set topLeftCoord (newValue) { this._variants.topLeftCoord = newValue }
