@@ -32,6 +32,7 @@ const defaultSettings = {
       innerLabels: false,                   // pieWrapper: settings.labelsInner, R: labels.inner
       displayPercentage: false,             // pieWrapper: settings.valuesDisplay, R: values.display.as
       displayDecimals: 1,                   // pieWrapper: settings.valuesDec, R: values.decimal.places
+      linePadding: 2,                       // pieWrapper: settings.linePadding, R: labels.line.padding
       innerPadding: 1,                      // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
       outerPadding: 1,                      // pieWrapper: settings.labelsOuterPadding, R: labels.outer.padding
       minLabelOffset: 5,                    // TODO use these values and expose as configurable

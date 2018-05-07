@@ -19,6 +19,7 @@ class OuterLabel {
     label,
     totalValue,
     value,
+    linePadding = 2,
     displayPercentage = false,
     displayDecimals = 0,
     displayPrefix = '',
@@ -49,6 +50,7 @@ class OuterLabel {
       id,
       label,
       labelText,
+      linePadding,
       segmentAngleMidpoint,
       segmentQuadrant,
       value
@@ -133,14 +135,14 @@ class OuterLabel {
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeLineConnectorCoord () {
-    const {height, width, hemisphere, topLeftCoord} = this
+    const {height, width, linePadding, hemisphere, topLeftCoord} = this
 
     const lineConnectorCoord = {}
     lineConnectorCoord.y = topLeftCoord.y + 0.5 * height
 
     lineConnectorCoord.x = (hemisphere === 'left')
-      ? topLeftCoord.x + width + 2
-      : topLeftCoord.x - 2
+      ? topLeftCoord.x + width + linePadding
+      : topLeftCoord.x - linePadding
 
     return lineConnectorCoord
   }
@@ -159,28 +161,30 @@ class OuterLabel {
     return topLeftCoord
   }
 
-  placeAlongFitLine (lineConnectorCoord) {
-    this.lineConnectorCoord = lineConnectorCoord
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.topLeftCoord = this._computeTopLeftCoord()
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  placeAlongFitLine (labelContactCoord) {
+    if (labelContactCoord.y <= this.pieCenter.y) {
+      this.setBottomTouchPoint(labelContactCoord)
+    } else {
+      this.setTopTouchPoint(labelContactCoord)
+    }
   }
 
+  // the top left/right of the label should line up with this point, but the linePadding
   setTopTouchPoint (coord) {
-    const {width, hemisphere} = this
+    const {width, linePadding, hemisphere} = this
     this.topLeftCoord = (hemisphere === 'left')
-      ? { x: coord.x - width, y: coord.y }
-      : { x: coord.x, y: coord.y }
+      ? { x: coord.x - width - linePadding, y: coord.y }
+      : { x: coord.x + linePadding, y: coord.y }
     this.lineConnectorCoord = this._computeLineConnectorCoord() // TODO NB this relies on previous value of labelAngle
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setBottomTouchPoint (coord) {
-    const {width, height, hemisphere} = this
+    const {width, height, linePadding, hemisphere} = this
     this.topLeftCoord = (hemisphere === 'left')
-      ? { y: coord.y - height, x: coord.x - width }
-      : { y: coord.y - height, x: coord.x }
+      ? { x: coord.x - width - linePadding, y: coord.y - height }
+      : { x: coord.x + linePadding, y: coord.y - height }
     this.lineConnectorCoord = this._computeLineConnectorCoord() // TODO NB this relies on previous value of labelAngle
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
@@ -266,6 +270,7 @@ class OuterLabel {
   get id () { return this._invariants.id }
   get label () { return this._invariants.label }
   get labelText () { return this._invariants.labelText }
+  get linePadding () { return this._invariants.linePadding }
   get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
   get segmentQuadrant () { return this._invariants.segmentQuadrant }
   get value () { return this._invariants.value }

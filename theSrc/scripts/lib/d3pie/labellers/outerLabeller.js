@@ -240,6 +240,8 @@ let labels = {
 
       if (intersection) {
         fitLineCoord = intersection
+        if (fitLineCoord.y < 0) { fitLineCoord = 0 }
+        if (fitLineCoord.y + labelDatum.height > canvasHeight) { fitLineCoord.y = canvasHeight - labelDatum.height }
       } else {
         labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label ${labelDatum.label}`)
         fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
@@ -551,12 +553,7 @@ let labels = {
 
     const innerLabelSet = []
     const canUseInnerLabelsInTheseQuadrants = (useInnerLabels)
-      // NB I cannot handle 2,3 because 3 will get placed first, but two are smaller segments,
-      // and the inner collision assumes larger gets placed first
-      // ? [4, 1, 2, 3]
       ? [1, 2, 3]
-      // ? [2, 3]
-      // ? [3]
       : []
 
     labels.performTwoPhaseLabelAdjustment({
@@ -604,36 +601,37 @@ let labels = {
     newY,
     labelDatum,
     labelRadius,
+    linePadding = 2,
     yRange,
     labelLiftOffAngle,
     pieCenter
   }) {
     let quadrant = null
-    if (newY - pieCenter > 0) {
+    if (newY - pieCenter.y > 0) {
       quadrant = (labelDatum.hemisphere === 'left') ? 3 : 2
     } else {
       quadrant = (labelDatum.hemisphere === 'left') ? 4 : 1
     }
 
-    let newLabelConnectorY = null
+    let bestFitLineY = null
     // the newY could be the lineConnector coord or it could be the top of the label , in which case the lineConnector is the bottom of the label
     if (anchor === 'top') {
       if (quadrant === 4 || quadrant === 1) {
-        newLabelConnectorY = newY + labelDatum.height
+        bestFitLineY = newY + labelDatum.height
       } else {
-        newLabelConnectorY = newY
+        bestFitLineY = newY
       }
     } else if (anchor === 'bottom') {
       if (quadrant === 4 || quadrant === 1) {
-        newLabelConnectorY = newY
+        bestFitLineY = newY
       } else {
-        newLabelConnectorY = newY - labelDatum.height
+        bestFitLineY = newY - labelDatum.height
       }
     } else {
       throw new Error('not top nor bottom so wtf mate')
     }
 
-    const yOffset = Math.abs(pieCenter.y - newLabelConnectorY)
+    const yOffset = Math.abs(pieCenter.y - bestFitLineY)
 
     if (yOffset > yRange) {
       throw new Error(`yOffset(${yOffset}) cannot be greater than yRange(${yRange})`)
@@ -665,20 +663,10 @@ let labels = {
       y: newY
     }
 
-    // drawTheseCoords.push({ coord: newLineConnectorCoord, color: 'green', note: labelDatum.label})
-
     if (anchor === 'top') {
-      if (quadrant === 4 || quadrant === 1) {
-        labelDatum.setTopTouchPoint(newLineConnectorCoord)
-      } else {
-        labelDatum.setBottomTouchPoint(newLineConnectorCoord)
-      }
+      labelDatum.setTopTouchPoint(newLineConnectorCoord)
     } else {
-      if (quadrant === 4 || quadrant === 1) {
-        labelDatum.setTopTouchPoint(newLineConnectorCoord)
-      } else {
-        labelDatum.setBottomTouchPoint(newLineConnectorCoord)
-      }
+      labelDatum.setBottomTouchPoint(newLineConnectorCoord)
     }
   },
 
@@ -767,8 +755,8 @@ let labels = {
 
     _(leftLabelsOverTop).each(useYFromLookupTableAndCorrectX(newYPositions, 'top'))
     _(rightLabelsOverTop).each(useYFromLookupTableAndCorrectX(newYPositions, 'top'))
-    _(leftLabelsUnderBottom).each(useYFromLookupTableAndCorrectX(newYPositions, 'bottom'))
-    _(rightLabelsUnderBottom).each(useYFromLookupTableAndCorrectX(newYPositions, 'bottom'))
+    _(leftLabelsUnderBottom).each(useYFromLookupTableAndCorrectX(newYPositions, 'top'))
+    _(rightLabelsUnderBottom).each(useYFromLookupTableAndCorrectX(newYPositions, 'top'))
 
     const labelsOverlappingRightEdgeCount = _(labelSet)
       .filter((datum) => { return datum.topLeftCoord.x + datum.width > canvasWidth })
@@ -827,8 +815,8 @@ let labels = {
     */
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
-    const terminateLoop = false // NB this is odd. It's done for readability to make it more obvious what 'return false' does in a _.each loop
-    const continueLoop = true // NB this is odd. It's done for readability to make it more obvious what 'return true' does in a _.each loop
+    const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
+    const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
     let phase1HitBottom = false
 
     let lp = `${hemisphere}:DOWN` // lp = logPrefix
@@ -930,10 +918,8 @@ let labels = {
     })
 
     if (phase1HitBottom) {
-      // aww shit now we gotta throw away our attempt at inner labelling and start again !
-      // XXX NB TODO strictly speaking we can only throw out our quadrant worth of inner labels
-
-      console.log(`resetting labelShown for ${_(innerLabelSet).map('id').value()}`)
+      // throw away our attempt at inner labelling and start again wrt inner labels!
+      // XXX NB TODO strictly speaking we can only throw out our quadrant/hemisphere worth of inner labels
       _(innerLabelSet).each(innerLabel => {
         const matchingOuterLabel = _.find(outerLabelSet, ({id: outerLabelId}) => outerLabelId === innerLabel.id)
         if (matchingOuterLabel) {
