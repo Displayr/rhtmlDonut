@@ -91,7 +91,8 @@ class d3pie {
       displayPercentage: this.options.labels.outer.displayPercentage,
       displayDecimals: parseFloat(this.options.labels.outer.displayDecimals),
       displayPrefix: this.options.data.prefix,
-      displaySuffix: this.options.data.suffix
+      displaySuffix: this.options.data.suffix,
+      innerPadding: parseFloat(this.options.labels.outer.innerPadding)
     })
 
     this.outerLabelData = outerLabeller.preprocessLabelSet({

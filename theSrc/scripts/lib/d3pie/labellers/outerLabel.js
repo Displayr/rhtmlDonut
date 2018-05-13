@@ -16,10 +16,11 @@ class OuterLabel {
     fontFamily,
     group,
     id,
+    innerPadding,
     label,
     totalValue,
     value,
-    linePadding = 2,
+    linePadding = 2, // space between lineConnector and labelText
     displayPercentage = false,
     displayDecimals = 0,
     displayPrefix = '',
@@ -48,6 +49,7 @@ class OuterLabel {
       group,
       hemisphere,
       id,
+      innerPadding,
       label,
       labelText,
       linePadding,
@@ -64,6 +66,7 @@ class OuterLabel {
       labelOffset: null,
       labelShown: true,
       labelTextLines: null,
+      lineHeight: null,
       lineConnectorCoord: {},
       outerRadius: null,
       pieCenter: null,
@@ -135,10 +138,14 @@ class OuterLabel {
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeLineConnectorCoord () {
-    const {height, width, linePadding, hemisphere, topLeftCoord} = this
+    const { width, linePadding, hemisphere, topLeftCoord, lineHeight, innerPadding, labelTextLines } = this
+    const numTextRows = labelTextLines.length
 
+    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
     const lineConnectorCoord = {}
-    lineConnectorCoord.y = topLeftCoord.y + 0.5 * height
+    lineConnectorCoord.y = (topLeftCoord.y < this.pieCenter.y)
+      ? topLeftCoord.y + (numTextRows - 1) + (innerPadding + lineHeight) + 0.5 * lineHeight
+      : topLeftCoord.y + 0.5 * lineHeight
 
     lineConnectorCoord.x = (hemisphere === 'left')
       ? topLeftCoord.x + width + linePadding
@@ -148,10 +155,18 @@ class OuterLabel {
   }
 
   setLineConnector (lineConnectorCoord) {
-    const {width, height, linePadding, hemisphere} = this
+    const { lineHeight, innerPadding, labelTextLines } = this
+    const numTextRows = labelTextLines.length
+
+    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
+    const topLeftY = (lineConnectorCoord.y < this.pieCenter.y)
+      ? lineConnectorCoord.y - 0.5 * lineHeight - (lineHeight * (numTextRows - 1)) - (innerPadding * (numTextRows - 1))
+      : lineConnectorCoord.y - 0.5 * lineHeight
+
+    const {width, linePadding, hemisphere} = this
     this.topLeftCoord = (hemisphere === 'left')
-      ? { x: lineConnectorCoord.x - linePadding - width, y: lineConnectorCoord.y - 0.5 * height }
-      : { x: lineConnectorCoord.x + linePadding, y: lineConnectorCoord.y - 0.5 * height }
+      ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
+      : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
@@ -256,6 +271,7 @@ class OuterLabel {
   get fractionalValue () { return this._invariants.fractionalValue }
   get hemisphere () { return this._invariants.hemisphere }
   get id () { return this._invariants.id }
+  get innerPadding () { return this._invariants.innerPadding }
   get label () { return this._invariants.label }
   get labelText () { return this._invariants.labelText }
   get linePadding () { return this._invariants.linePadding }
@@ -270,6 +286,9 @@ class OuterLabel {
 
   get height () { return this._variants.height }
   set height (newValue) { this._variants.height = newValue }
+
+  get lineHeight () { return this._variants.lineHeight }
+  set lineHeight (newValue) { this._variants.lineHeight = newValue }
 
   get labelAngle () { return this._variants.labelAngle }
   set labelAngle (newValue) { this._variants.labelAngle = newValue }

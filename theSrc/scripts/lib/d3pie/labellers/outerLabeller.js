@@ -29,7 +29,7 @@ let labels = {
     maxLabelWidth
   }) {
     let filteredLabelSet = labelSet.map(label => {
-      const { width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
+      const { lineHeight, width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
         parentContainer,
         labelText: label.labelText,
         fontSize: label.fontSize,
@@ -39,6 +39,7 @@ let labels = {
       })
 
       return Object.assign(label, {
+        lineHeight,
         width,
         height,
         labelTextLines
@@ -69,7 +70,7 @@ let labels = {
         _(descendingValuesLabelSet)
           .each((label, i) => {
             const newFontSize = Math.round(scale(i))
-            const { width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
+            const { lineHeight, width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
               parentContainer,
               labelText: label.labelText,
               fontSize: newFontSize,
@@ -80,6 +81,7 @@ let labels = {
 
             Object.assign(label, {
               fontSize: newFontSize,
+              lineHeight,
               width,
               height,
               labelTextLines
@@ -1075,6 +1077,7 @@ let labels = {
     const sumHeightAndPadding = _(dimensions).map('height').sum() + (lines.length - 1) * innerPadding
 
     return {
+      lineHeight: dimensions[0].height,
       width: widestLine,
       height: sumHeightAndPadding,
       labelTextLines: lines
@@ -1090,8 +1093,9 @@ let labels = {
     displayPercentage,
     displayDecimals,
     displayPrefix,
-    displaySuffix
-  }) {
+    displaySuffix,
+    innerPadding
+}) {
     let cumulativeValue = 0
     return labelData
       .filter(({value}) => { return value * 360 / totalSize >= minAngle })
@@ -1108,6 +1112,7 @@ let labels = {
           fontSize,
           group: datum.group,
           id: datum.id,
+          innerPadding,
           label: datum.label,
           totalValue: totalSize,
           value: datum.value,
