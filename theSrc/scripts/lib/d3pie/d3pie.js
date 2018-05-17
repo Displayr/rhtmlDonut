@@ -133,6 +133,11 @@ class d3pie {
     this.outerRadius = outerRadius
     this.labelOffset = labelOffset
 
+    const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
+    this.maxVerticalOffset = (_.isNull(this.options.labels.outer.maxVerticalOffset))
+      ? largestAllowableMaxVerticalOffset
+      : Math.min(largestAllowableMaxVerticalOffset, this.options.labels.outer.maxVerticalOffset)
+
     this.pieCenter = {
       x: this.options.size.canvasWidth / 2,
       y: this.options.size.canvasHeight / 2
@@ -187,6 +192,10 @@ class d3pie {
 
     // position the title and subtitle
     segments.addSegmentEventHandlers(this)
+
+    if (this.options.debug.draw_placement_lines) {
+      outerLabeller.drawPlacementLines(this)
+    }
   }
 
   computePieLayoutDimensions ({

@@ -16,6 +16,78 @@ const labelLogger = rootLog.getLogger('label')
 const between = (a, b, c) => (b >= a && b < c)
 
 let labels = {
+  drawPlacementLines (pie) {
+    const maxFontSize = _(pie.outerLabelData).map('fontSize').max()
+
+    // red dots : the initial placement line
+    _.range(0, 360, 2).map(angle => {
+      const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
+        angle,
+        labelHeight: 10, // made up
+        labelOffset: pie.labelOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        outerRadius: pie.outerRadius,
+        pieCenter: pie.pieCenter,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight),
+        maxFontSize,
+        maxVerticalOffset: pie.maxVerticalOffset
+      })
+      helpers.showPoint(pie.svg, fitLineCoord, 'red')
+    })
+
+    // green dots : the adjusted label placement line
+    const highestPoint = pie.pieCenter.y - (pie.outerRadius + pie.maxVerticalOffset)
+    const lowestPoint = pie.pieCenter.y + (pie.outerRadius + pie.maxVerticalOffset)
+    _([0, 180]).each(startAngle => {
+      _.range(highestPoint, lowestPoint, 5).map(yCoord => {
+        const fakeLabel = new OuterLabel({
+          angleExtent: 1 * 360 / 100,
+          angleStart: startAngle,
+          color: 'black',
+          fontFamily: 'arial',
+          fontSize: 12,
+          id: 'test',
+          innerPadding: parseFloat(pie.options.labels.outer.innerPadding),
+          label: 'test',
+          totalValue: 100,
+          value: 2
+        })
+
+        // compute label height and labelTextLines and lineHeight
+        const { lineHeight, width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
+          parentContainer: pie.svg,
+          labelText: fakeLabel.labelText,
+          fontSize: fakeLabel.fontSize,
+          fontFamily: fakeLabel.fontFamily,
+          maxLabelWidth: parseFloat(pie.options.labels.outer.maxWidthPercentage.replace('/%/', '')) / 100 * pie.options.size.canvasWidth,
+          innerPadding: parseFloat(pie.options.labels.outer.innerPadding)
+        })
+
+        Object.assign(fakeLabel, {
+          lineHeight,
+          width,
+          height,
+          labelTextLines,
+          pieCenter: pie.pieCenter,
+          labelOffset: pie.labelOffset,
+          outerRadius: pie.outerRadius
+        })
+
+        labels.adjustLabelToNewY({
+          parentContainer: pie.svg,
+          anchor: 'top',
+          newY: yCoord,
+          labelDatum: fakeLabel,
+          labelRadius: pie.outerRadius + pie.labelOffset,
+          yRange: pie.outerRadius + pie.maxVerticalOffset,
+          labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+          pieCenter: pie.pieCenter
+        })
+        helpers.showPoint(pie.svg, fakeLabel.lineConnectorCoord, 'green')
+      })
+    })
+  },
+
   // TODO break into small phases and combine with buildLabelSet
   preprocessLabelSet ({
     parentContainer,
@@ -150,7 +222,7 @@ let labels = {
   doLabelling: function (pie) {
     labels.clearPreviousLabelling(pie.svg, pie.cssPrefix)
 
-    // niavely place label
+    // naively place label
     labels.computeInitialLabelCoordinates(pie)
 
     // adjust label positions to try to accommodate conflicts
@@ -186,28 +258,53 @@ let labels = {
       labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
         labelOffset: pie.labelOffset,
-        maxVerticalOffset: parseFloat(pie.options.labels.outer.maxVerticalOffset),
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
         outerRadius: pie.outerRadius,
         pieCenter: pie.pieCenter,
         canvasHeight: parseFloat(pie.options.size.canvasHeight),
-        maxFontSize
+        maxFontSize,
+        maxVerticalOffset: pie.maxVerticalOffset
       })
     })
   },
 
   // TODO need to doc this using an image, and test that it lines up with computeXGivenY
+  // TODO this fn is now useless, as it too is a wrapper
   placeLabelAlongLabelRadiusWithLiftOffAngle: function ({
     labelDatum,
     labelOffset,
-    maxVerticalOffset,
     labelLiftOffAngle,
     outerRadius,
     pieCenter,
     canvasHeight,
-    maxFontSize
+    maxFontSize,
+    maxVerticalOffset
   }) {
-    const angle = labelDatum.segmentAngleMidpoint
+    const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
+      angle: labelDatum.segmentAngleMidpoint,
+      labelHeight: labelDatum.height,
+      labelOffset,
+      labelLiftOffAngle,
+      outerRadius,
+      pieCenter,
+      canvasHeight,
+      maxFontSize,
+      maxVerticalOffset
+    })
+    labelDatum.setLineConnector(fitLineCoord)
+  },
+
+  _computeInitialCoordAlongLabelRadiusWithLiftOffAngle: function ({
+    angle,
+    labelHeight,
+    labelLiftOffAngle,
+    pieCenter,
+    outerRadius,
+    labelOffset,
+    canvasHeight,
+    maxFontSize,
+    maxVerticalOffset
+  }) {
     let fitLineCoord = null
 
     const highYOffSetAngle = (angle) => (between(90 - labelLiftOffAngle, angle, 90 + labelLiftOffAngle) || between(270 - labelLiftOffAngle, angle, 270 + labelLiftOffAngle))
@@ -217,13 +314,9 @@ let labels = {
       const radialCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
       const radialLine = [pieCenter, radialCoord]
 
-      const verticalWhiteSpace = canvasHeight / 2 - labelOffset - outerRadius
-      const correctedMaxVerticalOffset = Math.max(maxVerticalOffset, labelOffset) // NB cannot set less than labelOffset
-      const excessVerticalWhiteSpace = Math.max(0, verticalWhiteSpace - correctedMaxVerticalOffset)
-
       let placementLineCoord1 = (between(0, angle, 180))
-        ? { x: pieCenter.x, y: excessVerticalWhiteSpace }
-        : { x: pieCenter.x, y: canvasHeight - excessVerticalWhiteSpace - maxFontSize }
+        ? { x: pieCenter.x, y: pieCenter.y - (outerRadius + maxVerticalOffset) }
+        : { x: pieCenter.x, y: pieCenter.y + (outerRadius + maxVerticalOffset) }
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
@@ -242,17 +335,17 @@ let labels = {
 
       if (intersection) {
         fitLineCoord = intersection
-        if (fitLineCoord.y < 0) { fitLineCoord = 0 }
-        if (fitLineCoord.y + labelDatum.height > canvasHeight) { fitLineCoord.y = canvasHeight - labelDatum.height }
+        if (fitLineCoord.y < 0) { fitLineCoord.y = 0 }
+        if (fitLineCoord.y + labelHeight > canvasHeight) { fitLineCoord.y = canvasHeight - labelHeight }
       } else {
-        labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label ${labelDatum.label}`)
+        labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label at angle ${angle}`)
         fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
       }
     } else {
       fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
     }
 
-    labelDatum.setLineConnector(fitLineCoord)
+    return fitLineCoord
   },
 
   drawOuterLabelLines: function (pie) {
@@ -477,6 +570,8 @@ let labels = {
     if (pie.outerLabelData.length <= 1) { return }
 
     labels.correctOutOfBoundLabelsPreservingOrder({
+      outerRadius: pie.outerRadius,
+      maxLabelOffset: pie.maxVerticalOffset,
       labelSet: pie.outerLabelData,
       pieCenter: pie.pieCenter,
       canvasHeight: parseFloat(pie.options.size.canvasHeight),
@@ -557,6 +652,8 @@ let labels = {
     labels.performTwoPhaseLabelAdjustment({
       outerLabelSet: leftOuterLabelsSortedByVerticalPositionAscending,
       innerLabelSet,
+      outerRadius: pie.outerRadius,
+      maxVerticalOffset: pie.maxVerticalOffset,
       canUseInnerLabelsInTheseQuadrants,
       hemisphere: 'left',
       pieCenter: pie.pieCenter,
@@ -573,6 +670,8 @@ let labels = {
     labels.performTwoPhaseLabelAdjustment({
       outerLabelSet: rightOuterLabelsSortedByVerticalPositionAscending,
       innerLabelSet,
+      outerRadius: pie.outerRadius,
+      maxVerticalOffset: pie.maxVerticalOffset,
       canUseInnerLabelsInTheseQuadrants,
       hemisphere: 'right',
       pieCenter: pie.pieCenter,
@@ -595,44 +694,34 @@ let labels = {
   },
 
   adjustLabelToNewY ({
+    parentContainer, // TODO delete . this is temp for debug
     anchor, // top or bottom
     newY,
     labelDatum,
     labelRadius,
-    linePadding = 2,
     yRange,
     labelLiftOffAngle,
     pieCenter
   }) {
-    let quadrant = null
-    if (newY - pieCenter.y > 0) {
-      quadrant = (labelDatum.hemisphere === 'left') ? 3 : 2
-    } else {
-      quadrant = (labelDatum.hemisphere === 'left') ? 4 : 1
-    }
-
-    let bestFitLineY = null
-    // the newY could be the lineConnector coord or it could be the top of the label , in which case the lineConnector is the bottom of the label
+    let newTopYCoord = null
     if (anchor === 'top') {
-      if (quadrant === 4 || quadrant === 1) {
-        bestFitLineY = newY + labelDatum.height
-      } else {
-        bestFitLineY = newY
-      }
+      newTopYCoord = newY
     } else if (anchor === 'bottom') {
-      if (quadrant === 4 || quadrant === 1) {
-        bestFitLineY = newY
-      } else {
-        bestFitLineY = newY - labelDatum.height
-      }
-    } else {
-      throw new Error('not top nor bottom so wtf mate')
+      newTopYCoord = newY - labelDatum.height
     }
 
-    const yOffset = Math.abs(pieCenter.y - bestFitLineY)
+    // TODO move to label
+    let numTextRows = labelDatum.labelTextLines.length
+    let { innerPadding, lineHeight } = labelDatum
+    let newLineConnectorYCoord = (newTopYCoord < pieCenter.y)
+      ? newTopYCoord + (numTextRows - 1) + (innerPadding + lineHeight) + 0.5 * lineHeight
+      : newTopYCoord + 0.5 * lineHeight
+
+    let yOffset = Math.abs(pieCenter.y - newLineConnectorYCoord)
 
     if (yOffset > yRange) {
-      throw new Error(`yOffset(${yOffset}) cannot be greater than yRange(${yRange})`)
+      console.warn(`yOffset(${yOffset}) cannot be greater than yRange(${yRange})`)
+      yOffset = yRange
     }
 
     const labelLiftOffAngleInRadians = math.toRadians(labelLiftOffAngle)
@@ -668,7 +757,7 @@ let labels = {
     }
   },
 
-  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding }) {
+  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding, outerRadius, maxVerticalOffset }) {
     const newYPositions = {}
     const useYFromLookupTableAndCorrectX = (yPositionLookupTable, anchor) => {
       return (labelDatum) => {
@@ -676,7 +765,7 @@ let labels = {
           anchor,
           newY: yPositionLookupTable[labelDatum.id],
           labelRadius,
-          yRange: canvasHeight / 2,
+          yRange: outerRadius + maxVerticalOffset,
           labelLiftOffAngle,
           labelDatum,
           pieCenter
@@ -783,6 +872,8 @@ let labels = {
   performTwoPhaseLabelAdjustment ({
     outerLabelSet,
     innerLabelSet,
+    outerRadius,
+    maxVerticalOffset,
     canUseInnerLabelsInTheseQuadrants,
     hemisphere,
     pieCenter,
@@ -905,7 +996,7 @@ let labels = {
 
           const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
           const deltaY = newY - gettingPushedLabel.topLeftCoord.y
-          if (newY + gettingPushedLabel.height > canvasHeight) {
+          if (newY + gettingPushedLabel.height > canvasHeight || newY > (pieCenter.y + outerRadius + maxVerticalOffset)) {
             labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
             phase1HitBottom = true
 
@@ -919,7 +1010,7 @@ let labels = {
             anchor: 'top',
             newY,
             labelRadius: outerLabelRadius,
-            yRange: canvasHeight / 2,
+            yRange: outerRadius + maxVerticalOffset,
             labelLiftOffAngle,
             labelDatum: gettingPushedLabel,
             pieCenter,
@@ -1038,7 +1129,7 @@ let labels = {
               anchor: 'top',
               newY,
               labelRadius: outerLabelRadius,
-              yRange: canvasHeight / 2,
+              yRange: outerRadius + maxVerticalOffset,
               yAngleThreshold: 30, // TODO configurable,
               labelDatum: gettingPushedLabel,
               labelLiftOffAngle,
@@ -1280,7 +1371,7 @@ let labels = {
       throw new CannotMoveToInner(label, `label line angle excceds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
     }
 
-    labelLogger.info(`placed ${pi(label)} inside`) // you are here
+    labelLogger.info(`placed ${pi(label)} inside`)
     innerLabelSet.push(newInnerLabel)
     label.labelShown = false
   }

@@ -22,7 +22,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
   | minumum label display threshold   | 0.3%    | `values.display.thres`               | `settings.minAngle`                        |
   | max label line angle              | 60      | `labels.line.max.angle`              | `settings.labelMaxLineAngle`               |
   | (advanced) lift off angle         | 30      | `labels.advanced.liftoff.angle`      | `settings.liftOffAngle`                    |
-  | (advanced) max vertical offset    | 100     | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset`          |
+  | (advanced) max vertical offset    | unset , i.e., use all space     | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset`          |
   | (advanced) iteration min increment | 0.0001 | `labels.advanced.min.increment`      | `settings.labelIterationMinIncrement`      | 
   | (advanced) iteration max increment | 0.005  | `labels.advanced.max.increment`      | `settings.labelIterationMaxIncrement`      |
  
@@ -39,7 +39,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
 * *minumum label display threshold*: Any segment with a fractional value lower than minAngle will not have a label. Note some segments with higher values will still not be displayed based on adjustments made
 * *max label line angle*: Hide any label where the angle between the radial line and the label line (line from outerRadius to label) is greater than the "max label line angle"
 * *(advanced) lift off angle*: Controls point where initial label placement algorithm begins to place the labels farther away from the outer radius. See doc here (TODO link doc)
-* *(advanced) max vertical offset*: At the 90 and 270 degree mark, what is the maximum distance between labels and outer radius.
+* *(advanced) max vertical offset*: At the 90 and 270 degree mark, what is the maximum distance between labels and the donut plot. Defaults to use all available space.
 * *(advanced) iteration min increment*: The label algorithm aborts on specific conditions, then retries with a higher min angle threshold. This increment bounds the amount the min angle threshold can increase between iterations 
 * *(advanced) iteration max increment*: See description above for "iteration min increment"
   

@@ -175,6 +175,9 @@ class PieWrapper {
         fontSize: this._settings.groupsSize,
         fontColor: this._settings.groupsFontColor,
         minFontSize: this._settings.groupLabelsMinFontSize
+      },
+      debug: {
+        draw_placement_lines: this._settings.debug_draw_placement_lines
       }
     })
   }

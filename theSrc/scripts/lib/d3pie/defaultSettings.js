@@ -43,7 +43,7 @@ const defaultSettings = {
       maxWidthPercentage: '30%',            // pieWrapper: settings.labelsMaxWidthPercentage. R: labels.max.width.percentage. wrap label text if label exceeds X% of canvasWidth
       iterationMinIncrement: 0.0001,        // pieWrapper: settings.labelIterationMinIncrement. R: labels.advanced.min.increment. Control labelling iterations step size
       iterationMaxIncrement: 0.005,         // pieWrapper: settings.labelIterationMaxIncrement. R: labels.advanced.max.increment. Control labelling iterations step size
-      maxVerticalOffset: 100                // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90 degree mark
+      maxVerticalOffset: null                // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90 degree mark
     },
     mainLabel: {                            //
       color: '#333333',                     // pieWrapper: settings.labelsColor, R: labels.font.color
@@ -131,6 +131,9 @@ const defaultSettings = {
     onMouseoverSegment: null,               // not used
     onMouseoutSegment: null,                // not used
     onClickSegment: null                    // not used
+  },
+  debug: {
+    draw_placement_lines: false
   }
 }
 
