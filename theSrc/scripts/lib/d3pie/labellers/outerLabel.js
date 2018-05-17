@@ -144,7 +144,7 @@ class OuterLabel {
     // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
     const lineConnectorCoord = {}
     lineConnectorCoord.y = (topLeftCoord.y < this.pieCenter.y)
-      ? topLeftCoord.y + (numTextRows - 1) + (innerPadding + lineHeight) + 0.5 * lineHeight
+      ? topLeftCoord.y + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
       : topLeftCoord.y + 0.5 * lineHeight
 
     lineConnectorCoord.x = (hemisphere === 'left')
