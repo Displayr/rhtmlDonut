@@ -634,14 +634,14 @@ let labels = {
   },
 
   _performCollisionResolutionAlgorithm (pie, outerLabelSet, useInnerLabels) {
-    const leftOuterLabelsSortedByVerticalPositionAscending = _(outerLabelSet)
+    const leftOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'left'})
       .sortBy(['topLeftCoord.y', 'id'])
       .value()
 
-    const rightOuterLabelsSortedByVerticalPositionAscending = _(outerLabelSet)
+    const rightOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'right'})
-      .sortBy('topLeftCoord.y')
+      .sortBy(['topLeftCoord.y', 'id'])
       .value()
 
     const innerLabelSet = []
@@ -649,8 +649,8 @@ let labels = {
       ? [1, 2, 3]
       : []
 
-    labels.performTwoPhaseLabelAdjustment({
-      outerLabelSet: leftOuterLabelsSortedByVerticalPositionAscending,
+    labels.performInitialClusterSpacing({
+      outerLabelSet: leftOuterLabelsSortedTopToBottom,
       innerLabelSet,
       outerRadius: pie.outerRadius,
       maxVerticalOffset: pie.maxVerticalOffset,
@@ -668,7 +668,43 @@ let labels = {
     })
 
     labels.performTwoPhaseLabelAdjustment({
-      outerLabelSet: rightOuterLabelsSortedByVerticalPositionAscending,
+      outerLabelSet: leftOuterLabelsSortedTopToBottom,
+      innerLabelSet,
+      outerRadius: pie.outerRadius,
+      maxVerticalOffset: pie.maxVerticalOffset,
+      canUseInnerLabelsInTheseQuadrants,
+      hemisphere: 'left',
+      pieCenter: pie.pieCenter,
+      canvasHeight: parseFloat(pie.options.size.canvasHeight),
+      innerLabelRadius: pie.innerRadius - pie.labelOffset,
+      innerRadius: pie.innerRadius,
+      outerLabelRadius: pie.outerRadius + pie.labelOffset,
+      horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
+      labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      minGap: parseFloat(pie.options.labels.outer.outerPadding)
+    })
+
+    labels.performInitialClusterSpacing({
+      outerLabelSet: rightOuterLabelsSortedTopToBottom,
+      innerLabelSet,
+      outerRadius: pie.outerRadius,
+      maxVerticalOffset: pie.maxVerticalOffset,
+      canUseInnerLabelsInTheseQuadrants,
+      hemisphere: 'right',
+      pieCenter: pie.pieCenter,
+      canvasHeight: parseFloat(pie.options.size.canvasHeight),
+      innerLabelRadius: pie.innerRadius - pie.labelOffset,
+      innerRadius: pie.innerRadius,
+      outerLabelRadius: pie.outerRadius + pie.labelOffset,
+      horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
+      labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      minGap: parseFloat(pie.options.labels.outer.outerPadding)
+    })
+
+    labels.performTwoPhaseLabelAdjustment({
+      outerLabelSet: rightOuterLabelsSortedTopToBottom,
       innerLabelSet,
       outerRadius: pie.outerRadius,
       maxVerticalOffset: pie.maxVerticalOffset,
@@ -869,6 +905,136 @@ let labels = {
     labelLogger.info(`corrected ${labelsOverlappingLeftEdgeCount} labels over right`)
   },
 
+  performInitialClusterSpacing ({
+    outerLabelSet,
+    innerLabelSet,
+    outerRadius,
+    maxVerticalOffset,
+    canUseInnerLabelsInTheseQuadrants,
+    hemisphere,
+    pieCenter,
+    canvasHeight,
+    innerLabelRadius,
+    innerRadius,
+    outerLabelRadius,
+    labelLiftOffAngle,
+    horizontalPadding,
+    maxAngleBetweenRadialAndLabelLines,
+    minGap
+  }) {
+    const getLabelAbove = (label) => {
+      const indexOf = outerLabelSet.indexOf(label)
+      if (indexOf !== -1 && indexOf !== 0) {
+        return outerLabelSet[indexOf - 1]
+      }
+      return null
+    }
+
+    const getLabelBelow = (label) => {
+      const indexOf = outerLabelSet.indexOf(label)
+      if (indexOf !== -1 && indexOf !== outerLabelSet.length - 1) {
+        return outerLabelSet[indexOf + 1]
+      }
+      return null
+    }
+
+    const pushLabelsUp = (labelsToPushUp) => {
+      _(labelsToPushUp).each(labelToPushUp => {
+        const labelBelow = getLabelBelow(labelToPushUp)
+        if (labelBelow) {
+          labels.adjustLabelToNewY({
+            anchor: 'bottom',
+            newY: labelBelow.topLeftCoord.y - minGap,
+            labelRadius: outerLabelRadius,
+            yRange: outerRadius + maxVerticalOffset,
+            labelLiftOffAngle,
+            labelDatum: labelToPushUp,
+            pieCenter,
+            horizontalPadding
+          })
+        } else {
+          console.warn(`tried to push label up, but there was no label below`)
+        }
+      })
+    }
+
+    const pushLabelsDown = (labelsToPushDown) => {
+      _(labelsToPushDown).each(labelToPushDown => {
+        const labelAbove = getLabelAbove(labelToPushDown)
+        if (labelAbove) {
+          labels.adjustLabelToNewY({
+            anchor: 'top',
+            newY: labelAbove.bottomLeftCoord.y + minGap,
+            labelRadius: outerLabelRadius,
+            yRange: outerRadius + maxVerticalOffset,
+            labelLiftOffAngle,
+            labelDatum: labelToPushDown,
+            pieCenter,
+            horizontalPadding
+          })
+        } else {
+          console.warn(`tried to push label down, but there was no label above`)
+        }
+      })
+    }
+
+    const collidingLabels = _(outerLabelSet)
+      .filter((frontierLabel, frontierIndex) => {
+        const otherLabels = []
+        if (!(frontierIndex === 0)) { otherLabels.push(outerLabelSet[frontierIndex - 1]) }
+        if (!(frontierIndex === outerLabelSet.length - 1)) { otherLabels.push(outerLabelSet[frontierIndex + 1]) }
+
+        const intersects = _.some(otherLabels, otherLabel => frontierLabel.intersectsWith(otherLabel))
+        return intersects
+      })
+      .value()
+
+    const collidingLabelSets = []
+    let activeSet = []
+    _(collidingLabels).each(collidingLabel => {
+      if (activeSet.length === 0) { activeSet.push(collidingLabel); return true }
+      if (Math.abs(collidingLabel.id - activeSet[activeSet.length - 1].id) <= 1) {
+        activeSet.push(collidingLabel)
+      } else {
+        collidingLabelSets.push(activeSet)
+        activeSet = [collidingLabel]
+      }
+    })
+    if (activeSet.length) {
+      collidingLabelSets.push(activeSet)
+    }
+
+    _(collidingLabelSets).each(collidingLabelSet => {
+      let verticalSpaceAbove = 0
+      const nearestNonIntersectingLabelAbove = getLabelAbove(collidingLabelSet[0])
+      if (nearestNonIntersectingLabelAbove) {
+        verticalSpaceAbove = collidingLabelSet[0].topLeftCoord.y - nearestNonIntersectingLabelAbove.bottomLeftCoord.y
+      }
+
+      let verticalSpaceBelow = 0
+      const nearestNonIntersectingLabelBelow = getLabelBelow(collidingLabelSet[collidingLabelSet.length - 1])
+      if (nearestNonIntersectingLabelBelow) {
+        verticalSpaceBelow = nearestNonIntersectingLabelBelow.topLeftCoord.y - collidingLabelSet[collidingLabelSet.length - 1].bottomLeftCoord.y
+      }
+
+      console.log(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
+      console.log(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
+
+      if (verticalSpaceAbove > 50 && verticalSpaceAbove > verticalSpaceBelow) {
+        console.log(`pushing whole set up`)
+        pushLabelsUp(_.reverse(collidingLabelSet))
+      } else if (verticalSpaceBelow > 50 && verticalSpaceBelow > verticalSpaceAbove) {
+        console.log(`pushing whole set down`)
+        pushLabelsDown(collidingLabelSet)
+      } else {
+        console.log(`pushing 1/2 up and 1/2 down`)
+        const [labelsToPushUp, labelsToPushDown] = _.chunk(collidingLabelSet, Math.ceil(collidingLabelSet.length / 2))
+        pushLabelsUp(_.reverse(labelsToPushUp))
+        pushLabelsDown(labelsToPushDown)
+      }
+    })
+  },
+
   performTwoPhaseLabelAdjustment ({
     outerLabelSet,
     innerLabelSet,
@@ -932,27 +1098,6 @@ let labels = {
 
       if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyAbove(frontierLabel)) {
         labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
-
-        // NB this option is only used on the label immediately after the frontier. This achieves the alternating pattern
-        if (canUseInnerLabelsInTheseQuadrants.includes(nextLabel.segmentQuadrant)) {
-          try {
-            labels.moveToInnerLabel({
-              label: nextLabel,
-              innerLabelSet,
-              innerLabelRadius,
-              innerRadius,
-              pieCenter
-            })
-            // return continueLoop
-          } catch (error) {
-            if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-              labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
-            } else {
-              throw error
-            }
-          }
-        }
-
         _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
           const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
           if (!alreadyAdjustedLabel) { return continueLoop }
@@ -1060,27 +1205,6 @@ let labels = {
 
         if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyBelow(frontierLabel)) {
           labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
-
-          // NB this option is only used on the label immediately after the frontier. This achieves the alternating pattern
-          if (canUseInnerLabelsInTheseQuadrants.includes(nextLabel.segmentQuadrant)) {
-            try {
-              labels.moveToInnerLabel({
-                label: nextLabel,
-                innerLabelSet,
-                innerLabelRadius,
-                innerRadius,
-                pieCenter
-              })
-              // return continueLoop
-            } catch (error) {
-              if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                labelLogger.debug(`${lp} could not move ${pi(nextLabel)} to inner: "${error.description}". Proceed with adjustment`)
-              } else {
-                throw error
-              }
-            }
-          }
-
           _(_.range(frontierIndex + 1, reversedLabelSet.length)).each((gettingPushedIndex) => {
             const alreadyAdjustedLabel = getPreviousShownLabel(reversedLabelSet, gettingPushedIndex)
             if (!alreadyAdjustedLabel) { return continueLoop }

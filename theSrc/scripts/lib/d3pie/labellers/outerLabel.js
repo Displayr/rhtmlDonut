@@ -219,8 +219,8 @@ class OuterLabel {
     return (_.isNaN(angleCInDegrees)) ? 0 : 180 - angleCInDegrees
   }
 
-  intersectsWith (anotherLabel) {
-    return labelIntersect(this, anotherLabel)
+  intersectsWith (anotherLabel, within = 0) {
+    return labelIntersect(this, anotherLabel, within)
   }
 
   isHigherThan (anotherLabel) {

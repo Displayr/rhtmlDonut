@@ -88,15 +88,24 @@ function ptInArc (pt, innerR, outerR, stAngle, edAngle) {
 
 function labelToRect (label) {
   return {
-    x: label.topLeftCoord.x,
-    y: label.topLeftCoord.y,
+    x: label.x || label.topLeftCoord.x,
+    y: label.y || label.topLeftCoord.y,
     width: label.width,
     height: label.height
   }
 }
 
-function labelIntersect (label1, label2) {
-  return rectIntersect(labelToRect(label1), labelToRect(label2))
+function expandBy (label, padding = 0) {
+  return {
+    x: label.x - padding,
+    y: label.y - padding,
+    width: label.width + 2 * padding,
+    height: label.height + 2 * padding
+  }
+}
+
+function labelIntersect (label1, label2, within = 0) {
+  return rectIntersect(expandBy(labelToRect(label1), within), labelToRect(label2))
 }
 
 function labelXaboveY (label1, label2) {
