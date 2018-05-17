@@ -571,7 +571,7 @@ let labels = {
 
     labels.correctOutOfBoundLabelsPreservingOrder({
       outerRadius: pie.outerRadius,
-      maxLabelOffset: pie.maxVerticalOffset,
+      maxVerticalOffset: pie.maxVerticalOffset,
       labelSet: pie.outerLabelData,
       pieCenter: pie.pieCenter,
       canvasHeight: parseFloat(pie.options.size.canvasHeight),
@@ -750,7 +750,7 @@ let labels = {
     let numTextRows = labelDatum.labelTextLines.length
     let { innerPadding, lineHeight } = labelDatum
     let newLineConnectorYCoord = (newTopYCoord < pieCenter.y)
-      ? newTopYCoord + (numTextRows - 1) + (innerPadding + lineHeight) + 0.5 * lineHeight
+      ? newTopYCoord + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
       : newTopYCoord + 0.5 * lineHeight
 
     let yOffset = Math.abs(pieCenter.y - newLineConnectorYCoord)
