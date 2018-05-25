@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "stages": {
+      "outOfBoundsCorrection": false,
+      "initialClusterSpacing": false,
+      "downSweep": true,
+      "upSweep": false
+    }
+  }
+}

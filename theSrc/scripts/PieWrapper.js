@@ -136,6 +136,7 @@ class PieWrapper {
         content: this.pieData
       },
       labels: {
+        stages: this._settings.stages,
         outer: {
           innerLabels: this._settings.labelsInner,
           displayPercentage: (this._settings.valuesDisplay === 'percentage'),

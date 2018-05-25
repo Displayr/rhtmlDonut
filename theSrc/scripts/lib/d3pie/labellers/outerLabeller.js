@@ -569,17 +569,19 @@ let labels = {
   performCollisionResolution: function (pie) {
     if (pie.outerLabelData.length <= 1) { return }
 
-    labels.correctOutOfBoundLabelsPreservingOrder({
-      outerRadius: pie.outerRadius,
-      maxVerticalOffset: pie.maxVerticalOffset,
-      labelSet: pie.outerLabelData,
-      pieCenter: pie.pieCenter,
-      canvasHeight: parseFloat(pie.options.size.canvasHeight),
-      canvasWidth: parseFloat(pie.options.size.canvasWidth),
-      labelRadius: pie.outerRadius + pie.labelOffset,
-      labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-      outerPadding: parseFloat(pie.options.labels.outer.outerPadding)
-    })
+    if (pie.options.labels.stages.outOfBoundsCorrection) {
+      labels.correctOutOfBoundLabelsPreservingOrder({
+        outerRadius: pie.outerRadius,
+        maxVerticalOffset: pie.maxVerticalOffset,
+        labelSet: pie.outerLabelData,
+        pieCenter: pie.pieCenter,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight),
+        canvasWidth: parseFloat(pie.options.size.canvasWidth),
+        labelRadius: pie.outerRadius + pie.labelOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        outerPadding: parseFloat(pie.options.labels.outer.outerPadding)
+      })
+    }
 
     labels._performCollisionResolutionIteration({
       useInnerLabels: pie.options.labels.outer.innerLabels,
@@ -649,7 +651,46 @@ let labels = {
       ? [1, 2, 3]
       : []
 
-    labels.performInitialClusterSpacing({
+    if (pie.options.labels.stages.initialClusterSpacing) {
+      labels.performInitialClusterSpacing({
+        outerLabelSet: leftOuterLabelsSortedTopToBottom,
+        innerLabelSet,
+        outerRadius: pie.outerRadius,
+        maxVerticalOffset: pie.maxVerticalOffset,
+        canUseInnerLabelsInTheseQuadrants,
+        hemisphere: 'left',
+        pieCenter: pie.pieCenter,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight),
+        innerLabelRadius: pie.innerRadius - pie.labelOffset,
+        innerRadius: pie.innerRadius,
+        outerLabelRadius: pie.outerRadius + pie.labelOffset,
+        horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        minGap: parseFloat(pie.options.labels.outer.outerPadding)
+      })
+
+      labels.performInitialClusterSpacing({
+        outerLabelSet: rightOuterLabelsSortedTopToBottom,
+        innerLabelSet,
+        outerRadius: pie.outerRadius,
+        maxVerticalOffset: pie.maxVerticalOffset,
+        canUseInnerLabelsInTheseQuadrants,
+        hemisphere: 'right',
+        pieCenter: pie.pieCenter,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight),
+        innerLabelRadius: pie.innerRadius - pie.labelOffset,
+        innerRadius: pie.innerRadius,
+        outerLabelRadius: pie.outerRadius + pie.labelOffset,
+        horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        minGap: parseFloat(pie.options.labels.outer.outerPadding)
+      })
+    }
+
+    labels.performTwoPhaseLabelAdjustment({
+      stages: pie.options.labels.stages,
       outerLabelSet: leftOuterLabelsSortedTopToBottom,
       innerLabelSet,
       outerRadius: pie.outerRadius,
@@ -668,42 +709,7 @@ let labels = {
     })
 
     labels.performTwoPhaseLabelAdjustment({
-      outerLabelSet: leftOuterLabelsSortedTopToBottom,
-      innerLabelSet,
-      outerRadius: pie.outerRadius,
-      maxVerticalOffset: pie.maxVerticalOffset,
-      canUseInnerLabelsInTheseQuadrants,
-      hemisphere: 'left',
-      pieCenter: pie.pieCenter,
-      canvasHeight: parseFloat(pie.options.size.canvasHeight),
-      innerLabelRadius: pie.innerRadius - pie.labelOffset,
-      innerRadius: pie.innerRadius,
-      outerLabelRadius: pie.outerRadius + pie.labelOffset,
-      horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
-      labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      minGap: parseFloat(pie.options.labels.outer.outerPadding)
-    })
-
-    labels.performInitialClusterSpacing({
-      outerLabelSet: rightOuterLabelsSortedTopToBottom,
-      innerLabelSet,
-      outerRadius: pie.outerRadius,
-      maxVerticalOffset: pie.maxVerticalOffset,
-      canUseInnerLabelsInTheseQuadrants,
-      hemisphere: 'right',
-      pieCenter: pie.pieCenter,
-      canvasHeight: parseFloat(pie.options.size.canvasHeight),
-      innerLabelRadius: pie.innerRadius - pie.labelOffset,
-      innerRadius: pie.innerRadius,
-      outerLabelRadius: pie.outerRadius + pie.labelOffset,
-      horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
-      labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      minGap: parseFloat(pie.options.labels.outer.outerPadding)
-    })
-
-    labels.performTwoPhaseLabelAdjustment({
+      stages: pie.options.labels.stages,
       outerLabelSet: rightOuterLabelsSortedTopToBottom,
       innerLabelSet,
       outerRadius: pie.outerRadius,
@@ -922,6 +928,10 @@ let labels = {
     maxAngleBetweenRadialAndLabelLines,
     minGap
   }) {
+    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset
+    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset
+    const terminateLoop = false
+
     const getLabelAbove = (label) => {
       const indexOf = outerLabelSet.indexOf(label)
       if (indexOf !== -1 && indexOf !== 0) {
@@ -942,9 +952,15 @@ let labels = {
       _(labelsToPushUp).each(labelToPushUp => {
         const labelBelow = getLabelBelow(labelToPushUp)
         if (labelBelow) {
+          const newY = labelBelow.topLeftCoord.y - minGap
+          if (newY < upperBoundary) {
+            console.warn(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded upperBoundary`)
+            return terminateLoop
+          }
+
           labels.adjustLabelToNewY({
+            newY,
             anchor: 'bottom',
-            newY: labelBelow.topLeftCoord.y - minGap,
             labelRadius: outerLabelRadius,
             yRange: outerRadius + maxVerticalOffset,
             labelLiftOffAngle,
@@ -961,10 +977,17 @@ let labels = {
     const pushLabelsDown = (labelsToPushDown) => {
       _(labelsToPushDown).each(labelToPushDown => {
         const labelAbove = getLabelAbove(labelToPushDown)
+
         if (labelAbove) {
+          const newY = labelAbove.bottomLeftCoord.y + minGap
+          if (newY > lowerBoundary) {
+            console.warn(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded lowerBoundary`)
+            return terminateLoop
+          }
+
           labels.adjustLabelToNewY({
+            newY,
             anchor: 'top',
-            newY: labelAbove.bottomLeftCoord.y + minGap,
             labelRadius: outerLabelRadius,
             yRange: outerRadius + maxVerticalOffset,
             labelLiftOffAngle,
@@ -1020,10 +1043,11 @@ let labels = {
       console.log(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
       console.log(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
 
-      if (verticalSpaceAbove > 50 && verticalSpaceAbove > verticalSpaceBelow) {
+      let differenceInVerticalSpace = Math.abs(verticalSpaceBelow - verticalSpaceAbove)
+      if (differenceInVerticalSpace > 10 && verticalSpaceAbove > verticalSpaceBelow) {
         console.log(`pushing whole set up`)
         pushLabelsUp(_.reverse(collidingLabelSet))
-      } else if (verticalSpaceBelow > 50 && verticalSpaceBelow > verticalSpaceAbove) {
+      } else if (differenceInVerticalSpace > 10 && verticalSpaceBelow > verticalSpaceAbove) {
         console.log(`pushing whole set down`)
         pushLabelsDown(collidingLabelSet)
       } else {
@@ -1036,6 +1060,7 @@ let labels = {
   },
 
   performTwoPhaseLabelAdjustment ({
+    stages,
     outerLabelSet,
     innerLabelSet,
     outerRadius,
@@ -1086,95 +1111,97 @@ let labels = {
       return null
     }
 
-    labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
-    _(outerLabelSet).each((frontierLabel, frontierIndex) => {
-      labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
-      if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
-      if (isLast(frontierIndex)) { return terminateLoop }
-      if (frontierLabel.hide) { return continueLoop }
+    if (stages.downSweep) {
+      labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
+      _(outerLabelSet).each((frontierLabel, frontierIndex) => {
+        labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
+        if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
+        if (isLast(frontierIndex)) { return terminateLoop }
+        if (frontierLabel.hide) { return continueLoop }
 
-      const nextLabel = outerLabelSet[frontierIndex + 1]
-      if (nextLabel.hide) { return continueLoop }
+        const nextLabel = outerLabelSet[frontierIndex + 1]
+        if (nextLabel.hide) { return continueLoop }
 
-      if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyAbove(frontierLabel)) {
-        labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
-        _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
-          const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
-          if (!alreadyAdjustedLabel) { return continueLoop }
+        if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyAbove(frontierLabel)) {
+          labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
+          _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
+            const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
+            if (!alreadyAdjustedLabel) { return continueLoop }
 
-          const immediatePreviousNeighbor = outerLabelSet[gettingPushedIndex - 1]
-          const immediatePreviousNeighborIsInInside = !immediatePreviousNeighbor.labelShown
+            const immediatePreviousNeighbor = outerLabelSet[gettingPushedIndex - 1]
+            const immediatePreviousNeighborIsInInside = !immediatePreviousNeighbor.labelShown
 
-          const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
-          if (gettingPushedLabel.hide) { return continueLoop }
+            const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
+            if (gettingPushedLabel.hide) { return continueLoop }
 
-          if (phase1HitBottom) {
-            labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
-            // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
-            gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: canvasHeight - minGap }) // TODO can I use adjustLabelToNewY ?
-            return continueLoop
-          }
-
-          if (gettingPushedLabel.isLowerThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
-            labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
-            return terminateLoop
-          }
-
-          if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
-            try {
-              labels.moveToInnerLabel({
-                label: gettingPushedLabel,
-                innerLabelSet,
-                innerLabelRadius,
-                innerRadius,
-                pieCenter
-              })
+            if (phase1HitBottom) {
+              labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
+              // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
+              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: pieCenter.y + outerRadius + maxVerticalOffset - minGap })
               return continueLoop
-            } catch (error) {
-              if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
-              } else {
-                throw error
+            }
+
+            if (gettingPushedLabel.isLowerThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
+              labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
+              return terminateLoop
+            }
+
+            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+              try {
+                labels.moveToInnerLabel({
+                  label: gettingPushedLabel,
+                  innerLabelSet,
+                  innerLabelRadius,
+                  innerRadius,
+                  pieCenter
+                })
+                return continueLoop
+              } catch (error) {
+                if (error.isInterrupt && error.type === 'CannotMoveToInner') {
+                  labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
+                } else {
+                  throw error
+                }
               }
             }
-          }
 
-          const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
-          const deltaY = newY - gettingPushedLabel.topLeftCoord.y
-          if (newY + gettingPushedLabel.height > canvasHeight || newY > (pieCenter.y + outerRadius + maxVerticalOffset)) {
-            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
-            phase1HitBottom = true
+            const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
+            const deltaY = newY - gettingPushedLabel.topLeftCoord.y
+            if (newY + gettingPushedLabel.height > canvasHeight || newY > (pieCenter.y + outerRadius + maxVerticalOffset)) {
+              labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
+              phase1HitBottom = true
 
-            gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: canvasHeight - minGap })  // TODO can I use adjustLabelToNewY ?
-            return continueLoop
-          }
+              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: pieCenter.y + outerRadius + maxVerticalOffset - minGap })
+              return continueLoop
+            }
 
-          const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
 
-          labels.adjustLabelToNewY({
-            anchor: 'top',
-            newY,
-            labelRadius: outerLabelRadius,
-            yRange: outerRadius + maxVerticalOffset,
-            labelLiftOffAngle,
-            labelDatum: gettingPushedLabel,
-            pieCenter,
-            horizontalPadding
+            labels.adjustLabelToNewY({
+              anchor: 'top',
+              newY,
+              labelRadius: outerLabelRadius,
+              yRange: outerRadius + maxVerticalOffset,
+              labelLiftOffAngle,
+              labelDatum: gettingPushedLabel,
+              pieCenter,
+              horizontalPadding
+            })
+
+            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
+            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
+
+            if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
+              throw new AngleThresholdExceeded(gettingPushedLabel)
+            }
+
+            if (!inBounds(gettingPushedIndex + 1)) { return terminateLoop } // terminate
           })
+        }
+      })
+    }
 
-          const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
-          labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
-
-          if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
-            throw new AngleThresholdExceeded(gettingPushedLabel)
-          }
-
-          if (!inBounds(gettingPushedIndex + 1)) { return terminateLoop } // terminate
-        })
-      }
-    })
-
-    if (phase1HitBottom) {
+    if (phase1HitBottom && stages.upSweep) {
       // throw away our attempt at inner labelling and start again wrt inner labels!
       // XXX NB TODO strictly speaking we can only throw out our quadrant/hemisphere worth of inner labels
       _(innerLabelSet).each(innerLabel => {

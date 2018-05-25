@@ -28,6 +28,12 @@ const defaultSettings = {
     content: []                             // pieWrapper: pieData
   },                                        //
   labels: {                                 //
+    stages: {
+      outOfBoundsCorrection: true,
+      initialClusterSpacing: true,
+      downSweep: true,
+      upSweep: true
+    },
     outer: {
       innerLabels: false,                   // pieWrapper: settings.labelsInner, R: labels.inner
       displayPercentage: false,             // pieWrapper: settings.valuesDisplay, R: values.display.as
