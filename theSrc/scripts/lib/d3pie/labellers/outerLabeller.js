@@ -638,12 +638,12 @@ let labels = {
   _performCollisionResolutionAlgorithm (pie, outerLabelSet, useInnerLabels) {
     const leftOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'left'})
-      .sortBy(['topLeftCoord.y', 'id'])
+      .sortBy(['topLeftCoord.y', x => { return -1 * x.id }])
       .value()
 
     const rightOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'right'})
-      .sortBy(['topLeftCoord.y', 'id'])
+      .sortBy(['topLeftCoord.y', x => { return x.id }])
       .value()
 
     const innerLabelSet = []
