@@ -1,8 +1,8 @@
 {
   "settings": {
     "stages": {
-      "outOfBoundsCorrection": true,
-      "initialClusterSpacing": true,
+      "outOfBoundsCorrection": false,
+      "initialClusterSpacing": false,
       "downSweep": false,
       "upSweep": false
     }

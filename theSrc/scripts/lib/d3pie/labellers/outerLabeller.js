@@ -643,8 +643,11 @@ let labels = {
 
     const rightOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'right'})
-      .sortBy(['topLeftCoord.y', x => { return x.id }])
+      .sortBy(['topLeftCoord.y', x => { return -1 * x.id }])
       .value()
+
+    console.log('rightOuterLabelsSortedTopToBottom')
+    console.log(JSON.stringify(rightOuterLabelsSortedTopToBottom.map(x => `${x.label} -> ${x.id} -> ${x.topLeftCoord.y}`), {}, 2))
 
     const innerLabelSet = []
     const canUseInnerLabelsInTheseQuadrants = (useInnerLabels)

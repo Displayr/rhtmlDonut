@@ -2,9 +2,9 @@
   "settings": {
     "stages": {
       "outOfBoundsCorrection": true,
-      "initialClusterSpacing": true,
+      "initialClusterSpacing": false,
       "downSweep": true,
-      "upSweep": false
+      "upSweep": true
     }
   }
 }
