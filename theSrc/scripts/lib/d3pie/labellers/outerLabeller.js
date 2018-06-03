@@ -654,7 +654,9 @@ let labels = {
       ? [1, 2, 3]
       : []
 
-    if (pie.options.labels.stages.initialClusterSpacing) {
+    // NB at some point we should do both innerLabelling and performInitialClusterSpacing. However,
+    // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred        the innerLabels to the spacing.
+    if (pie.options.labels.stages.initialClusterSpacing && !useInnerLabels) {
       labels.performInitialClusterSpacing({
         outerLabelSet: leftOuterLabelsSortedTopToBottom,
         innerLabelSet,
