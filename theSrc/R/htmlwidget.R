@@ -96,7 +96,7 @@ Donut <- function(
     labels.offset.percentage = "10%",
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
-    labels.advanced.line.max.angle = 90,
+    labels.advanced.line.max.angle = 60,
     labels.advanced.min.increment = 0.0001,
     labels.advanced.max.increment = 0.005,
     groups = NULL,
