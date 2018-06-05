@@ -59,6 +59,8 @@ class OuterLabel {
     }
 
     this._variants = {
+      isTopLabel: false,
+      isBottomLabel: false,
       angleBetweenLabelAndRadial: null,
       fontSize,
       height: null,
@@ -155,6 +157,36 @@ class OuterLabel {
   }
 
   setLineConnector (lineConnectorCoord) {
+    if (this.isTopLabel) {
+      this.setLineConnectorTopCoord(lineConnectorCoord)
+    } else if (this.isBottomLabel) {
+      this.setLineConnectorBottomCoord(lineConnectorCoord)
+    } else {
+      this.setLineConnectorNormal(lineConnectorCoord)
+    }
+  }
+
+  setLineConnectorTopCoord (lineConnectorCoord) {
+    this.topLeftCoord = {
+      x: lineConnectorCoord.x - this.width / 2,
+      y: lineConnectorCoord.y - this.height
+    }
+    this.lineConnectorCoord = lineConnectorCoord
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  setLineConnectorBottomCoord (lineConnectorCoord) {
+    this.topLeftCoord = {
+      x: lineConnectorCoord.x - this.width / 2,
+      y: lineConnectorCoord.y
+    }
+    this.lineConnectorCoord = lineConnectorCoord
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  setLineConnectorNormal (lineConnectorCoord) {
     const { lineHeight, innerPadding, labelTextLines } = this
     const numTextRows = labelTextLines.length
 
@@ -307,6 +339,12 @@ class OuterLabel {
 
   get width () { return this._variants.width }
   set width (newValue) { this._variants.width = newValue }
+
+  get isTopLabel () { return this._variants.isTopLabel }
+  set isTopLabel (newValue) { this._variants.isTopLabel = newValue }
+
+  get isBottomLabel () { return this._variants.isBottomLabel }
+  set isBottomLabel (newValue) { this._variants.isBottomLabel = newValue }
 }
 
 module.exports = OuterLabel

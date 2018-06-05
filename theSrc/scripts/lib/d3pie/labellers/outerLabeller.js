@@ -11,9 +11,9 @@ import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
 
-// const inclusiveBetween = (a, b, c) => (b >= a && b <= c)
-// const exclusiveBetween = (a, b, c) => (b > a && b < c)
-const between = (a, b, c) => (b >= a && b < c)
+const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
+// const exclusiveBetween = (a, b, c) => (a < b && b < c)
+const between = (a, b, c) => (a <= b && b < c)
 
 let labels = {
   drawPlacementLines (pie) {
@@ -253,7 +253,27 @@ let labels = {
   },
 
   computeInitialLabelCoordinates: function (pie) {
-    const maxFontSize = _(pie.outerLabelData).map('fontSize').max()
+    pie.maxFontSize = _(pie.outerLabelData).map('fontSize').max()
+
+    const topLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(89, labelData.segmentAngleMidpoint, 91))
+    const bottomLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(269, labelData.segmentAngleMidpoint, 271))
+
+    if (topLabels.length === 1) {
+      labelLogger.info('has top label')
+      pie.hasTopLabel = true
+      topLabels[0].isTopLabel = true
+    } else {
+      pie.hasTopLabel = false
+    }
+
+    if (bottomLabels.length === 1) {
+      labelLogger.info('has bottom label')
+      pie.hasBottomLabel = true
+      bottomLabels[0].isBottomLabel = true
+    } else {
+      pie.hasBottomLabel = false
+    }
+
     _(pie.outerLabelData).each(label => {
       labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
@@ -262,8 +282,11 @@ let labels = {
         outerRadius: pie.outerRadius,
         pieCenter: pie.pieCenter,
         canvasHeight: parseFloat(pie.options.size.canvasHeight),
-        maxFontSize,
-        maxVerticalOffset: pie.maxVerticalOffset
+        maxFontSize: pie.maxFontSize,
+        maxVerticalOffset: pie.maxVerticalOffset,
+        hasTopLabel: pie.hasTopLabel,
+        hasBottomLabel: pie.hasBottomLabel,
+        minGap: parseFloat(pie.options.labels.outer.outerPadding)
       })
     })
   },
@@ -278,20 +301,46 @@ let labels = {
     pieCenter,
     canvasHeight,
     maxFontSize,
-    maxVerticalOffset
+    maxVerticalOffset,
+    hasTopLabel = false,
+    hasBottomLabel = false,
+    minGap = 1
   }) {
-    const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
-      angle: labelDatum.segmentAngleMidpoint,
-      labelHeight: labelDatum.height,
-      labelOffset,
-      labelLiftOffAngle,
-      outerRadius,
-      pieCenter,
-      canvasHeight,
-      maxFontSize,
-      maxVerticalOffset
-    })
-    labelDatum.setLineConnector(fitLineCoord)
+    if (labelDatum.isTopLabel) {
+      const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
+      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+
+      const fitLineCoord = {
+        x: segmentCoord.x,
+        y: pieCenter.y - (outerRadius + maxVerticalOffset - labelDatum.height)
+      }
+      labelDatum.setLineConnector(fitLineCoord)
+    } else if (labelDatum.isBottomLabel) {
+      const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
+      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+
+      const fitLineCoord = {
+        x: segmentCoord.x,
+        y: pieCenter.y + (outerRadius + maxVerticalOffset - labelDatum.height)
+      }
+      labelDatum.setLineConnector(fitLineCoord)
+    } else {
+      const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
+        angle: labelDatum.segmentAngleMidpoint,
+        labelHeight: labelDatum.height,
+        labelOffset,
+        labelLiftOffAngle,
+        outerRadius,
+        pieCenter,
+        canvasHeight,
+        maxFontSize,
+        maxVerticalOffset,
+        hasTopLabel,
+        hasBottomLabel,
+        minGap
+      })
+      labelDatum.setLineConnector(fitLineCoord)
+    }
   },
 
   _computeInitialCoordAlongLabelRadiusWithLiftOffAngle: function ({
@@ -303,7 +352,10 @@ let labels = {
     labelOffset,
     canvasHeight,
     maxFontSize,
-    maxVerticalOffset
+    maxVerticalOffset,
+    hasTopLabel = false,
+    hasBottomLabel = false,
+    minGap = 1
   }) {
     let fitLineCoord = null
 
@@ -315,8 +367,8 @@ let labels = {
       const radialLine = [pieCenter, radialCoord]
 
       let placementLineCoord1 = (between(0, angle, 180))
-        ? { x: pieCenter.x, y: pieCenter.y - (outerRadius + maxVerticalOffset) }
-        : { x: pieCenter.x, y: pieCenter.y + (outerRadius + maxVerticalOffset) }
+        ? { x: pieCenter.x, y: pieCenter.y - (outerRadius + maxVerticalOffset) + ((hasTopLabel) ? (maxFontSize + minGap) : 0) }
+        : { x: pieCenter.x, y: pieCenter.y + (outerRadius + maxVerticalOffset) - ((hasBottomLabel) ? (maxFontSize + minGap) : 0) }
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
@@ -579,7 +631,10 @@ let labels = {
         canvasWidth: parseFloat(pie.options.size.canvasWidth),
         labelRadius: pie.outerRadius + pie.labelOffset,
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        outerPadding: parseFloat(pie.options.labels.outer.outerPadding)
+        outerPadding: parseFloat(pie.options.labels.outer.outerPadding),
+        hasTopLabel: pie.hasTopLabel,
+        hasBottomLabel: pie.hasBottomLabel,
+        maxFontSize: pie.maxFontSize
       })
     }
 
@@ -646,9 +701,6 @@ let labels = {
       .sortBy(['topLeftCoord.y', x => { return -1 * x.id }])
       .value()
 
-    console.log('rightOuterLabelsSortedTopToBottom')
-    console.log(JSON.stringify(rightOuterLabelsSortedTopToBottom.map(x => `${x.label} -> ${x.id} -> ${x.topLeftCoord.y}`), {}, 2))
-
     const innerLabelSet = []
     const canUseInnerLabelsInTheseQuadrants = (useInnerLabels)
       ? [1, 2, 3]
@@ -672,7 +724,10 @@ let labels = {
         horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
         maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-        minGap: parseFloat(pie.options.labels.outer.outerPadding)
+        minGap: parseFloat(pie.options.labels.outer.outerPadding),
+        maxFontSize: pie.maxFontSize,
+        hasTopLabel: pie.hasTopLabel,
+        hasBottomLabel: pie.hasBottomLabel
       })
 
       labels.performInitialClusterSpacing({
@@ -690,7 +745,10 @@ let labels = {
         horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
         maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-        minGap: parseFloat(pie.options.labels.outer.outerPadding)
+        minGap: parseFloat(pie.options.labels.outer.outerPadding),
+        maxFontSize: pie.maxFontSize,
+        hasTopLabel: pie.hasTopLabel,
+        hasBottomLabel: pie.hasBottomLabel
       })
     }
 
@@ -710,7 +768,10 @@ let labels = {
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
       maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      minGap: parseFloat(pie.options.labels.outer.outerPadding)
+      minGap: parseFloat(pie.options.labels.outer.outerPadding),
+      maxFontSize: pie.maxFontSize,
+      hasTopLabel: pie.hasTopLabel,
+      hasBottomLabel: pie.hasBottomLabel
     })
 
     labels.performTwoPhaseLabelAdjustment({
@@ -729,7 +790,10 @@ let labels = {
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
       maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      minGap: parseFloat(pie.options.labels.outer.outerPadding)
+      minGap: parseFloat(pie.options.labels.outer.outerPadding),
+      maxFontSize: pie.maxFontSize,
+      hasTopLabel: pie.hasTopLabel,
+      hasBottomLabel: pie.hasBottomLabel
     })
 
     outerLabelSet = outerLabelSet.filter(label => label.labelShown)
@@ -804,15 +868,21 @@ let labels = {
     }
   },
 
-  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding, outerRadius, maxVerticalOffset }) {
+  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding, outerRadius, maxVerticalOffset, hasTopLabel, hasBottomLabel, maxFontSize }) {
     const newYPositions = {}
     const useYFromLookupTableAndCorrectX = (yPositionLookupTable, anchor) => {
       return (labelDatum) => {
+        let apexLabelCorrection = 0
+        if ((labelDatum.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
+            (labelDatum.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
+          apexLabelCorrection = maxFontSize + outerPadding
+        }
+
         labels.adjustLabelToNewY({
           anchor,
           newY: yPositionLookupTable[labelDatum.id],
           labelRadius,
-          yRange: outerRadius + maxVerticalOffset,
+          yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
           labelLiftOffAngle,
           labelDatum,
           pieCenter
@@ -931,10 +1001,13 @@ let labels = {
     labelLiftOffAngle,
     horizontalPadding,
     maxAngleBetweenRadialAndLabelLines,
-    minGap
+    minGap,
+    maxFontSize,
+    hasTopLabel,
+    hasBottomLabel
   }) {
-    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset
-    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset
+    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
+    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
     const terminateLoop = false
 
     const getLabelAbove = (label) => {
@@ -958,16 +1031,22 @@ let labels = {
         const labelBelow = getLabelBelow(labelToPushUp)
         if (labelBelow) {
           const newY = labelBelow.topLeftCoord.y - minGap
-          if (newY < upperBoundary) {
+          if (newY - labelToPushUp.height < upperBoundary) {
             console.warn(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded upperBoundary`)
             return terminateLoop
+          }
+
+          let apexLabelCorrection = 0
+          if ((labelToPushUp.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
+            (labelToPushUp.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
+            apexLabelCorrection = maxFontSize + minGap
           }
 
           labels.adjustLabelToNewY({
             newY,
             anchor: 'bottom',
             labelRadius: outerLabelRadius,
-            yRange: outerRadius + maxVerticalOffset,
+            yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
             labelLiftOffAngle,
             labelDatum: labelToPushUp,
             pieCenter,
@@ -985,16 +1064,22 @@ let labels = {
 
         if (labelAbove) {
           const newY = labelAbove.bottomLeftCoord.y + minGap
-          if (newY > lowerBoundary) {
+          if (newY + labelToPushDown.height > lowerBoundary) {
             console.warn(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded lowerBoundary`)
             return terminateLoop
+          }
+
+          let apexLabelCorrection = 0
+          if ((labelToPushDown.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
+            (labelToPushDown.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
+            apexLabelCorrection = maxFontSize + minGap
           }
 
           labels.adjustLabelToNewY({
             newY,
             anchor: 'top',
             labelRadius: outerLabelRadius,
-            yRange: outerRadius + maxVerticalOffset,
+            yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
             labelLiftOffAngle,
             labelDatum: labelToPushDown,
             pieCenter,
@@ -1006,7 +1091,10 @@ let labels = {
       })
     }
 
+    // TODO why is this !_.has || ! necessary (should just be a simple not
     const collidingLabels = _(outerLabelSet)
+      .filter(frontierLabel => { return !_.has(frontierLabel.isTopLabel) || !frontierLabel.isTopLabel })
+      .filter(frontierLabel => { return !_.has(frontierLabel.isBottomLabel) || !frontierLabel.isBottomLabel })
       .filter((frontierLabel, frontierIndex) => {
         const otherLabels = []
         if (!(frontierIndex === 0)) { otherLabels.push(outerLabelSet[frontierIndex - 1]) }
@@ -1080,7 +1168,10 @@ let labels = {
     labelLiftOffAngle,
     horizontalPadding,
     maxAngleBetweenRadialAndLabelLines,
-    minGap
+    minGap,
+    maxFontSize,
+    hasTopLabel,
+    hasBottomLabel
   }) {
     /*
      Phase 1: push labels down
@@ -1116,6 +1207,9 @@ let labels = {
       return null
     }
 
+    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
+    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
+
     if (stages.downSweep) {
       labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
       _(outerLabelSet).each((frontierLabel, frontierIndex) => {
@@ -1139,10 +1233,16 @@ let labels = {
             const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
             if (gettingPushedLabel.hide) { return continueLoop }
 
+            if (gettingPushedLabel.isBottomLabel) {
+              labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} bottom label. cancelling inner`)
+              phase1HitBottom = true
+              return continueLoop
+            }
+
             if (phase1HitBottom) {
               labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
-              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: pieCenter.y + outerRadius + maxVerticalOffset - minGap })
+              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: lowerBoundary })
               return continueLoop
             }
 
@@ -1172,21 +1272,27 @@ let labels = {
 
             const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
             const deltaY = newY - gettingPushedLabel.topLeftCoord.y
-            if (newY + gettingPushedLabel.height > canvasHeight || newY > (pieCenter.y + outerRadius + maxVerticalOffset)) {
+            if (newY + gettingPushedLabel.height > lowerBoundary) {
               labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
               phase1HitBottom = true
 
-              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: pieCenter.y + outerRadius + maxVerticalOffset - minGap })
+              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: lowerBoundary })
               return continueLoop
             }
 
             const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
 
+            let apexLabelCorrection = 0
+            if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
+              (gettingPushedLabel.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
+              apexLabelCorrection = maxFontSize + minGap
+            }
+
             labels.adjustLabelToNewY({
               anchor: 'top',
               newY,
               labelRadius: outerLabelRadius,
-              yRange: outerRadius + maxVerticalOffset,
+              yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
               labelLiftOffAngle,
               labelDatum: gettingPushedLabel,
               pieCenter,
@@ -1247,6 +1353,12 @@ let labels = {
             const gettingPushedLabel = reversedLabelSet[gettingPushedIndex]
             if (gettingPushedLabel.hide) { return continueLoop }
 
+            if (gettingPushedLabel.isTopLabel) {
+              labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} top label. cancelling inner`)
+              phase2HitTop = true
+              return terminateLoop
+            }
+
             if (gettingPushedLabel.isHigherThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
               labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
               return terminateLoop
@@ -1273,7 +1385,7 @@ let labels = {
 
             const newY = alreadyAdjustedLabel.topLeftCoord.y - (gettingPushedLabel.height + minGap)
             const deltaY = gettingPushedLabel.topLeftCoord.y - newY
-            if (newY < 0) {
+            if (newY < upperBoundary) {
               labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. cancelling inner`)
               phase2HitTop = true
               return terminateLoop
@@ -1281,11 +1393,17 @@ let labels = {
 
             const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
 
+            let apexLabelCorrection = 0
+            if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
+              (gettingPushedLabel.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
+              apexLabelCorrection = maxFontSize + minGap
+            }
+
             labels.adjustLabelToNewY({
               anchor: 'top',
               newY,
               labelRadius: outerLabelRadius,
-              yRange: outerRadius + maxVerticalOffset,
+              yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
               yAngleThreshold: 30, // TODO configurable,
               labelDatum: gettingPushedLabel,
               labelLiftOffAngle,
