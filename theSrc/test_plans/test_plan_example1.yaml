@@ -1,0 +1,44 @@
+#structure of each test definition
+
+# test definition:
+#   type: string. single or directory
+#   name: string. default: data.concat(config).join(',')
+#   data: string or array of paths to config
+#   config: string or array of paths to config
+#   phases: array of phases. default [none, initial, down sweep, up sweep]
+
+#examples of different types of test definitions available:
+
+# single
+#
+#  - data: data.test_plan.abc_rbg
+#    type: single
+
+# repeat for each data
+# - data: data.test_plan.one_val
+#    config:
+#      - config.label_12_24
+#      - config.label_24
+#    type: repeat_for_each_data
+
+# repeat build a single page with an example for each config
+# - data: data.450_companies
+#    type: single_page_one_example_per_config
+#    snapshot-name: data.450_companies
+#    config:
+#      - config.defaultSettings
+#      - config.label_stage_1
+#      - config.label_stage_0
+
+
+version: 1
+tests:
+  - testname: simplest_example
+    data: data.test_plan.abc_rbg
+    type: single
+  - testname: one_val_multiple_font_configs
+    data: data.test_plan.one_val
+    config:
+      - config.label_12_24
+      - config.label_24
+    type: repeat_for_each_data

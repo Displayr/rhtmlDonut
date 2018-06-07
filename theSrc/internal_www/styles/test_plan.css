@@ -1,0 +1,40 @@
+
+.test-cases-container {
+    display: flex;
+}
+
+test-plan-group-name {
+    clear: both;
+}
+
+.test-definition-container {
+    border: solid 4px lightblue;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 10px;
+    justify-content: space-around;
+    align-items: flex-start;
+    flex-direction: row;
+}
+
+.test-definition-toggle:before {
+    /* symbol for "opening" panels */
+    font-family: 'Glyphicons Halflings';  /* essential for enabling glyphicon */
+    content: "\e114";    /* adjust as needed, taken from bootstrap.css */
+    float: right;        /* adjust as needed */
+    color: grey;         /* adjust as needed */
+}
+
+.test-definition-toggle.collapsed:before {
+    /* symbol for "collapsed" panels */
+    content: "\e080";    /* adjust as needed, taken from bootstrap.css */
+}
+
+.test-definition {
+    max-width: 350px;
+    max-height: 200px;
+}
+
+.test-definition pre {
+    font-size: 8px;
+}

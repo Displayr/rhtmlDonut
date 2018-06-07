@@ -7,10 +7,9 @@
     "default_border": true,
     "css": [
       "/styles/main.css"
-    ]
+    ],
+    "isReadySelector": "g[rhtmlDonut-status=ready]"
   },
-  "visualRegressionSuite": {
-    "isReadySelector": "svg.svgContent"
-  }
+  "visualRegressionSuite": {}
 }
 
