@@ -257,21 +257,26 @@ let labels = {
   computeInitialLabelCoordinates: function (pie) {
     pie.maxFontSize = _(pie.outerLabelData).map('fontSize').max()
 
-    const topLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(87, labelData.segmentAngleMidpoint, 93))
-    const bottomLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(267, labelData.segmentAngleMidpoint, 273))
+    const topLabel = _(pie.outerLabelData)
+      .filter(labelData => inclusiveBetween(87, labelData.segmentAngleMidpoint, 93))
+      .minBy(labelDatum => Math.abs(90 - labelDatum.segmentAngleMidpoint))
 
-    if (topLabels.length === 1) {
+    const bottomLabel = _(pie.outerLabelData)
+      .filter(labelData => inclusiveBetween(267, labelData.segmentAngleMidpoint, 273))
+      .minBy(labelDatum => Math.abs(270 - labelDatum.segmentAngleMidpoint))
+
+    if (topLabel) {
       labelLogger.info('has top label')
       pie.hasTopLabel = true
-      topLabels[0].isTopLabel = true
+      topLabel.isTopLabel = true
     } else {
       pie.hasTopLabel = false
     }
 
-    if (bottomLabels.length === 1) {
+    if (bottomLabel) {
       labelLogger.info('has bottom label')
       pie.hasBottomLabel = true
-      bottomLabels[0].isBottomLabel = true
+      bottomLabel.isBottomLabel = true
     } else {
       pie.hasBottomLabel = false
     }

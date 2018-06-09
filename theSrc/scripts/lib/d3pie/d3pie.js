@@ -175,6 +175,7 @@ class d3pie {
     }
 
     // NB drawShape is a debug only feature that will be deleted / supported some other way in the future
+    // TODO is this duplication of this.options.debug.draw_placement_lines ?
     if (this.options.labels.outer.debugDrawFitLines) {
       outerLabeller.debugDrawFitLines(this)
     } else {
