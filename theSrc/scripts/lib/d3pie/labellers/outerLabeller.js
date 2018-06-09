@@ -1441,11 +1441,13 @@ let labels = {
       const topYOfNearestLabel = _(nearestNeighbors).map('topLeftCoord.y').min()
 
       const newBottomYCoord = _.min([
-        topLabel.bottomLeftCoord.y,
         topYOfNearestLabel - parseFloat(pie.options.labels.outer.outerPadding),
         pie.pieCenter.y - pie.outerRadius - pie.labelOffset
       ])
-      topLabel.setLineConnector({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
+
+      if (newBottomYCoord > topLabel.bottomLeftCoord.y) {
+        topLabel.setLineConnector({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
+      }
     }
 
     const bottomLabel = _(pie.outerLabelData).find('isBottomLabel')
@@ -1457,11 +1459,13 @@ let labels = {
       const bottomYOfNearestLabel = _(nearestNeighbors).map('bottomLeftCoord.y').max()
 
       const newTopYCoord = _.max([
-        bottomLabel.topLeftCoord.y,
         bottomYOfNearestLabel + parseFloat(pie.options.labels.outer.outerPadding),
         pie.pieCenter.y + pie.outerRadius + pie.labelOffset
       ])
-      bottomLabel.setLineConnector({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
+
+      if (newTopYCoord < bottomLabel.topLeftCoord.y) {
+        bottomLabel.setLineConnector({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
+      }
     }
   },
 
