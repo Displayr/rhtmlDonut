@@ -317,11 +317,11 @@ let segments = {
       }
       if (pie.options.tooltips.enabled) {
         // TODO should be in outerLabeller once it is a class
-        const isLabelShown = (labelData, id) => {
-          return _.some(labelData, { id })
+        const isLabelShown = (innerLabelData, outerlabelData, id) => {
+          return _.some(innerLabelData, { id }) || _.some(outerlabelData, { id })
         }
 
-        if (!isLabelShown(pie.outerLabelData, d.id)) {
+        if (!isLabelShown(pie.innerLabelData, pie.outerLabelData, d.id)) {
           index = segment.attr('data-index')
           tt.showTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
         }

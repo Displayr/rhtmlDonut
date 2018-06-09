@@ -44,16 +44,6 @@ let tt = {
           val = val + pie.options.data.suffix
         }
         return d.label + ': ' + val
-        // TODO what to do with this unreachable code
-        // let caption = pie.options.tooltips.string
-        // if (pie.options.tooltips.type === 'caption') {
-        //   caption = d.caption
-        // }
-        // return tt.replacePlaceholders(pie, caption, i, {
-        //   label: d.label,
-        //   value: d.value,
-        //   percentage: segments.getPercentage(pie, i, pie.options.labels.percentage.decimalPlaces)
-        // })
       })
 
     tooltips.selectAll('.' + pie.cssPrefix + 'tooltip rect')
