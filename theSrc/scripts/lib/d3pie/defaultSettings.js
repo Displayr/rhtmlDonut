@@ -32,7 +32,8 @@ const defaultSettings = {
       outOfBoundsCorrection: true,
       initialClusterSpacing: true,
       downSweep: true,
-      upSweep: true
+      upSweep: true,
+      shortenTopAndBottom: true
     },
     outer: {
       innerLabels: false,                   // pieWrapper: settings.labelsInner, R: labels.inner

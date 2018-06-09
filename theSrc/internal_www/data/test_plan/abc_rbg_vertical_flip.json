@@ -1,0 +1,47 @@
+{
+  "values": [
+    10,
+    30,
+    60
+  ],
+  "labels": [
+    "A",
+    "C",
+    "B"
+  ],
+  "settings": {
+    "valuesFont": "arial",
+    "valuesSize": 10,
+    "valuesColor": [
+      "red",
+      "green",
+      "blue"
+    ],
+    "valuesDisplay": "percentage",
+    "valuesOrder": "descending",
+    "valuesDec": 1,
+    "labelsFont": "arial",
+    "labelsSize": 10,
+    "labelsColor": "#333333",
+    "labelsInner": false,
+    "labelsBold": false,
+    "labelsMinFontSize": 8,
+    "groups": null,
+    "groupsFont": "arial",
+    "groupsFontColor": "#333333",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsColor": null,
+    "groupsNames": null,
+    "groupsSums": null,
+    "groupsCounts": null,
+    "groupLabelsMinFontSize": 8,
+    "prefix": null,
+    "suffix": null,
+    "orderControl": false,
+    "gradient": false,
+    "innerRadius": "80%",
+    "minAngle": 0.003,
+    "borderColor": "white"
+  }
+}

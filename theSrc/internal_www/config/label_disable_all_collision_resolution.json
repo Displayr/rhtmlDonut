@@ -4,7 +4,8 @@
       "outOfBoundsCorrection": false,
       "initialClusterSpacing": false,
       "downSweep": false,
-      "upSweep": false
+      "upSweep": false,
+      "shortenTopAndBottom": false
     }
   }
 }

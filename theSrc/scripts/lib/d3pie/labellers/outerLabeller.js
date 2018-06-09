@@ -228,6 +228,8 @@ let labels = {
     // adjust label positions to try to accommodate conflicts
     labels.performCollisionResolution(pie)
 
+    labels.shortenTopAndBottom(pie)
+
     labels.drawOuterLabels(pie)
 
     labels.drawInnerLabels(pie)
@@ -255,8 +257,8 @@ let labels = {
   computeInitialLabelCoordinates: function (pie) {
     pie.maxFontSize = _(pie.outerLabelData).map('fontSize').max()
 
-    const topLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(89, labelData.segmentAngleMidpoint, 91))
-    const bottomLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(269, labelData.segmentAngleMidpoint, 271))
+    const topLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(87, labelData.segmentAngleMidpoint, 93))
+    const bottomLabels = pie.outerLabelData.filter(labelData => inclusiveBetween(267, labelData.segmentAngleMidpoint, 273))
 
     if (topLabels.length === 1) {
       labelLogger.info('has top label')
@@ -560,6 +562,7 @@ let labels = {
       .enter()
       .append('g')
       .attr('id', function (d) { return `${cssPrefix}labelGroup${d.id}-${labelType}` })
+      .attr('data-segmentangle', function (d) { return d.segmentAngleMidpoint })
       .attr('data-index', function (d) { return d.id })
       .attr('class', `${cssPrefix}labelGroup-${labelType}`)
       .attr('transform', function ({topLeftCoord}) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
@@ -1423,6 +1426,42 @@ let labels = {
           })
         }
       })
+    }
+  },
+
+  shortenTopAndBottom (pie) {
+    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
+
+    const topLabel = _(pie.outerLabelData).find('isTopLabel')
+    if (topLabel) {
+      const topLabelIndex = pie.outerLabelData.indexOf(topLabel)
+      const nearestNeighbors = []
+      if (topLabelIndex > 0) { nearestNeighbors.push(pie.outerLabelData[topLabelIndex - 1]) }
+      if (topLabelIndex < pie.outerLabelData.length - 1) { nearestNeighbors.push(pie.outerLabelData[topLabelIndex + 1]) }
+      const topYOfNearestLabel = _(nearestNeighbors).map('topLeftCoord.y').min()
+
+      const newBottomYCoord = _.min([
+        topLabel.bottomLeftCoord.y,
+        topYOfNearestLabel - parseFloat(pie.options.labels.outer.outerPadding),
+        pie.pieCenter.y - pie.outerRadius - pie.labelOffset
+      ])
+      topLabel.setLineConnector({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
+    }
+
+    const bottomLabel = _(pie.outerLabelData).find('isBottomLabel')
+    if (bottomLabel) {
+      const bottomLabelIndex = pie.outerLabelData.indexOf(bottomLabel)
+      const nearestNeighbors = []
+      if (bottomLabelIndex > 0) { nearestNeighbors.push(pie.outerLabelData[bottomLabelIndex - 1]) }
+      if (bottomLabelIndex < pie.outerLabelData.length - 1) { nearestNeighbors.push(pie.outerLabelData[bottomLabelIndex + 1]) }
+      const bottomYOfNearestLabel = _(nearestNeighbors).map('bottomLeftCoord.y').max()
+
+      const newTopYCoord = _.max([
+        bottomLabel.topLeftCoord.y,
+        bottomYOfNearestLabel + parseFloat(pie.options.labels.outer.outerPadding),
+        pie.pieCenter.y + pie.outerRadius + pie.labelOffset
+      ])
+      bottomLabel.setLineConnector({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
     }
   },
 
