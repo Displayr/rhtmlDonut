@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import d3 from 'd3'
-import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc } from './labelUtils'
+import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc, findIntersectingLabels } from './labelUtils'
 import helpers from '../helpers'
 import math from '../math'
 import segments from '../segments'
@@ -81,7 +81,9 @@ let labels = {
           labelRadius: pie.outerRadius + pie.labelOffset,
           yRange: pie.outerRadius + pie.maxVerticalOffset,
           labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-          pieCenter: pie.pieCenter
+          pieCenter: pie.pieCenter,
+          topIsLifted: false,
+          bottomIsLifted: false
         })
         helpers.showPoint(pie.svg, fakeLabel.lineConnectorCoord, 'green')
       })
@@ -281,11 +283,13 @@ let labels = {
       pie.hasBottomLabel = false
     }
 
+    // First place labels using a liftOff of 0, then check for collisions and only lift
+    // if there are any collisions do we apply a liftOffAngle
     _(pie.outerLabelData).each(label => {
       labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
         labelOffset: pie.labelOffset,
-        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        labelLiftOffAngle: 0,
         outerRadius: pie.outerRadius,
         pieCenter: pie.pieCenter,
         canvasHeight: parseFloat(pie.options.size.canvasHeight),
@@ -296,6 +300,52 @@ let labels = {
         minGap: parseFloat(pie.options.labels.outer.outerPadding)
       })
     })
+
+    const topLabelsThatCouldBeLifted = pie.outerLabelData
+      .filter(({segmentAngleMidpoint}) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+    const collisionsInTopSet = findIntersectingLabels(topLabelsThatCouldBeLifted)
+    if (collisionsInTopSet.length > 0) {
+      labelLogger.info(`Collisions between ${90 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${90 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
+      pie.topIsLifted = true
+      _(topLabelsThatCouldBeLifted).each(label => {
+        labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
+          labelDatum: label,
+          labelOffset: pie.labelOffset,
+          labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+          outerRadius: pie.outerRadius,
+          pieCenter: pie.pieCenter,
+          canvasHeight: parseFloat(pie.options.size.canvasHeight),
+          maxFontSize: pie.maxFontSize,
+          maxVerticalOffset: pie.maxVerticalOffset,
+          hasTopLabel: pie.hasTopLabel,
+          hasBottomLabel: pie.hasBottomLabel,
+          minGap: parseFloat(pie.options.labels.outer.outerPadding)
+        })
+      })
+    }
+
+    const bottomLabelsThatCouldBeLifted = pie.outerLabelData
+      .filter(({segmentAngleMidpoint}) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+    const collisionsInBottomSet = findIntersectingLabels(bottomLabelsThatCouldBeLifted)
+    if (collisionsInBottomSet.length > 0) {
+      labelLogger.info(`Collisions between ${270 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${270 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
+      pie.bottomIsLifted = true
+      _(bottomLabelsThatCouldBeLifted).each(label => {
+        labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
+          labelDatum: label,
+          labelOffset: pie.labelOffset,
+          labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+          outerRadius: pie.outerRadius,
+          pieCenter: pie.pieCenter,
+          canvasHeight: parseFloat(pie.options.size.canvasHeight),
+          maxFontSize: pie.maxFontSize,
+          maxVerticalOffset: pie.maxVerticalOffset,
+          hasTopLabel: pie.hasTopLabel,
+          hasBottomLabel: pie.hasBottomLabel,
+          minGap: parseFloat(pie.options.labels.outer.outerPadding)
+        })
+      })
+    }
   },
 
   // TODO need to doc this using an image, and test that it lines up with computeXGivenY
@@ -642,7 +692,9 @@ let labels = {
         outerPadding: parseFloat(pie.options.labels.outer.outerPadding),
         hasTopLabel: pie.hasTopLabel,
         hasBottomLabel: pie.hasBottomLabel,
-        maxFontSize: pie.maxFontSize
+        maxFontSize: pie.maxFontSize,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
       })
     }
 
@@ -678,14 +730,63 @@ let labels = {
       if (error.isInterrupt && error.type === 'AngleThresholdExceeded') {
         const offendingLabel = error.labelDatum
         labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' exceeded radial to labelLine angle threshold of ${pie.options.labels.outer.labelMaxLineAngle} (${offendingLabel.angleBetweenLabelAndRadial})`)
-        let newMinAngleThrehsold = offendingLabel.fractionalValue
-        if (newMinAngleThrehsold < minAngleThreshold + minIncrement) { newMinAngleThrehsold = minAngleThreshold + minIncrement }
-        if (newMinAngleThrehsold > minAngleThreshold + maxIncrement) { newMinAngleThrehsold = minAngleThreshold + maxIncrement }
+
+        // two strategies : lift top/bottom if not lifted. If both alreadt lifted,
+        // then increase minAngle threshold
+        let newMinAngleThrehsold = minAngleThreshold
+        if (offendingLabel.inTopHalf && !pie.topIsLifted) {
+          labelLogger.info('lifting top labels before next iteration')
+          // note this is the 'master labelSet', not the clone passed to each iteration
+          const topLabelsThatCouldBeLifted = labelSet
+            .filter(({segmentAngleMidpoint}) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+          pie.topIsLifted = true
+          _(topLabelsThatCouldBeLifted).each(label => {
+            labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
+              labelDatum: label,
+              labelOffset: pie.labelOffset,
+              labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+              outerRadius: pie.outerRadius,
+              pieCenter: pie.pieCenter,
+              canvasHeight: parseFloat(pie.options.size.canvasHeight),
+              maxFontSize: pie.maxFontSize,
+              maxVerticalOffset: pie.maxVerticalOffset,
+              hasTopLabel: pie.hasTopLabel,
+              hasBottomLabel: pie.hasBottomLabel,
+              minGap: parseFloat(pie.options.labels.outer.outerPadding)
+            })
+          })
+        } else if (offendingLabel.inBottomHalf && !pie.bottomIsLifted) {
+          labelLogger.info('lifting bottom labels before next iteration')
+          // note this is the 'master labelSet', not the clone passed to each iteration
+          pie.bottomIsLifted = true
+          _(labelSet)
+            .filter(({segmentAngleMidpoint}) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+            .each(label => {
+              labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
+                labelDatum: label,
+                labelOffset: pie.labelOffset,
+                labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+                outerRadius: pie.outerRadius,
+                pieCenter: pie.pieCenter,
+                canvasHeight: parseFloat(pie.options.size.canvasHeight),
+                maxFontSize: pie.maxFontSize,
+                maxVerticalOffset: pie.maxVerticalOffset,
+                hasTopLabel: pie.hasTopLabel,
+                hasBottomLabel: pie.hasBottomLabel,
+                minGap: parseFloat(pie.options.labels.outer.outerPadding)
+              })
+            })
+        } else {
+          newMinAngleThrehsold = offendingLabel.fractionalValue
+          if (newMinAngleThrehsold < minAngleThreshold + minIncrement) { newMinAngleThrehsold = minAngleThreshold + minIncrement }
+          if (newMinAngleThrehsold > minAngleThreshold + maxIncrement) { newMinAngleThrehsold = minAngleThreshold + maxIncrement }
+          labelLogger.info(`increased newMinAngleThrehsold to ${newMinAngleThrehsold}`)
+        }
 
         labels._performCollisionResolutionIteration({
           useInnerLabels,
           minAngleThreshold: newMinAngleThrehsold,
-          labelSet: labelSet, // NB it is the original labelset passed to next iteration, not the modified one
+          labelSet: labelSet, // NB it is the original labelset (potentially topIsLifted and bottomIsLifted applied), not the modified one from the failed iteration
           breakOutAngleThreshold,
           minIncrement,
           maxIncrement,
@@ -735,7 +836,9 @@ let labels = {
         minGap: parseFloat(pie.options.labels.outer.outerPadding),
         maxFontSize: pie.maxFontSize,
         hasTopLabel: pie.hasTopLabel,
-        hasBottomLabel: pie.hasBottomLabel
+        hasBottomLabel: pie.hasBottomLabel,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
       })
 
       labels.performInitialClusterSpacing({
@@ -756,7 +859,9 @@ let labels = {
         minGap: parseFloat(pie.options.labels.outer.outerPadding),
         maxFontSize: pie.maxFontSize,
         hasTopLabel: pie.hasTopLabel,
-        hasBottomLabel: pie.hasBottomLabel
+        hasBottomLabel: pie.hasBottomLabel,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
       })
     }
 
@@ -779,7 +884,9 @@ let labels = {
       minGap: parseFloat(pie.options.labels.outer.outerPadding),
       maxFontSize: pie.maxFontSize,
       hasTopLabel: pie.hasTopLabel,
-      hasBottomLabel: pie.hasBottomLabel
+      hasBottomLabel: pie.hasBottomLabel,
+      topIsLifted: pie.topIsLifted,
+      bottomIsLifted: pie.bottomIsLifted
     })
 
     labels.performTwoPhaseLabelAdjustment({
@@ -801,7 +908,9 @@ let labels = {
       minGap: parseFloat(pie.options.labels.outer.outerPadding),
       maxFontSize: pie.maxFontSize,
       hasTopLabel: pie.hasTopLabel,
-      hasBottomLabel: pie.hasBottomLabel
+      hasBottomLabel: pie.hasBottomLabel,
+      topIsLifted: pie.topIsLifted,
+      bottomIsLifted: pie.bottomIsLifted
     })
 
     outerLabelSet = outerLabelSet.filter(label => label.labelShown)
@@ -820,7 +929,9 @@ let labels = {
     labelRadius,
     yRange,
     labelLiftOffAngle,
-    pieCenter
+    pieCenter,
+    topIsLifted,
+    bottomIsLifted
   }) {
     let newTopYCoord = null
     if (anchor === 'top') {
@@ -843,7 +954,10 @@ let labels = {
       yOffset = yRange
     }
 
-    const labelLiftOffAngleInRadians = math.toRadians(labelLiftOffAngle)
+    const labelLiftOffAngleInRadians = ((labelDatum.inTopHalf && topIsLifted) || (labelDatum.inBottomHalf && bottomIsLifted))
+      ? math.toRadians(labelLiftOffAngle)
+      : 0
+
     const yPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.cos(labelLiftOffAngleInRadians)
     const xPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.sin(labelLiftOffAngleInRadians)
     let xOffset = 0
@@ -876,7 +990,7 @@ let labels = {
     }
   },
 
-  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding, outerRadius, maxVerticalOffset, hasTopLabel, hasBottomLabel, maxFontSize }) {
+  correctOutOfBoundLabelsPreservingOrder ({ labelSet, labelLiftOffAngle, labelRadius, canvasHeight, canvasWidth, pieCenter, outerPadding, outerRadius, maxVerticalOffset, hasTopLabel, hasBottomLabel, maxFontSize, topIsLifted, bottomIsLifted }) {
     const newYPositions = {}
     const useYFromLookupTableAndCorrectX = (yPositionLookupTable, anchor) => {
       return (labelDatum) => {
@@ -893,7 +1007,9 @@ let labels = {
           yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
           labelLiftOffAngle,
           labelDatum,
-          pieCenter
+          pieCenter,
+          topIsLifted,
+          bottomIsLifted
         })
         return labelDatum
       }
@@ -1012,11 +1128,14 @@ let labels = {
     minGap,
     maxFontSize,
     hasTopLabel,
-    hasBottomLabel
+    hasBottomLabel,
+    topIsLifted,
+    bottomIsLifted
   }) {
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
     const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
     const terminateLoop = false
+    const continueLoop = false
 
     const getLabelAbove = (label) => {
       const indexOf = outerLabelSet.indexOf(label)
@@ -1050,6 +1169,7 @@ let labels = {
             apexLabelCorrection = maxFontSize + minGap
           }
 
+          const oldY = labelToPushUp.bottomLeftCoord.y
           labels.adjustLabelToNewY({
             newY,
             anchor: 'bottom',
@@ -1058,11 +1178,32 @@ let labels = {
             labelLiftOffAngle,
             labelDatum: labelToPushUp,
             pieCenter,
-            horizontalPadding
+            horizontalPadding,
+            topIsLifted,
+            bottomIsLifted
           })
+
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.angleBetweenLabelAndRadial
+          if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
+            labelLogger.debug(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded max angle threshold`)
+            labels.adjustLabelToNewY({
+              oldY,
+              anchor: 'bottom',
+              labelRadius: outerLabelRadius,
+              yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
+              labelLiftOffAngle,
+              labelDatum: labelToPushUp,
+              pieCenter,
+              horizontalPadding,
+              topIsLifted,
+              bottomIsLifted
+            })
+            return terminateLoop
+          }
         } else {
           console.warn(`tried to push label up, but there was no label below`)
         }
+        return continueLoop
       })
     }
 
@@ -1083,6 +1224,7 @@ let labels = {
             apexLabelCorrection = maxFontSize + minGap
           }
 
+          const oldY = labelToPushDown.topLeftCoord.y
           labels.adjustLabelToNewY({
             newY,
             anchor: 'top',
@@ -1091,28 +1233,36 @@ let labels = {
             labelLiftOffAngle,
             labelDatum: labelToPushDown,
             pieCenter,
-            horizontalPadding
+            horizontalPadding,
+            topIsLifted,
+            bottomIsLifted
           })
+
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushDown.angleBetweenLabelAndRadial
+          if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
+            labelLogger.debug(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded max angle threshold`)
+            labels.adjustLabelToNewY({
+              oldY,
+              anchor: 'top',
+              labelRadius: outerLabelRadius,
+              yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
+              labelLiftOffAngle,
+              labelDatum: labelToPushDown,
+              pieCenter,
+              horizontalPadding,
+              topIsLifted,
+              bottomIsLifted
+            })
+            return terminateLoop
+          }
         } else {
           console.warn(`tried to push label down, but there was no label above`)
         }
+        return continueLoop
       })
     }
 
-    // TODO why is this !_.has || ! necessary (should just be a simple not
-    const collidingLabels = _(outerLabelSet)
-      .filter(frontierLabel => { return !_.has(frontierLabel.isTopLabel) || !frontierLabel.isTopLabel })
-      .filter(frontierLabel => { return !_.has(frontierLabel.isBottomLabel) || !frontierLabel.isBottomLabel })
-      .filter((frontierLabel, frontierIndex) => {
-        const otherLabels = []
-        if (!(frontierIndex === 0)) { otherLabels.push(outerLabelSet[frontierIndex - 1]) }
-        if (!(frontierIndex === outerLabelSet.length - 1)) { otherLabels.push(outerLabelSet[frontierIndex + 1]) }
-
-        const intersects = _.some(otherLabels, otherLabel => frontierLabel.intersectsWith(otherLabel))
-        return intersects
-      })
-      .value()
-
+    const collidingLabels = findIntersectingLabels(outerLabelSet)
     const collidingLabelSets = []
     let activeSet = []
     _(collidingLabels).each(collidingLabel => {
@@ -1179,7 +1329,9 @@ let labels = {
     minGap,
     maxFontSize,
     hasTopLabel,
-    hasBottomLabel
+    hasBottomLabel,
+    topIsLifted,
+    bottomIsLifted
   }) {
     /*
      Phase 1: push labels down
@@ -1304,7 +1456,9 @@ let labels = {
               labelLiftOffAngle,
               labelDatum: gettingPushedLabel,
               pieCenter,
-              horizontalPadding
+              horizontalPadding,
+              topIsLifted,
+              bottomIsLifted
             })
 
             const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
@@ -1416,7 +1570,9 @@ let labels = {
               labelDatum: gettingPushedLabel,
               labelLiftOffAngle,
               pieCenter,
-              horizontalPadding
+              horizontalPadding,
+              topIsLifted,
+              bottomIsLifted
             })
 
             const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
@@ -1435,7 +1591,11 @@ let labels = {
   },
 
   shortenTopAndBottom (pie) {
-    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
+    // just address  top for now
+    // how much white space on top (max of left and right)
+    // how much white space should there be if this was a tight plot ?
+    // determine new params for adjustLabel that accounts for the excess
+    // replace labels
 
     const topLabel = _(pie.outerLabelData).find('isTopLabel')
     if (topLabel) {
@@ -1473,6 +1633,95 @@ let labels = {
       }
     }
   },
+
+  // shortenTopAndBottomFailedAttempt (pie) {
+  //   if (!pie.options.labels.stages.shortenTopAndBottom) { }
+  //
+  //   const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
+  //
+  //   const setsSortedBottomToTop = {
+  //     topLeft: pie.outerLabelData
+  //       .filter(({segmentAngleMidpoint}) => between(60, segmentAngleMidpoint, 90))
+  //       .filter(({isTopLabel}) => !isTopLabel)
+  //       .sort((a, b) => b.topLeftCoord.y - a.topLeftCoord.y),
+  //     topRight: pie.outerLabelData
+  //       .filter(({segmentAngleMidpoint}) => between(90, segmentAngleMidpoint, 120))
+  //       .filter(({isTopLabel}) => !isTopLabel)
+  //       .sort((a, b) => b.topLeftCoord.y - a.topLeftCoord.y)
+  //   }
+  //
+  //   const requiredVerticalHeight = Math.max(
+  //    _(setsSortedBottomToTop.topLeft).map('height').sum() + (setsSortedBottomToTop.topLeft.length - 1) * labelPadding,
+  //    _(setsSortedBottomToTop.topRight).map('height').sum() + (setsSortedBottomToTop.topRight.length - 1) * labelPadding
+  //   )
+  //
+  //   console.log(`requiredVerticalHeight = zMath.max(
+  //     ${_(setsSortedBottomToTop.topLeft).map('height').sum() + (setsSortedBottomToTop.topLeft.length - 1) * labelPadding},
+  //     ${_(setsSortedBottomToTop.topRight).map('height').sum() + (setsSortedBottomToTop.topRight.length - 1) * labelPadding}
+  //   )`)
+  //
+  //   const indexOfBottomMostLabels = {
+  //     topLeft: pie.outerLabelData.indexOf(_.first(setsSortedBottomToTop.topLeft)),
+  //     topRight: pie.outerLabelData.indexOf(_.first(setsSortedBottomToTop.topRight))
+  //   }
+  //
+  //   const boundaryCoords = {
+  //     topLeft: (indexOfBottomMostLabels.topLeft > 0)
+  //       ? pie.outerLabelData[indexOfBottomMostLabels.topLeft - 1].topLeftCoord.y
+  //       : null,
+  //     topRight: (indexOfBottomMostLabels.topRight < pie.outerLabelData.length - 1)
+  //       ? pie.outerLabelData[indexOfBottomMostLabels.topRight + 1].topRightCoord.y
+  //       : null
+  //   }
+  //
+  //   let frontierCoords = {
+  //     topLeft: Math.min(pie.pieCenter.y - pie.outerRadius - pie.labelOffset, boundaryCoords.topLeft - labelPadding),
+  //     topRight: Math.min(pie.pieCenter.y - pie.outerRadius - pie.labelOffset, boundaryCoords.topRight - labelPadding)
+  //   }
+  //
+  //   console.log(`let frontierCoords = {
+  //     topLeft: Math.min(${pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, ${boundaryCoords.topLeft - labelPadding}),
+  //     topRight: Math.min(${pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, ${boundaryCoords.topRight - labelPadding})
+  //   }`)
+  //
+  //   let upperApexLabelCorrection = (pie.hasTopLabel)
+  //     ? pie.maxFontSize + labelPadding
+  //     : 0
+  //
+  //   helpers.showPoint(pie.svg, { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, 'green')
+  //
+  //   helpers.showPoint(pie.svg, { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.outerRadius - requiredVerticalHeight + upperApexLabelCorrection}, 'blue')
+  //
+  //   // distance from center to new desired top topmost label (not including topLabel)
+  //
+  //   _(setsSortedBottomToTop.topLeft).each(label => {
+  //     labels.adjustLabelToNewY({
+  //       anchor: 'bottom',
+  //       newY: frontierCoords.topLeft,
+  //       labelRadius: pie.outerRadius + pie.labelOffset,
+  //       yRange: pie.outerRadius + pie.labelOffset + requiredVerticalHeight - upperApexLabelCorrection,
+  //       labelLiftOffAngle: 30,
+  //       labelDatum: label,
+  //       pieCenter: pie.pieCenter
+  //     })
+  //
+  //     frontierCoords.topLeft = label.topLeftCoord.y - labelPadding
+  //   })
+  //
+  //   _(setsSortedBottomToTop.topRight).each(label => {
+  //     labels.adjustLabelToNewY({
+  //       anchor: 'bottom',
+  //       newY: frontierCoords.topRight,
+  //       labelRadius: pie.outerRadius + pie.labelOffset,
+  //       yRange: pie.outerRadius + pie.labelOffset + requiredVerticalHeight - upperApexLabelCorrection,
+  //       labelLiftOffAngle: 30,
+  //       labelDatum: label,
+  //       pieCenter: pie.pieCenter
+  //     })
+  //
+  //     frontierCoords.topRight = label.topRightCoord.y - labelPadding
+  //   })
+  // },
 
   wrapAndFormatLabelUsingSvgApproximation ({
     parentContainer,

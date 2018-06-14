@@ -119,6 +119,21 @@ function labelXbelowY (label1, label2) {
   return rectXbelowY(labelToRect(label1), labelToRect(label2))
 }
 
+// TODO why is this !_.has || ! necessary (should just be a simple not)
+function findIntersectingLabels (labels) {
+  return _(labels)
+    .filter(frontierLabel => { return !_.has(frontierLabel.isTopLabel) || !frontierLabel.isTopLabel })
+    .filter(frontierLabel => { return !_.has(frontierLabel.isBottomLabel) || !frontierLabel.isBottomLabel })
+    .filter((frontierLabel, frontierIndex) => {
+      const otherLabels = []
+      if (!(frontierIndex === 0)) { otherLabels.push(labels[frontierIndex - 1]) }
+      if (!(frontierIndex === labels.length - 1)) { otherLabels.push(labels[frontierIndex + 1]) }
+      const intersects = _.some(otherLabels, otherLabel => frontierLabel.intersectsWith(otherLabel))
+      return intersects
+    })
+    .value()
+}
+
 module.exports = {
   getLabelDimensionsUsingDivApproximation,
   getLabelDimensionsUsingSvgApproximation,
@@ -126,5 +141,6 @@ module.exports = {
   splitIntoLines,
   labelIntersect,
   labelXaboveY,
-  labelXbelowY
+  labelXbelowY,
+  findIntersectingLabels
 }

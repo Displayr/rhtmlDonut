@@ -5,7 +5,7 @@ const _ = require('lodash')
 const quadrants = [4, 1, 2, 3]
 const math = require('../math')
 
-// looks like some (e.g. pieCenter dont have get / set ) - same with innerlabel
+// looks like some things are added directly and not accounted for still (e.g. pieCenter dont have get / set ) - same with innerlabel
 
 class OuterLabel {
   constructor ({
@@ -28,6 +28,7 @@ class OuterLabel {
   }) {
     const segmentAngleMidpoint = angleStart + angleExtent / 2
     const hemisphere = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270) ? 'left' : 'right'
+    const inTopHalf = (segmentAngleMidpoint <= 180)
     const segmentQuadrantIndex = Math.floor(4 * segmentAngleMidpoint / 360)
     const segmentQuadrant = quadrants[segmentQuadrantIndex]
     const fractionalValue = value / totalValue
@@ -43,6 +44,7 @@ class OuterLabel {
     const labelText = `${label}: ${formattedLabelValue}`
 
     this._invariants = {
+      inTopHalf,
       color,
       fractionalValue,
       fontFamily,
@@ -251,7 +253,7 @@ class OuterLabel {
     return (_.isNaN(angleCInDegrees)) ? 0 : 180 - angleCInDegrees
   }
 
-  intersectsWith (anotherLabel, within = 0) {
+  intersectsWith (anotherLabel, within = -0) {
     return labelIntersect(this, anotherLabel, within)
   }
 
@@ -302,6 +304,8 @@ class OuterLabel {
   get fontFamily () { return this._invariants.fontFamily }
   get fractionalValue () { return this._invariants.fractionalValue }
   get hemisphere () { return this._invariants.hemisphere }
+  get inTopHalf () { return this._invariants.inTopHalf }
+  get inBottomHalf () { return !this._invariants.inTopHalf }
   get id () { return this._invariants.id }
   get innerPadding () { return this._invariants.innerPadding }
   get label () { return this._invariants.label }
