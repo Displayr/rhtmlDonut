@@ -15,6 +15,9 @@ const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
 // const exclusiveBetween = (a, b, c) => (a < b && b < c)
 const between = (a, b, c) => (a <= b && b < c)
 
+// TODO bit of a temp hack
+const spacingBetweenUpperTrianglesAndCenterMeridian = 0
+
 let labels = {
   drawPlacementLines (pie) {
     const maxFontSize = _(pie.outerLabelData).map('fontSize').max()
@@ -423,9 +426,13 @@ let labels = {
       const radialCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       const radialLine = [pieCenter, radialCoord]
 
-      let placementLineCoord1 = (between(0, angle, 180))
-        ? { x: pieCenter.x, y: pieCenter.y - (outerRadius + maxVerticalOffset) + ((hasTopLabel) ? (maxFontSize + minGap) : 0) }
-        : { x: pieCenter.x, y: pieCenter.y + (outerRadius + maxVerticalOffset) - ((hasBottomLabel) ? (maxFontSize + minGap) : 0) }
+      let placementLineCoord1 = {}
+      placementLineCoord1.y = (between(0, angle, 180))
+        ? pieCenter.y - (outerRadius + maxVerticalOffset) + ((hasTopLabel) ? (maxFontSize + minGap) : 0)
+        : pieCenter.y + (outerRadius + maxVerticalOffset) - ((hasBottomLabel) ? (maxFontSize + minGap) : 0)
+      placementLineCoord1.x = (between(0, angle, 90) || between(270, angle, 360))
+        ? pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian
+        : pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
@@ -976,7 +983,7 @@ let labels = {
 
       // step 2. Given the upperTriangleYAngle and the yOffset, determine the xOffset that places the label that places it along the upperTriange
       const yLengthOfLabelOnUpperTriangle = yRange - yOffset
-      xOffset = yLengthOfLabelOnUpperTriangle * Math.tan(upperTriangleYAngleInRadians)
+      xOffset = yLengthOfLabelOnUpperTriangle * Math.tan(upperTriangleYAngleInRadians) + spacingBetweenUpperTrianglesAndCenterMeridian
     }
 
     const newLineConnectorCoord = {
