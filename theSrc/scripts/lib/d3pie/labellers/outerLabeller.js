@@ -417,10 +417,10 @@ let labels = {
     let fitLineCoord = null
 
     const highYOffSetAngle = (angle) => (between(90 - labelLiftOffAngle, angle, 90 + labelLiftOffAngle) || between(270 - labelLiftOffAngle, angle, 270 + labelLiftOffAngle))
-    const pointAtZeroDegrees = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
+    const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
 
     if (highYOffSetAngle(angle)) {
-      const radialCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
+      const radialCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       const radialLine = [pieCenter, radialCoord]
 
       let placementLineCoord1 = (between(0, angle, 180))
@@ -429,13 +429,13 @@ let labels = {
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegrees, pieCenter, 90 - labelLiftOffAngle)
+        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
       } else if (between(90, angle, 180)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegrees, pieCenter, 90 + labelLiftOffAngle)
+        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 + labelLiftOffAngle)
       } else if (between(180, angle, 270)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegrees, pieCenter, 270 - labelLiftOffAngle)
+        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 - labelLiftOffAngle)
       } else {
-        placementLineCoord2 = math.rotate(pointAtZeroDegrees, pieCenter, 270 + labelLiftOffAngle)
+        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 + labelLiftOffAngle)
       }
 
       const placementLine = [placementLineCoord1, placementLineCoord2]
@@ -448,10 +448,10 @@ let labels = {
         if (fitLineCoord.y + labelHeight > canvasHeight) { fitLineCoord.y = canvasHeight - labelHeight }
       } else {
         labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label at angle ${angle}`)
-        fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
+        fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       }
     } else {
-      fitLineCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
+      fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
     }
 
     return fitLineCoord
@@ -1567,9 +1567,8 @@ let labels = {
               newY,
               labelRadius: outerLabelRadius,
               yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
-              yAngleThreshold: 30, // TODO configurable,
-              labelDatum: gettingPushedLabel,
               labelLiftOffAngle,
+              labelDatum: gettingPushedLabel,
               pieCenter,
               horizontalPadding,
               topIsLifted,
@@ -1597,6 +1596,9 @@ let labels = {
     // how much white space should there be if this was a tight plot ?
     // determine new params for adjustLabel that accounts for the excess
     // replace labels
+
+    this.shortenTop(pie)
+    this.shortenBottom(pie)
 
     const topLabel = _(pie.outerLabelData).find('isTopLabel')
     if (topLabel) {
@@ -1635,94 +1637,145 @@ let labels = {
     }
   },
 
-  // shortenTopAndBottomFailedAttempt (pie) {
-  //   if (!pie.options.labels.stages.shortenTopAndBottom) { }
-  //
-  //   const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
-  //
-  //   const setsSortedBottomToTop = {
-  //     topLeft: pie.outerLabelData
-  //       .filter(({segmentAngleMidpoint}) => between(60, segmentAngleMidpoint, 90))
-  //       .filter(({isTopLabel}) => !isTopLabel)
-  //       .sort((a, b) => b.topLeftCoord.y - a.topLeftCoord.y),
-  //     topRight: pie.outerLabelData
-  //       .filter(({segmentAngleMidpoint}) => between(90, segmentAngleMidpoint, 120))
-  //       .filter(({isTopLabel}) => !isTopLabel)
-  //       .sort((a, b) => b.topLeftCoord.y - a.topLeftCoord.y)
-  //   }
-  //
-  //   const requiredVerticalHeight = Math.max(
-  //    _(setsSortedBottomToTop.topLeft).map('height').sum() + (setsSortedBottomToTop.topLeft.length - 1) * labelPadding,
-  //    _(setsSortedBottomToTop.topRight).map('height').sum() + (setsSortedBottomToTop.topRight.length - 1) * labelPadding
-  //   )
-  //
-  //   console.log(`requiredVerticalHeight = zMath.max(
-  //     ${_(setsSortedBottomToTop.topLeft).map('height').sum() + (setsSortedBottomToTop.topLeft.length - 1) * labelPadding},
-  //     ${_(setsSortedBottomToTop.topRight).map('height').sum() + (setsSortedBottomToTop.topRight.length - 1) * labelPadding}
-  //   )`)
-  //
-  //   const indexOfBottomMostLabels = {
-  //     topLeft: pie.outerLabelData.indexOf(_.first(setsSortedBottomToTop.topLeft)),
-  //     topRight: pie.outerLabelData.indexOf(_.first(setsSortedBottomToTop.topRight))
-  //   }
-  //
-  //   const boundaryCoords = {
-  //     topLeft: (indexOfBottomMostLabels.topLeft > 0)
-  //       ? pie.outerLabelData[indexOfBottomMostLabels.topLeft - 1].topLeftCoord.y
-  //       : null,
-  //     topRight: (indexOfBottomMostLabels.topRight < pie.outerLabelData.length - 1)
-  //       ? pie.outerLabelData[indexOfBottomMostLabels.topRight + 1].topRightCoord.y
-  //       : null
-  //   }
-  //
-  //   let frontierCoords = {
-  //     topLeft: Math.min(pie.pieCenter.y - pie.outerRadius - pie.labelOffset, boundaryCoords.topLeft - labelPadding),
-  //     topRight: Math.min(pie.pieCenter.y - pie.outerRadius - pie.labelOffset, boundaryCoords.topRight - labelPadding)
-  //   }
-  //
-  //   console.log(`let frontierCoords = {
-  //     topLeft: Math.min(${pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, ${boundaryCoords.topLeft - labelPadding}),
-  //     topRight: Math.min(${pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, ${boundaryCoords.topRight - labelPadding})
-  //   }`)
-  //
-  //   let upperApexLabelCorrection = (pie.hasTopLabel)
-  //     ? pie.maxFontSize + labelPadding
-  //     : 0
-  //
-  //   helpers.showPoint(pie.svg, { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.outerRadius - pie.labelOffset}, 'green')
-  //
-  //   helpers.showPoint(pie.svg, { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.outerRadius - requiredVerticalHeight + upperApexLabelCorrection}, 'blue')
-  //
-  //   // distance from center to new desired top topmost label (not including topLabel)
-  //
-  //   _(setsSortedBottomToTop.topLeft).each(label => {
-  //     labels.adjustLabelToNewY({
-  //       anchor: 'bottom',
-  //       newY: frontierCoords.topLeft,
-  //       labelRadius: pie.outerRadius + pie.labelOffset,
-  //       yRange: pie.outerRadius + pie.labelOffset + requiredVerticalHeight - upperApexLabelCorrection,
-  //       labelLiftOffAngle: 30,
-  //       labelDatum: label,
-  //       pieCenter: pie.pieCenter
-  //     })
-  //
-  //     frontierCoords.topLeft = label.topLeftCoord.y - labelPadding
-  //   })
-  //
-  //   _(setsSortedBottomToTop.topRight).each(label => {
-  //     labels.adjustLabelToNewY({
-  //       anchor: 'bottom',
-  //       newY: frontierCoords.topRight,
-  //       labelRadius: pie.outerRadius + pie.labelOffset,
-  //       yRange: pie.outerRadius + pie.labelOffset + requiredVerticalHeight - upperApexLabelCorrection,
-  //       labelLiftOffAngle: 30,
-  //       labelDatum: label,
-  //       pieCenter: pie.pieCenter
-  //     })
-  //
-  //     frontierCoords.topRight = label.topRightCoord.y - labelPadding
-  //   })
-  // },
+  shortenTop (pie) {
+    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
+    if (!pie.topIsLifted) { return }
+
+    const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
+    const labelOffsetYCoord = pie.pieCenter.y - pie.outerRadius - pie.labelOffset
+    let upperApexLabelCorrection = (pie.hasTopLabel)
+      ? pie.maxFontSize + labelPadding
+      : 0
+
+    const setsSortedBottomToTop = {
+      left: _(pie.outerLabelData)
+        .filter('inLeftHalf')
+        .filter(({topLeftCoord}) => topLeftCoord.y <= labelOffsetYCoord)
+        .filter(({isTopLabel}) => !isTopLabel)
+        .sortBy([x => { return -1 * x.topLeftCoord.y }, x => { return -1 * x.id }])
+        .value(),
+      right: _(pie.outerLabelData)
+        .filter('inRightHalf')
+        .filter(({topRightCoord}) => topRightCoord.y <= labelOffsetYCoord)
+        .filter(({isTopLabel}) => !isTopLabel)
+        .sortBy([x => { return -1 * x.topLeftCoord.y }, x => { return -1 * x.id }])
+        .value()
+    }
+
+    const excessTopLeftVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
+    const excessTopRightVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.right).map('height').sum() - (setsSortedBottomToTop.right.length - 1) * labelPadding
+    const excessVerticalSpace = Math.min(excessTopLeftVerticalSpace, excessTopRightVerticalSpace)
+
+    // TODO use of upperApexLabelCorrection might be wrong ??
+    const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace - upperApexLabelCorrection
+
+    let frontierCoords = {
+      left: labelOffsetYCoord,
+      right: labelOffsetYCoord
+    }
+
+    // distance from center to new desired top topmost label (not including topLabel)
+    _(setsSortedBottomToTop.left).each(label => {
+      labels.adjustLabelToNewY({
+        anchor: 'bottom',
+        newY: frontierCoords.left,
+        labelRadius: pie.outerRadius + pie.labelOffset,
+        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        labelDatum: label,
+        pieCenter: pie.pieCenter,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
+      })
+      frontierCoords.left = label.topLeftCoord.y - labelPadding
+    })
+
+    _(setsSortedBottomToTop.right).each(label => {
+      labels.adjustLabelToNewY({
+        anchor: 'bottom',
+        newY: frontierCoords.right,
+        labelRadius: pie.outerRadius + pie.labelOffset,
+        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        labelDatum: label,
+        pieCenter: pie.pieCenter,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
+      })
+      frontierCoords.right = label.topRightCoord.y - labelPadding
+    })
+  },
+
+  shortenBottom (pie) {
+    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
+    if (!pie.bottomIsLifted) { return }
+
+    const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
+    const labelOffsetYCoord = pie.pieCenter.y + pie.outerRadius + pie.labelOffset
+    let upperApexLabelCorrection = (pie.hasBottomLabel)
+      ? pie.maxFontSize + labelPadding
+      : 0
+
+    const setsSortedBottomToTop = {
+      left: _(pie.outerLabelData)
+        .filter('inLeftHalf')
+        .filter(({bottomLeftCoord}) => bottomLeftCoord.y >= labelOffsetYCoord)
+        .filter(({isBottomLabel}) => !isBottomLabel)
+        .sortBy([x => { return x.topLeftCoord.y }, x => { return -1 * x.id }])
+        .value(),
+      right: _(pie.outerLabelData)
+        .filter('inRightHalf')
+        .filter(({bottomRightCoord}) => bottomRightCoord.y >= labelOffsetYCoord)
+        .filter(({isBottomLabel}) => !isBottomLabel)
+        .sortBy([x => { return x.topLeftCoord.y }, x => { return -1 * x.id }])
+        .value()
+    }
+
+    const excessTopLeftVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
+    const excessTopRightVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.right).map('height').sum() - (setsSortedBottomToTop.right.length - 1) * labelPadding
+    const excessVerticalSpace = Math.min(excessTopLeftVerticalSpace, excessTopRightVerticalSpace)
+
+    console.log(`excessVerticalSpace`, excessVerticalSpace)
+
+    // TODO use of upperApexLabelCorrection might be wrong ??
+    const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace - upperApexLabelCorrection
+
+    let frontierCoords = {
+      left: labelOffsetYCoord,
+      right: labelOffsetYCoord
+    }
+
+    // distance from center to new desired top topmost label (not including topLabel)
+    _(setsSortedBottomToTop.left).each(label => {
+      labels.adjustLabelToNewY({
+        anchor: 'top',
+        newY: frontierCoords.left,
+        labelRadius: pie.outerRadius + pie.labelOffset,
+        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        labelDatum: label,
+        pieCenter: pie.pieCenter,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
+      })
+      frontierCoords.left = label.bottomLeftCoord.y + labelPadding
+    })
+
+    _(setsSortedBottomToTop.right).each(label => {
+      labels.adjustLabelToNewY({
+        anchor: 'top',
+        newY: frontierCoords.right,
+        labelRadius: pie.outerRadius + pie.labelOffset,
+        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
+        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
+        labelDatum: label,
+        pieCenter: pie.pieCenter,
+        topIsLifted: pie.topIsLifted,
+        bottomIsLifted: pie.bottomIsLifted
+      })
+      frontierCoords.right = label.bottomRightCoord.y + labelPadding
+    })
+  },
 
   wrapAndFormatLabelUsingSvgApproximation ({
     parentContainer,

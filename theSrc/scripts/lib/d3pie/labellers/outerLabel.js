@@ -28,6 +28,7 @@ class OuterLabel {
   }) {
     const segmentAngleMidpoint = angleStart + angleExtent / 2
     const hemisphere = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270) ? 'left' : 'right'
+    const inLeftHalf = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270)
     const inTopHalf = (segmentAngleMidpoint <= 180)
     const segmentQuadrantIndex = Math.floor(4 * segmentAngleMidpoint / 360)
     const segmentQuadrant = quadrants[segmentQuadrantIndex]
@@ -44,6 +45,7 @@ class OuterLabel {
     const labelText = `${label}: ${formattedLabelValue}`
 
     this._invariants = {
+      inLeftHalf,
       inTopHalf,
       color,
       fractionalValue,
@@ -303,9 +305,15 @@ class OuterLabel {
   get color () { return this._invariants.color }
   get fontFamily () { return this._invariants.fontFamily }
   get fractionalValue () { return this._invariants.fractionalValue }
+
+  // NB left includes, right excludes
+  // NB top includes, bottom excludes
   get hemisphere () { return this._invariants.hemisphere }
   get inTopHalf () { return this._invariants.inTopHalf }
   get inBottomHalf () { return !this._invariants.inTopHalf }
+  get inLeftHalf () { return this._invariants.inLeftHalf }
+  get inRightHalf () { return !this._invariants.inLeftHalf }
+
   get id () { return this._invariants.id }
   get innerPadding () { return this._invariants.innerPadding }
   get label () { return this._invariants.label }
