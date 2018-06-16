@@ -49,7 +49,7 @@ const defaultSettings = {
       hideWhenLessThanPercentage: null,     // pieWrapper: null HARD CODE (minAngle is used instead) . TODO investigate this variable
       maxWidthPercentage: '30%',            // pieWrapper: settings.labelsMaxWidthPercentage. R: labels.max.width.percentage. wrap label text if label exceeds X% of canvasWidth
       iterationMinIncrement: 0.0001,        // pieWrapper: settings.labelIterationMinIncrement. R: labels.advanced.min.increment. Control labelling iterations step size
-      iterationMaxIncrement: 0.005,         // pieWrapper: settings.labelIterationMaxIncrement. R: labels.advanced.max.increment. Control labelling iterations step size
+      iterationMaxIncrement: 0.001,         // pieWrapper: settings.labelIterationMaxIncrement. R: labels.advanced.max.increment. Control labelling iterations step size
       maxVerticalOffset: null                // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90 degree mark
     },
     mainLabel: {                            //

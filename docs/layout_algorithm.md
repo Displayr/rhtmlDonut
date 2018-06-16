@@ -24,7 +24,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
   | (advanced) lift off angle         | 30      | `labels.advanced.liftoff.angle`      | `settings.liftOffAngle`                    |
   | (advanced) max vertical offset    | unset , i.e., use all space     | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset`          |
   | (advanced) iteration min increment | 0.0001 | `labels.advanced.min.increment`      | `settings.labelIterationMinIncrement`      | 
-  | (advanced) iteration max increment | 0.005  | `labels.advanced.max.increment`      | `settings.labelIterationMaxIncrement`      |
+  | (advanced) iteration max increment | 0.001  | `labels.advanced.max.increment`      | `settings.labelIterationMaxIncrement`      |
  
 *Config Descriptions*
 

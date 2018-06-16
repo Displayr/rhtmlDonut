@@ -98,7 +98,7 @@ Donut <- function(
     labels.advanced.liftoff.angle = 30,
     labels.advanced.line.max.angle = 60,
     labels.advanced.min.increment = 0.0001,
-    labels.advanced.max.increment = 0.005,
+    labels.advanced.max.increment = 0.001,
     groups = NULL,
     groups.color = NULL,
     groups.order = "initial",
