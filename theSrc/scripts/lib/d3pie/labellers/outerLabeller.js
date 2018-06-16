@@ -18,6 +18,10 @@ const between = (a, b, c) => (a <= b && b < c)
 // TODO bit of a temp hack
 const spacingBetweenUpperTrianglesAndCenterMeridian = 0
 
+// NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the fn returns false
+const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
+const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
+
 let labels = {
   drawPlacementLines (pie) {
     const maxFontSize = _(pie.outerLabelData).map('fontSize').max()
@@ -262,6 +266,7 @@ let labels = {
   computeInitialLabelCoordinates: function (pie) {
     pie.maxFontSize = _(pie.outerLabelData).map('fontSize').max()
 
+    // TODO hard coded assumptions
     const topLabel = _(pie.outerLabelData)
       .filter(labelData => inclusiveBetween(87, labelData.segmentAngleMidpoint, 93))
       .minBy(labelDatum => Math.abs(90 - labelDatum.segmentAngleMidpoint))
@@ -1142,8 +1147,7 @@ let labels = {
   }) {
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
     const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
-    const terminateLoop = false
-    const continueLoop = false
+    const continueLoop = false // TODO THIS IS A BUG !!!
 
     const getLabelAbove = (label) => {
       const indexOf = outerLabelSet.indexOf(label)
@@ -1359,8 +1363,6 @@ let labels = {
     */
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
-    const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
-    const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
     let phase1HitBottom = false
 
     let lp = `${hemisphere}:DOWN` // lp = logPrefix
@@ -1598,15 +1600,93 @@ let labels = {
   },
 
   shortenTopAndBottom (pie) {
-    // just address  top for now
-    // how much white space on top (max of left and right)
-    // how much white space should there be if this was a tight plot ?
-    // determine new params for adjustLabel that accounts for the excess
-    // replace labels
+    this.shortenLiftedTopLabels(pie)
+    this.shortenTopLabel(pie)
+    this.shortenLiftedBottomLabels(pie)
+    this.shortenBottomLabel(pie)
+  },
 
-    this.shortenTop(pie)
-    this.shortenBottom(pie)
+  shortenLiftedTopLabels (pie) {
+    if (pie.topIsLifted && pie.options.labels.stages.shortenTopAndBottom) {
+      const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
+      const outerRadiusYCoord = pie.pieCenter.y - pie.outerRadius
 
+      const pointAtZeroDegreesAlongLabelOffset = {
+        x: pie.pieCenter.x - pie.outerRadius - pie.labelOffset,
+        y: pie.pieCenter.y
+      }
+      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 60) // TODO hardcoded 30
+      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 120) // TODO hardcoded 30
+
+      const setsSortedBottomToTop = {
+        left: _(pie.outerLabelData)
+          .filter('inLeftHalf')
+          .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({isTopLabel}) => !isTopLabel)
+          .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
+          .value(),
+        right: _(pie.outerLabelData)
+          .filter('inRightHalf')
+          .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({isTopLabel}) => !isTopLabel)
+          .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
+          .value()
+      }
+
+      const excessLeftVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
+      const excessRightVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedBottomToTop.right).map('height').sum() - (setsSortedBottomToTop.right.length - 1) * labelPadding
+      const excessVerticalSpace = Math.min(excessLeftVerticalSpace, excessRightVerticalSpace)
+
+      if (excessVerticalSpace <= 10) {
+        console.log(`cancelling shortenLiftedTopLabels, there is not enough excess vertical space`)
+        return
+      }
+      const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+
+      // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
+      const leftPlacementTriangleLine = [
+        { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y - 5 },
+        { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
+      ]
+
+      const rightPlacementTriangleLine = [
+        { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y - 5 },
+        { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
+      ]
+
+      _(setsSortedBottomToTop.left).each((label, index) => {
+        const verticalLineThroughLabelConnector = [
+          label.lineConnectorCoord,
+          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        ]
+
+        const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
+        if (intersection) {
+          const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+          label.moveStraightDownBy(amountToMoveDownBy)
+        } else {
+          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+        }
+      })
+
+      _(setsSortedBottomToTop.right).each((label, index) => {
+        const verticalLineThroughLabelConnector = [
+          label.lineConnectorCoord,
+          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        ]
+
+        const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
+        if (intersection) {
+          const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+          label.moveStraightDownBy(amountToMoveDownBy)
+        } else {
+          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+        }
+      })
+    }
+  },
+
+  shortenTopLabel (pie) {
     const topLabel = _(pie.outerLabelData).find('isTopLabel')
     if (topLabel) {
       const topLabelIndex = pie.outerLabelData.indexOf(topLabel)
@@ -1624,7 +1704,89 @@ let labels = {
         topLabel.setLineConnector({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
       }
     }
+  },
 
+  shortenLiftedBottomLabels (pie) {
+    if (pie.bottomIsLifted && pie.options.labels.stages.shortenTopAndBottom) {
+      const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
+      const outerRadiusYCoord = pie.pieCenter.y + pie.outerRadius
+
+      const pointAtZeroDegreesAlongLabelOffset = {
+        x: pie.pieCenter.x - pie.outerRadius - pie.labelOffset,
+        y: pie.pieCenter.y
+      }
+      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 300) // TODO hardcoded 30
+      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 240) // TODO hardcoded 30
+
+      const setsSortedTopToBottom = {
+        left: _(pie.outerLabelData)
+          .filter('inLeftHalf')
+          .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({isBottomLabel}) => !isBottomLabel)
+          .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
+          .value(),
+        right: _(pie.outerLabelData)
+          .filter('inRightHalf')
+          .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({isBottomLabel}) => !isBottomLabel)
+          .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
+          .value()
+      }
+
+      const excessLeftVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedTopToBottom.left).map('height').sum() - (setsSortedTopToBottom.left.length - 1) * labelPadding
+      const excessRightVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedTopToBottom.right).map('height').sum() - (setsSortedTopToBottom.right.length - 1) * labelPadding
+      const excessVerticalSpace = Math.min(excessLeftVerticalSpace, excessRightVerticalSpace)
+
+      if (excessVerticalSpace <= 10) {
+        console.log(`cancelling shortenLiftedBottomLabels, there is not enough excess vertical space`)
+        return
+      }
+
+      const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+
+      const leftPlacementTriangleLine = [
+        { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y },
+        { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
+      ]
+
+      const rightPlacementTriangleLine = [
+        { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y },
+        { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
+      ]
+
+      _(setsSortedTopToBottom.left).each((label, index) => {
+        const verticalLineThroughLabelConnector = [
+          label.lineConnectorCoord,
+          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        ]
+
+        const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
+        if (intersection) {
+          const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+          label.moveStraightUpBy(amountToMoveUpBy)
+        } else {
+          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+        }
+      })
+
+      _(setsSortedTopToBottom.right).each((label, index) => {
+        const verticalLineThroughLabelConnector = [
+          label.lineConnectorCoord,
+          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        ]
+
+        const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
+        if (intersection) {
+          const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+          label.moveStraightUpBy(amountToMoveUpBy)
+        } else {
+          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+        }
+      })
+    }
+  },
+
+  shortenBottomLabel (pie) {
     const bottomLabel = _(pie.outerLabelData).find('isBottomLabel')
     if (bottomLabel) {
       const bottomLabelIndex = pie.outerLabelData.indexOf(bottomLabel)
@@ -1642,146 +1804,6 @@ let labels = {
         bottomLabel.setLineConnector({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
       }
     }
-  },
-
-  shortenTop (pie) {
-    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
-    if (!pie.topIsLifted) { return }
-
-    const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
-    const labelOffsetYCoord = pie.pieCenter.y - pie.outerRadius - pie.labelOffset
-    let upperApexLabelCorrection = (pie.hasTopLabel)
-      ? pie.maxFontSize + labelPadding
-      : 0
-
-    const setsSortedBottomToTop = {
-      left: _(pie.outerLabelData)
-        .filter('inLeftHalf')
-        .filter(({topLeftCoord}) => topLeftCoord.y <= labelOffsetYCoord)
-        .filter(({isTopLabel}) => !isTopLabel)
-        .sortBy([x => { return -1 * x.topLeftCoord.y }, x => { return -1 * x.id }])
-        .value(),
-      right: _(pie.outerLabelData)
-        .filter('inRightHalf')
-        .filter(({topRightCoord}) => topRightCoord.y <= labelOffsetYCoord)
-        .filter(({isTopLabel}) => !isTopLabel)
-        .sortBy([x => { return -1 * x.topLeftCoord.y }, x => { return -1 * x.id }])
-        .value()
-    }
-
-    const excessTopLeftVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
-    const excessTopRightVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.right).map('height').sum() - (setsSortedBottomToTop.right.length - 1) * labelPadding
-    const excessVerticalSpace = Math.min(excessTopLeftVerticalSpace, excessTopRightVerticalSpace)
-
-    // TODO use of upperApexLabelCorrection might be wrong ??
-    const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace - upperApexLabelCorrection
-
-    let frontierCoords = {
-      left: labelOffsetYCoord,
-      right: labelOffsetYCoord
-    }
-
-    // distance from center to new desired top topmost label (not including topLabel)
-    _(setsSortedBottomToTop.left).each(label => {
-      labels.adjustLabelToNewY({
-        anchor: 'bottom',
-        newY: frontierCoords.left,
-        labelRadius: pie.outerRadius + pie.labelOffset,
-        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
-        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        labelDatum: label,
-        pieCenter: pie.pieCenter,
-        topIsLifted: pie.topIsLifted,
-        bottomIsLifted: pie.bottomIsLifted
-      })
-      frontierCoords.left = label.topLeftCoord.y - labelPadding
-    })
-
-    _(setsSortedBottomToTop.right).each(label => {
-      labels.adjustLabelToNewY({
-        anchor: 'bottom',
-        newY: frontierCoords.right,
-        labelRadius: pie.outerRadius + pie.labelOffset,
-        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
-        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        labelDatum: label,
-        pieCenter: pie.pieCenter,
-        topIsLifted: pie.topIsLifted,
-        bottomIsLifted: pie.bottomIsLifted
-      })
-      frontierCoords.right = label.topRightCoord.y - labelPadding
-    })
-  },
-
-  shortenBottom (pie) {
-    if (!pie.options.labels.stages.shortenTopAndBottom) { return }
-    if (!pie.bottomIsLifted) { return }
-
-    const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
-    const labelOffsetYCoord = pie.pieCenter.y + pie.outerRadius + pie.labelOffset
-    let upperApexLabelCorrection = (pie.hasBottomLabel)
-      ? pie.maxFontSize + labelPadding
-      : 0
-
-    const setsSortedBottomToTop = {
-      left: _(pie.outerLabelData)
-        .filter('inLeftHalf')
-        .filter(({bottomLeftCoord}) => bottomLeftCoord.y >= labelOffsetYCoord)
-        .filter(({isBottomLabel}) => !isBottomLabel)
-        .sortBy([x => { return x.topLeftCoord.y }, x => { return -1 * x.id }])
-        .value(),
-      right: _(pie.outerLabelData)
-        .filter('inRightHalf')
-        .filter(({bottomRightCoord}) => bottomRightCoord.y >= labelOffsetYCoord)
-        .filter(({isBottomLabel}) => !isBottomLabel)
-        .sortBy([x => { return x.topLeftCoord.y }, x => { return -1 * x.id }])
-        .value()
-    }
-
-    const excessTopLeftVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
-    const excessTopRightVerticalSpace = pie.maxVerticalOffset - _(setsSortedBottomToTop.right).map('height').sum() - (setsSortedBottomToTop.right.length - 1) * labelPadding
-    const excessVerticalSpace = Math.min(excessTopLeftVerticalSpace, excessTopRightVerticalSpace)
-
-    console.log(`excessVerticalSpace`, excessVerticalSpace)
-
-    // TODO use of upperApexLabelCorrection might be wrong ??
-    const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace - upperApexLabelCorrection
-
-    let frontierCoords = {
-      left: labelOffsetYCoord,
-      right: labelOffsetYCoord
-    }
-
-    // distance from center to new desired top topmost label (not including topLabel)
-    _(setsSortedBottomToTop.left).each(label => {
-      labels.adjustLabelToNewY({
-        anchor: 'top',
-        newY: frontierCoords.left,
-        labelRadius: pie.outerRadius + pie.labelOffset,
-        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
-        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        labelDatum: label,
-        pieCenter: pie.pieCenter,
-        topIsLifted: pie.topIsLifted,
-        bottomIsLifted: pie.bottomIsLifted
-      })
-      frontierCoords.left = label.bottomLeftCoord.y + labelPadding
-    })
-
-    _(setsSortedBottomToTop.right).each(label => {
-      labels.adjustLabelToNewY({
-        anchor: 'top',
-        newY: frontierCoords.right,
-        labelRadius: pie.outerRadius + pie.labelOffset,
-        yRange: pie.outerRadius + pie.labelOffset + newMaxVerticalOffset,
-        labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        labelDatum: label,
-        pieCenter: pie.pieCenter,
-        topIsLifted: pie.topIsLifted,
-        bottomIsLifted: pie.bottomIsLifted
-      })
-      frontierCoords.right = label.bottomRightCoord.y + labelPadding
-    })
   },
 
   wrapAndFormatLabelUsingSvgApproximation ({
@@ -2006,6 +2028,76 @@ let labels = {
     labelLogger.info(`placed ${pi(label)} inside`)
     innerLabelSet.push(newInnerLabel)
     label.labelShown = false
+  },
+
+  nearestNeighborAbove (pie, label) {
+    try {
+      if (label.isTopLabel) { return null }
+
+      const labelIndex = pie.outerLabelData.indexOf(label)
+      if (labelIndex === -1) { return null }
+
+      let labelAbove = null
+      if (label.inTopLeftQuadrant) {
+        labelAbove = pie.outerLabelData[labelIndex + 1]
+      } else if (label.inTopRightQuadrant) {
+        labelAbove = pie.outerLabelData[labelIndex - 1]
+      } else if (label.inBottomLeftQuadrant) {
+        if (labelIndex === pie.outerLabelData.length - 1) {
+          labelAbove = _.first(pie.outerLabelData)
+        } else {
+          labelAbove = pie.outerLabelData[labelIndex + 1]
+        }
+      } else if (label.inBottomRightQuadrant) {
+        labelAbove = pie.outerLabelData[labelIndex - 1]
+      }
+
+      // sanity check
+      if (labelAbove.topLeftCoord.y < label.topLeftCoord.y) {
+        return labelAbove
+      } else {
+        console.error(`nearestNeighborAbove yields incorrect results for label`, label)
+        return null
+      }
+    } catch (e) {
+      console.error(`nearestNeighborAbove failed on `, e)
+      return null
+    }
+  },
+
+  nearestNeighborBelow (pie, label) {
+    try {
+      if (label.isBottomLabel) { return null }
+
+      const labelIndex = pie.outerLabelData.indexOf(label)
+      if (labelIndex === -1) { return null }
+
+      let labelBelow = null
+      if (label.inTopLeftQuadrant) {
+        if (labelIndex === 0) {
+          labelBelow = _.last(pie.outerLabelData)
+        } else {
+          labelBelow = pie.outerLabelData[labelIndex - 1]
+        }
+      } else if (label.inTopRightQuadrant) {
+        labelBelow = pie.outerLabelData[labelIndex + 1]
+      } else if (label.inBottomLeftQuadrant) {
+        labelBelow = pie.outerLabelData[labelIndex - 1]
+      } else if (label.inBottomRightQuadrant) {
+        labelBelow = pie.outerLabelData[labelIndex + 1]
+      }
+
+      // sanity check
+      if (labelBelow.topLeftCoord.y > label.topLeftCoord.y) {
+        return labelBelow
+      } else {
+        console.error(`nearestNeighborBelow yields incorrect results for label`, label)
+        return null
+      }
+    } catch (e) {
+      console.error(`nearestNeighborAbove failed on `, e)
+      return null
+    }
   }
 }
 

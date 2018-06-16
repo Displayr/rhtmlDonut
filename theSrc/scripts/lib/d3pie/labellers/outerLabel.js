@@ -160,6 +160,20 @@ class OuterLabel {
     return lineConnectorCoord
   }
 
+  moveStraightUpBy (verticalOffset) {
+    this.topLeftCoord.y -= verticalOffset
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  moveStraightDownBy (verticalOffset) {
+    this.topLeftCoord.y += verticalOffset
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
   setLineConnector (lineConnectorCoord) {
     if (this.isTopLabel) {
       this.setLineConnectorTopCoord(lineConnectorCoord)
@@ -300,6 +314,11 @@ class OuterLabel {
     }
   }
 
+  get topY () { return this.topLeftCoord.y }
+  get bottomY () { return this.bottomLeftCoord.y }
+  get leftX () { return this.topLeftCoord.x }
+  get rightX () { return this.topRightCoord.x }
+
   // accessors for invariants
 
   get color () { return this._invariants.color }
@@ -313,6 +332,11 @@ class OuterLabel {
   get inBottomHalf () { return !this._invariants.inTopHalf }
   get inLeftHalf () { return this._invariants.inLeftHalf }
   get inRightHalf () { return !this._invariants.inLeftHalf }
+
+  get inTopLeftQuadrant () { return this.inTopHalf && this.inLeftHalf }
+  get inTopRightQuadrant () { return this.inTopHalf && this.inRightHalf }
+  get inBottomLeftQuadrant () { return this.inBottomHalf && this.inLeftHalf }
+  get inBottomRightQuadrant () { return this.inBottomHalf && this.inRightHalf }
 
   get id () { return this._invariants.id }
   get innerPadding () { return this._invariants.innerPadding }
