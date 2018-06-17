@@ -1641,48 +1641,59 @@ let labels = {
         console.log(`cancelling shortenLiftedTopLabels, there is not enough excess vertical space`)
         return
       }
-      const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
 
-      // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
-      const leftPlacementTriangleLine = [
-        { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y - 5 },
-        { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
-      ]
-
-      const rightPlacementTriangleLine = [
-        { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y - 5 },
-        { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
-      ]
-
-      _(setsSortedBottomToTop.left).each((label, index) => {
-        const verticalLineThroughLabelConnector = [
-          label.lineConnectorCoord,
-          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+      let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+      while (true) {
+        labelLogger.info(`trying to shrink top with newMaxVerticalOffset: ${newMaxVerticalOffset} (original maxVerticalOffset: ${pie.maxVerticalOffset}`)
+        // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
+        const leftPlacementTriangleLine = [
+          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y - 5 },
+          { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
         ]
 
-        const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
-        if (intersection) {
-          const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
-          label.moveStraightDownBy(amountToMoveDownBy)
-        } else {
-          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
-        }
-      })
-
-      _(setsSortedBottomToTop.right).each((label, index) => {
-        const verticalLineThroughLabelConnector = [
-          label.lineConnectorCoord,
-          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        const rightPlacementTriangleLine = [
+          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y - 5 },
+          { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
         ]
 
-        const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
-        if (intersection) {
-          const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
-          label.moveStraightDownBy(amountToMoveDownBy)
-        } else {
-          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
-        }
-      })
+        _(setsSortedBottomToTop.left).each((label, index) => {
+          const verticalLineThroughLabelConnector = [
+            label.lineConnectorCoord,
+            {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+          ]
+
+          const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
+          if (intersection) {
+            const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+            label.moveStraightDownBy(amountToMoveDownBy)
+          } else {
+            labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+          }
+        })
+
+        _(setsSortedBottomToTop.right).each((label, index) => {
+          const verticalLineThroughLabelConnector = [
+            label.lineConnectorCoord,
+            {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+          ]
+
+          const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
+          if (intersection) {
+            const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+            label.moveStraightDownBy(amountToMoveDownBy)
+          } else {
+            labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+          }
+        })
+
+        const collidingLabels = findIntersectingLabels(_.flatten(setsSortedBottomToTop.left, setsSortedBottomToTop.right), 0)
+        if (collidingLabels.length === 0) { break }
+
+        // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
+        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
+
+        if (newMaxVerticalOffset >= pie.maxVerticalOffset) { break }
+      }
     }
   },
 
@@ -1742,47 +1753,58 @@ let labels = {
         return
       }
 
-      const newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+      let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+      while (true) {
+        labelLogger.info(`trying to shrink bottom with newMaxVerticalOffset: ${newMaxVerticalOffset} (original maxVerticalOffset: ${pie.maxVerticalOffset}`)
 
-      const leftPlacementTriangleLine = [
-        { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y },
-        { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
-      ]
-
-      const rightPlacementTriangleLine = [
-        { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y },
-        { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
-      ]
-
-      _(setsSortedTopToBottom.left).each((label, index) => {
-        const verticalLineThroughLabelConnector = [
-          label.lineConnectorCoord,
-          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        const leftPlacementTriangleLine = [
+          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y },
+          { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
         ]
 
-        const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
-        if (intersection) {
-          const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
-          label.moveStraightUpBy(amountToMoveUpBy)
-        } else {
-          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
-        }
-      })
-
-      _(setsSortedTopToBottom.right).each((label, index) => {
-        const verticalLineThroughLabelConnector = [
-          label.lineConnectorCoord,
-          {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+        const rightPlacementTriangleLine = [
+          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y },
+          { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
         ]
 
-        const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
-        if (intersection) {
-          const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
-          label.moveStraightUpBy(amountToMoveUpBy)
-        } else {
-          labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
-        }
-      })
+        _(setsSortedTopToBottom.left).each((label, index) => {
+          const verticalLineThroughLabelConnector = [
+            label.lineConnectorCoord,
+            {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+          ]
+
+          const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
+          if (intersection) {
+            const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+            label.moveStraightUpBy(amountToMoveUpBy)
+          } else {
+            labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+          }
+        })
+
+        _(setsSortedTopToBottom.right).each((label, index) => {
+          const verticalLineThroughLabelConnector = [
+            label.lineConnectorCoord,
+            {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
+          ]
+
+          const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
+          if (intersection) {
+            const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+            label.moveStraightUpBy(amountToMoveUpBy)
+          } else {
+            labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
+          }
+        })
+
+        const collidingLabels = findIntersectingLabels(_.flatten(setsSortedTopToBottom.left, setsSortedTopToBottom.right), 0)
+        if (collidingLabels.length === 0) { break }
+
+        // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
+        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
+
+        if (newMaxVerticalOffset >= pie.maxVerticalOffset) { break }
+      }
     }
   },
 
