@@ -16,7 +16,7 @@ const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
 const between = (a, b, c) => (a <= b && b < c)
 
 // TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 0
+const spacingBetweenUpperTrianglesAndCenterMeridian = 3
 
 // NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the fn returns false
 const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
@@ -1386,6 +1386,7 @@ let labels = {
         labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
         if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
+        if (frontierLabel.isTopLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = outerLabelSet[frontierIndex + 1]
@@ -1412,7 +1413,11 @@ let labels = {
             if (phase1HitBottom) {
               labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
-              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: lowerBoundary })
+              if (gettingPushedLabel.inLeftHalf) {
+                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+              } else {
+                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+              }
               return continueLoop
             }
 
@@ -1446,7 +1451,11 @@ let labels = {
               labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
               phase1HitBottom = true
 
-              gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x, y: lowerBoundary })
+              if (gettingPushedLabel.inLeftHalf) {
+                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+              } else {
+                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+              }
               return continueLoop
             }
 
@@ -1491,7 +1500,11 @@ let labels = {
         const matchingOuterLabel = _.find(outerLabelSet, ({id: outerLabelId}) => outerLabelId === innerLabel.id)
         if (matchingOuterLabel) {
           matchingOuterLabel.labelShown = true
-          matchingOuterLabel.setBottomTouchPoint({x: pieCenter.x, y: canvasHeight - minGap})  // TODO can I use adjustLabelToNewY ?
+          if (matchingOuterLabel.inLeftHalf) {
+            matchingOuterLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+          } else {
+            matchingOuterLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+          }
         } else {
           console.error(`should have found matching outer label for inner label ${pi(innerLabel)}`)
         }
@@ -1508,6 +1521,7 @@ let labels = {
         labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
+        if (frontierLabel.isBottomLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = reversedLabelSet[frontierIndex + 1]
