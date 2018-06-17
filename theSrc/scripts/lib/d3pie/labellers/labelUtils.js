@@ -119,6 +119,7 @@ function labelXbelowY (label1, label2) {
   return rectXbelowY(labelToRect(label1), labelToRect(label2))
 }
 
+// TODO findIntersectingLabels assumes sorted labels. Make it agnostic of order
 // TODO why is this !_.has || ! necessary (should just be a simple not)
 function findIntersectingLabels (labels, within = 0) {
   return _(labels)

@@ -1656,17 +1656,30 @@ let labels = {
         return
       }
 
+      const leftNearestNeighborBelow = labels.nearestNeighborBelow(pie, _.first(setsSortedBottomToTop.left))
+      const rightNearestNeighborBelow = labels.nearestNeighborBelow(pie, _.first(setsSortedBottomToTop.right))
+
+      // NB the hardcoded 10s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords. Not sure why they are needed yet (TODO)
+      const triangleLatitude = _([
+        leftPointWhereTriangleMeetsLabelRadius.y - 5, // NB y coord of left and right are the same, so using left is OK
+        (leftNearestNeighborBelow) ? leftNearestNeighborBelow.topY - 10 : null,
+        (rightNearestNeighborBelow) ? rightNearestNeighborBelow.topY - 10 : null
+      ])
+        .filter(y => !_.isNull(y))
+        .filter(y => !_.isUndefined(y))
+        .min()
+
       let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
       while (true) {
-        labelLogger.info(`trying to shrink top with newMaxVerticalOffset: ${newMaxVerticalOffset} (original maxVerticalOffset: ${pie.maxVerticalOffset}`)
+        labelLogger.info(`trying to shrink top with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset}`)
         // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
         const leftPlacementTriangleLine = [
-          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y - 5 },
+          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
           { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
         ]
 
         const rightPlacementTriangleLine = [
-          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y - 5 },
+          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
           { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
         ]
 
@@ -1700,7 +1713,19 @@ let labels = {
           }
         })
 
-        const collidingLabels = findIntersectingLabels(_.flatten(setsSortedBottomToTop.left, setsSortedBottomToTop.right), 0)
+        const labelsToTestForCollision = _([
+          labels.nearestNeighborBelow(pie, _.first(setsSortedBottomToTop.left)),
+          setsSortedBottomToTop.left,
+          setsSortedBottomToTop.right,
+          labels.nearestNeighborBelow(pie, _.first(setsSortedBottomToTop.right))
+        ])
+          .flatten()
+          .filter(label => !_.isNull(label))
+          .filter(label => !_.isUndefined(label))
+          .value()
+
+        // NB findIntersectingLabels assumes sorted labels (for now)
+        const collidingLabels = findIntersectingLabels(labelsToTestForCollision, 0)
         if (collidingLabels.length === 0) { break }
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
@@ -1767,17 +1792,30 @@ let labels = {
         return
       }
 
+      const leftNearestNeighborAbove = labels.nearestNeighborAbove(pie, _.first(setsSortedTopToBottom.left))
+      const rightNearestNeighborAbove = labels.nearestNeighborAbove(pie, _.first(setsSortedTopToBottom.right))
+
+      // NB the hardcoded 10s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords. Not sure why they are needed yet (TODO)
+      const triangleLatitude = _([
+        leftPointWhereTriangleMeetsLabelRadius.y, // NB y coord of left and right are the same, so using left is OK
+        (leftNearestNeighborAbove) ? leftNearestNeighborAbove.bottomY + 10 : null,
+        (rightNearestNeighborAbove) ? rightNearestNeighborAbove.bottomY + 10 : null
+      ])
+        .filter(y => !_.isNull(y))
+        .filter(y => !_.isUndefined(y))
+        .max()
+
       let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
       while (true) {
-        labelLogger.info(`trying to shrink bottom with newMaxVerticalOffset: ${newMaxVerticalOffset} (original maxVerticalOffset: ${pie.maxVerticalOffset}`)
+        labelLogger.info(`trying to shrink bottom with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset})`)
 
         const leftPlacementTriangleLine = [
-          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: leftPointWhereTriangleMeetsLabelRadius.y },
+          { x: leftPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
           { x: pie.pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
         ]
 
         const rightPlacementTriangleLine = [
-          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: rightPointWhereTriangleMeetsLabelRadius.y },
+          { x: rightPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
           { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
         ]
 
@@ -1811,7 +1849,19 @@ let labels = {
           }
         })
 
-        const collidingLabels = findIntersectingLabels(_.flatten(setsSortedTopToBottom.left, setsSortedTopToBottom.right), 0)
+        const labelsToTestForCollision = _([
+          labels.nearestNeighborAbove(pie, _.first(setsSortedTopToBottom.right)),
+          setsSortedTopToBottom.right,
+          setsSortedTopToBottom.left,
+          labels.nearestNeighborAbove(pie, _.first(setsSortedTopToBottom.left))
+        ])
+          .flatten()
+          .filter(label => !_.isNull(label))
+          .filter(label => !_.isUndefined(label))
+          .value()
+
+        // NB findIntersectingLabels assumes sorted labels (for now)
+        const collidingLabels = findIntersectingLabels(labelsToTestForCollision, 0)
         if (collidingLabels.length === 0) { break }
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
