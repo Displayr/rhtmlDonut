@@ -85,7 +85,7 @@ Donut <- function(
     values.font.size = 10,
     values.decimal.places = 1,
     values.display.as = "percentage",
-    values.display.thres = 0.3,
+    values.display.thres = 0.003,
     labels.font.family = "arial",
     labels.font.color = "#333333",
     labels.font.size = 10,
@@ -369,12 +369,6 @@ Donut <- function(
         groups.counts = NULL
         groups.sums = NULL
     }
-
-
-    if (values.display.thres > 100) {
-        values.display.thres = 100
-    }
-    values.display.thres = values.display.thres / 100
 
     if (!is.null(values))
         values = as.array(values)

@@ -7,7 +7,7 @@
 Donut(values, labels, values.color = NULL, values.order = "descending",
   values.font.family = "arial", values.font.size = 10,
   values.decimal.places = 1, values.display.as = "percentage",
-  values.display.thres = 0.3, labels.font.family = "arial",
+  values.display.thres = 0.003, labels.font.family = "arial",
   labels.font.color = "#333333", labels.font.size = 10,
   labels.min.font.size = 8, labels.padding.inner = 1,
   labels.padding.outer = 1, labels.max.width.percentage = "30\%",
