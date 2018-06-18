@@ -26,7 +26,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255), prefix = NULL,
   suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = "80\%", log.level = "info")
+  inner.radius = "0.8", log.level = "info")
 }
 \arguments{
 \item{values}{vector of real numbers}

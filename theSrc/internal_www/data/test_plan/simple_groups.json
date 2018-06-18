@@ -99,7 +99,7 @@
     "groupLabelsMinFontSize": 8,
     "orderControl": false,
     "gradient": false,
-    "innerRadius": "80%",
+    "innerRadius": "0.8",
     "minAngle": 0.003,
     "borderColor": "white"
   }

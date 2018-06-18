@@ -144,7 +144,7 @@
     "suffix": "%",
     "orderControl": false,
     "gradient": false,
-    "innerRadius": "70%",
+    "innerRadius": "0.7",
     "minAngle": 0.003,
     "borderColor": "#FFFFFF"
   }

@@ -11,7 +11,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
  
   | variable | default | R setting | JS setting |
   | -------- | ------- | --------- | ---------- |
-  | donut inner radius                | 80%     | `inner.radius`                       | `settings.innerRadius`                     |
+  | donut inner radius                | 0.8     | `inner.radius`                       | `settings.innerRadius`                     |
   | label offset percentage           | 10%     | `labels.offset.percentage`           | `settings.labelOffsetPercentage`           |
   | max label width percentage        | 25%     | `labels.max.width.percentage`        | `settings.labelsMaxWidthPercentage`        |
   | label font size                   | 10      | `labels.font.size`                   | `settings.labelsSize`                      |
@@ -28,7 +28,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
  
 *Config Descriptions*
 
-* *donut inner radius*: The radius of the inside of the donut, expressed as a percentage of the donut outer radius. Set to 0% to make a traditional pie graph
+* *donut inner radius*: The radius of the inside of the donut, expressed as a proportion of the donut outer radius. Set to 0 to make a traditional pie graph.
 * *label offset percentage*: The distance the labels should be placed "beyond" the outer donut radius, expressed as a percentage of the donut outer radius.
 * *max label width percentage*: maximum label width as a percentage of total width
 * *label font size*: initial font size used for labels before adjustments

@@ -744,7 +744,7 @@ let labels = {
         const offendingLabel = error.labelDatum
         labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' exceeded radial to labelLine angle threshold of ${pie.options.labels.outer.labelMaxLineAngle} (${offendingLabel.angleBetweenLabelAndRadial})`)
 
-        // two strategies : lift top/bottom if not lifted. If both alreadt lifted,
+        // two strategies : lift top/bottom if not lifted. If both already lifted,
         // then increase minAngle threshold
         let newMinAngleThrehsold = minAngleThreshold
         if (offendingLabel.inTopHalf && !pie.topIsLifted) {

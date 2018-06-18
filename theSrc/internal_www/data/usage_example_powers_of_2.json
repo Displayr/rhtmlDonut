@@ -92,7 +92,7 @@
     "suffix": "",
     "orderControl": false,
     "gradient": false,
-    "innerRadius": "0%",
+    "innerRadius": "0",
     "minAngle": 0.003,
     "borderColor": "#FFFFFF"
   }

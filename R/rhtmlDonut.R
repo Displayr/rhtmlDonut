@@ -124,7 +124,7 @@ Donut <- function(
     suffix = NULL,
     border.color = "white",
     gradient = FALSE, # not used by pieChart.R
-    inner.radius = "80%",
+    inner.radius = "0.8",
     log.level = "info") {
 
     # What does the logic between here and rhtmlDonut do ?

@@ -941,7 +941,7 @@
     "suffix": null,
     "orderControl": false,
     "gradient": false,
-    "innerRadius": "80%",
+    "innerRadius": "0.8",
     "borderColor": "white"
   }
 }

@@ -246,7 +246,7 @@
     "prefix": "",
     "suffix": "%",
     "gradient": false,
-    "innerRadius": "70%",
+    "innerRadius": "0.7",
     "minAngle": 0.003,
     "borderColor": "#FFFFFF",
     "logLevel": "info"

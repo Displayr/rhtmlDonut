@@ -123,7 +123,7 @@ class d3pie {
       canvasWidth: this.options.size.canvasWidth,
       canvasHeight: this.options.size.canvasHeight,
       labelOffsetProportion: parseFloat(this.options.size.labelOffsetPercentage.replace('/%/', '')) / 100,
-      innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius.replace('/%/', '')) / 100,
+      innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
       idealLeftWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
       idealRightWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
       idealTopWhiteSpaceSize: (maxLabelHeight || 0) + extraVerticalSpace,
