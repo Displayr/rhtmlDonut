@@ -123,7 +123,7 @@ class PieWrapper {
         canvasWidth: width,
         canvasHeight: height,
         pieInnerRadius: this._settings.innerRadius,
-        labelOffsetPercentage: this._settings.labelOffsetPercentage
+        labelOffset: this._settings.labelOffset
       },
       data: {
         sortOrder: this._settings.valuesOrder,

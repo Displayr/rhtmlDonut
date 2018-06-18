@@ -11,8 +11,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.font.color = "#333333", labels.font.size = 10,
   labels.min.font.size = 8, labels.padding.inner = 1,
   labels.padding.outer = 1, labels.max.width.percentage = "30\%",
-  labels.offset.percentage = "10\%",
-  labels.advanced.offset.yaxis.max = NULL,
+  labels.offset = "0.1", labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
   labels.advanced.min.increment = 1e-04,
   labels.advanced.max.increment = 0.001, groups = NULL,
@@ -41,7 +40,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{values.display.as}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".}
 
-\item{values.display.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,100] and he default is 0.3.}
+\item{values.display.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,1] and he default is 0.003.}
 
 \item{labels.font.family}{(optional) font family for \code{labels}. The default is "Arial"}
 
@@ -55,9 +54,9 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.padding.outer}{(optional) Padding between different labels. Default is 1.}
 
-\item{labels.max.width.percentage}{(optional) the maximum label width as a percentage of total width. The default is "25\%".}
+\item{labels.max.width.percentage}{(optional) the maximum label width as a proportion of total width. The default is "0.3".}
 
-\item{labels.offset.percentage}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a percentage of the outer radius. The default is "10\%".}
+\item{labels.offset}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is "0.1".}
 
 \item{labels.advanced.offset.yaxis.max}{(optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).}
 
@@ -119,7 +118,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{gradient}{(optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
 
-\item{inner.radius}{(optional) specifies the pie inner radius as a percentage of the outer radius. Range is "0\%" to "100\%". Default is "80\%".}
+\item{inner.radius}{(optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is "0.8".}
 
 \item{log.level}{(optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].}
 }

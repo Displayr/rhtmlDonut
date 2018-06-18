@@ -2,8 +2,8 @@ const defaultSettings = {
   size: {
     canvasHeight: 500,
     canvasWidth: 500,
-    pieInnerRadius: 0.8,                     // pieWrapper: settings.innerRadius, R: inner.radius
-    labelOffsetPercentage: '10%'             // pieWrapper: settings.labelOffsetPercentage, R: labels.offset.percentage
+    pieInnerRadius: 0.8,                    // pieWrapper: settings.innerRadius, R: inner.radius
+    labelOffset: 0.1                        // pieWrapper: settings.labelOffset, R: labels.offset
   },
   data: {
     sortOrder: 'descending',                // pieWrapper: settings.valuesOrder, R: values.order

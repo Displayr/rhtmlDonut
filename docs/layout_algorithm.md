@@ -12,14 +12,14 @@ The label layout algorithm goes through 4 phases and relies on several config se
   | variable | default | R setting | JS setting |
   | -------- | ------- | --------- | ---------- |
   | donut inner radius                | 0.8     | `inner.radius`                       | `settings.innerRadius`                     |
-  | label offset percentage           | 10%     | `labels.offset.percentage`           | `settings.labelOffsetPercentage`           |
+  | label offset                      | 0.1     | `labels.offset           `           | `settings.labelOffset`                     |
   | max label width percentage        | 25%     | `labels.max.width.percentage`        | `settings.labelsMaxWidthPercentage`        |
   | label font size                   | 10      | `labels.font.size`                   | `settings.labelsSize`                      |
   | label _minimum_ font size         | 8       | `labels.min.font.size`               | `settings.labelsMinFontSize`               | 
   | use inner labels                  | false   | `labels.inner`                       | `settings.labelsInner`                     |
   | label inner padding               | 1       | `labels.padding.inner`               | `settings.labelInnerPadding`               |
   | label outer padding               | 1       | `labels.padding.outer`               | `settings.labelOuterPadding`               |
-  | minumum label display threshold   | 0.3%    | `values.display.thres`               | `settings.minAngle`                        |
+  | minumum label display threshold   | 0.003   | `values.display.thres`               | `settings.minAngle`                        |
   | max label line angle              | 60      | `labels.line.max.angle`              | `settings.labelMaxLineAngle`               |
   | (advanced) lift off angle         | 30      | `labels.advanced.liftoff.angle`      | `settings.liftOffAngle`                    |
   | (advanced) max vertical offset    | unset , i.e., use all space     | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset`          |
@@ -29,14 +29,14 @@ The label layout algorithm goes through 4 phases and relies on several config se
 *Config Descriptions*
 
 * *donut inner radius*: The radius of the inside of the donut, expressed as a proportion of the donut outer radius. Set to 0 to make a traditional pie graph.
-* *label offset percentage*: The distance the labels should be placed "beyond" the outer donut radius, expressed as a percentage of the donut outer radius.
+* *label offset*: The distance the labels should be placed "beyond" the outer donut radius, expressed as a proportion of the donut outer radius.
 * *max label width percentage*: maximum label width as a percentage of total width
 * *label font size*: initial font size used for labels before adjustments
 * *label _minimum_ font size*: the minimum font size to be used. Adjustments will not shrink font beyond this value
 * *use inner labels*: if true, then labels will be moved inside the donut during collision resolution phase  
 * *labels.padding.inner*: Exact Padding between rows in a multi line label 
 * *labels.padding.outer*: Padding between different labels   
-* *minumum label display threshold*: Any segment with a fractional value lower than minAngle will not have a label. Note some segments with higher values will still not be displayed based on adjustments made
+* *minumum label display threshold*: Any segment with a fractional value of total lower than minAngle will not have a label. Note some segments with higher values will still not be displayed based on adjustments made
 * *max label line angle*: Hide any label where the angle between the radial line and the label line (line from outerRadius to label) is greater than the "max label line angle"
 * *(advanced) lift off angle*: Controls point where initial label placement algorithm begins to place the labels farther away from the outer radius. See doc here (TODO link doc)
 * *(advanced) max vertical offset*: At the 90 and 270 degree mark, what is the maximum distance between labels and the donut plot. Defaults to use all available space.
