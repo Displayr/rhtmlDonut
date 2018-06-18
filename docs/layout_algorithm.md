@@ -12,8 +12,8 @@ The label layout algorithm goes through 4 phases and relies on several config se
   | variable | default | R setting | JS setting |
   | -------- | ------- | --------- | ---------- |
   | donut inner radius                | 0.8     | `inner.radius`                       | `settings.innerRadius`                     |
-  | label offset                      | 0.1     | `labels.offset           `           | `settings.labelOffset`                     |
-  | max label width percentage        | 25%     | `labels.max.width.percentage`        | `settings.labelsMaxWidthPercentage`        |
+  | label offset                      | 0.1     | `labels.offset`                      | `settings.labelOffset`                     |
+  | max label width                   | 0.3     | `labels.max.width`                   | `settings.labelsMaxWidth`                  |
   | label font size                   | 10      | `labels.font.size`                   | `settings.labelsSize`                      |
   | label _minimum_ font size         | 8       | `labels.min.font.size`               | `settings.labelsMinFontSize`               | 
   | use inner labels                  | false   | `labels.inner`                       | `settings.labelsInner`                     |
@@ -30,7 +30,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
 
 * *donut inner radius*: The radius of the inside of the donut, expressed as a proportion of the donut outer radius. Set to 0 to make a traditional pie graph.
 * *label offset*: The distance the labels should be placed "beyond" the outer donut radius, expressed as a proportion of the donut outer radius.
-* *max label width percentage*: maximum label width as a percentage of total width
+* *max label width*: maximum label width as a proportion of total canvas width
 * *label font size*: initial font size used for labels before adjustments
 * *label _minimum_ font size*: the minimum font size to be used. Adjustments will not shrink font beyond this value
 * *use inner labels*: if true, then labels will be moved inside the donut during collision resolution phase  

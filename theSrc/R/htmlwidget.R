@@ -13,7 +13,7 @@
 #' @param labels.padding.inner (optional) Exact Padding between rows in a multi line label. Default is 1.
 #' @param labels.padding.outer (optional) Padding between different labels. Default is 1.
 #' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
-#' @param labels.max.width.percentage (optional) the maximum label width as a proportion of total width. The default is "0.3".
+#' @param labels.max.width (optional) the maximum label width as a proportion of total width. The default is "0.3".
 #' @param labels.offset (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is "0.1".
 #' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
 #' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
@@ -92,7 +92,7 @@ Donut <- function(
     labels.min.font.size = 8,
     labels.padding.inner = 1,
     labels.padding.outer = 1,
-    labels.max.width.percentage = "30%",
+    labels.max.width = 0.3,
     labels.offset = "0.1",
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
@@ -401,7 +401,7 @@ Donut <- function(
         labelsInner = labels.inner,
         labelsInnerPadding = labels.padding.inner,
         labelsOuterPadding = labels.padding.outer,
-        labelsMaxWidthPercentage = labels.max.width.percentage,
+        labelsMaxWidth = labels.max.width,
         labelOffset = labels.offset,
         labelMaxVerticalOffset = labels.advanced.offset.yaxis.max,
         labelLiftOffAngle = labels.advanced.liftoff.angle,

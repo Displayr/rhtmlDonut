@@ -146,7 +146,7 @@ class PieWrapper {
           liftOffAngle: this._settings.labelLiftOffAngle,
           maxVerticalOffset: this._settings.labelMaxVerticalOffset,
           labelMaxLineAngle: this._settings.labelMaxLineAngle,
-          maxWidthPercentage: this._settings.labelsMaxWidthPercentage,
+          maxWidth: this._settings.labelsMaxWidth,
           iterationMinIncrement: this._settings.labelIterationMinIncrement,
           iterationMaxIncrement: this._settings.labelIterationMaxIncrement
         },

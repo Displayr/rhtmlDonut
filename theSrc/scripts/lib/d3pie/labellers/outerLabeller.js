@@ -66,7 +66,7 @@ let labels = {
           labelText: fakeLabel.labelText,
           fontSize: fakeLabel.fontSize,
           fontFamily: fakeLabel.fontFamily,
-          maxLabelWidth: parseFloat(pie.options.labels.outer.maxWidthPercentage.replace('/%/', '')) / 100 * pie.options.size.canvasWidth,
+          maxLabelWidth: parseFloat(pie.options.labels.outer.maxWidth) * pie.options.size.canvasWidth,
           innerPadding: parseFloat(pie.options.labels.outer.innerPadding)
         })
 

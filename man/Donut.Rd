@@ -10,8 +10,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   values.display.thres = 0.003, labels.font.family = "arial",
   labels.font.color = "#333333", labels.font.size = 10,
   labels.min.font.size = 8, labels.padding.inner = 1,
-  labels.padding.outer = 1, labels.max.width.percentage = "30\%",
-  labels.offset = "0.1", labels.advanced.offset.yaxis.max = NULL,
+  labels.padding.outer = 1, labels.max.width = 0.3, labels.offset = "0.1",
+  labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
   labels.advanced.min.increment = 1e-04,
   labels.advanced.max.increment = 0.001, groups = NULL,
@@ -54,7 +54,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.padding.outer}{(optional) Padding between different labels. Default is 1.}
 
-\item{labels.max.width.percentage}{(optional) the maximum label width as a proportion of total width. The default is "0.3".}
+\item{labels.max.width}{(optional) the maximum label width as a proportion of total width. The default is "0.3".}
 
 \item{labels.offset}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is "0.1".}
 
