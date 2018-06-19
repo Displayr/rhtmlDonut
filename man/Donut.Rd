@@ -54,9 +54,9 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.padding.outer}{(optional) Padding between different labels. Default is 1.}
 
-\item{labels.max.width}{(optional) the maximum label width as a proportion of total width. The default is "0.3".}
+\item{labels.max.width}{(optional) the maximum label width as a proportion of total width. The default is 0.3.}
 
-\item{labels.offset}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is "0.1".}
+\item{labels.offset}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is 0.1.}
 
 \item{labels.advanced.offset.yaxis.max}{(optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).}
 
@@ -118,7 +118,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{gradient}{(optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
 
-\item{inner.radius}{(optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is "0.8".}
+\item{inner.radius}{(optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.}
 
 \item{log.level}{(optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].}
 }

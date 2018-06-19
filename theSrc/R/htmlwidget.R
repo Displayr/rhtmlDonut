@@ -13,8 +13,8 @@
 #' @param labels.padding.inner (optional) Exact Padding between rows in a multi line label. Default is 1.
 #' @param labels.padding.outer (optional) Padding between different labels. Default is 1.
 #' @param labels.inner (optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.
-#' @param labels.max.width (optional) the maximum label width as a proportion of total width. The default is "0.3".
-#' @param labels.offset (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is "0.1".
+#' @param labels.max.width (optional) the maximum label width as a proportion of total width. The default is 0.3.
+#' @param labels.offset (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is 0.1.
 #' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
 #' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
 #' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.
@@ -44,7 +44,7 @@
 #' @param suffix (optional) character, suffix for \code{labels}
 #' @param border.color (optional) c("white", "none", hex value)
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
-#' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is "0.8".
+#' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.
 #' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
 
 
