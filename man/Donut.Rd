@@ -10,7 +10,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   values.display.thres = 0.003, labels.font.family = "arial",
   labels.font.color = "#333333", labels.font.size = 10,
   labels.min.font.size = 8, labels.padding.inner = 1,
-  labels.padding.outer = 1, labels.max.width = 0.3, labels.offset = "0.1",
+  labels.padding.outer = 1, labels.max.width = 0.3, labels.offset = 0.1,
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
   labels.advanced.min.increment = 1e-04,
@@ -25,7 +25,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255), prefix = NULL,
   suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = "0.8", log.level = "info")
+  inner.radius = 0.8, log.level = "info")
 }
 \arguments{
 \item{values}{vector of real numbers}

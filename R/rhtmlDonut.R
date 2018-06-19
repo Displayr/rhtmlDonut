@@ -93,7 +93,7 @@ Donut <- function(
     labels.padding.inner = 1,
     labels.padding.outer = 1,
     labels.max.width = 0.3,
-    labels.offset = "0.1",
+    labels.offset = 0.1,
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
     labels.advanced.line.max.angle = 60,
@@ -124,7 +124,7 @@ Donut <- function(
     suffix = NULL,
     border.color = "white",
     gradient = FALSE, # not used by pieChart.R
-    inner.radius = "0.8",
+    inner.radius = 0.8,
     log.level = "info") {
 
     # What does the logic between here and rhtmlDonut do ?
