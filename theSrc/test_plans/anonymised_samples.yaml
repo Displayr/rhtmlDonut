@@ -1,0 +1,5 @@
+version: 1
+groupname: "Representative Examples (Anonymised)"
+tests:
+  - data_directory: "data/anonymised"
+    type: for_each_data_in_directory

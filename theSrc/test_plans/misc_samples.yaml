@@ -1,0 +1,5 @@
+version: 1
+groupname: "Representative Examples (Misc)"
+tests:
+  - data_directory: "data/misc"
+    type: for_each_data_in_directory

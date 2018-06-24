@@ -1,0 +1,29 @@
+version: 1
+tests:
+  - title: color variatons
+    general_comments: "this is a general comment"
+    width: 250
+    height: 300
+    rowSize: 5
+    type: single_page_one_example_per_data
+    data:
+      - data.decreasing_value_sets.1_decreasing_values
+      - data.decreasing_value_sets.2_decreasing_values
+      - data.decreasing_value_sets.3_decreasing_values
+      - data.decreasing_value_sets.4_decreasing_values
+      - data.decreasing_value_sets.5_decreasing_values
+      - data.decreasing_value_sets.6_decreasing_values
+      - data.decreasing_value_sets.7_decreasing_values
+      - data.decreasing_value_sets.8_decreasing_values
+      - data.decreasing_value_sets.9_decreasing_values
+      - data.decreasing_value_sets.10_decreasing_values
+      - data.decreasing_value_sets.11_decreasing_values
+      - data.decreasing_value_sets.12_decreasing_values
+      - data.decreasing_value_sets.13_decreasing_values
+      - data.decreasing_value_sets.14_decreasing_values
+      - data.decreasing_value_sets.15_decreasing_values
+      - data.decreasing_value_sets.16_decreasing_values
+      - data.decreasing_value_sets.17_decreasing_values
+      - data.decreasing_value_sets.18_decreasing_values
+      - data.decreasing_value_sets.19_decreasing_values
+      - data.decreasing_value_sets.20_decreasing_values

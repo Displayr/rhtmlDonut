@@ -1,0 +1,14 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 500
+    height: 500
+    rowSize: 3
+    data: data.test_plan.simple_groups
+    comments:
+      - location: 2
+        text: colors are not working
+    config:
+      - '{ "settings" : { "title" : "default title settings" } }'
+      - '{ "settings" : { "title" : "custom group label settings" } }|config.group_16_georgia_lightblue'
+      - '{ "settings" : { "title" : "custom group colors", "groupsColor" : [ "red", "green", "blue", "pink" ] } }'

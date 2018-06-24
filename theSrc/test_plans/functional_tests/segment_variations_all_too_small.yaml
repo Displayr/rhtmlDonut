@@ -1,0 +1,8 @@
+version: 1
+tests:
+  - type: single
+    width: 648
+    height: 447
+    rowSize: 3
+    data: data.test_plan.500_decreasing_values
+

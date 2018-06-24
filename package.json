@@ -10,7 +10,6 @@
   "devDependencies": {
     "gulp": "3.9.1",
     "husky": "^0.13.3",
-    "rhtmlBuildUtils": "Displayr/rhtmlBuildUtils#2.1.0",
     "sinon": "^2.3.2"
   },
   "dependencies": {
@@ -18,8 +17,12 @@
     "d3": "3.5.11",
     "es6-promise": "^3.2.1",
     "jquery": "2.2.2",
+    "js-yaml": "^3.12.0",
     "lodash": "4.6.1",
     "loglevel": "^1.6.1",
+    "mustache": "^2.3.0",
+    "recursive-readdir": "^2.2.2",
+    "rhtmlBuildUtils": "Displayr/rhtmlBuildUtils#12702b480f5c6ac2623869212cd2e8154e7b3711",
     "rhtmlParts": "Displayr/rhtmlParts#2.0.0"
   }
 }

@@ -1,0 +1,6 @@
+version: 1
+tests:
+  - type: single
+    width: 545
+    height: 460
+    data: data.bad_labelling

@@ -1,0 +1,14 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 250
+    height: 300
+    rowSize: 3
+    data: data.test_plan.abc_rbg
+    config:
+      - '{ "settings" : { "innerRadius" : "0", "title" : "innerRadius=0" } }'
+      - '{ "settings" : { "innerRadius" : "0.25", "title" : "innerRadius=0.25" } }'
+      - '{ "settings" : { "innerRadius" : "0.50", "title" : "innerRadius=0.50" } }'
+      - '{ "settings" : { "innerRadius" : "0.75", "title" : "innerRadius=0.75" } }'
+      - '{ "settings" : { "innerRadius" : "0.98", "title" : "innerRadius=0.98" } }'
+      - '{ "settings" : { "borderColor" : "pink", "title" : "borderColor=pink" } }'

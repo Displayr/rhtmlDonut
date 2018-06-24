@@ -12,17 +12,17 @@ import outerLabeller from './labellers/outerLabeller'
 
 import * as rootLog from 'loglevel'
 const layoutLogger = rootLog.getLogger('layout')
+
 /*!
  * This is not the standard d3pie. It's edited by Xiaoting Wang and then Kyle Zeeuwen for a DetailedDonutPlot
  * @author Ben Keen, Xiaoting Wang, Kyle Zeeuwen
- * @version 0.1.8
- * @date 22 March, 2016
  * @repo http://github.com/benkeen/d3pie
  * @repo http://github.com/Displayr/rhtmlDonut
  */
 
-var _scriptName = 'd3pie'
-var _version = '0.1.6'
+// TODO pull from package.json
+const _scriptName = 'rhtmlDonut'
+const _version = '0.1.6'
 
 class d3pie {
   constructor (element, options) {
@@ -52,6 +52,7 @@ class d3pie {
 
     // add a data-role to the DOM node to let anyone know that it contains a d3pie instance, and the d3pie version
     d3.select(this.element).attr(_scriptName, _version)
+    d3.select(this.element).attr(`${_scriptName}-status`, 'loading')
 
     // things that are done once
     if (this.options.data.smallSegmentGrouping.enabled) {
@@ -69,6 +70,7 @@ class d3pie {
     this.groupLabelData = []
 
     this._init()
+    d3.select(this.element).attr(`${_scriptName}-status`, 'ready')
   }
 
   redrawWithoutLoading () {
