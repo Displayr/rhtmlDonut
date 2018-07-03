@@ -80,6 +80,9 @@ class OuterLabel {
       width: null
     }
 
+    // strictly for debugging. Add label to root of class so we can inspect easier
+    this._label = label
+
     // NB TODO useful for testing and verifying access patterns while refactoring, but ultimately not usable. Delete after archiving for later use
     // return new Proxy(this, {
     //   get (target, propertyName) {
@@ -289,6 +292,12 @@ class OuterLabel {
     return this.topLeftCoord.y > anotherLabel.topLeftCoord.y + anotherLabel.height
   }
 
+  validateCoord ({x, y} = {}) {
+    const badX = (_.isNull(x) || _.isUndefined(x) || _.isNaN(x))
+    const badY = (_.isNull(x) || _.isUndefined(x) || _.isNaN(x))
+    if (badX || badY) { throw new Error(`Invalid coord for label '${this.label}': { x: ${x}, y: ${y} }`) }
+  }
+
   // convenience methods
 
   get hide () { return !this._variants.labelShown }
@@ -368,10 +377,16 @@ class OuterLabel {
   set labelTextLines (newValue) { this._variants.labelTextLines = newValue }
 
   get lineConnectorCoord () { return this._variants.lineConnectorCoord }
-  set lineConnectorCoord (newValue) { this._variants.lineConnectorCoord = newValue }
+  set lineConnectorCoord (newValue) {
+    this.validateCoord(newValue)
+    this._variants.lineConnectorCoord = newValue
+  }
 
   get topLeftCoord () { return this._variants.topLeftCoord }
-  set topLeftCoord (newValue) { this._variants.topLeftCoord = newValue }
+  set topLeftCoord (newValue) {
+    this.validateCoord(newValue)
+    this._variants.topLeftCoord = newValue
+  }
 
   get width () { return this._variants.width }
   set width (newValue) { this._variants.width = newValue }

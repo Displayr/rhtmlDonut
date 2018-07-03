@@ -52,3 +52,7 @@ test-plan-group-name {
 .test-definition pre {
     font-size: 8px;
 }
+
+.test-case.issue {
+    color: red;
+}

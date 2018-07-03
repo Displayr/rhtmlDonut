@@ -2,4 +2,10 @@ version: 1
 groupname: "Representative Examples (Anonymised)"
 tests:
   - data_directory: "data/anonymised"
+    use_config_as_title: true
     type: for_each_data_in_directory
+    comments:
+      - location: data.anonymised.sample_20
+        text: shows label overlap when there are nearby multiline labels
+      - location: data.anonymised.sample_4
+        text: color issue - add a border to hilight issue

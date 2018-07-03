@@ -1,0 +1,9 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 545
+    height: 460
+    data: data.r_vector_blowup
+    config:
+      - config.labeller_stage_up_down_sweep|config.debug
+#      - config.labeller_disable_all_collision_resolution|config.debug

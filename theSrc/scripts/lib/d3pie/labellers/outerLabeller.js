@@ -746,7 +746,7 @@ let labels = {
 
         // two strategies : lift top/bottom if not lifted. If both already lifted,
         // then increase minAngle threshold
-        let newMinAngleThrehsold = minAngleThreshold
+        let newMinAngleThreshold = minAngleThreshold
         if (offendingLabel.inTopHalf && !pie.topIsLifted) {
           labelLogger.info('lifting top labels before next iteration')
           // note this is the 'master labelSet', not the clone passed to each iteration
@@ -790,15 +790,20 @@ let labels = {
               })
             })
         } else {
-          newMinAngleThrehsold = offendingLabel.fractionalValue
-          if (newMinAngleThrehsold < minAngleThreshold + minIncrement) { newMinAngleThrehsold = minAngleThreshold + minIncrement }
-          if (newMinAngleThrehsold > minAngleThreshold + maxIncrement) { newMinAngleThrehsold = minAngleThreshold + maxIncrement }
-          labelLogger.info(`increased newMinAngleThrehsold to ${newMinAngleThrehsold}`)
+          newMinAngleThreshold = _(labelSet)
+            .filter(labelDatum => labelDatum.fractionalValue > minAngleThreshold)
+            .minBy('fractionalValue').fractionalValue
+
+          if (newMinAngleThreshold === minAngleThreshold) { throw new Error('oh no newMinAngleThreshold === minAngleThreshold were boned , pull out Jim! ') }
+
+          if (newMinAngleThreshold < minAngleThreshold + minIncrement) { newMinAngleThreshold = minAngleThreshold + minIncrement }
+          if (newMinAngleThreshold > minAngleThreshold + maxIncrement) { newMinAngleThreshold = minAngleThreshold + maxIncrement }
+          labelLogger.info(`increased newMinAngleThreshold to ${newMinAngleThreshold}`)
         }
 
         labels._performCollisionResolutionIteration({
           useInnerLabels,
-          minAngleThreshold: newMinAngleThrehsold,
+          minAngleThreshold: newMinAngleThreshold,
           labelSet: labelSet, // NB it is the original labelset (potentially topIsLifted and bottomIsLifted applied), not the modified one from the failed iteration
           breakOutAngleThreshold,
           minIncrement,
@@ -815,12 +820,12 @@ let labels = {
   _performCollisionResolutionAlgorithm (pie, outerLabelSet, useInnerLabels) {
     const leftOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'left'})
-      .sortBy(['topLeftCoord.y', x => { return -1 * x.id }])
+      .sortBy(['lineConnectorCoord.y', x => { return -1 * x.id }])
       .value()
 
     const rightOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'right'})
-      .sortBy(['topLeftCoord.y', x => { return -1 * x.id }])
+      .sortBy(['lineConnectorCoord.y', x => { return -1 * x.id }])
       .value()
 
     const innerLabelSet = []
@@ -832,7 +837,7 @@ let labels = {
     // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred        the innerLabels to the spacing.
     if (pie.options.labels.stages.initialClusterSpacing && !useInnerLabels) {
       labels.performInitialClusterSpacing({
-        outerLabelSet: leftOuterLabelsSortedTopToBottom,
+        outerLabelSetSortedTopToBottom: leftOuterLabelsSortedTopToBottom,
         innerLabelSet,
         outerRadius: pie.outerRadius,
         maxVerticalOffset: pie.maxVerticalOffset,
@@ -855,7 +860,7 @@ let labels = {
       })
 
       labels.performInitialClusterSpacing({
-        outerLabelSet: rightOuterLabelsSortedTopToBottom,
+        outerLabelSetSortedTopToBottom: rightOuterLabelsSortedTopToBottom,
         innerLabelSet,
         outerRadius: pie.outerRadius,
         maxVerticalOffset: pie.maxVerticalOffset,
@@ -879,6 +884,7 @@ let labels = {
     }
 
     labels.performTwoPhaseLabelAdjustment({
+      pie,
       stages: pie.options.labels.stages,
       outerLabelSet: leftOuterLabelsSortedTopToBottom,
       innerLabelSet,
@@ -903,6 +909,7 @@ let labels = {
     })
 
     labels.performTwoPhaseLabelAdjustment({
+      pie,
       stages: pie.options.labels.stages,
       outerLabelSet: rightOuterLabelsSortedTopToBottom,
       innerLabelSet,
@@ -1124,7 +1131,7 @@ let labels = {
   },
 
   performInitialClusterSpacing ({
-    outerLabelSet,
+    outerLabelSetSortedTopToBottom,
     innerLabelSet,
     outerRadius,
     maxVerticalOffset,
@@ -1147,20 +1154,23 @@ let labels = {
   }) {
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
     const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
-    const continueLoop = false // TODO THIS IS A BUG !!!
 
     const getLabelAbove = (label) => {
-      const indexOf = outerLabelSet.indexOf(label)
+      const indexOf = outerLabelSetSortedTopToBottom.indexOf(label)
       if (indexOf !== -1 && indexOf !== 0) {
-        return outerLabelSet[indexOf - 1]
+        const labelAbove = outerLabelSetSortedTopToBottom[indexOf - 1]
+        // if (labelAbove.topY <= label.topY) { return labelAbove }
+        return labelAbove
       }
       return null
     }
 
     const getLabelBelow = (label) => {
-      const indexOf = outerLabelSet.indexOf(label)
-      if (indexOf !== -1 && indexOf !== outerLabelSet.length - 1) {
-        return outerLabelSet[indexOf + 1]
+      const indexOf = outerLabelSetSortedTopToBottom.indexOf(label)
+      if (indexOf !== -1 && indexOf !== outerLabelSetSortedTopToBottom.length - 1) {
+        const labelBelow = outerLabelSetSortedTopToBottom[indexOf + 1]
+        // if (labelBelow.bottomY >= label.bottomY) { return labelBelow }
+        return labelBelow
       }
       return null
     }
@@ -1197,9 +1207,9 @@ let labels = {
 
           const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.angleBetweenLabelAndRadial
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
-            labelLogger.debug(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded max angle threshold`)
+            labelLogger.info(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded max angle threshold. OldY: ${oldY}`)
             labels.adjustLabelToNewY({
-              oldY,
+              newY: oldY,
               anchor: 'bottom',
               labelRadius: outerLabelRadius,
               yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
@@ -1213,7 +1223,7 @@ let labels = {
             return terminateLoop
           }
         } else {
-          console.warn(`tried to push label up, but there was no label below`)
+          console.warn(`tried to push label '${labelToPushUp.label}' up, but there was no label below`)
         }
         return continueLoop
       })
@@ -1254,7 +1264,7 @@ let labels = {
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             labelLogger.debug(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded max angle threshold`)
             labels.adjustLabelToNewY({
-              oldY,
+              newY: oldY,
               anchor: 'top',
               labelRadius: outerLabelRadius,
               yRange: outerRadius + maxVerticalOffset - apexLabelCorrection,
@@ -1268,13 +1278,13 @@ let labels = {
             return terminateLoop
           }
         } else {
-          console.warn(`tried to push label down, but there was no label above`)
+          console.warn(`tried to push label '${labelToPushDown.label}' down, but there was no label above`)
         }
         return continueLoop
       })
     }
 
-    const collidingLabels = findIntersectingLabels(outerLabelSet)
+    const collidingLabels = findIntersectingLabels(outerLabelSetSortedTopToBottom)
     const collidingLabelSets = []
     let activeSet = []
     _(collidingLabels).each(collidingLabel => {
@@ -1292,37 +1302,41 @@ let labels = {
 
     _(collidingLabelSets).each(collidingLabelSet => {
       let verticalSpaceAbove = 0
-      const nearestNonIntersectingLabelAbove = getLabelAbove(collidingLabelSet[0])
+      const nearestNonIntersectingLabelAbove = getLabelAbove(_.first(collidingLabelSet))
       if (nearestNonIntersectingLabelAbove) {
         verticalSpaceAbove = collidingLabelSet[0].topLeftCoord.y - nearestNonIntersectingLabelAbove.bottomLeftCoord.y
       }
 
       let verticalSpaceBelow = 0
-      const nearestNonIntersectingLabelBelow = getLabelBelow(collidingLabelSet[collidingLabelSet.length - 1])
+      const nearestNonIntersectingLabelBelow = getLabelBelow(_.last(collidingLabelSet))
       if (nearestNonIntersectingLabelBelow) {
         verticalSpaceBelow = nearestNonIntersectingLabelBelow.topLeftCoord.y - collidingLabelSet[collidingLabelSet.length - 1].bottomLeftCoord.y
       }
 
-      console.log(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
-      console.log(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
+      labelLogger.debug(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
+      labelLogger.debug(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
 
       let differenceInVerticalSpace = Math.abs(verticalSpaceBelow - verticalSpaceAbove)
-      if (differenceInVerticalSpace > 10 && verticalSpaceAbove > verticalSpaceBelow) {
-        console.log(`pushing whole set up`)
+      let sumOfVerticalSpace = verticalSpaceBelow + verticalSpaceAbove
+      if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceAbove > verticalSpaceBelow) {
+        labelLogger.debug(`pushing whole set up`)
         pushLabelsUp(_.reverse(collidingLabelSet))
-      } else if (differenceInVerticalSpace > 10 && verticalSpaceBelow > verticalSpaceAbove) {
-        console.log(`pushing whole set down`)
+      } else if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceBelow > verticalSpaceAbove) {
+        labelLogger.debug(`pushing whole set down`)
         pushLabelsDown(collidingLabelSet)
-      } else {
-        console.log(`pushing 1/2 up and 1/2 down`)
+      } else if (sumOfVerticalSpace > 10) {
+        labelLogger.debug(`pushing 1/2 up and 1/2 down`)
         const [labelsToPushUp, labelsToPushDown] = _.chunk(collidingLabelSet, Math.ceil(collidingLabelSet.length / 2))
         pushLabelsUp(_.reverse(labelsToPushUp))
         pushLabelsDown(labelsToPushDown)
+      } else {
+        labelLogger.debug(`no room to space cluster. Skipping`)
       }
     })
   },
 
   performTwoPhaseLabelAdjustment ({
+    pie,
     stages,
     outerLabelSet,
     innerLabelSet,
@@ -1364,6 +1378,7 @@ let labels = {
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
     let phase1HitBottom = false
+    let phase1LineAngleExceeded = false
 
     let lp = `${hemisphere}:DOWN` // lp = logPrefix
     const inBounds = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex >= 0 && candidateIndex < arrayLength
@@ -1385,6 +1400,7 @@ let labels = {
       _(outerLabelSet).each((frontierLabel, frontierIndex) => {
         labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
         if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
+        if (phase1LineAngleExceeded) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
         if (frontierLabel.isTopLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
@@ -1484,7 +1500,10 @@ let labels = {
             labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
             if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
-              throw new AngleThresholdExceeded(gettingPushedLabel)
+              // throw new AngleThresholdExceeded(gettingPushedLabel)
+              labelLogger.warn(`  ${lp} ${pi(gettingPushedLabel)} line angle exceeds threshold of ${maxAngleBetweenRadialAndLabelLines}. Cancelling downSweep.`)
+              phase1LineAngleExceeded = true
+              return terminateLoop
             }
 
             if (!inBounds(gettingPushedIndex + 1)) { return terminateLoop } // terminate
@@ -1493,7 +1512,7 @@ let labels = {
       })
     }
 
-    if (phase1HitBottom && stages.upSweep) {
+    if ((phase1HitBottom || phase1LineAngleExceeded) && stages.upSweep) {
       // throw away our attempt at inner labelling and start again wrt inner labels!
       // XXX NB TODO strictly speaking we can only throw out our quadrant/hemisphere worth of inner labels
       _(innerLabelSet).each(innerLabel => {
@@ -1610,6 +1629,15 @@ let labels = {
           })
         }
       })
+
+      // final check for left over line angle violators
+      _(outerLabelSet).each(label => {
+        const angleBetweenRadialAndLabelLine = label.angleBetweenLabelAndRadial
+        if (angleBetweenRadialAndLabelLine > maxAngleBetweenRadialAndLabelLines) {
+          labelLogger.warn(`  final pass found ${pi(label)} line angle exceeds threshold.`)
+          throw new AngleThresholdExceeded(label)
+        }
+      })
     }
   },
 
@@ -1671,7 +1699,7 @@ let labels = {
 
       let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
       while (true) {
-        labelLogger.info(`trying to shrink top with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset}`)
+        labelLogger.info(`trying to shrink top with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset})`)
         // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
         const leftPlacementTriangleLine = [
           { x: leftPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
@@ -2118,6 +2146,7 @@ let labels = {
 
   nearestNeighborAbove (pie, label) {
     try {
+      if (!label) { return null }
       if (label.isTopLabel) { return null }
 
       const labelIndex = pie.outerLabelData.indexOf(label)
@@ -2153,6 +2182,7 @@ let labels = {
 
   nearestNeighborBelow (pie, label) {
     try {
+      if (!label) { return null }
       if (label.isBottomLabel) { return null }
 
       const labelIndex = pie.outerLabelData.indexOf(label)

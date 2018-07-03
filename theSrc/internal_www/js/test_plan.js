@@ -41,7 +41,7 @@ const renderTestPlanGroup = function (testPlan) {
 }
 
 const testCaseTemplate = `
-  <li class="test-case">
+  <li class="test-case {{issue}}">
     <a class="load-link" href="{{ testUrl }}" title="{{ testDefinition }}" class="test-link">{{ testName }}</a>
     <!--<div class="test-definition-container {{ groupName }} {{ testIndex }}">-->
       <!--<div class="test-definition-toggle collapsed" data-toggle="collapse" href=".test-definition-container.{{ groupName }}.{{ testIndex }} .test-definition" role="button" aria-expanded="false" aria-controls="collapseExample">Definition</div>-->
@@ -55,6 +55,7 @@ const renderTestCase = function (testCase, testIndex, groupName) {
   const testDefinition = JSON.stringify(_.omit(testCase, ['renderExampleUrl', 'testname']), {}, 2)
   const testName = testCase.testname
   const testUrl = testCase.renderExampleUrl
+  const issue = (testCase.widgets.find(widgetConfig => _.has(widgetConfig, 'comment')))
   Mustache.parse(testCaseTemplate)
-  return Mustache.render(testCaseTemplate, { testName, testDefinition, testUrl, testIndex, groupName })
+  return Mustache.render(testCaseTemplate, { testName, testDefinition, testUrl, testIndex, groupName, issue: (issue) ? 'issue' : '' })
 }

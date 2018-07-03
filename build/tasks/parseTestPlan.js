@@ -26,6 +26,7 @@ function registerTaskWithGulp (gulp) {
 function loadConfigs (testPlansDir) {
   return readdir(testPlansDir)
     .then(filePaths => filePaths.filter(fileName => fileName.endsWith('.yaml')))
+    .then(filePaths => filePaths.filter(fileName => fileName.match('anon'))) // DELETE ME
     .then(testPlanFilePaths => {
       return Promise.all(testPlanFilePaths.map(testPlanFilePath => {
         return new Promise((resolve, reject) => {
@@ -145,12 +146,20 @@ const parsers = {
   for_each_data_in_directory: function (testDefinition) {
     // NB return an array of N because this generates a test case per data file
     const dataStrings = getDataStringsFromTestDefinition(testDefinition)
-    return dataStrings.map(dataString => {
-      return {
-        testname: dataString,
-        widgets: [{ config: [dataString] }]
-      }
-    })
+    const configStrings = toArray(testDefinition.config) || []
+    return dataStrings
+      .map(dataString => {
+        return {
+          testname: dataString,
+          widgets: [{ config: [dataString].concat(configStrings) }]
+        }
+      })
+      .map(config => {
+        if (testDefinition.use_config_as_title) {
+          config.title = config.widgets[0].config.join('|')
+        }
+        return config
+      })
   }
 }
 
@@ -158,20 +167,41 @@ function configToTestCases (testDefinition) {
   const commonRenderExampleParts = extractCommonParamsFromTestDefinition(testDefinition)
   const arrayOfwidgetConfigsAndOverrides = extractWidgetConfigsAndOverrides(testDefinition)
 
-  return arrayOfwidgetConfigsAndOverrides.map(widgetConfig => {
+  return arrayOfwidgetConfigsAndOverrides.map((widgetConfig, outerWidgetIndex) => {
     const renderExampleConfigWithoutUrl = _.assign({}, commonRenderExampleParts, widgetConfig)
     if (!_.has(renderExampleConfigWithoutUrl, 'testname')) { throw new Error('missing testname') }
 
     const positionalComments = _(renderExampleConfigWithoutUrl.comments || [])
       .transform((result, { location, text }) => {
-        result[parseInt(location)] = text
+        const isNumberRegex = new RegExp('^[0-9]+$')
+        const locationIsIndex = isNumberRegex.test(`${location}`)
+
+        if (locationIsIndex) {
+          result[`index-${location}`] = text
+        } else {
+          result[location] = text
+        }
         return result
       }, {})
       .value()
 
     _(renderExampleConfigWithoutUrl.widgets).each((widgetConfig, index) => {
-      if (_.has(positionalComments, index)) {
-        widgetConfig.comment = positionalComments[index]
+      if (_.has(positionalComments, `index-${index}`)) {
+        widgetConfig.comment = positionalComments[`index-${index}`]
+        widgetConfig.status = 'red'
+      }
+
+      if (_.has(positionalComments, `index-${outerWidgetIndex}`)) {
+        widgetConfig.comment = positionalComments[`index-${outerWidgetIndex}`]
+        widgetConfig.status = 'red'
+      }
+
+      const widgetConfigStrings = widgetConfig.config.join('|')
+      const matchingComment = _.find(_.keys(positionalComments), (commentLocation) => {
+        return widgetConfigStrings.indexOf(commentLocation) !== -1
+      })
+      if (matchingComment) {
+        widgetConfig.comment = positionalComments[matchingComment]
         widgetConfig.status = 'red'
       }
     })
@@ -246,11 +276,15 @@ function extractCommonParamsFromTestDefinition (testDefinition) {
 
 function echoError (error) {
   console.error(error)
+  console.error(error)
   throw error
 }
 
 function toArray (stringOrArray) {
-  return (_.isArray(stringOrArray)) ? stringOrArray : [stringOrArray]
+  if (_.isNull(stringOrArray)) { return [] }
+  if (_.isUndefined(stringOrArray)) { return [] }
+  if (_.isArray(stringOrArray)) { return stringOrArray }
+  return [stringOrArray]
 }
 
 function generateBddFeatureFile (combinedTestPlan) {
