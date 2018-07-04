@@ -1,0 +1,16 @@
+version: 1
+groupname: "Representative Examples (Misc) 600x600"
+tests:
+  - data_directory: "data/misc"
+    width: 600
+    height: 600
+    type: for_each_data_in_directory
+    use_config_as_title: true
+    comments:
+      - location: usage_example_diet_survey
+        text: label overlap
+      - location: coke_zero_sentiment_unsorted
+        text: top label sticks out too much
+      - location: browser_stats_gradient
+        text: top label sticks out too much
+    config: config.debug

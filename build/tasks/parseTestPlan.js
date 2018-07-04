@@ -72,7 +72,7 @@ function extractGroupedTestCases (testPlanFiles) {
           tests: _(plans)
             .map('plan.tests')
             .flatten()
-            .map(configToTestCases)
+            .map(testDefinition => configToTestCases(testDefinition, groupname))
             .flatten()
             .value(),
           groupName: groupname
@@ -106,7 +106,7 @@ function generateRenderExampleUrl (renderExampleConfig) {
 }
 
 const parsers = {
-  single: function (testDefinition) {
+  single: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
     return [
       {
@@ -114,7 +114,7 @@ const parsers = {
       }
     ]
   },
-  multipart_single: function (testDefinition) {
+  multipart_single: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
     return [
       {
@@ -122,7 +122,7 @@ const parsers = {
       }
     ]
   },
-  single_page_one_example_per_config: function (testDefinition) {
+  single_page_one_example_per_config: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
     return [
       {
@@ -132,7 +132,7 @@ const parsers = {
       }
     ]
   },
-  single_page_one_example_per_data: function (testDefinition) {
+  single_page_one_example_per_data: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
     return [
       {
@@ -142,14 +142,14 @@ const parsers = {
       }
     ]
   },
-  for_each_data_in_directory: function (testDefinition) {
+  for_each_data_in_directory: function (testDefinition, groupname) {
     // NB return an array of N because this generates a test case per data file
     const dataStrings = getDataStringsFromTestDefinition(testDefinition)
     const configStrings = toArray(testDefinition.config) || []
     return dataStrings
       .map(dataString => {
         return {
-          testname: dataString,
+          testname: `${groupname} ${dataString}`,
           widgets: [{ config: [dataString].concat(configStrings) }]
         }
       })
@@ -162,9 +162,9 @@ const parsers = {
   }
 }
 
-function configToTestCases (testDefinition) {
+function configToTestCases (testDefinition, groupname) {
   const commonRenderExampleParts = extractCommonParamsFromTestDefinition(testDefinition)
-  const arrayOfwidgetConfigsAndOverrides = extractWidgetConfigsAndOverrides(testDefinition)
+  const arrayOfwidgetConfigsAndOverrides = extractWidgetConfigsAndOverrides(testDefinition, groupname)
 
   return arrayOfwidgetConfigsAndOverrides.map((widgetConfig, outerWidgetIndex) => {
     const renderExampleConfigWithoutUrl = _.assign({}, commonRenderExampleParts, widgetConfig)
@@ -185,12 +185,14 @@ function configToTestCases (testDefinition) {
       .value()
 
     _(renderExampleConfigWithoutUrl.widgets).each((widgetConfig, index) => {
+      // this deals with for each config or for each data but only generate one snapshot (ie one renderExample configs)
       if (_.has(positionalComments, `index-${index}`)) {
         widgetConfig.comment = positionalComments[`index-${index}`]
         widgetConfig.status = 'red'
       }
 
-      if (_.has(positionalComments, `index-${outerWidgetIndex}`)) {
+      // this deals with directory scanning configs that have more than one snapshot (ie multiple renderExample configs)
+      if (arrayOfwidgetConfigsAndOverrides.length > 1 && _.has(positionalComments, `index-${outerWidgetIndex}`)) {
         widgetConfig.comment = positionalComments[`index-${outerWidgetIndex}`]
         widgetConfig.status = 'red'
       }
@@ -211,18 +213,18 @@ function configToTestCases (testDefinition) {
   })
 }
 
-function extractWidgetConfigsAndOverrides (testDefinition) {
+function extractWidgetConfigsAndOverrides (testDefinition, groupname) {
   switch (testDefinition.type) {
     case 'single':
-      return parsers.single(testDefinition)
+      return parsers.single(testDefinition, groupname)
     case 'multipart_single':
-      return parsers.multipart_single(testDefinition)
+      return parsers.multipart_single(testDefinition, groupname)
     case 'single_page_one_example_per_config':
-      return parsers.single_page_one_example_per_config(testDefinition)
+      return parsers.single_page_one_example_per_config(testDefinition, groupname)
     case 'single_page_one_example_per_data':
-      return parsers.single_page_one_example_per_data(testDefinition)
+      return parsers.single_page_one_example_per_data(testDefinition, groupname)
     case 'for_each_data_in_directory':
-      return parsers.for_each_data_in_directory(testDefinition)
+      return parsers.for_each_data_in_directory(testDefinition, groupname)
     default:
       throw new Error(`invalid type ${testDefinition.type}`)
   }

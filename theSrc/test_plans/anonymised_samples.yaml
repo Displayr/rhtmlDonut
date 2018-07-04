@@ -8,4 +8,4 @@ tests:
       - location: data.anonymised.sample_20
         text: shows label overlap when there are nearby multiline labels
       - location: data.anonymised.sample_4
-        text: color issue - add a border to hilight issue
+        text: color issue

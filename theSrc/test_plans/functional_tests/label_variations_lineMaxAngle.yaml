@@ -7,6 +7,11 @@ tests:
     height: 350
     rowSize: 5
     data: data.decreasing_value_sets.100_decreasing_values
+    comments:
+      - location: 'labelMaxLineAngle=45'
+        text: label overlap
+      - location: 'labelMaxLineAngle=60'
+        text: label overlap
     config:
       - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "30", "title" : "labelMaxLineAngle=30" } }'
       - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "45", "title" : "labelMaxLineAngle=45" } }'
