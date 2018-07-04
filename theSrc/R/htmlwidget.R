@@ -134,8 +134,10 @@ Donut <- function(
     #  * compute group counts
     #  * reorder values and groups depending on order "descending" v "alphabetical" v "initial"
 
-    if (is.null(values))
-        stop("values must not be empty")
+    if (is.null(values)) { stop("values must not be empty") }
+    if (is.null(labels)) { stop("labels must not be empty") }
+    if (inner.radius >= 1 || inner.radius  < 0) { stop("inner.radius must be 0 or greater and less than 1") }
+
     if (!is.vector(values)) {
         if (is.matrix(values) || is.data.frame(values))
             stop("values must be a vector-like object")
@@ -145,8 +147,6 @@ Donut <- function(
             stop("Data type of values is not recognized")
     }
 
-    if (is.null(labels))
-        stop("labels must not be empty")
     if (!is.vector(labels)) {
         if (is.matrix(labels) || is.data.frame(labels))
             stop("labels must be a vector-like object")
