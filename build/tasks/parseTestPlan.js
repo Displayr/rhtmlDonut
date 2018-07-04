@@ -26,7 +26,6 @@ function registerTaskWithGulp (gulp) {
 function loadConfigs (testPlansDir) {
   return readdir(testPlansDir)
     .then(filePaths => filePaths.filter(fileName => fileName.endsWith('.yaml')))
-    .then(filePaths => filePaths.filter(fileName => fileName.match('anon'))) // DELETE ME
     .then(testPlanFilePaths => {
       return Promise.all(testPlanFilePaths.map(testPlanFilePath => {
         return new Promise((resolve, reject) => {
