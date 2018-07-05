@@ -9,8 +9,10 @@ tests:
     comments:
       - location: 0
         text: do not use this setting
+        status: yellow
       - location: 1
         text: do not use this setting
+        status: yellow
     data: data.test_plan.lots_of_values_at_top_and_bottom
     config:
       - 'config.label_6|{ "settings" : { "labelLiftOffAngle" : "10", "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelLiftOffAngle=10" } }'

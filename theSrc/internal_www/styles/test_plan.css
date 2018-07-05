@@ -53,6 +53,18 @@ test-plan-group-name {
     font-size: 8px;
 }
 
-.test-case.issue {
+li.test-case  {
+    font-size: 20px;
+}
+
+li.test-case a {
+    font-size: 14px;
+}
+
+.test-case.status-red {
     color: red;
+}
+
+.test-case.status-yellow {
+    color: yellow;
 }

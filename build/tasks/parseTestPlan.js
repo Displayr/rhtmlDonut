@@ -171,14 +171,14 @@ function configToTestCases (testDefinition, groupname) {
     if (!_.has(renderExampleConfigWithoutUrl, 'testname')) { throw new Error('missing testname') }
 
     const positionalComments = _(renderExampleConfigWithoutUrl.comments || [])
-      .transform((result, { location, text }) => {
+      .transform((result, { location, text, status = 'red' }) => {
         const isNumberRegex = new RegExp('^[0-9]+$')
         const locationIsIndex = isNumberRegex.test(`${location}`)
 
         if (locationIsIndex) {
-          result[`index-${location}`] = text
+          result[`index-${location}`] = { text, status }
         } else {
-          result[location] = text
+          result[location] = { text, status }
         }
         return result
       }, {})
@@ -187,14 +187,14 @@ function configToTestCases (testDefinition, groupname) {
     _(renderExampleConfigWithoutUrl.widgets).each((widgetConfig, index) => {
       // this deals with for each config or for each data but only generate one snapshot (ie one renderExample configs)
       if (_.has(positionalComments, `index-${index}`)) {
-        widgetConfig.comment = positionalComments[`index-${index}`]
-        widgetConfig.status = 'red'
+        widgetConfig.comment = positionalComments[`index-${index}`].text
+        widgetConfig.status = positionalComments[`index-${index}`].status
       }
 
       // this deals with directory scanning configs that have more than one snapshot (ie multiple renderExample configs)
       if (arrayOfwidgetConfigsAndOverrides.length > 1 && _.has(positionalComments, `index-${outerWidgetIndex}`)) {
-        widgetConfig.comment = positionalComments[`index-${outerWidgetIndex}`]
-        widgetConfig.status = 'red'
+        widgetConfig.comment = positionalComments[`index-${outerWidgetIndex}`].text
+        widgetConfig.status = positionalComments[`index-${outerWidgetIndex}`].status
       }
 
       const widgetConfigStrings = widgetConfig.config.join('|')
@@ -202,8 +202,8 @@ function configToTestCases (testDefinition, groupname) {
         return widgetConfigStrings.indexOf(commentLocation) !== -1
       })
       if (matchingComment) {
-        widgetConfig.comment = positionalComments[matchingComment]
-        widgetConfig.status = 'red'
+        widgetConfig.comment = positionalComments[matchingComment].text
+        widgetConfig.status = positionalComments[matchingComment].status
       }
     })
     delete renderExampleConfigWithoutUrl.comments
