@@ -711,43 +711,73 @@ let labels = {
       })
     }
 
+    // TODO normalize the config variables for initial vs max for both maxlineAngle and minValue
     labels._performCollisionResolutionIteration({
       useInnerLabels: pie.options.labels.outer.innerLabels,
       minAngleThreshold: parseFloat(pie.options.data.minAngle),
+      breakOutAngleThreshold: 0.1,
+      // for now make maxLineAngleValue == maxLineAngleMaxValue so that this strategy is temp dissabled
+      maxLineAngleValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      maxLineAngleMaxValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      maxLineAngleIncrement: 3,
       labelSet: pie.outerLabelData,
       minIncrement: parseFloat(pie.options.labels.outer.iterationMinIncrement),
       maxIncrement: parseFloat(pie.options.labels.outer.iterationMaxIncrement),
-      breakOutAngleThreshold: 0.1,
       pie })
   },
 
-  _performCollisionResolutionIteration ({ useInnerLabels, minAngleThreshold, labelSet, minIncrement, maxIncrement, breakOutAngleThreshold, pie }) {
+  _performCollisionResolutionIteration ({
+    useInnerLabels,
+    minAngleThreshold,
+    labelSet,
+    maxLineAngleValue,
+    maxLineAngleMaxValue,
+    maxLineAngleIncrement,
+    minIncrement,
+    maxIncrement,
+    breakOutAngleThreshold,
+    pie,
+    iterationStrategies = {
+      minValueIncreases: 0,
+      maxAngleIncreases: 0
+    }
+  }) {
     const clonedAndFilteredLabelSet = _.cloneDeep(labelSet).filter(labelDatum => labelDatum.fractionalValue > minAngleThreshold)
     labelLogger.info(`collision iteration started. minAngle=${minAngleThreshold}, beforeFilterCount=${labelSet.length}, afterFilterCount: ${clonedAndFilteredLabelSet.length}`)
 
     try {
-      let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performCollisionResolutionAlgorithm(pie, clonedAndFilteredLabelSet, useInnerLabels)
+      let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performCollisionResolutionAlgorithm({
+        pie,
+        clonedAndFilteredLabelSet,
+        useInnerLabels,
+        maxLineAngleValue
+      })
 
-      if (candidateOuterLabelSet.length > 0) {
+      if (candidateOuterLabelSet.length > 0 || candidateInnerLabelSet.length > 0) {
         pie.outerLabelData = candidateOuterLabelSet
         pie.innerLabelData = candidateInnerLabelSet
       } else {
-        labelLogger.error(`collision resolution failed: removed all labels!`)
+        labelLogger.error(`collision resolution failed: it tried to removed all labels!`)
       }
     } catch (error) {
-      if (minAngleThreshold >= breakOutAngleThreshold) {
-        labelLogger.error(`collision resolution failed: hit breakOutAngle: ${breakOutAngleThreshold}`)
-        return
-      }
-
       if (error.isInterrupt && error.type === 'AngleThresholdExceeded') {
         const offendingLabel = error.labelDatum
-        labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' exceeded radial to labelLine angle threshold of ${pie.options.labels.outer.labelMaxLineAngle} (${offendingLabel.angleBetweenLabelAndRadial})`)
+        labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' exceeded radial to labelLine angle threshold of ${maxLineAngleValue} (${offendingLabel.angleBetweenLabelAndRadial})`)
 
-        // two strategies : lift top/bottom if not lifted. If both already lifted,
-        // then increase minAngle threshold
+        // three strategies :
+        //  1) lift top/bottom if not lifted. If both already lifted,
+        //  2) then increase minAngle (minValue) threshold
+        //  3) then increase maxLabelLineAngle threshold
+
+        const availableStrategies = {
+          liftTop: offendingLabel.inTopHalf && !pie.topIsLifted,
+          liftBottom: offendingLabel.inBottomHalf && !pie.bottomIsLifted,
+          increaseMinValue: minAngleThreshold < breakOutAngleThreshold,
+          increaseMaxLabelLineAngle: maxLineAngleValue < maxLineAngleMaxValue
+        }
+
         let newMinAngleThreshold = minAngleThreshold
-        if (offendingLabel.inTopHalf && !pie.topIsLifted) {
+        if (availableStrategies.liftTop) {
           labelLogger.info('lifting top labels before next iteration')
           // note this is the 'master labelSet', not the clone passed to each iteration
           const topLabelsThatCouldBeLifted = labelSet
@@ -768,7 +798,7 @@ let labels = {
               minGap: parseFloat(pie.options.labels.outer.outerPadding)
             })
           })
-        } else if (offendingLabel.inBottomHalf && !pie.bottomIsLifted) {
+        } else if (availableStrategies.liftBottom) {
           labelLogger.info('lifting bottom labels before next iteration')
           // note this is the 'master labelSet', not the clone passed to each iteration
           pie.bottomIsLifted = true
@@ -789,7 +819,13 @@ let labels = {
                 minGap: parseFloat(pie.options.labels.outer.outerPadding)
               })
             })
-        } else {
+        // TODO this makes it really clear that newMinAngleThreshold should be renamed to minValueThreshold
+        } else if (
+          availableStrategies.increaseMinValue &&
+          (!availableStrategies.increaseMaxLabelLineAngle || iterationStrategies.minValueIncreases < (iterationStrategies.maxAngleIncreases + 1) * 10)
+        ) {
+          iterationStrategies.minValueIncreases++
+
           newMinAngleThreshold = _(labelSet)
             .filter(labelDatum => labelDatum.fractionalValue > minAngleThreshold)
             .minBy('fractionalValue').fractionalValue
@@ -799,6 +835,12 @@ let labels = {
           if (newMinAngleThreshold < minAngleThreshold + minIncrement) { newMinAngleThreshold = minAngleThreshold + minIncrement }
           if (newMinAngleThreshold > minAngleThreshold + maxIncrement) { newMinAngleThreshold = minAngleThreshold + maxIncrement }
           labelLogger.info(`increased newMinAngleThreshold to ${newMinAngleThreshold}`)
+        } else if (availableStrategies.increaseMaxLabelLineAngle) {
+          iterationStrategies.maxAngleIncreases++
+          maxLineAngleValue += maxLineAngleIncrement
+          labelLogger.info(`increased maxLineAngleValue to ${maxLineAngleValue}`)
+        } else {
+          labelLogger.error(`collision resolution failed: hit breakOutValue: ${breakOutAngleThreshold} and maxLineAngleMaxValue: ${maxLineAngleMaxValue}`)
         }
 
         labels._performCollisionResolutionIteration({
@@ -806,9 +848,13 @@ let labels = {
           minAngleThreshold: newMinAngleThreshold,
           labelSet: labelSet, // NB it is the original labelset (potentially topIsLifted and bottomIsLifted applied), not the modified one from the failed iteration
           breakOutAngleThreshold,
+          maxLineAngleValue,
+          maxLineAngleMaxValue,
+          maxLineAngleIncrement,
           minIncrement,
           maxIncrement,
-          pie
+          pie,
+          iterationStrategies
         })
       } else {
         labelLogger.error(`collision resolution failed: unexpected error: ${error}`)
@@ -817,7 +863,12 @@ let labels = {
     }
   },
 
-  _performCollisionResolutionAlgorithm (pie, outerLabelSet, useInnerLabels) {
+  _performCollisionResolutionAlgorithm ({
+    pie,
+    clonedAndFilteredLabelSet: outerLabelSet,
+    useInnerLabels,
+    maxLineAngleValue
+  }) {
     const leftOuterLabelsSortedTopToBottom = _(outerLabelSet)
       .filter({hemisphere: 'left'})
       .sortBy(['lineConnectorCoord.y', x => { return -1 * x.id }])
@@ -850,7 +901,7 @@ let labels = {
         outerLabelRadius: pie.outerRadius + pie.labelOffset,
         horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        maxAngleBetweenRadialAndLabelLines: maxLineAngleValue,
         minGap: parseFloat(pie.options.labels.outer.outerPadding),
         maxFontSize: pie.maxFontSize,
         hasTopLabel: pie.hasTopLabel,
@@ -873,7 +924,7 @@ let labels = {
         outerLabelRadius: pie.outerRadius + pie.labelOffset,
         horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
         labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-        maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        maxAngleBetweenRadialAndLabelLines: maxLineAngleValue,
         minGap: parseFloat(pie.options.labels.outer.outerPadding),
         maxFontSize: pie.maxFontSize,
         hasTopLabel: pie.hasTopLabel,
@@ -899,7 +950,7 @@ let labels = {
       outerLabelRadius: pie.outerRadius + pie.labelOffset,
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      maxAngleBetweenRadialAndLabelLines: maxLineAngleValue,
       minGap: parseFloat(pie.options.labels.outer.outerPadding),
       maxFontSize: pie.maxFontSize,
       hasTopLabel: pie.hasTopLabel,
@@ -924,7 +975,7 @@ let labels = {
       outerLabelRadius: pie.outerRadius + pie.labelOffset,
       horizontalPadding: parseFloat(pie.options.labels.mainLabel.horizontalPadding),
       labelLiftOffAngle: parseFloat(pie.options.labels.outer.liftOffAngle),
-      maxAngleBetweenRadialAndLabelLines: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+      maxAngleBetweenRadialAndLabelLines: maxLineAngleValue,
       minGap: parseFloat(pie.options.labels.outer.outerPadding),
       maxFontSize: pie.maxFontSize,
       hasTopLabel: pie.hasTopLabel,
