@@ -1,0 +1,36 @@
+version: 1
+tests:
+  - type: multi_widget_single_page
+    rowSize: 4
+    comments:
+      - location: 2
+        text: large font causes donut overlap
+        status: red
+      - location: 3
+        text: large font causes donut overlap
+        status: red
+    widgets:
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings": { "labelsSize": 40 } }'
+          - '{ "settings" : { "title" : "size=40" } }'
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings": { "labelsSize": 50, "labelsMaxWidth": "0.25" } }'
+          - '{ "settings" : { "title" : "size=50, labelsMaxWidth=0.25" } }'
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings": { "labelsSize": 50, "labelsMaxWidth": "0.46" } }'
+          - '{ "settings" : { "title" : "size=50, labelsMaxWidth=0.46" } }'
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings": { "labelsSize": 60, "labelsMaxWidth": "0.46" } }'
+          - '{ "settings" : { "title" : "size=60, labelsMaxWidth=0.46" } }'

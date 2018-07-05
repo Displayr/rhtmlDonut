@@ -24,7 +24,7 @@
     #
     #  - testname: example test
     #    data: data.test_plan.abc_rbg
-    #    type: single
+    #    type: single_widget_single_page
 
     # repeat for each data
     # - testname: example test

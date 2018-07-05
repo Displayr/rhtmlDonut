@@ -1,0 +1,21 @@
+version: 1
+tests:
+  - type: multi_widget_single_page
+    rowSize: 4
+    comments:
+      - location: 0
+        text: values display does not work ?
+        status: red
+    widgets:
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings" : { "valuesDec": "0", "valuesDisplay": "percentage" } }'
+          - '{ "settings" : { "subtitle": "valuesDisplay=percentage<br>does not work?" } }'
+      - height: 500
+        width: 500
+        config:
+          - data.test_plan.abc_rbg
+          - '{ "settings" : { "valuesDec": "3" } }'
+          - '{ "settings" : { "title": "valuesDec=3" } }'

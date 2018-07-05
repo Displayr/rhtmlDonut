@@ -106,19 +106,22 @@ function generateRenderExampleUrl (renderExampleConfig) {
 }
 
 const parsers = {
-  single: function (testDefinition, groupname) {
+  single_widget_single_page: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
+    // NB gather all data and config, put together into a single widget
+    const datas = toArray(testDefinition.data)
+    const configs = toArray(testDefinition.config)
     return [
       {
-        widgets: [{config: [testDefinition.data]}]
+        widgets: [{config: datas.concat(configs)}]
       }
     ]
   },
-  multipart_single: function (testDefinition, groupname) {
+  multi_widget_single_page: function (testDefinition, groupname) {
     // NB return an array of one because this generates a single test case
     return [
       {
-        widgets: [{config: testDefinition.config}]
+        widgets: toArray(testDefinition.widgets)
       }
     ]
   },
@@ -214,20 +217,11 @@ function configToTestCases (testDefinition, groupname) {
 }
 
 function extractWidgetConfigsAndOverrides (testDefinition, groupname) {
-  switch (testDefinition.type) {
-    case 'single':
-      return parsers.single(testDefinition, groupname)
-    case 'multipart_single':
-      return parsers.multipart_single(testDefinition, groupname)
-    case 'single_page_one_example_per_config':
-      return parsers.single_page_one_example_per_config(testDefinition, groupname)
-    case 'single_page_one_example_per_data':
-      return parsers.single_page_one_example_per_data(testDefinition, groupname)
-    case 'for_each_data_in_directory':
-      return parsers.for_each_data_in_directory(testDefinition, groupname)
-    default:
-      throw new Error(`invalid type ${testDefinition.type}`)
+  if (!_.has(parsers, testDefinition.type)) {
+    throw new Error(`invalid type ${testDefinition.type}`)
   }
+
+  return parsers[testDefinition.type](testDefinition, groupname)
 }
 
 function extractCommonParamsFromTestDefinition (testDefinition) {

@@ -56,8 +56,11 @@ const renderTestCase = function (testCase, testIndex, groupName) {
     .value()
 
   let status = 'green'
-  if (!_.isEmpty(statuses) && statuses.includes('red')) { status = 'red' }
-  else if (!_.isEmpty(statuses)) { status = 'yellow' }
+  if (!_.isEmpty(statuses) && statuses.includes('red')) {
+    status = 'red'
+  } else if (!_.isEmpty(statuses)) {
+    status = 'yellow'
+  }
 
   Mustache.parse(testCaseTemplate)
   return Mustache.render(testCaseTemplate, { testName, testDefinition, testUrl, testIndex, groupName, status })

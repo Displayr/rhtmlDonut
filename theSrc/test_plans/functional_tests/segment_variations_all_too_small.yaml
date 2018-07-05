@@ -1,6 +1,6 @@
 version: 1
 tests:
-  - type: single
+  - type: single_widget_single_page
     width: 648
     height: 447
     rowSize: 3
