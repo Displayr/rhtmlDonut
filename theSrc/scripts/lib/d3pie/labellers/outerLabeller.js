@@ -1644,7 +1644,8 @@ let labels = {
             if (newY < upperBoundary) {
               labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. cancelling inner`)
               phase2HitTop = true
-              return terminateLoop
+              // return terminateLoop
+              throw new AngleThresholdExceeded(gettingPushedLabel) // TODO better exception here
             }
 
             const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
@@ -1689,6 +1690,13 @@ let labels = {
           throw new AngleThresholdExceeded(label)
         }
       })
+
+      // final check for colliding labels
+      const collidingLabels = findIntersectingLabels(outerLabelSet)
+      if (collidingLabels.length > 0) {
+        labelLogger.warn(`  final pass found ${collidingLabels.length} colliding labels.`)
+        throw new AngleThresholdExceeded(collidingLabels[0]) // TODO make new exception
+      }
     }
   },
 
