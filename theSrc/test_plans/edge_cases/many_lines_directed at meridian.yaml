@@ -1,0 +1,16 @@
+version: 1
+tests:
+  - general_comments: the first example is final product, all others are intermediate stages
+    type: single_page_one_example_per_config
+    width: 500
+    height: 750
+    rowSize: 3
+    data: config.label_16
+    comment:
+      - location: labeller_stage_shorten_top_bottom_phase
+        text: lines look bad when bent back to meridian
+        status: red
+    config:
+      - data.test_plan.many_lines_directed_at_meridian_working
+      - data.test_plan.many_lines_directed_at_meridian_working_reduced
+      - data.test_plan.many_lines_directed_at_meridian
