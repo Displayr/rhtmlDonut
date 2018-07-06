@@ -6,6 +6,10 @@ tests:
     height: 300
     rowSize: 5
     type: single_page_one_example_per_data
+    comments:
+      - location: 20_decreasing_values
+        status: yellow
+        text: should shorten label 10 more
     data:
       - data.decreasing_value_sets.1_decreasing_values
       - data.decreasing_value_sets.2_decreasing_values

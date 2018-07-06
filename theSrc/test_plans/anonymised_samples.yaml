@@ -9,3 +9,6 @@ tests:
         text: shows label overlap when there are nearby multiline labels
       - location: data.anonymised.sample_4
         text: color issue
+      - location: data.anonymised.sample_22
+        text: bottom needs more shortening
+        status: yellow

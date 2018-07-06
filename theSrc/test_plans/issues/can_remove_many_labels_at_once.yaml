@@ -5,5 +5,4 @@ tests:
     height: 350
     rowSize: 3
     config:
-      - 'data.decreasing_value_sets.100_decreasing_values|config.use_inner_labels'
       - 'data.test_plan.1x75_then_25x1_unequal|config.use_inner_labels|config.labelMaxLineAngle_120'
