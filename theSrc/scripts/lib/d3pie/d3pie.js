@@ -146,10 +146,16 @@ class d3pie {
     }
 
     _(this.outerLabelData).each(label => {
-      label.pieCenter = this.pieCenter
-      label.innerRadius = this.innerRadius
-      label.outerRadius = this.outerRadius
-      label.labelOffset = this.labelOffset
+      const coordAtZeroDegrees = { x: this.pieCenter.x - outerRadius, y: this.pieCenter.y }
+      const segmentMidpointCoord = math.rotate(coordAtZeroDegrees, this.pieCenter, label.segmentAngleMidpoint)
+
+      label.addLayoutFacts({
+        segmentMidpointCoord,
+        pieCenter: this.pieCenter,
+        innerRadius: this.innerRadius,
+        outerRadius: this.outerRadius,
+        labelOffset: this.labelOffset
+      })
     })
 
     layoutLogger.info(`pie layout determined:

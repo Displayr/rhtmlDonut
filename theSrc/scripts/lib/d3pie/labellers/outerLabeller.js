@@ -278,7 +278,7 @@ let labels = {
     if (topLabel) {
       labelLogger.info('has top label')
       pie.hasTopLabel = true
-      topLabel.isTopLabel = true
+      topLabel.isTopApexLabel = true
     } else {
       pie.hasTopLabel = false
     }
@@ -286,7 +286,7 @@ let labels = {
     if (bottomLabel) {
       labelLogger.info('has bottom label')
       pie.hasBottomLabel = true
-      bottomLabel.isBottomLabel = true
+      bottomLabel.isBottomApexLabel = true
     } else {
       pie.hasBottomLabel = false
     }
@@ -371,7 +371,7 @@ let labels = {
     hasBottomLabel = false,
     minGap = 1
   }) {
-    if (labelDatum.isTopLabel) {
+    if (labelDatum.isTopApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
       const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
@@ -380,7 +380,7 @@ let labels = {
         y: pieCenter.y - (outerRadius + maxVerticalOffset - labelDatum.height)
       }
       labelDatum.setLineConnector(fitLineCoord)
-    } else if (labelDatum.isBottomLabel) {
+    } else if (labelDatum.isBottomApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
       const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
@@ -1055,9 +1055,9 @@ let labels = {
     }
 
     if (anchor === 'top') {
-      labelDatum.setTopTouchPoint(newLineConnectorCoord)
+      labelDatum.setTopMedialPoint(newLineConnectorCoord)
     } else {
-      labelDatum.setBottomTouchPoint(newLineConnectorCoord)
+      labelDatum.setBottomMedialPoint(newLineConnectorCoord)
     }
   },
 
@@ -1453,7 +1453,7 @@ let labels = {
         if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (phase1LineAngleExceeded) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isTopLabel) { return continueLoop }
+        if (frontierLabel.isTopApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = outerLabelSet[frontierIndex + 1]
@@ -1471,7 +1471,7 @@ let labels = {
             const gettingPushedLabel = outerLabelSet[gettingPushedIndex]
             if (gettingPushedLabel.hide) { return continueLoop }
 
-            if (gettingPushedLabel.isBottomLabel) {
+            if (gettingPushedLabel.isBottomApexLabel) {
               labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} bottom label. cancelling inner`)
               phase1HitBottom = true
               return continueLoop
@@ -1481,9 +1481,9 @@ let labels = {
               labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -1519,9 +1519,9 @@ let labels = {
               phase1HitBottom = true
 
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -1571,9 +1571,9 @@ let labels = {
         if (matchingOuterLabel) {
           matchingOuterLabel.labelShown = true
           if (matchingOuterLabel.inLeftHalf) {
-            matchingOuterLabel.setBottomTouchPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           } else {
-            matchingOuterLabel.setBottomTouchPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           }
         } else {
           console.error(`should have found matching outer label for inner label ${pi(innerLabel)}`)
@@ -1591,7 +1591,7 @@ let labels = {
         labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isBottomLabel) { return continueLoop }
+        if (frontierLabel.isBottomApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = reversedLabelSet[frontierIndex + 1]
@@ -1609,7 +1609,7 @@ let labels = {
             const gettingPushedLabel = reversedLabelSet[gettingPushedIndex]
             if (gettingPushedLabel.hide) { return continueLoop }
 
-            if (gettingPushedLabel.isTopLabel) {
+            if (gettingPushedLabel.isTopApexLabel) {
               labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} top label. cancelling inner`)
               phase2HitTop = true
               return terminateLoop
@@ -1723,13 +1723,13 @@ let labels = {
         left: _(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isTopLabel}) => !isTopLabel)
+          .filter(({isTopApexLabel}) => !isTopApexLabel)
           .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
           .value(),
         right: _(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isTopLabel}) => !isTopLabel)
+          .filter(({isTopApexLabel}) => !isTopApexLabel)
           .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
           .value()
       }
@@ -1824,7 +1824,7 @@ let labels = {
   },
 
   shortenTopLabel (pie) {
-    const topLabel = _(pie.outerLabelData).find('isTopLabel')
+    const topLabel = _(pie.outerLabelData).find('isTopApexLabel')
     if (topLabel) {
       const topLabelIndex = pie.outerLabelData.indexOf(topLabel)
       const nearestNeighbors = []
@@ -1859,13 +1859,13 @@ let labels = {
         left: _(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isBottomLabel}) => !isBottomLabel)
+          .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
           .value(),
         right: _(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isBottomLabel}) => !isBottomLabel)
+          .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
           .value()
       }
@@ -1960,7 +1960,7 @@ let labels = {
   },
 
   shortenBottomLabel (pie) {
-    const bottomLabel = _(pie.outerLabelData).find('isBottomLabel')
+    const bottomLabel = _(pie.outerLabelData).find('isBottomApexLabel')
     if (bottomLabel) {
       const bottomLabelIndex = pie.outerLabelData.indexOf(bottomLabel)
       const nearestNeighbors = []
@@ -2015,6 +2015,7 @@ let labels = {
     innerPadding
 }) {
     let cumulativeValue = 0
+
     return labelData
       .filter(({value}) => { return value * 360 / totalSize >= minAngle })
       .map((datum) => {
@@ -2023,8 +2024,7 @@ let labels = {
         cumulativeValue += datum.value
 
         return new OuterLabel({
-          angleExtent,
-          angleStart,
+          segmentAngleMidpoint: angleStart + angleExtent / 2,
           color: datum.color,
           fontFamily,
           fontSize,
@@ -2157,7 +2157,7 @@ let labels = {
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setTopTouchPoint(innerRadiusLabelCoord)
+          newInnerLabel.setTopMedialPoint(innerRadiusLabelCoord)
         } else {
           labelLogger.debug(`inner collision between ${pi(previousLabel)} v ${pi(newInnerLabel)}(new). Moving new up`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
@@ -2169,7 +2169,7 @@ let labels = {
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setBottomTouchPoint(innerRadiusLabelCoord)
+          newInnerLabel.setBottomMedialPoint(innerRadiusLabelCoord)
         }
       }
     }
@@ -2206,7 +2206,7 @@ let labels = {
   nearestNeighborAbove (pie, label) {
     try {
       if (!label) { return null }
-      if (label.isTopLabel) { return null }
+      if (label.isTopApexLabel) { return null }
 
       const labelIndex = pie.outerLabelData.indexOf(label)
       if (labelIndex === -1) { return null }
@@ -2242,7 +2242,7 @@ let labels = {
   nearestNeighborBelow (pie, label) {
     try {
       if (!label) { return null }
-      if (label.isBottomLabel) { return null }
+      if (label.isBottomApexLabel) { return null }
 
       const labelIndex = pie.outerLabelData.indexOf(label)
       if (labelIndex === -1) { return null }

@@ -9,8 +9,7 @@ const math = require('../math')
 
 class OuterLabel {
   constructor ({
-    angleExtent,
-    angleStart,
+    segmentAngleMidpoint,
     color,
     fontSize,
     fontFamily,
@@ -26,7 +25,6 @@ class OuterLabel {
     displayPrefix = '',
     displaySuffix = ''
   }) {
-    const segmentAngleMidpoint = angleStart + angleExtent / 2
     const hemisphere = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270) ? 'left' : 'right'
     const inLeftHalf = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270)
     const inTopHalf = (segmentAngleMidpoint <= 180)
@@ -63,19 +61,16 @@ class OuterLabel {
     }
 
     this._variants = {
-      isTopLabel: false,
-      isBottomLabel: false,
+      isTopApexLabel: false,
+      isBottomApexLabel: false,
       angleBetweenLabelAndRadial: null,
       fontSize,
       height: null,
       labelAngle: segmentAngleMidpoint,
-      labelOffset: null,
       labelShown: true,
       labelTextLines: null,
       lineHeight: null,
       lineConnectorCoord: {},
-      outerRadius: null,
-      pieCenter: null,
       topLeftCoord: {},
       width: null
     }
@@ -119,6 +114,11 @@ class OuterLabel {
     // })
   }
 
+  // these facts are not available at constructor time, so add them later via calling addLayoutFacts
+  addLayoutFacts ({ segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset }) {
+    _.assign(this._invariants, { segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset })
+  }
+
   // NB TODO dont think this works
   toString () {
     return this.label
@@ -145,23 +145,8 @@ class OuterLabel {
     return val
   }
 
-  // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
-  _computeLineConnectorCoord () {
-    const { width, linePadding, hemisphere, topLeftCoord, lineHeight, innerPadding, labelTextLines } = this
-    const numTextRows = labelTextLines.length
-
-    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
-    const lineConnectorCoord = {}
-    lineConnectorCoord.y = (topLeftCoord.y < this.pieCenter.y)
-      ? topLeftCoord.y + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
-      : topLeftCoord.y + 0.5 * lineHeight
-
-    lineConnectorCoord.x = (hemisphere === 'left')
-      ? topLeftCoord.x + width + linePadding
-      : topLeftCoord.x - linePadding
-
-    return lineConnectorCoord
-  }
+  ////////////////////////////
+  // Label movement calls
 
   moveStraightUpBy (verticalOffset) {
     this.topLeftCoord.y -= verticalOffset
@@ -177,17 +162,41 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
+  // the top left/right of the label should line up with this point, but the linePadding
+  setTopMedialPoint (coord) {
+    const {width, linePadding, hemisphere} = this
+    this.topLeftCoord = (hemisphere === 'left')
+      ? { x: coord.x - width - linePadding, y: coord.y }
+      : { x: coord.x + linePadding, y: coord.y }
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  setBottomMedialPoint (coord) {
+    const {width, height, linePadding, hemisphere} = this
+    this.topLeftCoord = (hemisphere === 'left')
+      ? { x: coord.x - width - linePadding, y: coord.y - height }
+      : { x: coord.x + linePadding, y: coord.y - height }
+    this.lineConnectorCoord = this._computeLineConnectorCoord()
+    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  ////////////////////////////
+  // Line connector calculation calls
+
   setLineConnector (lineConnectorCoord) {
-    if (this.isTopLabel) {
-      this.setLineConnectorTopCoord(lineConnectorCoord)
-    } else if (this.isBottomLabel) {
-      this.setLineConnectorBottomCoord(lineConnectorCoord)
+    if (this.isTopApexLabel) {
+      this.setLineConnectorOnTopApexLabel(lineConnectorCoord)
+    } else if (this.isBottomApexLabel) {
+      this.setLineConnectorOnBottomApexLabel(lineConnectorCoord)
     } else {
-      this.setLineConnectorNormal(lineConnectorCoord)
+      this.setLineConnectorOnNormalLabel(lineConnectorCoord)
     }
   }
 
-  setLineConnectorTopCoord (lineConnectorCoord) {
+  setLineConnectorOnTopApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
       y: lineConnectorCoord.y - this.height
@@ -197,7 +206,7 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setLineConnectorBottomCoord (lineConnectorCoord) {
+  setLineConnectorOnBottomApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
       y: lineConnectorCoord.y
@@ -207,7 +216,7 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setLineConnectorNormal (lineConnectorCoord) {
+  setLineConnectorOnNormalLabel (lineConnectorCoord) {
     const { lineHeight, innerPadding, labelTextLines } = this
     const numTextRows = labelTextLines.length
 
@@ -225,25 +234,22 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  // the top left/right of the label should line up with this point, but the linePadding
-  setTopTouchPoint (coord) {
-    const {width, linePadding, hemisphere} = this
-    this.topLeftCoord = (hemisphere === 'left')
-      ? { x: coord.x - width - linePadding, y: coord.y }
-      : { x: coord.x + linePadding, y: coord.y }
-    this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
-  }
+  // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
+  _computeLineConnectorCoord () {
+    const { width, linePadding, hemisphere, topLeftCoord, lineHeight, innerPadding, labelTextLines } = this
+    const numTextRows = labelTextLines.length
 
-  setBottomTouchPoint (coord) {
-    const {width, height, linePadding, hemisphere} = this
-    this.topLeftCoord = (hemisphere === 'left')
-      ? { x: coord.x - width - linePadding, y: coord.y - height }
-      : { x: coord.x + linePadding, y: coord.y - height }
-    this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
+    const lineConnectorCoord = {}
+    lineConnectorCoord.y = (topLeftCoord.y < this.pieCenter.y)
+      ? topLeftCoord.y + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
+      : topLeftCoord.y + 0.5 * lineHeight
+
+    lineConnectorCoord.x = (hemisphere === 'left')
+      ? topLeftCoord.x + width + linePadding
+      : topLeftCoord.x - linePadding
+
+    return lineConnectorCoord
   }
 
   // https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine (Cosine Rule)
@@ -356,6 +362,12 @@ class OuterLabel {
   get segmentQuadrant () { return this._invariants.segmentQuadrant }
   get value () { return this._invariants.value }
 
+  get segmentMidpointCoord () { return this._invariants.segmentMidpointCoord }
+  get pieCenter () { return this._invariants.pieCenter }
+  get innerRadius () { return this._invariants.innerRadius }
+  get outerRadius () { return this._invariants.outerRadius }
+  get labelOffset () { return this._invariants.labelOffset }
+
   // accessors and mutators for variants
 
   get fontSize () { return this._variants.fontSize }
@@ -391,11 +403,11 @@ class OuterLabel {
   get width () { return this._variants.width }
   set width (newValue) { this._variants.width = newValue }
 
-  get isTopLabel () { return this._variants.isTopLabel }
-  set isTopLabel (newValue) { this._variants.isTopLabel = newValue }
+  get isTopApexLabel () { return this._variants.isTopApexLabel }
+  set isTopApexLabel (newValue) { this._variants.isTopApexLabel = newValue }
 
-  get isBottomLabel () { return this._variants.isBottomLabel }
-  set isBottomLabel (newValue) { this._variants.isBottomLabel = newValue }
+  get isBottomApexLabel () { return this._variants.isBottomApexLabel }
+  set isBottomApexLabel (newValue) { this._variants.isBottomApexLabel = newValue }
 }
 
 module.exports = OuterLabel

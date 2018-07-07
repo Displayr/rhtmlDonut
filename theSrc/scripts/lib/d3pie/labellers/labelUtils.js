@@ -123,8 +123,8 @@ function labelXbelowY (label1, label2) {
 // TODO why is this !_.has || ! necessary (should just be a simple not)
 function findIntersectingLabels (labels, within = 0) {
   return _(labels)
-    .filter(frontierLabel => { return !_.has(frontierLabel.isTopLabel) || !frontierLabel.isTopLabel })
-    .filter(frontierLabel => { return !_.has(frontierLabel.isBottomLabel) || !frontierLabel.isBottomLabel })
+    .filter(frontierLabel => { return !_.has(frontierLabel.isTopApexLabel) || !frontierLabel.isTopApexLabel })
+    .filter(frontierLabel => { return !_.has(frontierLabel.isBottomApexLabel) || !frontierLabel.isBottomApexLabel })
     .filter((frontierLabel, frontierIndex) => {
       const otherLabels = []
       if (!(frontierIndex === 0)) { otherLabels.push(labels[frontierIndex - 1]) }
