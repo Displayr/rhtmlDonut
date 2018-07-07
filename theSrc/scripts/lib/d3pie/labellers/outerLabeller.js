@@ -473,6 +473,7 @@ let labels = {
     pie.outerLabelLines = pie.outerLabelData
       .map(labelData => {
         return labels.computeOuterLabelLine({
+          pie,
           pieCenter: pie.pieCenter,
           outerRadius: pie.outerRadius,
           labelData
@@ -489,46 +490,72 @@ let labels = {
       .append('g')
       .attr('class', function (d) { return `${pie.cssPrefix}lineGroup ${pie.cssPrefix}lineGroup-${d[0].id}` })
 
-    let lineFunction = d3.svg.line()
-      .x(function (d) { return d.x })
-      .y(function (d) { return d.y })
+    let lineFunctionBasis = d3.svg.line()
+      .x(d => d.x)
+      .y(d => d.y)
       .interpolate('basis')
 
+    let linearLine = d3.svg.line()
+      .x(d => d.x)
+      .y(d => d.y)
+      .interpolate('linear')
+
     lineGroup.append('path')
-      .attr('d', lineFunction)
-      .attr('stroke', function (d) { return d[0].color })
+      .attr('d', (d) => {
+        switch (d[0].lineType) {
+          case 'basis':
+            return lineFunctionBasis(d)
+          case 'linear':
+            return linearLine(d)
+          default:
+            throw new Error(`Invalid line type ${d[0].lineType}`)
+        }
+      })
+      .attr('stroke', d => d[0].color)
       .attr('stroke-width', 1)
       .attr('fill', 'none')
       .style('opacity', 1)
       .style('display', 'inline')
   },
 
-  computeOuterLabelLine: function ({ pieCenter, outerRadius, labelData }) {
-    const pointAtZeroDegrees = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-    let originCoords = math.rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
-    originCoords.id = labelData.id
-    originCoords.color = labelData.color
+  computeOuterLabelLine: function ({ pie, pieCenter, outerRadius, labelData }) {
+    let segmentCoord = _.clone(labelData.segmentMidpointCoord)
+    let labelCoord = labelData.lineConnectorCoord
 
-    let end = labelData.lineConnectorCoord
+    segmentCoord.id = labelData.id
+    segmentCoord.color = labelData.color
 
-    let mid = {
-      x: originCoords.x + (end.x - originCoords.x) * 0.5,
-      y: originCoords.y + (end.y - originCoords.y) * 0.5,
-      type: 'mid'
+    let mid = {}
+    if (labelData.linePointsToMeridian) {
+      segmentCoord.lineType = 'linear'
+      const totalXDelta = segmentCoord.x - labelCoord.x
+      mid = {
+        x: (labelData.inLeftHalf)
+          ? segmentCoord.x + Math.abs(totalXDelta)
+          : segmentCoord.x - Math.abs(totalXDelta),
+        y: (labelData.inTopHalf)
+          ? segmentCoord.y - Math.abs(totalXDelta)
+          : segmentCoord.y + Math.abs(totalXDelta),
+        type: 'mid'
+      }
+    } else {
+      segmentCoord.lineType = 'basis'
+      mid = {
+        x: segmentCoord.x + (labelCoord.x - segmentCoord.x) * 0.5,
+        y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5,
+        type: 'mid'
+      }
+      switch (labelData.inTopHalf) {
+        case true:
+          mid.y -= Math.abs(labelCoord.y - segmentCoord.y) * 0.25
+          break
+        case false:
+          mid.y += Math.abs(labelCoord.y - segmentCoord.y) * 0.25
+          break
+      }
     }
 
-    switch (labelData.segmentQuadrant) {
-      case 4: // top left
-      case 1: // top right
-        mid.y -= Math.abs(end.y - originCoords.y) * 0.25
-        break
-      case 3: // bottom left
-      case 2: // bottom right
-        mid.y += Math.abs(end.y - originCoords.y) * 0.25
-        break
-    }
-
-    return [originCoords, mid, end]
+    return [segmentCoord, mid, labelCoord]
   },
 
   drawInnerLabelLines: function (pie) {
