@@ -379,7 +379,7 @@ let labels = {
         x: segmentCoord.x,
         y: pieCenter.y - (outerRadius + maxVerticalOffset - labelDatum.height)
       }
-      labelDatum.setLineConnector(fitLineCoord)
+      labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     } else if (labelDatum.isBottomApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
       const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
@@ -388,7 +388,7 @@ let labels = {
         x: segmentCoord.x,
         y: pieCenter.y + (outerRadius + maxVerticalOffset - labelDatum.height)
       }
-      labelDatum.setLineConnector(fitLineCoord)
+      labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     } else {
       const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
         angle: labelDatum.segmentAngleMidpoint,
@@ -404,7 +404,7 @@ let labels = {
         hasBottomLabel,
         minGap
       })
-      labelDatum.setLineConnector(fitLineCoord)
+      labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     }
   },
 
@@ -1838,7 +1838,7 @@ let labels = {
       ])
 
       if (newBottomYCoord > topLabel.bottomLeftCoord.y) {
-        topLabel.setLineConnector({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
+        topLabel.placeLabelViaConnectorCoord({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
       }
     }
   },
@@ -1974,7 +1974,7 @@ let labels = {
       ])
 
       if (newTopYCoord < bottomLabel.topLeftCoord.y) {
-        bottomLabel.setLineConnector({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
+        bottomLabel.placeLabelViaConnectorCoord({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
       }
     }
   },

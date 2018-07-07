@@ -145,7 +145,7 @@ class OuterLabel {
     return val
   }
 
-  ////////////////////////////
+  /// /////////////////////////
   // Label movement calls
 
   moveStraightUpBy (verticalOffset) {
@@ -183,20 +183,19 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  ////////////////////////////
-  // Line connector calculation calls
-
-  setLineConnector (lineConnectorCoord) {
+  placeLabelViaConnectorCoord (lineConnectorCoord) {
     if (this.isTopApexLabel) {
-      this.setLineConnectorOnTopApexLabel(lineConnectorCoord)
+      this._placeLabelViaConnectorCoordOnTopApexLabel(lineConnectorCoord)
     } else if (this.isBottomApexLabel) {
-      this.setLineConnectorOnBottomApexLabel(lineConnectorCoord)
+      this._placeLabelViaConnectorCoordOnBottomApexLabel(lineConnectorCoord)
+    } else if (this.linePointsToMeridian) {
+      this._placeLabelViaConnectorCoordOnNormalLabel(lineConnectorCoord)
     } else {
-      this.setLineConnectorOnNormalLabel(lineConnectorCoord)
+      this._placeLabelViaConnectorCoordOnNormalLabel(lineConnectorCoord)
     }
   }
 
-  setLineConnectorOnTopApexLabel (lineConnectorCoord) {
+  _placeLabelViaConnectorCoordOnTopApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
       y: lineConnectorCoord.y - this.height
@@ -206,7 +205,7 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setLineConnectorOnBottomApexLabel (lineConnectorCoord) {
+  _placeLabelViaConnectorCoordOnBottomApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
       y: lineConnectorCoord.y
@@ -216,7 +215,7 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setLineConnectorOnNormalLabel (lineConnectorCoord) {
+  _placeLabelViaConnectorCoordOnNormalLabel (lineConnectorCoord) {
     const { lineHeight, innerPadding, labelTextLines } = this
     const numTextRows = labelTextLines.length
 
@@ -234,20 +233,29 @@ class OuterLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
+  // End Label movement calls
+  /// /////////////////////////
+
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeLineConnectorCoord () {
-    const { width, linePadding, hemisphere, topLeftCoord, lineHeight, innerPadding, labelTextLines } = this
-    const numTextRows = labelTextLines.length
+    const numTextRows = this.labelTextLines.length
 
-    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
-    const lineConnectorCoord = {}
-    lineConnectorCoord.y = (topLeftCoord.y < this.pieCenter.y)
-      ? topLeftCoord.y + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
-      : topLeftCoord.y + 0.5 * lineHeight
+    let lineConnectorCoord = {}
+    if (this.linePointsToMeridian) {
+      // place the line connection at inner most X and Y
+      lineConnectorCoord.y = (this.inTopHalf)
+        ? this.bottomY
+        : this.topY
+    } else {
+      // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
+      lineConnectorCoord.y = (this.inTopHalf)
+        ? this.topY + (numTextRows - 1) * (this.innerPadding + this.lineHeight) + 0.5 * this.lineHeight
+        : this.topY + 0.5 * this.lineHeight
+    }
 
-    lineConnectorCoord.x = (hemisphere === 'left')
-      ? topLeftCoord.x + width + linePadding
-      : topLeftCoord.x - linePadding
+    lineConnectorCoord.x = (this.inLeftHalf)
+      ? this.rightX + this.linePadding
+      : this.leftX - this.linePadding
 
     return lineConnectorCoord
   }
@@ -352,6 +360,12 @@ class OuterLabel {
   get inTopRightQuadrant () { return this.inTopHalf && this.inRightHalf }
   get inBottomLeftQuadrant () { return this.inBottomHalf && this.inLeftHalf }
   get inBottomRightQuadrant () { return this.inBottomHalf && this.inRightHalf }
+
+  get linePointsToMeridian () {
+    return (this.inLeftHalf)
+      ? (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x > this.segmentMidpointCoord.x)
+      : (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x < this.segmentMidpointCoord.x)
+  }
 
   get id () { return this._invariants.id }
   get innerPadding () { return this._invariants.innerPadding }
