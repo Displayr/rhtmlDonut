@@ -2,7 +2,11 @@ version: 1
 tests:
   - type: multi_widget_single_page
     rowSize: 1
-    comments: []
+    comments:
+      - location: 0
+        text: overlap
+      - location: 1
+        text: overlap
     widgets:
       - height: 1200
         width: 1200

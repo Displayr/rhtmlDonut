@@ -10,7 +10,7 @@ tests:
       - location: data.test_plan.many_lines_directed_at_meridian_working_reduced
         text: shorten routines cause overlap
         status: red
-      - location: data.test_plan.many_lines_directed_at_meridian
+      - location: 2
         text: shorten routines cause overlap
         status: red
     config:

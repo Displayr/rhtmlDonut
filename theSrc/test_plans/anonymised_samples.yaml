@@ -11,4 +11,6 @@ tests:
         text: color issue
       - location: data.anonymised.sample_22
         text: bottom needs more shortening
+      - location: data.anonymised.sample_9
+        text: shortening causes overlap in top right hemi
         status: yellow
