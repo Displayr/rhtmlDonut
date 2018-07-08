@@ -1745,21 +1745,22 @@ let labels = {
         x: pie.pieCenter.x - pie.outerRadius - pie.labelOffset,
         y: pie.pieCenter.y
       }
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 60) // TODO hardcoded 30
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 120) // TODO hardcoded 30
+      const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
 
       const setsSortedBottomToTop = {
         left: _(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
-          .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
+          .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value(),
         right: _(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
-          .sortBy([({topY}) => { return -1 * topY }, ({id}) => { return -1 * id }])
+          .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value()
       }
 
@@ -1808,6 +1809,7 @@ let labels = {
           const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+            labelLogger.debug(`shorten top: left side: moving ${pi(label)} down by ${amountToMoveDownBy}`)
             label.moveStraightDownBy(amountToMoveDownBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1823,6 +1825,7 @@ let labels = {
           const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
+            labelLogger.debug(`shorten top: right side: moving ${pi(label)} down by ${amountToMoveDownBy}`)
             label.moveStraightDownBy(amountToMoveDownBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1843,6 +1846,7 @@ let labels = {
         // NB findIntersectingLabels assumes sorted labels (for now)
         const collidingLabels = findIntersectingLabels(labelsToTestForCollision, 0)
         if (collidingLabels.length === 0) { break }
+        labelLogger.debug(`shorten top: found ${collidingLabels.length} colliding labels`)
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
         newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
@@ -1881,21 +1885,22 @@ let labels = {
         x: pie.pieCenter.x - pie.outerRadius - pie.labelOffset,
         y: pie.pieCenter.y
       }
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 300) // TODO hardcoded 30
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 240) // TODO hardcoded 30
+      const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
 
       const setsSortedTopToBottom = {
         left: _(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
-          .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
+          .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value(),
         right: _(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
-          .sortBy([({bottomY}) => { return bottomY }, ({id}) => { return -1 * id }])
+          .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value()
       }
 
@@ -1944,6 +1949,7 @@ let labels = {
           const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+            labelLogger.debug(`shorten bottom: left side: moving ${pi(label)} up by ${amountToMoveUpBy}`)
             label.moveStraightUpBy(amountToMoveUpBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1959,6 +1965,7 @@ let labels = {
           const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
+            labelLogger.debug(`shorten bottom: right side: moving ${pi(label)} up by ${amountToMoveUpBy}`)
             label.moveStraightUpBy(amountToMoveUpBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1979,6 +1986,7 @@ let labels = {
         // NB findIntersectingLabels assumes sorted labels (for now)
         const collidingLabels = findIntersectingLabels(labelsToTestForCollision, 0)
         if (collidingLabels.length === 0) { break }
+        labelLogger.debug(`shorten bottom: found ${collidingLabels.length} colliding labels`)
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
         newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
