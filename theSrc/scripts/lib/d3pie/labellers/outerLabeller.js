@@ -16,13 +16,14 @@ const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
 const between = (a, b, c) => (a <= b && b < c)
 
 // TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 3
+const spacingBetweenUpperTrianglesAndCenterMeridian = 7
 
-// NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the fn returns false
+// NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the loop function returns false
 const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
 const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
 
 let labels = {
+  // NB function used for debug and test purpose only
   drawPlacementLines (pie) {
     const maxFontSize = _(pie.outerLabelData).map('fontSize').max()
 
@@ -266,27 +267,27 @@ let labels = {
   computeInitialLabelCoordinates: function (pie) {
     pie.maxFontSize = _(pie.outerLabelData).map('fontSize').max()
 
-    // TODO hard coded assumptions
-    const topLabel = _(pie.outerLabelData)
+    // TODO hard coded ranges
+    const topApexLabel = _(pie.outerLabelData)
       .filter(labelData => inclusiveBetween(87, labelData.segmentAngleMidpoint, 93))
       .minBy(labelDatum => Math.abs(90 - labelDatum.segmentAngleMidpoint))
 
-    const bottomLabel = _(pie.outerLabelData)
+    const bottomApexLabel = _(pie.outerLabelData)
       .filter(labelData => inclusiveBetween(267, labelData.segmentAngleMidpoint, 273))
       .minBy(labelDatum => Math.abs(270 - labelDatum.segmentAngleMidpoint))
 
-    if (topLabel) {
-      labelLogger.info('has top label')
+    if (topApexLabel) {
+      labelLogger.info('has top apex label')
       pie.hasTopLabel = true
-      topLabel.isTopApexLabel = true
+      topApexLabel.isTopApexLabel = true
     } else {
       pie.hasTopLabel = false
     }
 
-    if (bottomLabel) {
-      labelLogger.info('has bottom label')
+    if (bottomApexLabel) {
+      labelLogger.info('has bottom apex label')
       pie.hasBottomLabel = true
-      bottomLabel.isBottomApexLabel = true
+      bottomApexLabel.isBottomApexLabel = true
     } else {
       pie.hasBottomLabel = false
     }
@@ -495,7 +496,7 @@ let labels = {
       .y(d => d.y)
       .interpolate('basis')
 
-    let linearLine = d3.svg.line()
+    let linearLine = d3.svg.line() // TODO delete if still unused
       .x(d => d.x)
       .y(d => d.y)
       .interpolate('linear')
@@ -527,7 +528,7 @@ let labels = {
 
     let mid = {}
     if (labelData.linePointsToMeridian) {
-      segmentCoord.lineType = 'linear'
+      segmentCoord.lineType = 'basis'
       const totalXDelta = segmentCoord.x - labelCoord.x
       mid = {
         x: (labelData.inLeftHalf)
@@ -896,13 +897,14 @@ let labels = {
     useInnerLabels,
     maxLineAngleValue
   }) {
+    // NB could backfire : adding apex labels to both sets ...
     const leftOuterLabelsSortedTopToBottom = _(outerLabelSet)
-      .filter({hemisphere: 'left'})
+      .filter(label => label.inLeftHalf || label.isTopApexLabel || label.isBottomApexLabel)
       .sortBy(['lineConnectorCoord.y', x => { return -1 * x.id }])
       .value()
 
     const rightOuterLabelsSortedTopToBottom = _(outerLabelSet)
-      .filter({hemisphere: 'right'})
+      .filter(label => label.inRightHalf || label.isTopApexLabel || label.isBottomApexLabel)
       .sortBy(['lineConnectorCoord.y', x => { return -1 * x.id }])
       .value()
 

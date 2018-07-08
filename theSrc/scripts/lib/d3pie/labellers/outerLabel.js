@@ -240,18 +240,11 @@ class OuterLabel {
   _computeLineConnectorCoord () {
     const numTextRows = this.labelTextLines.length
 
+    // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
     let lineConnectorCoord = {}
-    if (this.linePointsToMeridian) {
-      // place the line connection at inner most X and Y
-      lineConnectorCoord.y = (this.inTopHalf)
-        ? this.bottomY
-        : this.topY
-    } else {
-      // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
-      lineConnectorCoord.y = (this.inTopHalf)
-        ? this.topY + (numTextRows - 1) * (this.innerPadding + this.lineHeight) + 0.5 * this.lineHeight
-        : this.topY + 0.5 * this.lineHeight
-    }
+    lineConnectorCoord.y = (this.inTopHalf)
+      ? this.topY + (numTextRows - 1) * (this.innerPadding + this.lineHeight) + 0.5 * this.lineHeight
+      : this.topY + 0.5 * this.lineHeight
 
     lineConnectorCoord.x = (this.inLeftHalf)
       ? this.rightX + this.linePadding

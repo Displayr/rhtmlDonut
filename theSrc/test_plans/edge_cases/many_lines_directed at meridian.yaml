@@ -6,11 +6,14 @@ tests:
     height: 750
     rowSize: 3
     data: config.label_16
-    comment:
-      - location: labeller_stage_shorten_top_bottom_phase
-        text: lines look bad when bent back to meridian
+    comments:
+      - location: data.test_plan.many_lines_directed_at_meridian_working_reduced
+        text: shorten routines cause overlap
+        status: red
+      - location: data.test_plan.many_lines_directed_at_meridian
+        text: shorten routines cause overlap
         status: red
     config:
-      - data.test_plan.many_lines_directed_at_meridian_working
+      - data.test_plan.many_lines_directed_at_meridian_working|config.debug
       - data.test_plan.many_lines_directed_at_meridian_working_reduced
       - data.test_plan.many_lines_directed_at_meridian
