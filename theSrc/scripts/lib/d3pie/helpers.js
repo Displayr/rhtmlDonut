@@ -128,6 +128,18 @@ let helpers = {
   },
 
   // for debugging
+  showLine: function (svg, coords, color = 'black', note = '') {
+    const path = 'M' + coords.map(({x, y}) => `${x} ${y}`).join(' L')
+    svg.append('path')
+      .attr('d', path)
+      .attr('stroke', color)
+      .attr('stroke-width', 1)
+      .attr('fill', 'none')
+      .style('opacity', 1)
+      .style('display', 'inline')
+  },
+
+  // for debugging
   showPoint: function (svg, coord, color = 'black', note = '') {
     svg.append('circle')
       .attr('cx', coord.x)

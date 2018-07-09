@@ -14,6 +14,6 @@ tests:
         text: shorten routines cause overlap
         status: red
     config:
-      - data.test_plan.many_lines_directed_at_meridian_working|config.debug
+      - data.test_plan.many_lines_directed_at_meridian_working
       - data.test_plan.many_lines_directed_at_meridian_working_reduced
       - data.test_plan.many_lines_directed_at_meridian

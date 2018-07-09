@@ -1737,7 +1737,11 @@ let labels = {
   },
 
   shortenLiftedTopLabels (pie) {
-    if (pie.topIsLifted && pie.options.labels.stages.shortenTopAndBottom) {
+    if (!pie.topIsLifted || !pie.options.labels.stages.shortenTopAndBottom) {
+      return
+    }
+
+    try {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y - pie.outerRadius
 
@@ -1749,19 +1753,20 @@ let labels = {
       const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
       const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
 
+      // TODO can I add this cloneDeep in the chain ?
       const setsSortedBottomToTop = {
-        left: _(pie.outerLabelData)
+        left: _.cloneDeep(_(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
           .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
-          .value(),
-        right: _(pie.outerLabelData)
+          .value()),
+        right: _.cloneDeep(_(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
           .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
-          .value()
+          .value())
       }
 
       const excessLeftVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedBottomToTop.left).map('height').sum() - (setsSortedBottomToTop.left.length - 1) * labelPadding
@@ -1786,9 +1791,13 @@ let labels = {
         .filter(y => !_.isUndefined(y))
         .min()
 
-      let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+      const maxVerticalOffset = (pie.hasTopLabel)
+        ? pie.maxVerticalOffset - pie.maxFontSize - parseFloat(pie.options.labels.outer.outerPadding)
+        : pie.maxVerticalOffset
+
+      let newMaxVerticalOffset = maxVerticalOffset - excessVerticalSpace
       while (true) {
-        labelLogger.info(`trying to shrink top with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset})`)
+        labelLogger.info(`trying to shrink top with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${maxVerticalOffset})`)
         // NB the hardcoded 5s here are a sub optimal solution to prevent crowding around the leftPointWhereTriangleMeetsLabelRadius and rightPointWhereTriangleMeetsLabelRadius coords
         const leftPlacementTriangleLine = [
           { x: leftPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
@@ -1800,7 +1809,15 @@ let labels = {
           { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord - newMaxVerticalOffset }
         ]
 
+        // helpers.showLine(pie.svg, leftPlacementTriangleLine)
+        // helpers.showLine(pie.svg, rightPlacementTriangleLine)
+
         _(setsSortedBottomToTop.left).each((label, index) => {
+          if (label.leftX < leftPointWhereTriangleMeetsLabelRadius.x) {
+            labelLogger.debug(`shorten top: skipping ${pi(label)}. It is outside triangle`)
+            return continueLoop
+          }
+
           const verticalLineThroughLabelConnector = [
             label.lineConnectorCoord,
             {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
@@ -1809,7 +1826,7 @@ let labels = {
           const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
-            labelLogger.debug(`shorten top: left side: moving ${pi(label)} down by ${amountToMoveDownBy}`)
+            labelLogger.debug(`shorten top: left side: moving ${pi(label)} down by ${amountToMoveDownBy}`) // NB this is misleading because it is not calc from original position
             label.moveStraightDownBy(amountToMoveDownBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1817,6 +1834,11 @@ let labels = {
         })
 
         _(setsSortedBottomToTop.right).each((label, index) => {
+          if (label.rightX > rightPointWhereTriangleMeetsLabelRadius.x) {
+            labelLogger.debug(`shorten top: skipping ${pi(label)}. It is outside triangle`)
+            return continueLoop
+          }
+
           const verticalLineThroughLabelConnector = [
             label.lineConnectorCoord,
             {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
@@ -1825,7 +1847,7 @@ let labels = {
           const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveDownBy = intersection.y - label.lineConnectorCoord.y
-            labelLogger.debug(`shorten top: right side: moving ${pi(label)} down by ${amountToMoveDownBy}`)
+            labelLogger.debug(`shorten top: right side: moving ${pi(label)} down by ${amountToMoveDownBy}`) // NB this is misleading because it is not calc from original position
             label.moveStraightDownBy(amountToMoveDownBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1849,10 +1871,27 @@ let labels = {
         labelLogger.debug(`shorten top: found ${collidingLabels.length} colliding labels`)
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
-        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
+        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, maxVerticalOffset)
 
-        if (newMaxVerticalOffset >= pie.maxVerticalOffset) { break }
+        if (newMaxVerticalOffset >= maxVerticalOffset) { throw new Error('abort shorten top. Could not produce shortened labels without collision') }
       }
+
+      // getting here means success ! Apply the cloned labels back to the mainline
+      _(setsSortedBottomToTop.left).each(clonedLabel => {
+        const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
+        if (index !== -1) {
+          pie.outerLabelData[index] = clonedLabel
+        }
+      })
+
+      _(setsSortedBottomToTop.right).each(clonedLabel => {
+        const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
+        if (index !== -1) {
+          pie.outerLabelData[index] = clonedLabel
+        }
+      })
+    } catch (error) {
+      console.error(error)
     }
   },
 
@@ -1877,7 +1916,11 @@ let labels = {
   },
 
   shortenLiftedBottomLabels (pie) {
-    if (pie.bottomIsLifted && pie.options.labels.stages.shortenTopAndBottom) {
+    if (!pie.bottomIsLifted || !pie.options.labels.stages.shortenTopAndBottom) {
+      return
+    }
+
+    try {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y + pie.outerRadius
 
@@ -1889,19 +1932,20 @@ let labels = {
       const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
       const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
 
+      // TODO can I add this cloneDeep in the chain ?
       const setsSortedTopToBottom = {
-        left: _(pie.outerLabelData)
+        left: _.cloneDeep(_(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
-          .value(),
-        right: _(pie.outerLabelData)
+          .value()),
+        right: _.cloneDeep(_(pie.outerLabelData)
           .filter('inRightHalf')
           .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
-          .value()
+          .value())
       }
 
       const excessLeftVerticalSpace = pie.maxVerticalOffset - pie.labelOffset - _(setsSortedTopToBottom.left).map('height').sum() - (setsSortedTopToBottom.left.length - 1) * labelPadding
@@ -1926,9 +1970,13 @@ let labels = {
         .filter(y => !_.isUndefined(y))
         .max()
 
-      let newMaxVerticalOffset = pie.maxVerticalOffset - excessVerticalSpace
+      const maxVerticalOffset = (pie.hasBottomLabel)
+        ? pie.maxVerticalOffset - pie.maxFontSize - parseFloat(pie.options.labels.outer.outerPadding)
+        : pie.maxVerticalOffset
+
+      let newMaxVerticalOffset = maxVerticalOffset - excessVerticalSpace
       while (true) {
-        labelLogger.info(`trying to shrink bottom with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${pie.maxVerticalOffset})`)
+        labelLogger.info(`trying to shrink bottom with new maxVerticalOffset: ${newMaxVerticalOffset} (original: ${maxVerticalOffset})`)
 
         const leftPlacementTriangleLine = [
           { x: leftPointWhereTriangleMeetsLabelRadius.x, y: triangleLatitude },
@@ -1940,7 +1988,15 @@ let labels = {
           { x: pie.pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: outerRadiusYCoord + newMaxVerticalOffset }
         ]
 
+        // helpers.showLine(pie.svg, leftPlacementTriangleLine)
+        // helpers.showLine(pie.svg, rightPlacementTriangleLine)
+
         _(setsSortedTopToBottom.left).each((label, index) => {
+          if (label.leftX < leftPointWhereTriangleMeetsLabelRadius.x) {
+            labelLogger.debug(`shorten bottom: skipping ${pi(label)}. It is outside triangle`)
+            return continueLoop
+          }
+
           const verticalLineThroughLabelConnector = [
             label.lineConnectorCoord,
             {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
@@ -1949,7 +2005,7 @@ let labels = {
           const intersection = math.computeIntersection(leftPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
-            labelLogger.debug(`shorten bottom: left side: moving ${pi(label)} up by ${amountToMoveUpBy}`)
+            labelLogger.debug(`shorten bottom: left side: moving ${pi(label)} up by ${amountToMoveUpBy}`) // NB this is misleading because it is not calc from original position
             label.moveStraightUpBy(amountToMoveUpBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1957,6 +2013,11 @@ let labels = {
         })
 
         _(setsSortedTopToBottom.right).each((label, index) => {
+          if (label.rightX > rightPointWhereTriangleMeetsLabelRadius.x) {
+            labelLogger.debug(`shorten bottom: skipping ${pi(label)}. It is outside triangle`)
+            return continueLoop
+          }
+
           const verticalLineThroughLabelConnector = [
             label.lineConnectorCoord,
             {x: label.lineConnectorCoord.x, y: pie.pieCenter.y}
@@ -1965,7 +2026,7 @@ let labels = {
           const intersection = math.computeIntersection(rightPlacementTriangleLine, verticalLineThroughLabelConnector)
           if (intersection) {
             const amountToMoveUpBy = label.lineConnectorCoord.y - intersection.y
-            labelLogger.debug(`shorten bottom: right side: moving ${pi(label)} up by ${amountToMoveUpBy}`)
+            labelLogger.debug(`shorten bottom: right side: moving ${pi(label)} up by ${amountToMoveUpBy}`) // NB this is misleading because it is not calc from original position
             label.moveStraightUpBy(amountToMoveUpBy)
           } else {
             labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine  and verticalLineThroughLabelConnector for ${label.labelText}`)
@@ -1989,10 +2050,27 @@ let labels = {
         labelLogger.debug(`shorten bottom: found ${collidingLabels.length} colliding labels`)
 
         // getting here implies collision, so lets increase the newMaxVerticalOffset and try again
-        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, pie.maxVerticalOffset)
+        newMaxVerticalOffset = Math.min(newMaxVerticalOffset + 5, maxVerticalOffset)
 
-        if (newMaxVerticalOffset >= pie.maxVerticalOffset) { break }
+        if (newMaxVerticalOffset >= maxVerticalOffset) { throw new Error('abort shorten bottom. Could not produce shortened labels without collision') }
       }
+
+      // getting here means success ! Apply the cloned labels back to the mainline
+      _(setsSortedTopToBottom.left).each(clonedLabel => {
+        const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
+        if (index !== -1) {
+          pie.outerLabelData[index] = clonedLabel
+        }
+      })
+
+      _(setsSortedTopToBottom.right).each(clonedLabel => {
+        const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
+        if (index !== -1) {
+          pie.outerLabelData[index] = clonedLabel
+        }
+      })
+    } catch (error) {
+      console.error(error)
     }
   },
 
@@ -2245,7 +2323,7 @@ let labels = {
       if (!label) { return null }
       if (label.isTopApexLabel) { return null }
 
-      const labelIndex = pie.outerLabelData.indexOf(label)
+      const labelIndex = _.findIndex(pie.outerLabelData, { id: label.id })
       if (labelIndex === -1) { return null }
 
       let labelAbove = null
@@ -2281,7 +2359,7 @@ let labels = {
       if (!label) { return null }
       if (label.isBottomApexLabel) { return null }
 
-      const labelIndex = pie.outerLabelData.indexOf(label)
+      const labelIndex = _.findIndex(pie.outerLabelData, { id: label.id })
       if (labelIndex === -1) { return null }
 
       let labelBelow = null
