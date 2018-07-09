@@ -6,4 +6,8 @@ tests:
     height: 1000
     type: for_each_data_in_directory
     use_config_as_title: true
+    comments:
+      - location: misc.450_companies
+        text: excluding labels from triangle causes issues
+        status: red
     config: config.debug

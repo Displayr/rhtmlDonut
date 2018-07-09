@@ -7,14 +7,12 @@ tests:
     type: for_each_data_in_directory
     use_config_as_title: true
     comments:
-      - location: usage_example_diet_survey
-        text: label overlap hortening causes overlap in three quadrants
       - location: coke_zero_sentiment_unsorted
         text: top label sticks out too much
-      - location: browser_stats_gradient
+      - location: browser_stats_unordered
         text: top label sticks out too much
-      - location: 450_companies
-        text: shortening causes overlap in top right quadrant
-      - location: browser_stats_innerlabels2
-        text: shortening causes overlap in bottom left quadrant
+      - location: browser_stats_gradient
+        text: bottom label sticks out too much
+      - location: australian_city_populations
+        text: labels stick out too much
     config: config.debug

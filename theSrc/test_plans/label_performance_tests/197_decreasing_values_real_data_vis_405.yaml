@@ -4,9 +4,8 @@ tests:
     rowSize: 1
     comments:
       - location: 0
-        text: overlap
-      - location: 1
-        text: overlap
+        text: the top should shrink more
+        status: yellow
     widgets:
       - height: 1200
         width: 1200

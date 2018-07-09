@@ -1,6 +1,10 @@
 version: 1
 tests:
   - type: single_widget_single_page
+    comments:
+      - location: bad_labelling
+        text: the top should shrink more
+        status: yellow
     width: 545
     height: 460
     data: data.bad_labelling

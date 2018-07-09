@@ -6,13 +6,7 @@ tests:
     height: 750
     rowSize: 3
     data: config.label_16
-    comments:
-      - location: data.test_plan.many_lines_directed_at_meridian_working_reduced
-        text: shorten routines cause overlap
-        status: red
-      - location: 2
-        text: shorten routines cause overlap
-        status: red
+    comments: []
     config:
       - data.test_plan.many_lines_directed_at_meridian_working
       - data.test_plan.many_lines_directed_at_meridian_working_reduced
