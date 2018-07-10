@@ -61,11 +61,12 @@ class OuterLabel {
     }
 
     this._variants = {
-      isTopApexLabel: false,
-      isBottomApexLabel: false,
       angleBetweenLabelAndRadial: null,
       fontSize,
       height: null,
+      isBottomApexLabel: false,
+      isLifted: false,
+      isTopApexLabel: false,
       labelAngle: segmentAngleMidpoint,
       labelShown: true,
       labelTextLines: null,
@@ -377,11 +378,20 @@ class OuterLabel {
 
   // accessors and mutators for variants
 
+  get isLifted () { return this._variants.isLifted }
+  set isLifted (newValue) { this._variants.isLifted = newValue }
+
   get fontSize () { return this._variants.fontSize }
   set fontSize (newValue) { this._variants.fontSize = newValue }
 
   get height () { return this._variants.height }
   set height (newValue) { this._variants.height = newValue }
+
+  get isTopApexLabel () { return this._variants.isTopApexLabel }
+  set isTopApexLabel (newValue) { this._variants.isTopApexLabel = newValue }
+
+  get isBottomApexLabel () { return this._variants.isBottomApexLabel }
+  set isBottomApexLabel (newValue) { this._variants.isBottomApexLabel = newValue }
 
   get lineHeight () { return this._variants.lineHeight }
   set lineHeight (newValue) { this._variants.lineHeight = newValue }
@@ -409,12 +419,6 @@ class OuterLabel {
 
   get width () { return this._variants.width }
   set width (newValue) { this._variants.width = newValue }
-
-  get isTopApexLabel () { return this._variants.isTopApexLabel }
-  set isTopApexLabel (newValue) { this._variants.isTopApexLabel = newValue }
-
-  get isBottomApexLabel () { return this._variants.isBottomApexLabel }
-  set isBottomApexLabel (newValue) { this._variants.isBottomApexLabel = newValue }
 }
 
 module.exports = OuterLabel

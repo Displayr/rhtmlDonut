@@ -29,7 +29,7 @@ let labels = {
 
     // red dots : the initial placement line
     _.range(0, 360, 2).map(angle => {
-      const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
+      const { fitLineCoord, isLifted } = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
         angle,
         labelHeight: 10, // made up
         labelOffset: pie.labelOffset,
@@ -40,7 +40,7 @@ let labels = {
         maxFontSize,
         maxVerticalOffset: pie.maxVerticalOffset
       })
-      helpers.showPoint(pie.svg, fitLineCoord, 'red')
+      helpers.showPoint(pie.svg, fitLineCoord, (isLifted) ? 'red' : 'orange')
     })
 
     // green dots : the adjusted label placement line
@@ -391,7 +391,7 @@ let labels = {
       }
       labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     } else {
-      const fitLineCoord = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
+      const { fitLineCoord, isLifted } = labels._computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
         angle: labelDatum.segmentAngleMidpoint,
         labelHeight: labelDatum.height,
         labelOffset,
@@ -406,6 +406,7 @@ let labels = {
         minGap
       })
       labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
+      labelDatum.isLifted = isLifted
     }
   },
 
@@ -424,6 +425,7 @@ let labels = {
     minGap = 1
   }) {
     let fitLineCoord = null
+    let isLifted = false
 
     const highYOffSetAngle = (angle) => (between(90 - labelLiftOffAngle, angle, 90 + labelLiftOffAngle) || between(270 - labelLiftOffAngle, angle, 270 + labelLiftOffAngle))
     const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
@@ -459,6 +461,7 @@ let labels = {
         fitLineCoord = intersection
         if (fitLineCoord.y < 0) { fitLineCoord.y = 0 }
         if (fitLineCoord.y + labelHeight > canvasHeight) { fitLineCoord.y = canvasHeight - labelHeight }
+        isLifted = true
       } else {
         labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label at angle ${angle}`)
         fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
@@ -467,7 +470,7 @@ let labels = {
       fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
     }
 
-    return fitLineCoord
+    return { fitLineCoord, isLifted }
   },
 
   drawOuterLabelLines: function (pie) {
@@ -1034,6 +1037,7 @@ let labels = {
     bottomIsLifted
   }) {
     let newTopYCoord = null
+    let isLifted = false
     if (anchor === 'top') {
       newTopYCoord = newY
     } else if (anchor === 'bottom') {
@@ -1069,6 +1073,7 @@ let labels = {
     } else {
       // place X along upper triangle
       // step 1. Given [x,y]PosWhereLabelRadiusAndUpperTriangleMeet, and yRange, compute the upperTriangleYAngle
+      isLifted = true
       const yLengthOfUpperTriangle = yRange - yPosWhereLabelRadiusAndUpperTriangleMeet
       const xLengthOfUpperTriangle = xPosWhereLabelRadiusAndUpperTriangleMeet
       const upperTriangleYAngleInRadians = Math.atan(xLengthOfUpperTriangle / yLengthOfUpperTriangle)
@@ -1083,6 +1088,7 @@ let labels = {
       y: newY
     }
 
+    labelDatum.isLifted = isLifted
     if (anchor === 'top') {
       labelDatum.setTopMedialPoint(newLineConnectorCoord)
     } else {
@@ -1756,12 +1762,14 @@ let labels = {
       // TODO can I add this cloneDeep in the chain ?
       const setsSortedBottomToTop = {
         left: _.cloneDeep(_(pie.outerLabelData)
+          .filter('isLifted')
           .filter('inLeftHalf')
           .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
           .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value()),
         right: _.cloneDeep(_(pie.outerLabelData)
+          .filter('isLifted')
           .filter('inRightHalf')
           .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isTopApexLabel}) => !isTopApexLabel)
@@ -1813,7 +1821,7 @@ let labels = {
         // helpers.showLine(pie.svg, rightPlacementTriangleLine)
 
         _(setsSortedBottomToTop.left).each((label, index) => {
-          if (label.leftX < leftPointWhereTriangleMeetsLabelRadius.x) {
+          if (label.rightX < leftPointWhereTriangleMeetsLabelRadius.x) {
             labelLogger.debug(`shorten top: skipping ${pi(label)}. It is outside triangle`)
             return continueLoop
           }
@@ -1834,7 +1842,7 @@ let labels = {
         })
 
         _(setsSortedBottomToTop.right).each((label, index) => {
-          if (label.rightX > rightPointWhereTriangleMeetsLabelRadius.x) {
+          if (label.leftX > rightPointWhereTriangleMeetsLabelRadius.x) {
             labelLogger.debug(`shorten top: skipping ${pi(label)}. It is outside triangle`)
             return continueLoop
           }
@@ -1936,12 +1944,14 @@ let labels = {
       const setsSortedTopToBottom = {
         left: _.cloneDeep(_(pie.outerLabelData)
           .filter('inLeftHalf')
+          .filter('isLifted')
           .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
           .value()),
         right: _.cloneDeep(_(pie.outerLabelData)
           .filter('inRightHalf')
+          .filter('isLifted')
           .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
           .filter(({isBottomApexLabel}) => !isBottomApexLabel)
           .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
@@ -1992,7 +2002,7 @@ let labels = {
         // helpers.showLine(pie.svg, rightPlacementTriangleLine)
 
         _(setsSortedTopToBottom.left).each((label, index) => {
-          if (label.leftX < leftPointWhereTriangleMeetsLabelRadius.x) {
+          if (label.rightX < leftPointWhereTriangleMeetsLabelRadius.x) {
             labelLogger.debug(`shorten bottom: skipping ${pi(label)}. It is outside triangle`)
             return continueLoop
           }
@@ -2013,7 +2023,7 @@ let labels = {
         })
 
         _(setsSortedTopToBottom.right).each((label, index) => {
-          if (label.rightX > rightPointWhereTriangleMeetsLabelRadius.x) {
+          if (label.leftX > rightPointWhereTriangleMeetsLabelRadius.x) {
             labelLogger.debug(`shorten bottom: skipping ${pi(label)}. It is outside triangle`)
             return continueLoop
           }
