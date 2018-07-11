@@ -1,12 +1,17 @@
 version: 1
 tests:
-  - general_comments: the first example is final product, all others are intermediate stages
-    type: single_page_one_example_per_config
+  - type: single_page_one_example_per_config
     width: 500
     height: 750
     rowSize: 3
     data: config.label_16
-    comments: []
+    comments:
+      - location: 1
+        text: labels are pushed too far up
+        status: red
+      - location: 2
+        text: labels are pushed too far up
+        status: red
     config:
       - data.test_plan.many_lines_directed_at_meridian_working
       - data.test_plan.many_lines_directed_at_meridian_working_reduced

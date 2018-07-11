@@ -32,7 +32,14 @@ function loadConfigs (testPlansDir) {
           fs.readFileAsync(testPlanFilePath, 'utf8')
             .then(jsyaml.safeLoad)
             .then(fileContents => {
+              if (!_.isArray(fileContents.tests) || _.isEmpty(fileContents.tests)) {
+                throw new Error(`Invalid file ${testPlanFilePath}. tests is not an array of length 1 or more`)
+              }
+
               if (!_.has(fileContents, 'tests[0].testname')) {
+                // console.log('fileContents')
+                // console.log(JSON.stringify(fileContents, {}, 2))
+
                 fileContents.tests[0].testname = extractTestNameFromPath(testPlanFilePath)
               }
 

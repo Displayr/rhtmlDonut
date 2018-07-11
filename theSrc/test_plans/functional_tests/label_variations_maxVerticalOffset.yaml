@@ -9,7 +9,10 @@ tests:
     comments:
       - location: 0
         text: excluding lifted labels outside of triangle is causing issue
-        status: red
+        status: yellow
+      - location: 3
+        text: minor line overlap top right quadrant
+        status: yellow
     config:
       - 'data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 150, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=150" } }'
       - 'data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 100, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=100" } }'

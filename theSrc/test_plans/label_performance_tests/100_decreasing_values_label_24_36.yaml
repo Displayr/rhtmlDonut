@@ -2,7 +2,10 @@ version: 1
 tests:
   - type: multi_widget_single_page
     rowSize: 1
-    comments: []
+    comments:
+      - location: 2
+        text: too many labels removed
+        status: yellow
     widgets:
       - height: 1000
         width: 1000

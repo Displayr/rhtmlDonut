@@ -7,7 +7,7 @@ tests:
     type: for_each_data_in_directory
     use_config_as_title: true
     comments:
-      - location: misc.450_companies
-        text: excluding labels from triangle causes issues
+      - location: coke_zero_sentiment_unsorted
+        text: labels too lifted
         status: red
     config: config.debug
