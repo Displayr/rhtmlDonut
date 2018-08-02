@@ -1,0 +1,7 @@
+{
+  "settings": {
+    "stages": {
+      "outOfBoundsCorrection": false
+    }
+  }
+}

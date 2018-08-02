@@ -1,0 +1,142 @@
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css?family=Arvo:400,700italic,700,400italic" rel="stylesheet"
+          type="text/css">
+    <link href="/styles/internal_www.css" rel="stylesheet" type="text/css">
+    <link href="/styles/main.css" rel="stylesheet" type="text/css">
+    <script src="../../internal_www/external/lodash.min.js"></script>
+    <script src="../../internal_www/external/jquery.min.js"></script>
+</head>
+<body loaded="" widgets-ready="">
+<div class="index-link"><a href="/">back to index</a></div>
+<script src="/js/renderContentPage.js"></script>
+
+<div id="examples-container" style="display:inline-block" snapshot-name="many_lines_directed at meridian">
+    <div class="description">the first example is final product, all others are intermediate stages</div>
+    <div class="row">
+        <div class="example status-red example-0"
+             data-config="config.label_16|data.test_plan.many_lines_directed_at_meridian_working_reduced|config.debug"
+             data-width="500" data-height="750" title="shorten routines cause overlap">
+        </div>
+    </div>
+</div>
+
+<script>
+
+  /*
+   * config is passed as a base64 encoded json object at url parameter 'config'
+   * or as a file that can be fetched at the relative URL specified in url parameter 'configPath'
+   * Config structure:
+   * {
+   *   width: int,
+   *   height: int,
+   *   title: string,
+   *   rowSize: int
+   *   snapshotName: string
+   *   widgets: Array of object:
+   *     width
+   *     height
+   *     config: array of strings
+   *     state: string
+   *     rerenderControls: boolean
+   *     border: boolean,
+   *     comment:
+   *     status: [green|yellow|red]
+   * }
+   */
+
+  const defaultConfig = {
+    width: 600,
+    height: 600,
+    title: null,
+    rowSize: 1,
+    widgets: []
+  }
+
+  function getUrlVars () {
+    var vars = {}
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&')
+    _(hashes).each(hashString => {
+      var hash = hashString.split('=')
+      if (!_.has(vars, hash[0])) { vars[hash[0]] = hash[1] }
+      else if (_.has(vars, hash[0]) && _.isString(vars[hash[0]])) { vars[hash[0]] = [vars[hash[0]], hash[1]]}
+      else if (_.has(vars, hash[0]) && _.isArray(vars[hash[0]])) { vars[hash[0]].push(hash[1]) }
+    })
+    return vars
+  }
+
+  $(document).ready(function () {
+
+    // NB run this next tick to ensure:
+    // A) renderContentPage.js does not pick up the class=example before we have added the data- properties to render-example-container
+    // B) renderContentPage.js has added addExampleTo the window
+    setTimeout(() => {
+      const urlVars = getUrlVars()
+
+      const configPromise = (_.has(urlVars, 'config'))
+        ? parseConfig(urlVars.config)
+        : fetchAndParseConfig(urlVars.configPath)
+
+      configPromise.then(renderExampleConfig => {
+        console.log('renderExampleConfig')
+        console.log(JSON.stringify(renderExampleConfig, {}, 2))
+
+        const examplesContainer = $('#examples-container')
+        if (renderExampleConfig.testname) { examplesContainer.attr('snapshot-name', renderExampleConfig.testname) }
+
+        const widgetConfigs = (_.isArray(renderExampleConfig.widgets)) ? renderExampleConfig.widgets : [renderExampleConfig.widgets]
+        const rowSize = parseInt(renderExampleConfig.rowSize)
+        const rowsOfWidgetConfigs = _.chunk(widgetConfigs, rowSize)
+
+        if (renderExampleConfig.title) {
+          const descriptionDiv = $('<h3 class="description">').html(renderExampleConfig.title)
+          examplesContainer.append(descriptionDiv)
+        }
+
+        if (renderExampleConfig.general_comments) {
+          _(renderExampleConfig.general_comments).each(general_comment => {
+            const descriptionDiv = $('<div class="description">').html(general_comment)
+            examplesContainer.append(descriptionDiv)
+          })
+        }
+
+        _(rowsOfWidgetConfigs).each((rowOfWidgetConfigs) => {
+          const newRow = $('<div class="row">')
+          examplesContainer.append(newRow)
+
+          _(rowOfWidgetConfigs).each((widgetConfig) => {
+
+            const exampleDiv = $('<div class="example">')
+
+            exampleDiv.attr('data-config', (widgetConfig.config || []).join('|'))
+            exampleDiv.attr('data-width', widgetConfig.width || renderExampleConfig.width)
+            exampleDiv.attr('data-height', widgetConfig.height || renderExampleConfig.height)
+            if (widgetConfig.state) { exampleDiv.attr('data-state', renderExampleConfig.state) }
+            if (widgetConfig.rerenderControls) { exampleDiv.attr('data-rerender', true) }
+            if (widgetConfig.border) { exampleDiv.attr('data-border', true) }
+            if (widgetConfig.comment) { exampleDiv.attr('title', widgetConfig.comment) }
+
+            if (widgetConfig.status) { exampleDiv.addClass(`status-${widgetConfig.status}`) }
+
+            newRow.append(exampleDiv)
+          })
+        })
+
+        // NB addExampleTo is a function added to window by renderContentPage.js
+        $('.example').each(addExampleTo)
+      })
+    }, 0)
+  })
+
+  function parseConfig (base64EncodedConfigString) {
+    const parsedConfig = JSON.parse(atob(base64EncodedConfigString))
+    return Promise.resolve(_.defaultsDeep(parsedConfig, defaultConfig))
+  }
+
+  function fetchAndParseConfig () {
+    throw new Error('not implemented yet')
+  }
+</script>
+<script src="//localhost:35729/livereload.js?snipver=1" async="" defer=""></script>
+</body>
+</html>

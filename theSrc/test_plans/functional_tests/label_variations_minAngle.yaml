@@ -1,0 +1,16 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    general_comments: 'row 1 is ordered decreasing, row 2 is unordered'
+    width: 250
+    height: 250
+    rowSize: 4
+    config:
+      - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "title" : "default minAngle (0.003)" } }'
+      - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minAngle" : "0.01", "title" : "minAngle=0.01" } }'
+      - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minAngle" : "0.05", "title" : "minAngle=0.05" } }'
+      - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minAngle" : "0.08", "title" : "minAngle=0.08" } }'
+      - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "title" : "default minAngle (0.003)" } }'
+      - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minAngle" : "0.01", "title" : "minAngle=0.01" } }'
+      - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minAngle" : "0.05", "title" : "minAngle=0.05" } }'
+      - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minAngle" : "0.08", "title" : "minAngle=0.08" } }'

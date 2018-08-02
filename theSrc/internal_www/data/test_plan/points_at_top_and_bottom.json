@@ -1,0 +1,43 @@
+{
+  "values": [
+    75,
+    5,5,
+    2,2,2,2,2,
+    5,5,
+    75,
+    75,
+    5,5,
+    2,2,2,2,2,
+    5,5,
+    75
+  ],
+  "labels": [
+    "75",
+    "5","5",
+    "2","2","2","2","2",
+    "5","5",
+    "75",
+    "75",
+    "5","5",
+    "2","2","2","2","2",
+    "5","5",
+    "75"
+  ],
+  "settings": {
+    "valuesOrder": "initial",
+    "valuesColor": [
+      "red",
+      "red", "red",
+      "lightblue", "lightblue", "green", "lightblue", "lightblue",
+      "red", "red",
+      "red",
+      "red",
+      "red", "red",
+      "lightblue", "lightblue", "green", "lightblue", "lightblue",
+      "red", "red",
+      "red"
+    ],
+     "minAngle": 0.000001,
+     "labelMaxLineAngle": 90
+  }
+}

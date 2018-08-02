@@ -1,0 +1,60 @@
+{
+  "values": [
+    69.683257918552,
+    23.9819004524887,
+    6.33484162895928
+  ],
+  "labels": [
+    "xxxx xx xxx xxxxxxx xxxxxxxx xxx xxx xxxxxxxxx",
+    "xxxxx xxxx xx xxx xxxxxxx xxxxxxxx xxx xxx xxxxxxxxx",
+    "xxxx xxxx xxxx xx xx xxxxxxx xxxxxxxx xxx xxx xxxxxxxxx"
+  ],
+  "settings": {
+    "valuesFont": "Arial",
+    "valuesSize": 10,
+    "valuesColor": [
+      "#5C9AD3",
+      "#ED7D31",
+      "#A5A5A5"
+    ],
+    "valuesDisplay": "original",
+    "valuesOrder": "initial",
+    "valuesDec": 0,
+    "labelsFont": "Arial",
+    "labelsSize": 10,
+    "labelsColor": "#2C2C2C",
+    "labelsInner": false,
+    "labelsBold": false,
+    "labelsMinFontSize": 10,
+    "groups": null,
+    "groupsFont": "Arial",
+    "groupsFontColor": "#2C2C2C",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsColor": null,
+    "groupsNames": null,
+    "groupsSums": null,
+    "groupsCounts": null,
+    "groupLabelsMinFontSize": 10,
+    "footer": "",
+    "footerFontFamily": null,
+    "footerFontSize": null,
+    "footerFontColor": null,
+    "title": "",
+    "titleFontFamily": null,
+    "titleFontSize": null,
+    "titleFontColor": null,
+    "titleTopPadding": 0,
+    "subtitle": "",
+    "subtitleFontFamily": null,
+    "subtitleFontSize": null,
+    "subtitleFontColor": null,
+    "prefix": "",
+    "suffix": "%",
+    "orderControl": false,
+    "gradient": false,
+    "innerRadius": "0",
+    "minAngle": 0.003,
+    "borderColor": "#FFFFFF"
+  }
+}

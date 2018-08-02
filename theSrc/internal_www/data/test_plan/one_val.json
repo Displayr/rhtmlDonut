@@ -1,0 +1,15 @@
+{
+  "values": [
+    100
+  ],
+  "labels": [
+    "label"
+  ],
+  "settings": {
+    "valuesOrder": "initial",
+    "valuesDec": 0,
+    "groups": null,
+    "orderControl": false,
+    "gradient": false
+  }
+}

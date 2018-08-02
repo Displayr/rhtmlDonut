@@ -1,0 +1,8 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 350
+    height: 350
+    rowSize: 3
+    config:
+      - 'data.test_plan.1x75_then_25x1_unequal|config.use_inner_labels|config.labelMaxLineAngle_120'

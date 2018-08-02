@@ -1,0 +1,12 @@
+version: 1
+tests:
+  - type: single_page_one_example_per_config
+    width: 350
+    height: 350
+    rowSize: 4
+    data: data.decreasing_value_sets.20_decreasing_values
+    config:
+      - '{ "settings" : { "labelOffset" : "0.01", "title" : "labelOffset=0.01" } }'
+      - '{ "settings" : { "labelOffset" : "0.05", "title" : "labelOffset=0.05" } }'
+      - '{ "settings" : { "labelOffset" : "0.2", "title" : "labelOffset=0.2" } }'
+      - '{ "settings" : { "labelOffset" : "0.5", "title" : "labelOffset=0.5" } }'

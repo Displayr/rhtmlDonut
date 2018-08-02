@@ -7,9 +7,9 @@ const validate = {
 
   // called whenever a new pie chart is created
   initialCheck: function (pie) {
-    var cssPrefix = pie.cssPrefix
-    var element = pie.element
-    var options = pie.options
+    const cssPrefix = pie.cssPrefix
+    const element = pie.element
+    let options = pie.options
 
     // confirm element is either a DOM element or a valid string for a DOM element
     if (!(element instanceof HTMLElement || element instanceof SVGElement)) {
@@ -17,9 +17,9 @@ const validate = {
       return false
     }
 
-    // confirm the CSS prefix is valid. It has to start with a-Z and contain nothing but a-Z0-9_-
+    // confirm the CSS prefix is valid. It has to be at least one character long and contain only alphanumeric or _- characters
     if (!(/[a-zA-Z][a-zA-Z0-9_-]*$/.test(cssPrefix))) {
-      console.error('d3pie error: invalid options.misc.cssPrefix')
+      console.error(`d3pie error: invalid options.misc.cssPrefix: '${cssPrefix}'`)
       return false
     }
 
@@ -34,22 +34,19 @@ const validate = {
     }
 
     // clear out any invalid data. Each data row needs a valid positive number and a label
-    var data = []
-    for (var i = 0; i < options.data.content.length; i++) {
+    let data = []
+    for (let i = 0; i < options.data.content.length; i++) {
       if (typeof options.data.content[i].value !== 'number' || isNaN(options.data.content[i].value)) {
-        // console.log("not valid: ", options.data.content[i]);
+        console.error('not valid: ', options.data.content[i])
         continue
       }
       if (options.data.content[i].value <= 0) {
-        // console.log("not valid - should have positive value: ", options.data.content[i]);
+        console.error('not valid - should have positive value: ', options.data.content[i])
         continue
       }
       data.push(options.data.content[i])
     }
     pie.options.data.content = data
-
-    // labels.outer.hideWhenLessThanPercentage - 1-100
-    // labels.inner.hideWhenLessThanPercentage - 1-100
 
     return true
   }
