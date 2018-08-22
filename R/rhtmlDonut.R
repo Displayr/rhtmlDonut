@@ -134,7 +134,10 @@ Donut <- function(
 
     if (is.null(values)) { stop("values must not be empty") }
     if (is.null(labels)) { stop("labels must not be empty") }
-    if (inner.radius >= 1 || inner.radius  < 0) { stop("inner.radius must be 0 or greater and less than 1") }
+    
+    if (is.character(inner.radius) && grepl("\\d%$", inner.radius))
+        inner.radius <- as.numeric(sub("%$", "", inner.radius)) / 100
+    if (inner.radius >= 1 || inner.radius < 0) { stop("inner.radius must be 0 or greater and less than 1") }
 
     if (!is.vector(values)) {
         if (is.matrix(values) || is.data.frame(values))
