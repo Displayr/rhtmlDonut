@@ -22,7 +22,8 @@ The label layout algorithm goes through 4 phases and relies on several config se
   | minumum label display threshold   | 0.003   | `values.display.thres`               | `settings.minAngle`                        |
   | max label line angle              | 60      | `labels.line.max.angle`              | `settings.labelMaxLineAngle`               |
   | (advanced) lift off angle         | 30      | `labels.advanced.liftoff.angle`      | `settings.liftOffAngle`                    |
-  | (advanced) max vertical offset    | unset , i.e., use all space     | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset`          |
+  | (advanced) max vertical offset    | unset , i.e., use all space | `labels.advanced.offset.yaxis.max`   | `settings.labelMaxVerticalOffset` |
+  | (advanced) unordered tiebreak removal strategy | 'last' | `labels.advanced.removal.tiebreak`   | `settings.labelUnorderedRemovalTiebreak` |
   // Doc the tieBreak settings
  
 *Config Descriptions*
@@ -39,6 +40,7 @@ The label layout algorithm goes through 4 phases and relies on several config se
 * *max label line angle*: Hide any label where the angle between the radial line and the label line (line from outerRadius to label) is greater than the "max label line angle"
 * *(advanced) lift off angle*: Controls point where initial label placement algorithm begins to place the labels farther away from the outer radius. See doc here (TODO link doc)
 * *(advanced) max vertical offset*: At the 90 and 270 degree mark, what is the maximum distance between labels and the donut plot. Defaults to use all available space.
+* *(advanced) unordered tiebreak removal strategy*: For unordered data sets, when removing the minumum label during placement, if there are multiple minimum labels, what do we do? setting to 'last' will remove the last minimum label in the set, 'best' will remove the minimum label that is most likely causing a collision.
   
 ## Label layout Algorithm overview
 
@@ -53,17 +55,18 @@ The label layout algorithm goes through 4 phases and relies on several config se
 
 1. **Compute outer pie radius**
 
-    _note we previously hard coded at 2/3 of the constraining dimension, which was why donuts were always so small._
-    
     From above we know the largest label width. Choose the largest outer donut radius that will:
      * fit the canvas height
      * fit the canvas width
      * leave enough horizontal space at 0 and 180 degrees to fit the largest label
-     * leave at least enough vertical space for a single label to be drawn at _pieDistance_ (see config settings above) pixels from 90 and 270 degrees.
+     * leave at least enough vertical space for a single label to be drawn at _label offset_ (see config settings above) pixels from 90 and 270 degrees.
  
 1.  **Niavely place labels**
 
-    This simple phase we simply place labels at _pieDistance_ pixels past the outer radius along the radial line that intersects the midpoint of the pie segment. When labels are placed near the top and bottom, we apply a lift off to increase the spacing. See docs here (TODO add docs)
+    This simple phase we simply place labels at _label offset_ pixels past the outer radius along the radial line that intersects the midpoint of the pie segment.
+     
+     YOU ARE HERE
+    Next we look at the labels along the top and bottom of the pie. When labels are placed near the top and bottom, we apply a lift off to increase the spacing. See docs here (TODO add docs)
 
 1. **Apply conflict resolution**
 

@@ -3,6 +3,7 @@ import _ from 'lodash'
 import d3 from 'd3'
 import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
+import helpers from './lib/d3pie/helpers'
 import {Footer, Title, Subtitle} from 'rhtmlParts'
 import * as rootLog from 'loglevel'
 const layoutLogger = rootLog.getLogger('layout')
@@ -98,7 +99,7 @@ class PieWrapper {
       .attr('class', 'pieGroup')
       .attr('transform', `translate(0,${pieGroupYOffset})`)
 
-    // NB pie rect is for debugpurposes only
+    // NB pie rect is for debug purposes only
     // TODO add a show/hide attribute controlled by the debug settings
     pieGroup.append('rect')
       .attr('class', 'pieRect')
@@ -251,6 +252,11 @@ class PieWrapper {
 
     if (!this._settings.valuesColor) {
       this._settings.valuesColor = this._computeColors()
+    } else {
+      const nonHexColors = this._settings.valuesColor.filter((color) => !/^#[a-fA-F0-9]{6}$/.test(color))
+      if (nonHexColors.length > 0) {
+        throw new Error(`. Invalid value color(s): [${nonHexColors.join(', ')}]: must be Hex (#rrggbb) format`)
+      }
     }
 
     this.pieData = []
@@ -290,7 +296,7 @@ class PieWrapper {
       const deltaLum = Math.min(0.2, 0.3 / groupDataLookup[groupName].count)
       const lum = 100 * deltaLum * (1 + groupDataLookup[groupName].runningCount++)
       try {
-        return increaseBrightness(baseColor, lum)
+        return helpers.increaseBrightness(baseColor, lum)
       } catch (e) {
         console.error('color error, baseColor is' + baseColor)
         return baseColor
@@ -311,9 +317,9 @@ class PieWrapper {
 
     const groupsColor = this._settings.groupsColor || d3.scale.category20().range()
 
-    const invalidColors = groupsColor.filter((color) => !color.match(/#[a-fA-F0-9]/))
-    if (invalidColors.length > 0) {
-      throw new Error(`Invalid color(s) '${invalidColors.join(', ')}': must be Hex (#rrggbb) format`)
+    const nonHexColors = groupsColor.filter((color) => !color.match(/^#[a-fA-F0-9]{6}$/))
+    if (nonHexColors.length > 0) {
+      throw new Error(`Invalid group color(s) '${nonHexColors.join(', ')}': must be Hex (#rrggbb) format`)
     }
 
     for (let i = 0; i < this._settings.groupsSums.length; i++) {
@@ -363,27 +369,6 @@ function getContainerDimensions (rootElement) {
     console.error(`fail in getContainerDimensions: ${err}`)
     return null
   }
-}
-
-// TODO to utils
-// from http://stackoverflow.com/questions/6443990/javascript-calculate-brighter-colour
-function increaseBrightness (hex, percent) {
-  // strip the leading # if it's there
-  hex = hex.replace(/^\s*#|\s*$/g, '')
-
-  // convert 3 char codes --> 6, e.g. `E0F` --> `EE00FF`
-  if (hex.length === 3) {
-    hex = hex.replace(/(.)/g, '$1$1')
-  }
-
-  let r = parseInt(hex.substr(0, 2), 16)
-  let g = parseInt(hex.substr(2, 2), 16)
-  let b = parseInt(hex.substr(4, 2), 16)
-
-  return '#' +
-    ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
-    ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
-    ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1)
 }
 
 module.exports = PieWrapper
