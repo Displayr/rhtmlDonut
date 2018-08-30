@@ -13,9 +13,9 @@
     "valuesFont": "arial",
     "valuesSize": 10,
     "valuesColor": [
-      "red",
-      "green",
-      "blue"
+      "#ff0000",
+      "#008000",
+      "#0000ff"
     ],
     "valuesDisplay": "percentage",
     "valuesOrder": "descending",

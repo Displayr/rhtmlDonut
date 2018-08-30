@@ -888,6 +888,8 @@ let labels = {
           iterationStrategies.removeLabel++
 
           if (pie.options.data.sortOrder === 'initial' && pie.options.labels.strategies.unorderedTieBreak === 'best') {
+            // sort by value, then as a tiebreak choose the label closest to the current offending label
+            // removing a label closer to the offending label is more likely to solve the current labelling issue
             let idToRemove = _(labelSet)
               .sortBy('value', ({id}) => Math.abs(offendingLabel.id - id))
               .map('id')

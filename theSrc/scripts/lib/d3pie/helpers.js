@@ -1,5 +1,7 @@
 import d3 from 'd3'
 import math from './math'
+import * as rootLog from 'loglevel'
+const colorLogger = rootLog.getLogger('tooltip')
 
 let helpers = {
 
@@ -76,10 +78,13 @@ let helpers = {
     let g = parseInt(hex.substr(2, 2), 16)
     let b = parseInt(hex.substr(4, 2), 16)
 
-    return '#' +
+    const adjustedColor = '#' +
       ((0 | (1 << 8) + r + (256 - r) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1)
+
+    colorLogger.info(`adjust brightness: input: ${hex}, output: ${adjustedColor}, percent: ${percent}`)
+    return adjustedColor
   },
 
   applySmallSegmentGrouping: function (data, smallSegmentGrouping) {
