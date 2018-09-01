@@ -137,6 +137,7 @@ class PieWrapper {
         content: this.pieData
       },
       labels: {
+        enabled: this._settings.labelsEnabled,
         strategies: {
           unorderedTieBreak: this._settings.labelUnorderedRemovalTiebreak
         },
@@ -177,7 +178,8 @@ class PieWrapper {
         font: this._settings.groupsFont,
         fontSize: this._settings.groupsSize,
         fontColor: this._settings.groupsFontColor,
-        minFontSize: this._settings.groupLabelsMinFontSize
+        minFontSize: this._settings.groupLabelsMinFontSize,
+        labelsEnabled: this._settings.groupLabelsEnabled
       },
       debug: {
         draw_placement_lines: this._settings.debug_draw_placement_lines

@@ -6,6 +6,7 @@
 #' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,1] and he default is 0.003.
 #' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".
 #' @param values.decimal.places (optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).
+#' @param labels.enabled (optional) enable / disable outer labels. The default is TRUE.
 #' @param labels.font.family (optional) font family for \code{labels}. The default is "Arial"
 #' @param labels.font.size (optional) desired font size in pixels for \code{labels}. The default is 10.
 #' @param labels.font.color (optional) a hex value to set the font color for \code{labels}. The default is "#333333".
@@ -26,6 +27,7 @@
 #' @param groups.min.font.size (optional) the minimum font size in pixcels for \code{groups}. The default is 8.
 #' @param groups.color (optional) colors for \code{groups}. If not provided then D3 colors are generated.
 #' @param groups.order (optional) ordering of \code{groups} = c("descending", "initial", "alphabetical"). The default is "descending".
+#' @param groups.labels.enabled (optional) enable / disable group labels. The default is TRUE.
 #' @param title (optional) specifies the title text.
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
 #' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 16.
@@ -85,6 +87,7 @@ Donut <- function(
     values.decimal.places = 1,
     values.display.as = "percentage",
     values.display.thres = 0.003,
+    labels.enabled = TRUE,
     labels.font.family = "arial",
     labels.font.color = "#333333",
     labels.font.size = 10,
@@ -104,6 +107,7 @@ Donut <- function(
     groups.font.color = "#333333",
     groups.font.size = 10,
     groups.min.font.size = 8,
+    groups.labels.enabled = TRUE,
     labels.inner = FALSE,
     footer = "",
     footer.font.family = "Arial",
@@ -398,6 +402,7 @@ Donut <- function(
         valuesDisplay = values.display.as,
         valuesOrder = values.order,
         valuesDec = values.decimal.places,
+        labelsEnabled = labels.enabled,
         labelsFont = labels.font.family,
         labelsSize = labels.font.size,
         labelsColor = labels.font.color,
@@ -419,6 +424,7 @@ Donut <- function(
         groupsNames = groups.names,
         groupsSums = groups.sums, # length = length(unique(groups))
         groupsCounts = groups.counts, # number of items in each group
+        groupLabelsEnabled = groups.labels.enabled,
         groupLabelsMinFontSize = groups.min.font.size,
         footer = footer,
         footerFontFamily = footer.font.family,

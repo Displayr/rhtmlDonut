@@ -27,7 +27,8 @@ const defaultSettings = {
     minAngle: 0.003,                        // pieWrapper: settings.minAngle, R: values.display.thres
     content: []                             // pieWrapper: pieData
   },                                        //
-  labels: {                                 //
+  labels: {
+    enabled: true,                          // pieWrapper: settings.labelsEnabled, R: labels.enabled
     strategies: {                           //
       unorderedTieBreak: 'best'             // pieWrapper: settings.labelUnorderedRemovalTiebreak, R: labels.advanced.removal.tiebreak
     },                                      //
@@ -132,7 +133,8 @@ const defaultSettings = {
     fontSize: 10,                           // pieWrapper: settings.groupsSize, R: groups.font.size
     fontColor: '#333333',                   // pieWrapper: settings.groupsFontColor, R: groups.color
     minFontSize: null,                      // pieWrapper: settings.groupLabelsMinFontSize, R: groups.min.font.size
-    fontWeight: 'normal'                    // pieWrapper: settings.groupsBold, R: groups.font.bold
+    fontWeight: 'normal',                   // pieWrapper: settings.groupsBold, R: groups.font.bold
+    labelsEnabled: true                     // pieWrapper: settings.groupLabelsEnabled, R: groups.labels.enabled
   },                                        //
   callbacks: {                              //
     onload: null,                           // not used
