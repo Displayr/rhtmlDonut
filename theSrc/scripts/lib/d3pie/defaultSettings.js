@@ -29,7 +29,7 @@ const defaultSettings = {
   },                                        //
   labels: {                                 //
     strategies: {                           //
-      unorderedTieBreak: 'last'             // pieWrapper: settings.labelUnorderedRemovalTiebreak, R: labels.advanced.removal.tiebreak
+      unorderedTieBreak: 'best'             // pieWrapper: settings.labelUnorderedRemovalTiebreak, R: labels.advanced.removal.tiebreak
     },                                      //
     stages: {                               //
       outOfBoundsCorrection: true,          //
