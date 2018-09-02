@@ -2401,7 +2401,9 @@ let labels = {
 
     let fontSizeDistribution = _(labelSet).countBy('fontSize')
 
-    let maxFontSize = _(labelSet).map('fontSize').max()
+    let maxFontSize = _(labelSet)
+      .map('fontSize')
+      .max() || 0
 
     let densities = _(labelSet)
       .countBy(labelDatum => {

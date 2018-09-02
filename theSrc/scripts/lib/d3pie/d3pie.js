@@ -84,58 +84,70 @@ class d3pie {
       if (!_.has(datum, 'id')) { datum.id = i }
     })
 
-    const initialLabelSet = outerLabeller.buildLabelSet({
-      totalSize: this.totalSize,
-      minAngle: this.options.data.minAngle,
-      labelData: this.options.data.content,
-      fontSize: this.options.labels.mainLabel.fontSize,
-      fontFamily: this.options.labels.mainLabel.font,
-      displayPercentage: this.options.labels.outer.displayPercentage,
-      displayDecimals: parseFloat(this.options.labels.outer.displayDecimals),
-      displayPrefix: this.options.data.prefix,
-      displaySuffix: this.options.data.suffix,
-      innerPadding: parseFloat(this.options.labels.outer.innerPadding)
-    })
+    let pieDimensions = {}
+    let labelStats = {maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0}
 
-    this.outerLabelData = outerLabeller.preprocessLabelSet({
-      parentContainer: this.svg,
-      labelSet: initialLabelSet,
-      minAngle: this.options.data.minAngle,
-      canvasHeight: this.options.size.canvasHeight,
-      minFontSize: this.options.labels.mainLabel.minFontSize,
-      maxFontSize: this.options.labels.mainLabel.fontSize,
-      innerPadding: parseFloat(this.options.labels.outer.innerPadding),
-      outerPadding: parseFloat(this.options.labels.outer.outerPadding),
-      maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth
-    })
+    if (this.options.labels.enabled) {
+      const initialLabelSet = outerLabeller.buildLabelSet({
+        totalSize: this.totalSize,
+        minAngle: this.options.data.minAngle,
+        labelData: this.options.data.content,
+        fontSize: this.options.labels.mainLabel.fontSize,
+        fontFamily: this.options.labels.mainLabel.font,
+        displayPercentage: this.options.labels.outer.displayPercentage,
+        displayDecimals: parseFloat(this.options.labels.outer.displayDecimals),
+        displayPrefix: this.options.data.prefix,
+        displaySuffix: this.options.data.suffix,
+        innerPadding: parseFloat(this.options.labels.outer.innerPadding)
+      })
 
-    const {
-      maxLabelWidth,
-      maxLabelHeight,
-      maxFontSize,
-      densities
-    } = outerLabeller.computeLabelStats(this.outerLabelData)
+      this.outerLabelData = outerLabeller.preprocessLabelSet({
+        parentContainer: this.svg,
+        labelSet: initialLabelSet,
+        minAngle: this.options.data.minAngle,
+        canvasHeight: this.options.size.canvasHeight,
+        minFontSize: this.options.labels.mainLabel.minFontSize,
+        maxFontSize: this.options.labels.mainLabel.fontSize,
+        innerPadding: parseFloat(this.options.labels.outer.innerPadding),
+        outerPadding: parseFloat(this.options.labels.outer.outerPadding),
+        maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth
+      })
 
-    const extraVerticalSpace = (_.get(densities, 'top') > 8)
-      ? 2 * maxLabelHeight
-      : 0
+      labelStats = outerLabeller.computeLabelStats(this.outerLabelData)
 
-    const labelLinePadding = 2 // TODO pull from config
+      const extraVerticalSpace = (_.get(labelStats.densities, 'top') > 8)
+        ? 2 * labelStats.maxLabelHeight
+        : 0
 
-    const { innerRadius, outerRadius, constrained, labelOffset } = this.computePieLayoutDimensions({
-      maxFontSize,
-      canvasWidth: this.options.size.canvasWidth,
-      canvasHeight: this.options.size.canvasHeight,
-      labelOffsetProportion: parseFloat(this.options.size.labelOffset),
-      innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
-      idealLeftWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
-      idealRightWhiteSpaceSize: (maxLabelWidth || 0) + labelLinePadding,
-      idealTopWhiteSpaceSize: (maxLabelHeight || 0) + extraVerticalSpace,
-      idealBottomWhiteSpaceSize: (maxLabelHeight || 0) + extraVerticalSpace
-    })
-    this.innerRadius = innerRadius
-    this.outerRadius = outerRadius
-    this.labelOffset = labelOffset
+      const labelLinePadding = 2 // TODO pull from config
+      pieDimensions = this.computePieLayoutDimensions({
+        maxFontSize: labelStats.maxFontSize,
+        canvasWidth: this.options.size.canvasWidth,
+        canvasHeight: this.options.size.canvasHeight,
+        labelOffsetProportion: parseFloat(this.options.size.labelOffset),
+        innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
+        idealLeftWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
+        idealRightWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
+        idealTopWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
+        idealBottomWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace
+      })
+    } else {
+      pieDimensions = this.computePieLayoutDimensions({
+        maxFontSize: 0,
+        canvasWidth: this.options.size.canvasWidth,
+        canvasHeight: this.options.size.canvasHeight,
+        labelOffsetProportion: 0,
+        innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
+        idealLeftWhiteSpaceSize: 0,
+        idealRightWhiteSpaceSize: 0,
+        idealTopWhiteSpaceSize: 0,
+        idealBottomWhiteSpaceSize: 0
+      })
+    }
+
+    this.innerRadius = pieDimensions.innerRadius
+    this.outerRadius = pieDimensions.outerRadius
+    this.labelOffset = pieDimensions.labelOffset
 
     const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
     const unboundedMaxVerticalOffset = (_.isNull(this.options.labels.outer.maxVerticalOffset))
@@ -149,7 +161,7 @@ class d3pie {
     }
 
     _(this.outerLabelData).each(label => {
-      const coordAtZeroDegrees = { x: this.pieCenter.x - outerRadius, y: this.pieCenter.y }
+      const coordAtZeroDegrees = { x: this.pieCenter.x - this.outerRadius, y: this.pieCenter.y }
       const segmentMidpointCoord = math.rotate(coordAtZeroDegrees, this.pieCenter, label.segmentAngleMidpoint)
 
       label.addLayoutFacts({
@@ -164,11 +176,11 @@ class d3pie {
     layoutLogger.info(`pie layout determined:
       canvasWidth: ${this.options.size.canvasWidth}
       canvasHeight: ${this.options.size.canvasHeight}
-      constrainedDimension: ${constrained}
+      constrainedDimension: ${pieDimensions.constrained}
       radius: ${this.innerRadius} -> ${this.outerRadius}
       labelOffset: ${this.labelOffset}
-      maxLabelWidth: ${maxLabelWidth || 0}
-      maxLabelHeight: ${maxLabelHeight || 0}
+      maxLabelWidth: ${labelStats.maxLabelWidth || 0}
+      maxLabelHeight: ${labelStats.maxLabelHeight || 0}
       idealTopWhiteSpaceSize: ${this.options.labels.mainLabel.fontSize}
       idealBottomWhiteSpaceSize: ${this.options.labels.mainLabel.fontSize}
     `)
@@ -189,11 +201,11 @@ class d3pie {
     // TODO is this duplication of this.options.debug.draw_placement_lines ?
     if (this.options.labels.outer.debugDrawFitLines) {
       outerLabeller.debugDrawFitLines(this)
-    } else {
+    } else if (this.options.labels.enabled) {
       outerLabeller.doLabelling(this)
     }
 
-    if (this.options.groups.content) {
+    if (this.options.groups.content && this.options.groups.labelsEnabled) {
       groupLabeller.doLabelling(this)
     }
 

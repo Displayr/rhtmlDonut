@@ -7,17 +7,19 @@
 Donut(values, labels, values.color = NULL, values.order = "descending",
   values.font.family = "arial", values.font.size = 10,
   values.decimal.places = 1, values.display.as = "percentage",
-  values.display.thres = 0.003, labels.font.family = "arial",
-  labels.font.color = "#333333", labels.font.size = 10,
-  labels.min.font.size = 8, labels.padding.inner = 1,
-  labels.padding.outer = 1, labels.max.width = 0.3, labels.offset = 0.1,
+  values.display.thres = 0.003, labels.enabled = TRUE,
+  labels.font.family = "arial", labels.font.color = "#333333",
+  labels.font.size = 10, labels.min.font.size = 8,
+  labels.padding.inner = 1, labels.padding.outer = 1,
+  labels.max.width = 0.3, labels.offset = 0.1,
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
   labels.advanced.removal.tiebreak = "last", groups = NULL,
   groups.color = NULL, groups.order = "initial",
   groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8, labels.inner = FALSE,
-  footer = "", footer.font.family = "Arial", footer.font.size = 8,
+  groups.font.size = 10, groups.min.font.size = 8,
+  groups.labels.enabled = TRUE, labels.inner = FALSE, footer = "",
+  footer.font.family = "Arial", footer.font.size = 8,
   footer.font.color = rgb(44, 44, 44, maxColorValue = 255), title = NULL,
   title.font.family = "arial", title.font.size = 16,
   title.font.color = "#333333", title.top.padding = 0, subtitle = "",
@@ -40,6 +42,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{values.display.as}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".}
 
 \item{values.display.thres}{(optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,1] and he default is 0.003.}
+
+\item{labels.enabled}{(optional) enable / disable outer labels. The default is TRUE.}
 
 \item{labels.font.family}{(optional) font family for \code{labels}. The default is "Arial"}
 
@@ -78,6 +82,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{groups.font.size}{(optional) desired font size in pixels for \code{groups}. The default is 10.}
 
 \item{groups.min.font.size}{(optional) the minimum font size in pixcels for \code{groups}. The default is 8.}
+
+\item{groups.labels.enabled}{(optional) enable / disable group labels. The default is TRUE.}
 
 \item{labels.inner}{(optional) boolean. if \code{TRUE} then add inner labels to the pie only if both of these conditions are satisfied: (1) no \code{groups} and (2) \code{values.order} is "descending". The default is \code{FALSE}.}
 
