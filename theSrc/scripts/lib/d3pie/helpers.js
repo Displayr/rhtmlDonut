@@ -83,7 +83,7 @@ let helpers = {
       ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1)
 
-    colorLogger.info(`adjust brightness: input: ${hex}, output: ${adjustedColor}, percent: ${percent}`)
+    colorLogger.debug(`adjust brightness: input: ${hex}, output: ${adjustedColor}, percent: ${percent}`)
     return adjustedColor
   },
 
