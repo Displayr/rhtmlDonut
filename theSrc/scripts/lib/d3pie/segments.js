@@ -234,16 +234,18 @@ let segments = {
     // TODO consolidate with outerLabeller version
     const p = (labelDatum) => `${labelDatum.id}(${labelDatum.label.substr(0, 6)})`
 
-    lb.on('mouseover', function (d, i) {
-      tooltipLogger.debug(`mouseover label ${p(d)}`)
-      let currentEl = d3.select(this)
+    lb.on('mouseover', function (d) {
+      tooltipLogger.info(`mouseover label ${p(d)}`)
+
+      const id = d.id
+      const currentEl = d3.select(this)
       let segment, label
 
       if (currentEl.attr('class') === pie.cssPrefix + 'arc') {
         segment = currentEl.select('path')
-        label = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + i + '-outer')
+        label = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + id + '-outer')
       } else {
-        segment = d3.select('#' + pie.cssPrefix + 'segment' + i)
+        segment = d3.select('#' + pie.cssPrefix + 'segment' + id)
         label = currentEl.select('text')
       }
 
@@ -261,17 +263,19 @@ let segments = {
       segments.onSegmentEvent(pie, pie.options.callbacks.onMouseoverSegment, segment, isExpanded)
     })
 
-    lb.on('mouseout', function (d, i) {
+    lb.on('mouseout', function (d) {
       tooltipLogger.debug(`mouseout label ${p(d)}`)
-      let currentEl = d3.select(this)
+
+      const id = d.id
+      const currentEl = d3.select(this)
       let segment, index, label
 
       if (currentEl.attr('class') === pie.cssPrefix + 'arc') {
         segment = currentEl.select('path')
-        label = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + i + '-outer')
+        label = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + id + '-outer')
       } else {
         index = currentEl.attr('data-index')
-        segment = d3.select('#' + pie.cssPrefix + 'segment' + i)
+        segment = d3.select('#' + pie.cssPrefix + 'segment' + id)
         label = currentEl.select('text')
       }
 
