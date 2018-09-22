@@ -5301,9 +5301,9 @@ restore-cursor@^1.0.1:
     exit-hook "^1.0.0"
     onetime "^1.0.0"
 
-rhtmlBuildUtils@Displayr/rhtmlBuildUtils#3.0.0:
-  version "3.0.0"
-  resolved "https://codeload.github.com/Displayr/rhtmlBuildUtils/tar.gz/f6207ce7ef494a14cc8497d0b1efbf69fd80dd41"
+rhtmlBuildUtils@Displayr/rhtmlBuildUtils#3.0.1:
+  version "3.0.1"
+  resolved "https://codeload.github.com/Displayr/rhtmlBuildUtils/tar.gz/86caf15547c803241941d08df5a9ce8d15a3690e"
   dependencies:
     app-root-dir "^1.0.2"
     babel-plugin-array-includes "^2.0.3"

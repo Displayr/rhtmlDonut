@@ -23,7 +23,7 @@
     "loglevel": "^1.6.1",
     "mustache": "^2.3.0",
     "recursive-readdir": "^2.2.2",
-    "rhtmlBuildUtils": "Displayr/rhtmlBuildUtils#3.0.0",
+    "rhtmlBuildUtils": "Displayr/rhtmlBuildUtils#3.0.1",
     "rhtmlParts": "Displayr/rhtmlParts#2.0.0"
   }
 }
