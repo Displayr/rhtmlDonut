@@ -33,8 +33,15 @@ In R:
     "Edge 12", "Firefox 38.0", "Chrome iPad", "Firefox 42.0", "Firefox 45.0",
     "Firefox 31.0", "Opera 34.0", "Chrome 41.0", "Opera 12.1")
      
-    rhtmlDonut::Donut(values = values1,
+    rhtmlDonut::Donut(footer="IE Sucks",
+                      footer.font.size=8,
+                      title="Browser Usage",
+                      title.font.size=32,
+                      subtitle="Circa ~ 2013",
+                      subtitle.font.size=24, 
+                      values = values1,
                       labels = labels1,
+                      labels.font.size = 16,
                       values.order = "descending",
                       prefix = "", suffix = "%")
                       

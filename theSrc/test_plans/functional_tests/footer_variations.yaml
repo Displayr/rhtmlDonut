@@ -8,4 +8,5 @@ tests:
     config:
       - '{ "settings" : { "footer" : "default footer settings" } }'
       - '{ "settings" : { "footer" : "custom footer settings" } }|config.footer_12_georgia_lightblue'
-      - '{ "settings" : { "footer" : "multiline<br>footers<br>are supported" } }'
+      - '{ "settings" : { "footer" : "multiline <br>footers<br> are supported" } }'
+      - '{ "settings" : { "footer" : "this is a really long footer with lots of things to say and it should naturally wrap and it does not contain any user specified wraps" } }'
