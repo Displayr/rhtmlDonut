@@ -45,9 +45,11 @@ class PieWrapper {
         fontSize: this._settings.titleFontSize,
         fontFamily: this._settings.titleFontFamily,
         topPadding: this._settings.titleTopPadding,
-        bottomPadding: 10
+        bottomPadding: 10,
+        innerPadding: 2
       })
       this.title.setX(width / 2)
+      this.title.setMaxWidth(width)
       this.title.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.titleHeight = this.title.getHeight()
     }
@@ -59,9 +61,11 @@ class PieWrapper {
         subtitleFontSize: this._settings.subtitleFontSize,
         subtitleFontFamily: this._settings.subtitleFontFamily,
         yOffset: this.titleHeight,
-        bottomPadding: 10
+        bottomPadding: 10,
+        innerPadding: 2
       })
       this.subtitle.setX(width / 2)
+      this.subtitle.setMaxWidth(width)
       this.subtitle.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.subtitleHeight = this.subtitle.getHeight()
     }
@@ -78,6 +82,8 @@ class PieWrapper {
         innerPadding: 2
       })
       this.footer.setX(width / 2)
+      this.footer.setMaxWidth(width)
+      this.footer.setContainerHeight(height)
       this.footer.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.footerHeight = this.footer.getHeight()
     }
@@ -199,18 +205,21 @@ class PieWrapper {
 
     if (this.title) {
       this.title.setX(width / 2)
+      this.title.setMaxWidth(width)
       this.title.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.titleHeight = this.title.getHeight()
     }
 
     if (this.subtitle) {
       this.subtitle.setX(width / 2)
+      this.subtitle.setMaxWidth(width)
       this.subtitle.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.subtitleHeight = this.subtitle.getHeight()
     }
 
     if (this.footer) {
       this.footer.setX(width / 2)
+      this.footer.setMaxWidth(width)
       this.footer.setContainerHeight(height)
       this.footer.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.footerHeight = this.footer.getHeight()
