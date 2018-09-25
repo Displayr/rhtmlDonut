@@ -5380,7 +5380,7 @@ rhtmlBuildUtils@Displayr/rhtmlBuildUtils#3.0.1:
 
 rhtmlParts@Displayr/rhtmlParts#VIS-419:
   version "3.0.0"
-  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/618379abac66dfb624a7be56ef26ba3100170f67"
+  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/3b216876efc01599477c703ae6b7dfb7e0a75da8"
   dependencies:
     jquery "^3.3.1"
     lodash "^4.17.11"

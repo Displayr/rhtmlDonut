@@ -212,6 +212,7 @@ class PieWrapper {
 
     if (this.subtitle) {
       this.subtitle.setX(width / 2)
+      this.subtitle.setY(this.titleHeight)
       this.subtitle.setMaxWidth(width)
       this.subtitle.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.subtitleHeight = this.subtitle.getHeight()
