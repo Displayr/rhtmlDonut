@@ -8,7 +8,8 @@
     "css": [
       "/styles/main.css"
     ],
-    "isReadySelector": "g[rhtmlDonut-status=ready]"
+    "isReadySelector": "g[rhtmlDonut-status=ready]",
+    "singleWidgetSnapshotSelector": "svg.svgContent"
   },
   "visualRegressionSuite": {}
 }
