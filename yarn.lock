@@ -5374,9 +5374,9 @@ rhtmlBuildUtils@Displayr/rhtmlBuildUtils#3.0.1:
     stream "0.0.2"
     yargs "^8.0.1"
 
-rhtmlParts@Displayr/rhtmlParts#2.0.0:
-  version "2.0.0"
-  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/76168666f7eea743bc6e3a86349da76bfa556ff5"
+rhtmlParts@Displayr/rhtmlParts#VIS-419:
+  version "3.0.0"
+  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/3d1b4001b0a591ae610743dc48114a7343fd18d7"
   dependencies:
     lodash.isnumber "^3.0.3"
     lodash.isstring "^4.0.1"
