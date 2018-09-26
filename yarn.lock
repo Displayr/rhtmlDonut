@@ -3549,7 +3549,7 @@ jquery@2.2.2:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-2.2.2.tgz#3e302dc61eb329a21e9efac937d731f061134c59"
 
-jquery@^3.2.1, jquery@^3.3.1:
+jquery@^3.2.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.3.1.tgz#958ce29e81c9790f31be7792df5d4d95fc57fbca"
 
@@ -5376,9 +5376,8 @@ rhtmlBuildUtils@Displayr/rhtmlBuildUtils#3.0.1:
 
 rhtmlParts@Displayr/rhtmlParts#VIS-419:
   version "3.0.0"
-  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/85dabf197d2f8156041ce858fd11aab90466242a"
+  resolved "https://codeload.github.com/Displayr/rhtmlParts/tar.gz/3d1b4001b0a591ae610743dc48114a7343fd18d7"
   dependencies:
-    jquery "^3.3.1"
     lodash.isnumber "^3.0.3"
     lodash.isstring "^4.0.1"
 
