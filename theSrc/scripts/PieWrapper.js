@@ -372,14 +372,10 @@ PieWrapper.initClass()
 // TODO to utils
 function getContainerDimensions (rootElement) {
   try {
-    const jqueryRoot = $(rootElement)
-    return {
-      width: jqueryRoot.width(),
-      height: jqueryRoot.height()
-    }
+    return rootElement.getBoundingClientRect()
   } catch (err) {
-    console.error(`fail in getContainerDimensions: ${err}`)
-    return null
+    err.message = `fail in getContainerDimensions: ${err.message}`
+    throw err
   }
 }
 

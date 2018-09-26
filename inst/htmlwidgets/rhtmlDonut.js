@@ -42665,14 +42665,10 @@ PieWrapper.initClass
 // TODO to utils
 ();function getContainerDimensions(rootElement) {
   try {
-    var jqueryRoot = (0, _jquery2.default)(rootElement);
-    return {
-      width: jqueryRoot.width(),
-      height: jqueryRoot.height()
-    };
+    return rootElement.getBoundingClientRect();
   } catch (err) {
-    console.error('fail in getContainerDimensions: ' + err);
-    return null;
+    err.message = 'fail in getContainerDimensions: ' + err.message;
+    throw err;
   }
 }
 
