@@ -13,3 +13,4 @@ tests:
       - '{ "settings" : { "title" : "title", "footer" : "footer" } }'
       - '{ "settings" : { "subtitle" : "subtitle", "footer" : "footer" } }'
       - '{ "settings" : { "title" : "title", "subtitle" : "subtitle", "footer" : "footer" } }'
+      - data.test_plan.long_title_subtitle_footer

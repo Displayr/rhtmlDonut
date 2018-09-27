@@ -1,0 +1,22 @@
+{
+  "values": [
+    60,
+    30,
+    10
+  ],
+  "labels": [
+    "B",
+    "C",
+    "A"
+  ],
+  "settings": {
+    "valuesColor": [
+      "#0000ff",
+      "#008000",
+      "#ff0000"
+    ],
+    "title": "really long rambling rambling rambling rambling rambling rambling multiline wrapped title",
+    "subtitle": "really long rambling rambling rambling rambling rambling rambling multiline wrapped subtitle",
+    "footer": "really long rambling rambling rambling rambling rambling rambling multiline wrapped footer"
+  }
+}
