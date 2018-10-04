@@ -51,7 +51,7 @@ function wordTokenizer (inputString) {
   return inputString.split(' ').map(_.trim).filter((token) => !_.isEmpty(token))
 }
 
-function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'sans-serif') {
+function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'sans-serif', maxLines = null) {
   let tokens = wordTokenizer(inputString)
 
   let currentLine = []
@@ -62,9 +62,18 @@ function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'san
 
     const { width } = getLabelDimensionsUsingDivApproximation(currentLine.join(' '), fontSize, fontFamily)
     if (width > maxWidth && currentLine.length > 1) {
-      tokens.unshift(currentLine.pop())
-      lines.push(`${currentLine.join(' ')}`)
-      currentLine = []
+      if (maxLines && lines.length === maxLines - 1) {
+        currentLine.pop()
+        currentLine.push('...')
+        tokens = []
+        lines.push(`${currentLine.join(' ')}`)
+        currentLine = []
+        break
+      } else {
+        tokens.unshift(currentLine.pop())
+        lines.push(`${currentLine.join(' ')}`)
+        currentLine = []
+      }
     }
   }
 
