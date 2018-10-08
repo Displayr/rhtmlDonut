@@ -102,6 +102,8 @@ const defaultSettings = {
   },                                        // not used
   tooltips: {                               //
     enabled: true,                          // pieWrapper: HARD CODE
+    maxWidth: 0.3,                          // pieWrapper: settings.tooltipMaxWidth, R: tooltip.max.width
+    maxHeight: 0.3,                         // pieWrapper: settings.tooltipMaxHeight, R: tooltip.max.height
     type: 'placeholder',                    // pieWrapper: HARD CODE
     string: '',                             // pieWrapper: HARD CODE
     placeholderParser: null,                // pieWrapper: HARD CODE

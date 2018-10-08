@@ -4,7 +4,7 @@ import d3 from 'd3'
 import helpers from './helpers'
 import math from './math'
 import segments from './segments'
-import tt from './tooltip'
+import tooltip from './tooltip'
 import validate from './validate'
 import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
@@ -211,7 +211,7 @@ class d3pie {
 
     // add and position the tooltips
     if (this.options.tooltips.enabled) {
-      tt.addTooltips(this)
+      tooltip.addTooltips(this)
     }
 
     // position the title and subtitle

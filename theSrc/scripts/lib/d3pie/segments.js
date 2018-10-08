@@ -1,6 +1,6 @@
 import helpers from './helpers'
 import math from './math'
-import tt from './tooltip'
+import tooltip from './tooltip'
 import d3 from 'd3'
 import _ from 'lodash'
 
@@ -327,7 +327,7 @@ let segments = {
 
         if (!isLabelShown(pie.innerLabelData, pie.outerLabelData, d.id)) {
           index = segment.attr('data-index')
-          tt.showTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
+          tooltip.showTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
         }
       }
 
@@ -338,7 +338,7 @@ let segments = {
     arc.on('mousemove', function (d) {
       tooltipLogger.debug(`mousemove arc ${p(d)}`)
       let index = d3.select(this).select('path').attr('data-index')
-      tt.moveTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
+      tooltip.moveTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
     })
 
     arc.on('mouseout', function (d, i) {
@@ -366,7 +366,7 @@ let segments = {
 
       if (pie.options.tooltips.enabled) {
         index = segment.attr('data-index')
-        tt.hideTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
+        tooltip.hideTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
       }
 
       let isExpanded = segment.attr('class') === pie.cssPrefix + 'expanded'
@@ -416,7 +416,7 @@ let segments = {
         if (pie.options.tooltips.enabled) {
           if (pie.groupLabelData[i].hide) {
             index = segment.attr('data-index')
-            tt.showTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
+            tooltip.showTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
           }
         }
 
@@ -426,7 +426,7 @@ let segments = {
 
       garc.on('mousemove', function () {
         let index = d3.select(this).select('path').attr('data-index')
-        tt.moveTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
+        tooltip.moveTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
       })
 
       garc.on('mouseout', function (d, i) {
@@ -441,7 +441,7 @@ let segments = {
 
         if (pie.options.tooltips.enabled) {
           index = segment.attr('data-index')
-          tt.hideTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
+          tooltip.hideTooltip(pie, '#' + pie.cssPrefix + 'gtooltip' + index)
         }
 
         let isExpanded = segment.attr('class') === pie.cssPrefix + 'expanded'

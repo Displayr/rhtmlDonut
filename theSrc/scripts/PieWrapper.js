@@ -170,7 +170,9 @@ class PieWrapper {
         }
       },
       tooltips: {
-        enabled: true
+        enabled: true,
+        maxWidth: this._settings.tooltipMaxWidth,
+        maxHeight: this._settings.tooltipMaxHeight
       },
       misc: {
         colors: {

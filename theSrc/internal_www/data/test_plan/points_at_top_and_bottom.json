@@ -26,16 +26,16 @@
   "settings": {
     "valuesOrder": "initial",
     "valuesColor": [
-      "red",
-      "red", "red",
-      "lightblue", "lightblue", "green", "lightblue", "lightblue",
-      "red", "red",
-      "red",
-      "red",
-      "red", "red",
-      "lightblue", "lightblue", "green", "lightblue", "lightblue",
-      "red", "red",
-      "red"
+      "#ff0000",
+      "#ff0000", "#ff0000",
+      "#ADD8E6", "#ADD8E6", "#008000", "#ADD8E6", "#ADD8E6",
+      "#ff0000", "#ff0000",
+      "#ff0000",
+      "#ff0000",
+      "#ff0000", "#ff0000",
+      "#ADD8E6", "#ADD8E6", "#008000", "#ADD8E6", "#ADD8E6",
+      "#ff0000", "#ff0000",
+      "#ff0000"
     ],
      "minAngle": 0.000001,
      "labelMaxLineAngle": 90

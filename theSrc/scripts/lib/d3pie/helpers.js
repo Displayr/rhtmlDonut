@@ -27,8 +27,9 @@ let helpers = {
     }
   },
 
-  getDimensions: function (id) {
-    let el = document.getElementById(id)
+  getDimensions: function (idString) {
+    const id = (idString && idString[0] === '#') ? idString.slice(1) : idString
+    const el = document.getElementById(id)
     let w = 0
     let h = 0
     if (el) {
