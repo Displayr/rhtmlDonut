@@ -10,11 +10,11 @@ const layoutLogger = rootLog.getLogger('layout')
 
 class PieWrapper {
   static uniqueId () {
-    return this._palmTreeInstanceCounter++
+    return this._donutInstanceCounter++
   }
 
   static initClass () {
-    this._palmTreeInstanceCounter = 0
+    this._donutInstanceCounter = 0
   }
 
   constructor () {
