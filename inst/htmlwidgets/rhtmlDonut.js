@@ -70023,6 +70023,7 @@ function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'san
     currentLine.push(token)
 
     const { width } = getLabelDimensionsUsingDivApproximation(currentLine.join(' '), fontSize, fontFamily)
+    console.log(`got width ${width}`)
     if (width > maxWidth && currentLine.length > 1) {
       tokens.unshift(currentLine.pop())
       lines.push(`${currentLine.join(' ')}`)
