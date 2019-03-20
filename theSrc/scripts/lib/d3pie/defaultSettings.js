@@ -102,8 +102,8 @@ const defaultSettings = {
   },                                        // not used
   tooltips: {                               //
     enabled: true,                          // pieWrapper: HARD CODE
-    maxWidth: 0.3,                          // pieWrapper: settings.tooltipMaxWidth, R: tooltip.max.width
-    maxHeight: 0.3,                         // pieWrapper: settings.tooltipMaxHeight, R: tooltip.max.height
+    maxWidth: 0.3,                          // pieWrapper: settings.tooltipMaxWidth, R: tooltips.max.width
+    maxHeight: 0.3,                         // pieWrapper: settings.tooltipMaxHeight, R: tooltips.max.height
     type: 'placeholder',                    // pieWrapper: HARD CODE
     string: '',                             // pieWrapper: HARD CODE
     placeholderParser: null,                // pieWrapper: HARD CODE
@@ -111,10 +111,10 @@ const defaultSettings = {
       fadeInSpeed: 1,                       // pieWrapper: HARD CODE
       backgroundColor: '#000000',           // pieWrapper: HARD CODE
       backgroundOpacity: 0.5,               // pieWrapper: HARD CODE
-      color: '#efefef',                     // pieWrapper: HARD CODE
       borderRadius: 2,                      // pieWrapper: HARD CODE
-      font: 'arial',                        // pieWrapper: HARD CODE
-      fontSize: 10,                         // pieWrapper: HARD CODE
+      font: 'arial',                        // pieWrapper: settings.tooltipFontFamily, R: tooltips.font.family
+      fontSize: 10,                         // pieWrapper: settings.tooltipFontSize, R: tooltips.font.size
+      color: '#efefef',                     // pieWrapper: settings.tooltipFontColor, R: tooltips.font.color
       padding: 4                            // pieWrapper: HARD CODE
     }                                       //
   },                                        //
