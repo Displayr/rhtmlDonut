@@ -22,6 +22,9 @@
 #' @param labels.advanced.removal.tiebreak (optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.
 #' @param tooltips.max.width (optional) the maximum tooltip width as a proportion of total width. The default is 0.3.
 #' @param tooltips.max.height (optional) the maximum tooltip height as a proportion of total height. The default is 0.3.
+#' @param tooltips.font.family (optional) font family for tooltips. The default is "Arial".
+#' @param tooltips.font.size (optional) font size for tooltips. The default is 10.
+#' @param tooltips.font.color (optional) font color for tooltips. The default is '#efefef'.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
 #' @param groups.font.family (optional) font family for \code{groups}. The default is "Arial".
 #' @param groups.font.size (optional) desired font size in pixels for \code{groups}. The default is 10.
@@ -104,6 +107,9 @@ Donut <- function(
     labels.advanced.removal.tiebreak = "last",
     tooltips.max.width = 0.3,
     tooltips.max.height = 0.3,
+    tooltips.font.family = "Arial",
+    tooltips.font.size = 10,
+    tooltips.font.color = "#efefef",
     groups = NULL,
     groups.color = NULL,
     groups.order = "initial",
@@ -422,6 +428,9 @@ Donut <- function(
         labelUnorderedRemovalTiebreak = labels.advanced.removal.tiebreak,
         tooltipMaxWidth = tooltips.max.width,
         tooltipMaxHeight = tooltips.max.height,
+        tooltipFontFamily = tooltips.font.family,
+        tooltipFontSize = tooltips.font.size,
+        tooltipFontColor = tooltips.font.color,
         groups = groups, # length = n
         groupsFont = groups.font.family, # string
         groupsFontColor = groups.font.color,

@@ -124,7 +124,6 @@ class PieWrapper {
     }
 
     // TODO remove all defaults here that are covered in defaultSettings. May require a "delete all null/undefined step in the middle"
-
     this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
       size: {
         canvasWidth: width,
@@ -172,7 +171,12 @@ class PieWrapper {
       tooltips: {
         enabled: true,
         maxWidth: this._settings.tooltipMaxWidth,
-        maxHeight: this._settings.tooltipMaxHeight
+        maxHeight: this._settings.tooltipMaxHeight,
+        styles: {
+          font: this._settings.tooltipFontFamily,
+          fontSize: this._settings.tooltipFontSize,
+          color: this._settings.tooltipFontColor
+        }
       },
       misc: {
         colors: {
