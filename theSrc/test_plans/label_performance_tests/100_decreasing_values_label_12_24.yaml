@@ -1,27 +1,23 @@
 version: 1
-tests:
-  - type: multi_widget_single_page
-    rowSize: 1
-    comments: []
-    widgets:
-      - height: 1000
-        width: 1000
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.1000x1000" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_12_24
-#          - config.debug
-      - height: 800
-        width: 800
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.800x800" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_12_24
-#          - config.debug
-      - height: 600
-        width: 600
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.600x600" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_12_24
-#          - config.debug
+type: multi_widget_single_page
+rowSize: 1
+comments: []
+widgets:
+  - height: 1000
+    width: 1000
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.1000x1000" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_12_24
+  - height: 800
+    width: 800
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.800x800" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_12_24
+  - height: 600
+    width: 600
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_12_24.600x600" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_12_24

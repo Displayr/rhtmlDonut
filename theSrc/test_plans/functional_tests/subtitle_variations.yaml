@@ -1,12 +1,11 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_config
-    width: 250
-    height: 300
-    rowSize: 3
-    data: data.test_plan.abc_rbg
-    config:
-      - '{ "settings" : { "subtitle" : "default subtitle settings" } }'
-      - '{ "settings" : { "subtitle" : "custom subtitle settings" } }|config.subtitle_12_georgia_lightblue'
-      - '{ "settings" : { "subtitle" : "this is a really long subtitle with lots of things to say and it should naturally wrap and it does not contain any user specified wraps" } }'
-      - '{ "settings" : { "subtitle" : "user specified wraps <br>in sub titles<br>are supported" } }'
+type: single_page_one_example_per_config
+width: 250
+height: 300
+rowSize: 3
+data: data.test_plan.abc_rbg
+config:
+  - '{ "settings" : { "subtitle" : "default subtitle settings" } }'
+  - '{ "settings" : { "subtitle" : "custom subtitle settings" } }|config.subtitle_12_georgia_lightblue'
+  - '{ "settings" : { "subtitle" : "this is a really long subtitle with lots of things to say and it should naturally wrap and it does not contain any user specified wraps" } }'
+  - '{ "settings" : { "subtitle" : "user specified wraps <br>in sub titles<br>are supported" } }'

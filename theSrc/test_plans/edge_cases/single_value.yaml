@@ -1,8 +1,7 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_data
-    width: 500
-    height: 500
-    data:
-      - data.test_plan.one_val
-      - data.test_plan.one_val_group
+type: single_page_one_example_per_data
+width: 500
+height: 500
+data:
+  - data.test_plan.one_val
+  - data.test_plan.one_val_group

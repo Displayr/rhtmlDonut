@@ -1,9 +1,8 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_config
-    width: 400
-    height: 500
-    rowSize: 2
-    config:
-      - data.test_plan.abc_rbg
-      - data.test_plan.abc_rbg_vertical_flip
+type: single_page_one_example_per_config
+width: 400
+height: 500
+rowSize: 2
+config:
+  - data.test_plan.abc_rbg
+  - data.test_plan.abc_rbg_vertical_flip

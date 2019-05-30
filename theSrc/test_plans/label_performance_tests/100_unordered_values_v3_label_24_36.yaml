@@ -1,27 +1,23 @@
 version: 1
-tests:
-  - type: multi_widget_single_page
-    rowSize: 1
-    comments: []
-    widgets:
-      - height: 1000
-        width: 1000
-        config:
-          - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.1000x1000" } }'
-          - data.unordered_value_sets.100_unordered_values_v3
-          - config.label_24_36
-#          - config.debug
-      - height: 800
-        width: 800
-        config:
-          - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.800x800" } }'
-          - data.unordered_value_sets.100_unordered_values_v3
-          - config.label_24_36
-#          - config.debug
-      - height: 600
-        width: 600
-        config:
-          - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.600x600" } }'
-          - data.unordered_value_sets.100_unordered_values_v3
-          - config.label_24_36
-#          - config.debug
+type: multi_widget_single_page
+rowSize: 1
+comments: []
+widgets:
+  - height: 1000
+    width: 1000
+    config:
+      - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.1000x1000" } }'
+      - data.unordered_value_sets.100_unordered_values_v3
+      - config.label_24_36
+  - height: 800
+    width: 800
+    config:
+      - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.800x800" } }'
+      - data.unordered_value_sets.100_unordered_values_v3
+      - config.label_24_36
+  - height: 600
+    width: 600
+    config:
+      - '{ "settings" : { "title" : "100_unordered_values_v3.label_24_36.600x600" } }'
+      - data.unordered_value_sets.100_unordered_values_v3
+      - config.label_24_36

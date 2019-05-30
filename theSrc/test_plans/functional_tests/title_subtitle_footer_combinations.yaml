@@ -1,16 +1,15 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_config
-    width: 250
-    height: 300
-    rowSize: 3
-    data: data.test_plan.abc_rbg
-    config:
-      - '{ "settings" : { "title" : "title" } }'
-      - '{ "settings" : { "subtitle" : "subtitle" } }'
-      - '{ "settings" : { "footer" : "footer" } }'
-      - '{ "settings" : { "title" : "title", "subtitle" : "subtitle" } }'
-      - '{ "settings" : { "title" : "title", "footer" : "footer" } }'
-      - '{ "settings" : { "subtitle" : "subtitle", "footer" : "footer" } }'
-      - '{ "settings" : { "title" : "title", "subtitle" : "subtitle", "footer" : "footer" } }'
-      - data.test_plan.long_title_subtitle_footer
+type: single_page_one_example_per_config
+width: 250
+height: 300
+rowSize: 3
+data: data.test_plan.abc_rbg
+config:
+  - '{ "settings" : { "title" : "title" } }'
+  - '{ "settings" : { "subtitle" : "subtitle" } }'
+  - '{ "settings" : { "footer" : "footer" } }'
+  - '{ "settings" : { "title" : "title", "subtitle" : "subtitle" } }'
+  - '{ "settings" : { "title" : "title", "footer" : "footer" } }'
+  - '{ "settings" : { "subtitle" : "subtitle", "footer" : "footer" } }'
+  - '{ "settings" : { "title" : "title", "subtitle" : "subtitle", "footer" : "footer" } }'
+  - data.test_plan.long_title_subtitle_footer
