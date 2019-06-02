@@ -1,7 +1,6 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_config
-    width: 500
-    height: 500
-    config:
-      - 'data.equal_value_sets.50_equal_values|{ "settings" : { "minAngle" : "0.03", "title" : "all labels should be excluded because minAngle > all segments" } }'
+type: single_page_one_example_per_config
+width: 500
+height: 500
+config:
+  - 'data.equal_value_sets.50_equal_values|{ "settings" : { "minAngle" : "0.03", "title" : "all labels should be excluded because minAngle > all segments" } }'

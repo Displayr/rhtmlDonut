@@ -1,8 +1,7 @@
 version: 1
-tests:
-  - type: single_page_one_example_per_config
-    width: 1000
-    height: 1000
-    rowSize: 1
-    config:
-      - data.test_plan.tooltip_styling
+type: single_page_one_example_per_config
+width: 1000
+height: 1000
+rowSize: 1
+config:
+  - data.test_plan.tooltip_styling

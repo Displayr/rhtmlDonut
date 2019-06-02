@@ -1,30 +1,26 @@
 version: 1
-tests:
-  - type: multi_widget_single_page
-    rowSize: 1
-    comments:
-      - location: 2
-        text: too many labels removed
-        status: yellow
-    widgets:
-      - height: 1000
-        width: 1000
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.1000x1000" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_24_36
-#          - config.debug
-      - height: 800
-        width: 800
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.800x800" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_24_36
-#          - config.debug
-      - height: 600
-        width: 600
-        config:
-          - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.600x600" } }'
-          - data.decreasing_value_sets.100_decreasing_values
-          - config.label_24_36
-#          - config.debug
+type: multi_widget_single_page
+rowSize: 1
+comments:
+  - location: 2
+    text: too many labels removed
+    status: yellow
+widgets:
+  - height: 1000
+    width: 1000
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.1000x1000" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_24_36
+  - height: 800
+    width: 800
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.800x800" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_24_36
+  - height: 600
+    width: 600
+    config:
+      - '{ "settings" : { "title" : "100_decreasing_values.label_24_36.600x600" } }'
+      - data.decreasing_value_sets.100_decreasing_values
+      - config.label_24_36
