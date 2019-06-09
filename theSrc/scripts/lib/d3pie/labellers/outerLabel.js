@@ -164,7 +164,7 @@ class OuterLabel {
   }
 
   setTopMedialPoint (coord) {
-    const {width, linePadding, hemisphere} = this
+    const { width, linePadding, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y }
       : { x: coord.x + linePadding, y: coord.y }
@@ -174,7 +174,7 @@ class OuterLabel {
   }
 
   setBottomMedialPoint (coord) {
-    const {width, height, linePadding, hemisphere} = this
+    const { width, height, linePadding, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y - height }
       : { x: coord.x + linePadding, y: coord.y - height }
@@ -224,7 +224,7 @@ class OuterLabel {
       ? lineConnectorCoord.y - 0.5 * lineHeight - (lineHeight * (numTextRows - 1)) - (innerPadding * (numTextRows - 1))
       : lineConnectorCoord.y - 0.5 * lineHeight
 
-    const {width, linePadding, hemisphere} = this
+    const { width, linePadding, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
       : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
@@ -255,9 +255,9 @@ class OuterLabel {
 
   // https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine (Cosine Rule)
   _computeAngleBetweenLabelLineAndRadialLine () {
-    const {lineConnectorCoord, pieCenter, outerRadius, segmentAngleMidpoint} = this
+    const { lineConnectorCoord, pieCenter, outerRadius, segmentAngleMidpoint } = this
 
-    const pointAtZeroDegrees = {x: pieCenter.x - outerRadius, y: pieCenter.y}
+    const pointAtZeroDegrees = { x: pieCenter.x - outerRadius, y: pieCenter.y }
     const outerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
 
     // consider a triangle with three sides
@@ -299,7 +299,7 @@ class OuterLabel {
     return this.topLeftCoord.y > anotherLabel.topLeftCoord.y + anotherLabel.height
   }
 
-  validateCoord ({x, y} = {}) {
+  validateCoord ({ x, y } = {}) {
     const badX = (_.isNull(x) || _.isUndefined(x) || _.isNaN(x))
     const badY = (_.isNull(x) || _.isUndefined(x) || _.isNaN(x))
     if (badX || badY) { throw new Error(`Invalid coord for label '${this.label}': { x: ${x}, y: ${y} }`) }

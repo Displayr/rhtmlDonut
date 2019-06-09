@@ -311,7 +311,7 @@ let labels = {
     })
 
     const topLabelsThatCouldBeLifted = pie.outerLabelData
-      .filter(({segmentAngleMidpoint}) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+      .filter(({ segmentAngleMidpoint }) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
     const collisionsInTopSet = findIntersectingLabels(topLabelsThatCouldBeLifted)
     if (collisionsInTopSet.length > 0) {
       labelLogger.info(`Collisions between ${90 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${90 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
@@ -334,7 +334,7 @@ let labels = {
     }
 
     const bottomLabelsThatCouldBeLifted = pie.outerLabelData
-      .filter(({segmentAngleMidpoint}) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+      .filter(({ segmentAngleMidpoint }) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
     const collisionsInBottomSet = findIntersectingLabels(bottomLabelsThatCouldBeLifted)
     if (collisionsInBottomSet.length > 0) {
       labelLogger.info(`Collisions between ${270 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${270 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
@@ -690,7 +690,7 @@ let labels = {
       .attr('data-segmentangle', function (d) { return d.segmentAngleMidpoint.toFixed(3) })
       .attr('data-index', function (d) { return d.id })
       .attr('class', `${cssPrefix}labelGroup-${labelType}`)
-      .attr('transform', function ({topLeftCoord}) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
+      .attr('transform', function ({ topLeftCoord }) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
       .style('opacity', 1)
 
     labelGroup.append('text')
@@ -842,7 +842,7 @@ let labels = {
           labelLogger.info('lifting top labels before next iteration')
           // note this is the 'master labelSet', not the clone passed to each iteration
           const topLabelsThatCouldBeLifted = labelSet
-            .filter(({segmentAngleMidpoint}) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+            .filter(({ segmentAngleMidpoint }) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
           pie.topIsLifted = true
           _(topLabelsThatCouldBeLifted).each(label => {
             labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
@@ -864,7 +864,7 @@ let labels = {
           // note this is the 'master labelSet', not the clone passed to each iteration
           pie.bottomIsLifted = true
           _(labelSet)
-            .filter(({segmentAngleMidpoint}) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
+            .filter(({ segmentAngleMidpoint }) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
             .each(label => {
               labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
                 labelDatum: label,
@@ -891,7 +891,7 @@ let labels = {
             // sort by value, then as a tiebreak choose the label closest to the current offending label
             // removing a label closer to the offending label is more likely to solve the current labelling issue
             let idToRemove = _(labelSet)
-              .sortBy('value', ({id}) => Math.abs(offendingLabel.id - id))
+              .sortBy('value', ({ id }) => Math.abs(offendingLabel.id - id))
               .map('id')
               .first()
 
@@ -1648,7 +1648,7 @@ let labels = {
       // throw away our attempt at inner labelling and start again wrt inner labels!
       // XXX NB TODO strictly speaking we can only throw out our quadrant/hemisphere worth of inner labels
       _(innerLabelSet).each(innerLabel => {
-        const matchingOuterLabel = _.find(outerLabelSet, ({id: outerLabelId}) => outerLabelId === innerLabel.id)
+        const matchingOuterLabel = _.find(outerLabelSet, ({ id: outerLabelId }) => outerLabelId === innerLabel.id)
         if (matchingOuterLabel) {
           matchingOuterLabel.labelShown = true
           if (matchingOuterLabel.inLeftHalf) {
@@ -1818,16 +1818,16 @@ let labels = {
         left: _.cloneDeep(_(pie.outerLabelData)
           .filter('isLifted')
           .filter('inLeftHalf')
-          .filter(({topY}) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isTopApexLabel}) => !isTopApexLabel)
-          .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
+          .filter(({ topY }) => topY <= leftPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({ isTopApexLabel }) => !isTopApexLabel)
+          .sortBy([({ lineConnectorCoord }) => { return -1 * lineConnectorCoord.y }, ({ id }) => { return -1 * id }])
           .value()),
         right: _.cloneDeep(_(pie.outerLabelData)
           .filter('isLifted')
           .filter('inRightHalf')
-          .filter(({topY}) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isTopApexLabel}) => !isTopApexLabel)
-          .sortBy([({lineConnectorCoord}) => { return -1 * lineConnectorCoord.y }, ({id}) => { return -1 * id }])
+          .filter(({ topY }) => topY <= rightPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({ isTopApexLabel }) => !isTopApexLabel)
+          .sortBy([({ lineConnectorCoord }) => { return -1 * lineConnectorCoord.y }, ({ id }) => { return -1 * id }])
           .value())
       }
 
@@ -2072,16 +2072,16 @@ let labels = {
         left: _.cloneDeep(_(pie.outerLabelData)
           .filter('inLeftHalf')
           .filter('isLifted')
-          .filter(({bottomY}) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isBottomApexLabel}) => !isBottomApexLabel)
-          .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
+          .filter(({ bottomY }) => bottomY >= leftPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({ isBottomApexLabel }) => !isBottomApexLabel)
+          .sortBy([({ lineConnectorCoord }) => { return lineConnectorCoord.y }, ({ id }) => { return -1 * id }])
           .value()),
         right: _.cloneDeep(_(pie.outerLabelData)
           .filter('inRightHalf')
           .filter('isLifted')
-          .filter(({bottomY}) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
-          .filter(({isBottomApexLabel}) => !isBottomApexLabel)
-          .sortBy([({lineConnectorCoord}) => { return lineConnectorCoord.y }, ({id}) => { return -1 * id }])
+          .filter(({ bottomY }) => bottomY >= rightPointWhereTriangleMeetsLabelRadius.y)
+          .filter(({ isBottomApexLabel }) => !isBottomApexLabel)
+          .sortBy([({ lineConnectorCoord }) => { return lineConnectorCoord.y }, ({ id }) => { return -1 * id }])
           .value())
       }
 
@@ -2334,7 +2334,7 @@ let labels = {
     displayPrefix,
     displaySuffix,
     innerPadding
-}) {
+  }) {
     let cumulativeValue = 0
 
     return labelData
@@ -2360,12 +2360,12 @@ let labels = {
           displaySuffix
         })
       })
-      .filter(({value}) => { return value / totalSize >= minAngle }) // NB must filter here as we are tracking cumulative value above
+      .filter(({ value }) => { return value / totalSize >= minAngle }) // NB must filter here as we are tracking cumulative value above
   },
 
   computeLabelStats: function (labelSet, outerlabelPadding = 1) {
-    const leftLabels = _(labelSet).filter({hemisphere: 'left'}).value()
-    const rightLabels = _(labelSet).filter({hemisphere: 'right'}).value()
+    const leftLabels = _(labelSet).filter({ hemisphere: 'left' }).value()
+    const rightLabels = _(labelSet).filter({ hemisphere: 'right' }).value()
 
     const minDataValue = _(labelSet)
       .map('value')
@@ -2392,12 +2392,12 @@ let labels = {
       .max() || 0
 
     let cumulativeLeftSideLabelHeight = _(leftLabels)
-        .map('height')
-        .sum() + outerlabelPadding * Math.max(0, (leftLabels.length - 1))
+      .map('height')
+      .sum() + outerlabelPadding * Math.max(0, (leftLabels.length - 1))
 
     let cumulativeRightSideLabelHeight = _(rightLabels)
-        .map('height')
-        .sum() + outerlabelPadding * Math.max(0, (rightLabels.length - 1))
+      .map('height')
+      .sum() + outerlabelPadding * Math.max(0, (rightLabels.length - 1))
 
     let fontSizeDistribution = _(labelSet).countBy('fontSize')
 
@@ -2468,8 +2468,8 @@ let labels = {
       )
 
       const newLabelIsInOrderVertically = (newLabelShouldBeBelowPreviousLabel)
-       ? newInnerLabel.isLowerThan(previousLabel)
-       : newInnerLabel.isHigherThan(previousLabel)
+        ? newInnerLabel.isLowerThan(previousLabel)
+        : newInnerLabel.isHigherThan(previousLabel)
 
       if (newInnerLabel.intersectsWith(previousLabel, 2) || !newLabelIsInOrderVertically) {
         if (newLabelShouldBeBelowPreviousLabel) {
@@ -2500,7 +2500,7 @@ let labels = {
       }
     }
 
-    const relativeToCenter = ({x, y}) => { return { x: x - pieCenter.x, y: y - pieCenter.y } }
+    const relativeToCenter = ({ x, y }) => { return { x: x - pieCenter.x, y: y - pieCenter.y } }
 
     const topLeftCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.topLeftCoord), 0, innerRadius, 0, 360)
     const topRightCoordIsInArc = ptInArc(relativeToCenter(newInnerLabel.topRightCoord), 0, innerRadius, 0, 360)

@@ -39,7 +39,7 @@ let helpers = {
     } else {
       console.error('error: getDimensions() ' + id + ' not found.')
     }
-    return {w: w, h: h}
+    return { w: w, h: h }
   },
 
   /**
@@ -135,7 +135,7 @@ let helpers = {
 
   // for debugging
   showLine: function (svg, coords, color = 'black', note = '') {
-    const path = 'M' + coords.map(({x, y}) => `${x} ${y}`).join(' L')
+    const path = 'M' + coords.map(({ x, y }) => `${x} ${y}`).join(' L')
     svg.append('path')
       .attr('d', path)
       .attr('stroke', color)

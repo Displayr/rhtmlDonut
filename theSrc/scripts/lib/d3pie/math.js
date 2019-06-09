@@ -33,19 +33,19 @@ let math = {
    * @returns {Array}
    */
   rotate: function (pointToBeRotated, originPointToRotateAround, angleInDegrees) {
-    const {x, y} = pointToBeRotated
-    const {x: xm, y: ym} = originPointToRotateAround
+    const { x, y } = pointToBeRotated
+    const { x: xm, y: ym } = originPointToRotateAround
     const angleInRadians = math.toRadians(angleInDegrees)
 
     // subtract reference point, so that reference point is translated to origin and add it in the end again
     let xr = (x - xm) * Math.cos(angleInRadians) - (y - ym) * Math.sin(angleInRadians) + xm
     let yr = (x - xm) * Math.sin(angleInRadians) + (y - ym) * Math.cos(angleInRadians) + ym
 
-    return {x: xr, y: yr}
+    return { x: xr, y: yr }
   },
 
-// https://stackoverflow.com/questions/385305/efficient-maths-algorithm-to-calculate-intersections
-  computeIntersection: function ([{x: x1, y: y1}, {x: x2, y: y2}], [{x: x3, y: y3}, {x: x4, y: y4}]) {
+  // https://stackoverflow.com/questions/385305/efficient-maths-algorithm-to-calculate-intersections
+  computeIntersection: function ([{ x: x1, y: y1 }, { x: x2, y: y2 }], [{ x: x3, y: y3 }, { x: x4, y: y4 }]) {
     if (!_.every([x1, y1, x2, y2, x3, y3, x4, y4], x => !_.isNaN(x))) {
       throw new Error(`computeIntersection called with NaN`)
     }
@@ -68,7 +68,7 @@ let math = {
       const x = (a * x34 - b * x12) / c
       const y = (a * y34 - b * y12) / c
 
-      return {x, y}
+      return { x, y }
     }
   },
 
