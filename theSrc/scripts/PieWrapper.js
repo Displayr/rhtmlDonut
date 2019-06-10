@@ -4,7 +4,7 @@ import d3 from 'd3'
 import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
-import {Footer, Title, Subtitle} from 'rhtmlParts'
+import { Footer, Title, Subtitle } from 'rhtmlParts'
 import * as rootLog from 'loglevel'
 const layoutLogger = rootLog.getLogger('layout')
 
@@ -26,7 +26,7 @@ class PieWrapper {
   }
 
   draw (element) {
-    const {width, height} = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
+    const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
     console.log(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
     $(element).find('*').remove()
 
@@ -115,7 +115,7 @@ class PieWrapper {
     this._drawPie({ element: pieGroup, height: donutPlotHeight, width })
   }
 
-  _drawPie ({element, width, height}) {
+  _drawPie ({ element, width, height }) {
     let dataFormatter = null
     if (this._settings.valuesDec >= 0) {
       dataFormatter = d3.format(',.' + this._settings.valuesDec + 'f')

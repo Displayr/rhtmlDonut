@@ -75,11 +75,11 @@ let labels = {
       let r1 = 0
       let r2 = pie.innerRadius
 
-      const topLeftPoint = {x: center.x + bb.x, y: center.y + bb.y}
+      const topLeftPoint = { x: center.x + bb.x, y: center.y + bb.y }
       const topLeftPointIsInsideArc = ptInArc(topLeftPoint, r1, r2, stAngle, edAngle)
-      const topRightPointIsInsideArc = ptInArc({x: topLeftPoint.x + bb.width, y: topLeftPoint.y}, r1, r2, stAngle, edAngle)
-      const bottomLeftIsInsideArc = ptInArc({x: topLeftPoint.x, y: topLeftPoint.y + bb.height}, r1, r2, stAngle, edAngle)
-      const bottomRightIsInsideArc = ptInArc({x: topLeftPoint.x + bb.width, y: topLeftPoint.y + bb.height}, r1, r2, stAngle, edAngle)
+      const topRightPointIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y }, r1, r2, stAngle, edAngle)
+      const bottomLeftIsInsideArc = ptInArc({ x: topLeftPoint.x, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
+      const bottomRightIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
 
       labelLogger.debug(`checkBounds on group label ${labelText}`)
       labelLogger.debug(`  topLeftPointIsInsideArc: ${topLeftPointIsInsideArc}`)
@@ -204,7 +204,7 @@ let labels = {
     }
     let labelGroupDims = labelGroupNode.getBBox()
 
-    let angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalSize, {midpoint: true})
+    let angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalSize, { midpoint: true })
 
     let pointAt90Degrees = { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.innerRadius * 0.6 }
     let newCoords = math.rotate(pointAt90Degrees, pie.pieCenter, angle - 90)

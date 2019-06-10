@@ -39,12 +39,12 @@ function getLabelDimensionsUsingSvgApproximation (parentContainer, inputString, 
     .style('dominant-baseline', 'text-before-edge')
     .text(inputString)
 
-  const {x, y, width, height} = tempText.node().getBBox()
+  const { x, y, width, height } = tempText.node().getBBox()
   parentContainer.selectAll('.tempLabel').remove()
 
   // NB on some window sizes getBBox will return negative y offsets. Add them to returned value for consistent behaviour
   // across all window sizes
-  return {width: width + x, height: height + y}
+  return { width: width + x, height: height + y }
 }
 
 function wordTokenizer (inputString) {

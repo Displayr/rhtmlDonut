@@ -85,7 +85,7 @@ class d3pie {
     })
 
     let pieDimensions = {}
-    let labelStats = {maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0}
+    let labelStats = { maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0 }
 
     if (this.options.labels.enabled) {
       const initialLabelSet = outerLabeller.buildLabelSet({

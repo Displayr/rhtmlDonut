@@ -27,7 +27,7 @@ class InnerLabel {
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeLineConnectorCoord () {
-    const {height, width, hemisphere, topLeftCoord} = this
+    const { height, width, hemisphere, topLeftCoord } = this
 
     const lineConnectorCoord = {}
     lineConnectorCoord.y = topLeftCoord.y + 0.5 * height
@@ -41,7 +41,7 @@ class InnerLabel {
 
   // NB _computeTopLeftCoord must be inverse of _computeLineConnectorCoord
   _computeTopLeftCoord () {
-    const {height, width, hemisphere, lineConnectorCoord} = this
+    const { height, width, hemisphere, lineConnectorCoord } = this
 
     const topLeftCoord = {}
     topLeftCoord.y = lineConnectorCoord.y - 0.5 * height
@@ -61,7 +61,7 @@ class InnerLabel {
   }
 
   setTopMedialPoint (coord) {
-    const {width, hemisphere} = this
+    const { width, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'right')
       ? { x: coord.x - width, y: coord.y }
       : { x: coord.x, y: coord.y }
@@ -71,7 +71,7 @@ class InnerLabel {
   }
 
   setBottomMedialPoint (coord) {
-    const {width, height, hemisphere} = this
+    const { width, height, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'right')
       ? { y: coord.y - height, x: coord.x - width }
       : { y: coord.y - height, x: coord.x }
@@ -82,9 +82,9 @@ class InnerLabel {
 
   // https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine (Cosine Rule)
   _computeAngleBetweenLabelLineAndRadialLine () {
-    const {lineConnectorCoord, pieCenter, innerRadius, segmentAngleMidpoint} = this
+    const { lineConnectorCoord, pieCenter, innerRadius, segmentAngleMidpoint } = this
 
-    const pointAtZeroDegrees = {x: pieCenter.x - innerRadius, y: pieCenter.y}
+    const pointAtZeroDegrees = { x: pieCenter.x - innerRadius, y: pieCenter.y }
     const innerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
 
     // consider a triangle with three sides
