@@ -266,6 +266,8 @@ class PieWrapper {
 
     if (this._settings.groups) {
       this.groupData = this._processGroupConfig()
+    } else {
+      this.groupData = []
     }
 
     if (!this._settings.valuesColor) {
