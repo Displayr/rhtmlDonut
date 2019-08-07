@@ -156,7 +156,8 @@ class PieWrapper {
           liftOffAngle: this._settings.labelLiftOffAngle,
           maxVerticalOffset: this._settings.labelMaxVerticalOffset,
           labelMaxLineAngle: this._settings.labelMaxLineAngle,
-          maxWidth: this._settings.labelsMaxWidth
+          maxWidth: this._settings.labelsMaxWidth,
+          maxLines: this._settings.labelsMaxLines
         },
         mainLabel: {
           color: this._settings.labelsColor,
@@ -275,7 +276,7 @@ class PieWrapper {
     } else {
       const nonHexColors = this._settings.valuesColor.filter((color) => !/^#[a-fA-F0-9]{6}$/.test(color))
       if (nonHexColors.length > 0) {
-        throw new Error(`. Invalid value color(s): [${nonHexColors.join(', ')}]: must be Hex (#rrggbb) format`)
+        throw new Error(`. Invalid value color(s): [${nonHexColors.join(', ').slice(0, 10)}]: must be Hex (#rrggbb) format`)
       }
     }
 

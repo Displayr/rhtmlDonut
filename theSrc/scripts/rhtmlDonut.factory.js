@@ -1,14 +1,23 @@
 import PieWrapper from './PieWrapper'
+import DisplayError from './DisplayError'
 
 module.exports = function (element) {
   let instance = new PieWrapper()
   return {
     renderValue (inputConfig) {
-      instance.setConfig(inputConfig)
-      instance.draw(element)
+      try {
+        instance.setConfig(inputConfig)
+        instance.draw(element)
+      } catch (error) {
+        DisplayError.displayErrorMessage(element, error.message)
+      }
     },
     resize () {
-      instance.resize(element)
+      try {
+        instance.resize(element)
+      } catch (error) {
+        DisplayError.displayErrorMessage(element, error.message)
+      }
     }
   }
 }

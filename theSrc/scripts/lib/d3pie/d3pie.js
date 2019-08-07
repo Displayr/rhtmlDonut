@@ -110,7 +110,8 @@ class d3pie {
         maxFontSize: this.options.labels.mainLabel.fontSize,
         innerPadding: parseFloat(this.options.labels.outer.innerPadding),
         outerPadding: parseFloat(this.options.labels.outer.outerPadding),
-        maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth
+        maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth,
+        maxLabelLines: parseFloat(this.options.labels.outer.maxLines)
       })
 
       labelStats = outerLabeller.computeLabelStats(this.outerLabelData)
