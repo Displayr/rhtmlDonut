@@ -177,8 +177,11 @@ Donut <- function(
     if (length(labels) != length(values))
         stop("length of labels and values must be equal")
 
-    if (!is.null(values.color))
+    if (!is.null(values.color)) {
+        if (length(values.color) != length(values))
+            stop("length of values.color and values must be equal")
         values.color = as.array(values.color)
+    }
     if (!is.null(groups))
         groups = as.array(groups)
     if (!is.null(groups.color)) {
