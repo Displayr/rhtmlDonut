@@ -52,7 +52,9 @@ const defaultSettings = {
       labelMaxLineAngle: 60, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       hideWhenLessThanPercentage: null, // pieWrapper: null HARD CODE (minAngle is used instead) . TODO investigate this variable
       maxWidth: 0.3, // pieWrapper: settings.labelsMaxWidth. R: labels.max.width. wrap label text if label exceeds X% of canvasWidth
-      maxVerticalOffset: null // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90 degree mark
+      maxVerticalOffset: null, // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90
+      // degree mark
+      maxLines: 6 // pieWrapper: settings.labelMaxLines, R: labels.max.lines. Truncate after X vertical lines of text
     },
     mainLabel: { //
       color: '#333333', // pieWrapper: settings.labelsColor, R: labels.font.color

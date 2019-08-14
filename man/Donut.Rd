@@ -11,24 +11,25 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.font.family = "arial", labels.font.color = "#333333",
   labels.font.size = 10, labels.min.font.size = 8,
   labels.padding.inner = 1, labels.padding.outer = 1,
-  labels.max.width = 0.3, labels.offset = 0.1,
+  labels.max.width = 0.3, labels.max.lines = 6, labels.offset = 0.1,
   labels.advanced.offset.yaxis.max = NULL,
-  labels.advanced.liftoff.angle = 30, labels.advanced.line.max.angle = 60,
+  labels.advanced.liftoff.angle = 30,
+  labels.advanced.line.max.angle = 60,
   labels.advanced.removal.tiebreak = "last", tooltips.max.width = 0.3,
   tooltips.max.height = 0.3, tooltips.font.family = "Arial",
-  tooltips.font.size = 10, tooltips.font.color = "#efefef", groups = NULL,
-  groups.color = NULL, groups.order = "initial",
+  tooltips.font.size = 10, tooltips.font.color = "#efefef",
+  groups = NULL, groups.color = NULL, groups.order = "initial",
   groups.font.family = "arial", groups.font.color = "#333333",
   groups.font.size = 10, groups.min.font.size = 8,
   groups.labels.enabled = TRUE, labels.inner = FALSE, footer = "",
   footer.font.family = "Arial", footer.font.size = 8,
-  footer.font.color = rgb(44, 44, 44, maxColorValue = 255), title = NULL,
-  title.font.family = "arial", title.font.size = 16,
+  footer.font.color = rgb(44, 44, 44, maxColorValue = 255),
+  title = NULL, title.font.family = "arial", title.font.size = 16,
   title.font.color = "#333333", title.top.padding = 0, subtitle = "",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
-  subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255), prefix = NULL,
-  suffix = NULL, border.color = "white", gradient = FALSE,
-  inner.radius = 0.8, log.level = "info")
+  subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
+  prefix = NULL, suffix = NULL, border.color = "white",
+  gradient = FALSE, inner.radius = 0.8, log.level = "info")
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -60,6 +61,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{labels.padding.outer}{(optional) Padding between different labels. Default is 1.}
 
 \item{labels.max.width}{(optional) the maximum label width as a proportion of total width. The default is 0.3.}
+
+\item{labels.max.lines}{(optional) the maximum number of vertical lines to allow when wrapping labels. The default is 6.}
 
 \item{labels.offset}{(optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is 0.1.}
 

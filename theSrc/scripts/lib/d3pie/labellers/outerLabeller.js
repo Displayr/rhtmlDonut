@@ -68,7 +68,8 @@ let labels = {
           fontSize: fakeLabel.fontSize,
           fontFamily: fakeLabel.fontFamily,
           maxLabelWidth: parseFloat(pie.options.labels.outer.maxWidth) * pie.options.size.canvasWidth,
-          innerPadding: parseFloat(pie.options.labels.outer.innerPadding)
+          innerPadding: parseFloat(pie.options.labels.outer.innerPadding),
+          maxLabelLines: parseFloat(pie.options.labels.outer.maxLines)
         })
 
         Object.assign(fakeLabel, {
@@ -108,7 +109,8 @@ let labels = {
     innerPadding,
     outerPadding,
     minAngle,
-    maxLabelWidth
+    maxLabelWidth,
+    maxLabelLines
   }) {
     let filteredLabelSet = labelSet.map(label => {
       const { lineHeight, width, height, labelTextLines } = labels.wrapAndFormatLabelUsingSvgApproximation({
@@ -117,7 +119,8 @@ let labels = {
         fontSize: label.fontSize,
         fontFamily: label.fontFamily,
         maxLabelWidth,
-        innerPadding
+        innerPadding,
+        maxLabelLines
       })
 
       return Object.assign(label, {
@@ -158,7 +161,8 @@ let labels = {
               fontSize: newFontSize,
               fontFamily: label.fontFamily,
               maxLabelWidth,
-              innerPadding
+              innerPadding,
+              maxLabelLines
             })
 
             Object.assign(label, {
@@ -2306,9 +2310,10 @@ let labels = {
     fontSize,
     fontFamily,
     innerPadding,
-    maxLabelWidth
+    maxLabelWidth,
+    maxLabelLines
   }) {
-    let lines = splitIntoLines(labelText, maxLabelWidth, fontSize, fontFamily)
+    let lines = splitIntoLines(labelText, maxLabelWidth, fontSize, fontFamily, maxLabelLines)
     const dimensions = lines.map(line => {
       return getLabelDimensionsUsingSvgApproximation(parentContainer, line, fontSize, fontFamily)
     })
