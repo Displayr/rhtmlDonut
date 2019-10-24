@@ -21,10 +21,20 @@ let tt = {
   },
 
   addTooltips: function (pie) {
+    const {
+      backgroundColor,
+      backgroundOpacity,
+      borderRadius,
+      font,
+      fontColor,
+      fontSize,
+      padding
+    } = pie.options.tooltips.styles
+    const getComputedBackgroundColor = (d) => (_.isNull(backgroundColor)) ? d.color : backgroundColor
+
     const maxWidth = parseFloat(pie.options.size.canvasWidth) * parseFloat(pie.options.tooltips.maxWidth)
     const maxHeight = parseFloat(pie.options.size.canvasHeight) * parseFloat(pie.options.tooltips.maxHeight)
-    const maxLines = Math.ceil(maxHeight / parseFloat(pie.options.tooltips.styles.fontSize))
-    const styles = pie.options.tooltips.styles
+    const maxLines = Math.ceil(maxHeight / parseFloat(fontSize))
 
     // group the label groups (label, percentage, value) into a single element for simpler positioning
     let tooltips = d3.select(pie.element).append('g')
@@ -39,32 +49,38 @@ let tt = {
       .style('opacity', 0)
       .append('rect')
       .attr({
-        rx: styles.borderRadius,
-        ry: styles.borderRadius,
-        x: -styles.padding,
-        y: -(styles.fontSize + styles.padding),
-        opacity: styles.backgroundOpacity
+        rx: borderRadius,
+        ry: borderRadius,
+        x: -padding,
+        y: -(fontSize + padding),
+        opacity: backgroundOpacity
       })
-      .style('fill', styles.backgroundColor)
+      .style('fill', getComputedBackgroundColor)
 
     tooltips.selectAll('.' + pie.cssPrefix + 'tooltip')
       .data(pie.options.data.content)
       .append('text')
-      .attr('fill', function (d) { return styles.color })
-      .style('font-size', function (d) { return styles.fontSize })
-      .style('font-family', function (d) { return styles.font })
+      .attr('fill', function (d) {
+        if (_.isNull(fontColor)) {
+          const computedBackgroundColor = getComputedBackgroundColor(d)
+          return getTextColorGivenBackground(computedBackgroundColor, backgroundOpacity)
+        }
+        return fontColor
+      })
+      .style('font-size', fontSize)
+      .style('font-family', font)
       .style('dominant-baseline', 'text-after-edge')
       .style('text-align', 'start')
       .each(function (d) {
         let textElement = d3.select(this)
         const tooltipText = tt.getTooltipText(pie, d)
-        const lines = splitIntoLines(tooltipText, maxWidth, styles.fontSize, styles.font, maxLines)
+        const lines = splitIntoLines(tooltipText, maxWidth, fontSize, font, maxLines)
 
         textElement.text(null)
         _(lines).forEach((lineContent, lineIndex) => {
           textElement.append('tspan')
             .attr('x', 0)
-            .attr('y', lineIndex * (parseFloat(styles.fontSize) + 1))
+            .attr('y', lineIndex * (parseFloat(fontSize) + 1))
             .text(lineContent)
         })
       })
@@ -73,11 +89,11 @@ let tt = {
       .attr({
         width: function (d, i) {
           let dims = helpers.getDimensions(pie.cssPrefix + 'tooltip' + i)
-          return dims.w + (2 * styles.padding)
+          return dims.w + (2 * padding)
         },
         height: function (d, i) {
           let dims = helpers.getDimensions(pie.cssPrefix + 'tooltip' + i)
-          return dims.h + (2 * styles.padding)
+          return dims.h + (2 * padding)
         }
       })
 
@@ -94,32 +110,38 @@ let tt = {
         .style('opacity', 0)
         .append('rect')
         .attr({
-          rx: styles.borderRadius,
-          ry: styles.borderRadius,
-          x: -styles.padding,
-          y: -(styles.fontSize + styles.padding),
-          opacity: styles.backgroundOpacity
+          rx: borderRadius,
+          ry: borderRadius,
+          x: -padding,
+          y: -(fontSize + padding),
+          opacity: backgroundOpacity
         })
-        .style('fill', styles.backgroundColor)
+        .style('fill', getComputedBackgroundColor)
 
       groupTips.selectAll('.' + pie.cssPrefix + 'gtooltip')
         .data(pie.options.groups.content)
         .append('text')
-        .attr('fill', function (d) { return styles.color })
-        .style('font-size', function (d) { return styles.fontSize })
-        .style('font-family', function (d) { return styles.font })
+        .attr('fill', function (d) {
+          if (_.isNull(fontColor)) {
+            const computedBackgroundColor = getComputedBackgroundColor(d)
+            return getTextColorGivenBackground(computedBackgroundColor, backgroundOpacity)
+          }
+          return fontColor
+        })
+        .style('font-size', fontSize)
+        .style('font-family', font)
         .style('dominant-baseline', 'text-after-edge')
         .style('text-align', 'start')
         .each(function (d) {
           let textElement = d3.select(this)
           const tooltipText = tt.getTooltipText(pie, d)
-          const lines = splitIntoLines(tooltipText, maxWidth, styles.fontSize, styles.font, maxLines)
+          const lines = splitIntoLines(tooltipText, maxWidth, fontSize, font, maxLines)
 
           textElement.text(null)
           _(lines).forEach((lineContent, lineIndex) => {
             textElement.append('tspan')
               .attr('x', 0)
-              .attr('y', lineIndex * (parseFloat(styles.fontSize) + 1))
+              .attr('y', lineIndex * (parseFloat(fontSize) + 1))
               .text(lineContent)
           })
         })
@@ -128,11 +150,11 @@ let tt = {
         .attr({
           width: function (d, i) {
             let dims = helpers.getDimensions(pie.cssPrefix + 'gtooltip' + i)
-            return dims.w + (2 * styles.padding)
+            return dims.w + (2 * padding)
           },
           height: function (d, i) {
             let dims = helpers.getDimensions(pie.cssPrefix + 'gtooltip' + i)
-            return dims.h + (2 * styles.padding)
+            return dims.h + (2 * padding)
           }
         })
     }
@@ -174,6 +196,29 @@ let tt = {
         let y = pie.options.size.canvasHeight + 1000
         return 'translate(' + x + ',' + y + ')'
       })
+  }
+}
+
+// calculate color contrast
+// http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
+const rgbRegex = new RegExp(/#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/, 'i')
+function getTextColorGivenBackground (backgroundColor, backgroundOpacity) {
+  const rgbMatch = backgroundColor.match(rgbRegex)
+  let red = null
+  let green = null
+  let blue = null
+  let o = 255
+  if (rgbMatch) {
+    red = parseInt(rgbMatch[1], 16)
+    green = parseInt(rgbMatch[2], 16)
+    blue = parseInt(rgbMatch[3], 16)
+    o = Math.round(((red * 299) + (green * 587) + (blue * 114)) / 1000)
+  }
+
+  if (backgroundOpacity === 0) {
+    return 'black'
+  } else {
+    return (o > 125) ? 'black' : 'white'
   }
 }
 

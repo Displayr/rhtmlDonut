@@ -1,4 +1,5 @@
 {
+  "description": "at dimensions of 1000x1000 this config will cause lots of tooltips to be required. The tooltips should be configured in a seperate json file as this is just a base",
   "values": [
     100,
     99,
@@ -150,9 +151,6 @@
       2,
       1
     ],
-    "groupLabelsMinFontSize": 8,
-    "tooltipFontFamily": "georgia",
-    "tooltipFontSize": 36,
-    "tooltipFontColor": "pink"
+    "groupLabelsMinFontSize": 8
   }
 }

@@ -110,14 +110,15 @@ const defaultSettings = {
     string: '', // pieWrapper: HARD CODE
     placeholderParser: null, // pieWrapper: HARD CODE
     styles: { //
-      fadeInSpeed: 1, // pieWrapper: HARD CODE
-      backgroundColor: '#000000', // pieWrapper: HARD CODE
-      backgroundOpacity: 0.5, // pieWrapper: HARD CODE
+      backgroundColor: null, // pieWrapper: _settings.tooltipBackgroundColor, R: tooltips.bg.color
+      backgroundOpacity: 0.8, // pieWrapper: HARD CODE
       borderRadius: 2, // pieWrapper: HARD CODE
+      fadeInSpeed: 1, // pieWrapper: HARD CODE
       font: 'arial', // pieWrapper: settings.tooltipFontFamily, R: tooltips.font.family
+      fontColor: null, // pieWrapper: settings.tooltipFontColor, R: tooltips.font.color
       fontSize: 10, // pieWrapper: settings.tooltipFontSize, R: tooltips.font.size
-      color: '#efefef', // pieWrapper: settings.tooltipFontColor, R: tooltips.font.color
       padding: 4 // pieWrapper: HARD CODE
+
     } //
   }, //
   misc: { //

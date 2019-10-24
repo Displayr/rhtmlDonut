@@ -174,9 +174,11 @@ class PieWrapper {
         maxWidth: this._settings.tooltipMaxWidth,
         maxHeight: this._settings.tooltipMaxHeight,
         styles: {
+          backgroundColor: this._settings.tooltipBackgroundColor,
+          backgroundOpacity: this._settings.tooltipBackgroundOpacity,
           font: this._settings.tooltipFontFamily,
-          fontSize: this._settings.tooltipFontSize,
-          color: this._settings.tooltipFontColor
+          fontColor: this._settings.tooltipFontColor,
+          fontSize: this._settings.tooltipFontSize
         }
       },
       misc: {
