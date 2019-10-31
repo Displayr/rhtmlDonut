@@ -3,5 +3,7 @@ type: single_page_one_example_per_config
 width: 1000
 height: 1000
 rowSize: 1
+data: data.test_plan.tooltip_base
 config:
-  - data.test_plan.tooltip_styling
+  - config.tooltip_auto_color
+  - config.tooltip_pink_georgia_36

@@ -38,8 +38,19 @@ Feature: Tooltip Interactions
     Then the "interaction_hover_segment_group_with_short_wrapped_tooltip" snapshot matches the baseline
 
   Scenario: Scenario: Tooltip styling is configurable
-    Given I am viewing "data.test_plan.tooltip_styling" with dimensions 1000x1000
+    Given I am viewing "data.test_plan.tooltip_base|config.tooltip_pink_georgia_36" with dimensions 1000x1000
     When I hover over segment 4
     Then the "interaction_hover_segment_with_tooltip_styling" snapshot matches the baseline
     When I hover over group segment 2
     Then the "interaction_hover_segment_group_with_tooltip_styling" snapshot matches the baseline
+
+  Scenario: Scenario: Tooltip autocolor works
+    Given I am viewing "data.test_plan.tooltip_base|config.tooltip_auto_color" with dimensions 1000x1000
+    When I hover over segment 4
+    Then the "interaction_hover_segment_with_tooltip_autocolor_segment_4" snapshot matches the baseline
+    When I hover over segment 14
+    Then the "interaction_hover_segment_with_tooltip_autocolor_segment_14" snapshot matches the baseline
+    When I hover over group segment 2
+    Then the "interaction_hover_segment_group_with_tooltip_autocolor_group_2" snapshot matches the baseline
+    When I hover over group segment 4
+    Then the "interaction_hover_segment_group_with_tooltip_autocolor_group_4" snapshot matches the baseline

@@ -25,7 +25,9 @@
 #' @param tooltips.max.height (optional) the maximum tooltip height as a proportion of total height. The default is 0.3.
 #' @param tooltips.font.family (optional) font family for tooltips. The default is "Arial".
 #' @param tooltips.font.size (optional) font size for tooltips. The default is 10.
-#' @param tooltips.font.color (optional) font color for tooltips. The default is '#efefef'.
+#' @param tooltips.font.color (optional) font hex color for tooltips. The default is NULL. If set to NULL, the color will be set to black or white automatically based on the background color.
+#' @param tooltips.bg.color (optional) hex color code. The default is NULL. If set to NULL, the background color is the same as the segment.
+#' @param tooltips.bg.opacity (optional) tooltip background opacity. A value between 0 and 1. Default is 0.8.
 #' @param groups (optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.
 #' @param groups.font.family (optional) font family for \code{groups}. The default is "Arial".
 #' @param groups.font.size (optional) desired font size in pixels for \code{groups}. The default is 10.
@@ -53,6 +55,7 @@
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.
 #' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
+
 
 
 #' @examples
@@ -111,7 +114,9 @@ Donut <- function(
     tooltips.max.height = 0.3,
     tooltips.font.family = "Arial",
     tooltips.font.size = 10,
-    tooltips.font.color = "#efefef",
+    tooltips.font.color = NULL,
+    tooltips.bg.color = NULL,
+    tooltips.bg.opacity = 0.8,
     groups = NULL,
     groups.color = NULL,
     groups.order = "initial",
@@ -437,6 +442,8 @@ Donut <- function(
         tooltipFontFamily = tooltips.font.family,
         tooltipFontSize = tooltips.font.size,
         tooltipFontColor = tooltips.font.color,
+        tooltipBackgroundColor = tooltips.bg.color,
+        tooltipBackgroundOpacity = tooltips.bg.opacity,
         groups = groups, # length = n
         groupsFont = groups.font.family, # string
         groupsFontColor = groups.font.color,

@@ -17,8 +17,9 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.advanced.line.max.angle = 60,
   labels.advanced.removal.tiebreak = "last", tooltips.max.width = 0.3,
   tooltips.max.height = 0.3, tooltips.font.family = "Arial",
-  tooltips.font.size = 10, tooltips.font.color = "#efefef",
-  groups = NULL, groups.color = NULL, groups.order = "initial",
+  tooltips.font.size = 10, tooltips.font.color = NULL,
+  tooltips.bg.color = NULL, tooltips.bg.opacity = 0.8, groups = NULL,
+  groups.color = NULL, groups.order = "initial",
   groups.font.family = "arial", groups.font.color = "#333333",
   groups.font.size = 10, groups.min.font.size = 8,
   groups.labels.enabled = TRUE, labels.inner = FALSE, footer = "",
@@ -82,7 +83,11 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{tooltips.font.size}{(optional) font size for tooltips. The default is 10.}
 
-\item{tooltips.font.color}{(optional) font color for tooltips. The default is '#efefef'.}
+\item{tooltips.font.color}{(optional) font hex color for tooltips. The default is NULL. If set to NULL, the color will be set to black or white automatically based on the background color.}
+
+\item{tooltips.bg.color}{(optional) hex color code. The default is NULL. If set to NULL, the background color is the same as the segment.}
+
+\item{tooltips.bg.opacity}{(optional) tooltip background opacity. A value between 0 and 1. Default is 0.8.}
 
 \item{groups}{(optional) character vector that specifies the group of \code{values}. Length must be the same as \code{values}. If this is set, the inner region of the pie will be filled to indicate groups.}
 
