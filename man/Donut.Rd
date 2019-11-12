@@ -29,7 +29,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   title.font.color = "#333333", title.top.padding = 0, subtitle = "",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
-  prefix = NULL, suffix = NULL, border.color = "white",
+  prefix = NULL, suffix = NULL, border.color = "#ffffff",
   gradient = FALSE, inner.radius = 0.8, log.level = "info")
 }
 \arguments{
@@ -137,7 +137,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{suffix}{(optional) character, suffix for \code{labels}}
 
-\item{border.color}{(optional) c("white", "none", hex value)}
+\item{border.color}{(optional) hex value, or "none"}
 
 \item{gradient}{(optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.}
 

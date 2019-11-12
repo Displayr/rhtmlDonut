@@ -51,7 +51,7 @@
 #' @param footer.font.size is the font size of the footer text
 #' @param prefix (optional) character, prefix for \code{labels}
 #' @param suffix (optional) character, suffix for \code{labels}
-#' @param border.color (optional) c("white", "none", hex value)
+#' @param border.color (optional) hex value, or "none"
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.
 #' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
@@ -141,7 +141,7 @@ Donut <- function(
     subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
     prefix = NULL,
     suffix = NULL,
-    border.color = "white",
+    border.color = "#ffffff",
     gradient = FALSE, # not used by pieChart.R
     inner.radius = 0.8,
     log.level = "info") {

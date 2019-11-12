@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
+    "color-name": "^1.1.4",
     "d3": "3.5.11",
     "es6-promise": "^3.2.1",
     "jquery": "^3.3.1",

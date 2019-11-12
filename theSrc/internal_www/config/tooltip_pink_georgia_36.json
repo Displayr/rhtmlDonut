@@ -1,7 +1,7 @@
 {
   "settings": {
     "tooltipBackgroundColor": "blue",
-    "tooltipBackgroundOpacity": 0.8,
+    "tooltipBackgroundOpacity": 0.5,
     "tooltipFontColor": "pink",
     "tooltipFontFamily": "georgia",
     "tooltipFontSize": 36
