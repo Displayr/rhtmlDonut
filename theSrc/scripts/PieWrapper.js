@@ -6,6 +6,11 @@ import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
 import * as rootLog from 'loglevel'
+import {
+  isHexColor,
+  isValidColorName,
+  getHexColorFromString
+} from './colorUtils'
 const layoutLogger = rootLog.getLogger('layout')
 
 class PieWrapper {
@@ -275,12 +280,46 @@ class PieWrapper {
 
     if (!this._settings.valuesColor) {
       this._settings.valuesColor = this._computeColors()
-    } else {
-      const nonHexColors = this._settings.valuesColor.filter((color) => !/^#[a-fA-F0-9]{6}$/.test(color))
-      if (nonHexColors.length > 0) {
-        throw new Error(`. Invalid value color(s): [${nonHexColors.join(', ').slice(0, 10)}]: must be Hex (#rrggbb) format`)
-      }
     }
+
+    const colorArrays = [
+      'groupsColor',
+      'valuesColor'
+    ]
+
+    _(colorArrays).each(colorArray => {
+      const inputColorArray = this._settings[colorArray]
+      if (_.isNull(inputColorArray) || _.isUndefined(inputColorArray)) { return }
+      this._settings[colorArray] = inputColorArray.map(color => {
+        if (isHexColor(color)) { return color }
+        if (isValidColorName(color)) { return getHexColorFromString(color) }
+        return color
+      })
+      let nonHexColors = this._settings[colorArray].filter(color => !isHexColor(color))
+      if (nonHexColors.length > 0) {
+        throw new Error(`. Invalid value in setting ${colorArray}: [${nonHexColors.join(', ').slice(0, 10)}]: must be Hex (#rrggbb) format or valid HTML color`)
+      }
+    })
+
+    const colorFields = [
+      'borderColor',
+      'footerFontColor',
+      'groupsFontColor',
+      'labelsColor',
+      'subtitleFontColor',
+      'titleFontColor',
+      'tooltipBackgroundColor',
+      'tooltipFontColor'
+    ]
+
+    _(colorFields).each(colorField => {
+      const color = this._settings[colorField]
+      if (_.isNull(color) || _.isUndefined(color) || color === 'none') { return }
+      if (isHexColor(color)) { return }
+      if (isValidColorName(color)) { this._settings[colorField] = getHexColorFromString(color) } else {
+        throw new Error(`. Invalid value in setting ${colorField}: '${color}': must be Hex (#rrggbb) format or valid HTML color`)
+      }
+    })
 
     this.pieData = []
     for (let i = 0; i < this._valuesCount; i++) {
