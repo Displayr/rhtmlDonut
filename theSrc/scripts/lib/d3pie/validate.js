@@ -41,7 +41,7 @@ const validate = {
         continue
       }
       if (options.data.content[i].value <= 0) {
-        console.error('not valid - should have positive value: ', options.data.content[i])
+        console.log('not valid - should have positive value: ', options.data.content[i])
         continue
       }
       data.push(options.data.content[i])
