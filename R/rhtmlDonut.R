@@ -186,15 +186,30 @@ Donut <- function(
         if (length(values.color) != length(values))
             stop("length of values.color and values must be equal")
         values.color = as.array(values.color)
+        checkHexColor(values.color)
     }
     if (!is.null(groups))
         groups = as.array(groups)
     if (!is.null(groups.color)) {
         groups.color = as.array(groups.color)
-        if (!all(grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", groups.color))) {
-            stop("Group colors must be in hex format, e.g.: c('#beefee', '#f00')")
-        }
+        checkHexColor(groups.color, "outer ring")
     }
+    if (!is.null(labels.font.color))
+        checkHexColor(labels.font.color, "labels")
+    if (!is.null(tooltips.font.color))
+        checkHexColor(tooltips.font.color, "hovertext")
+    if (!is.null(tooltips.bg.color))
+        checkHexColor(tooltips.bg.color, "hovertext background")
+    if (!is.null(groups.font.color))
+        checkHexColor(groups.font.color, "group labels")
+    if (!is.null(title.font.color))
+        checkHexColor(title.font.color, "title")
+    if (!is.null(subtitle.font.color))
+        checkHexColor(subtitle.font.color, "subtitle")
+    if (!is.null(footer.font.color))
+        checkHexColor(footer.font.color, "footer")
+    if (!is.null(border.color) && border.color != "None")
+        checkHexColor(border.color, "border")
 
     val.perc = values/sum(values)
     vmax = max(val.perc)
@@ -494,4 +509,23 @@ Donut <- function(
         ),
         package = "rhtmlDonut"
     )
+}
+
+checkHexColor <- function(hex.colors, input.name = NULL)
+{
+    is.invalid <- !grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", hex.colors)
+    if (any(is.invalid))
+    {
+        n.invalid <- sum(is.invalid)
+        msg.prefix <- paste0("The following input ",
+                             ngettext(n.invalid, "color", "colors"))
+        if (!is.null(input.name))
+            msg.prefix <- paste0(msg.prefix, " for the ", input.name)
+
+        stop(msg.prefix, ngettext(n.invalid, " has", " have"),
+             " an invalid hex format: ",
+             paste0(hex.colors[is.invalid], collapse = ", "),
+             ". A valid hex color consists of the character # followed by ",
+             "either 3 or 6 characters from 0-9 and A-F, e.g., #ABC123.")
+    }
 }
