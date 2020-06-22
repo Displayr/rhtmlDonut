@@ -186,30 +186,30 @@ Donut <- function(
         if (length(values.color) != length(values))
             stop("length of values.color and values must be equal")
         values.color = as.array(values.color)
-        checkHexColor(values.color)
+        checkColor(values.color)
     }
     if (!is.null(groups))
         groups = as.array(groups)
     if (!is.null(groups.color)) {
         groups.color = as.array(groups.color)
-        checkHexColor(groups.color, "outer ring")
+        checkColor(groups.color, "outer ring")
     }
     if (!is.null(labels.font.color))
-        checkHexColor(labels.font.color, "labels")
+        checkColor(labels.font.color, "labels")
     if (!is.null(tooltips.font.color))
-        checkHexColor(tooltips.font.color, "hovertext")
+        checkColor(tooltips.font.color, "hovertext")
     if (!is.null(tooltips.bg.color))
-        checkHexColor(tooltips.bg.color, "hovertext background")
+        checkColor(tooltips.bg.color, "hovertext background")
     if (!is.null(groups.font.color))
-        checkHexColor(groups.font.color, "group labels")
+        checkColor(groups.font.color, "group labels")
     if (!is.null(title.font.color))
-        checkHexColor(title.font.color, "title")
+        checkColor(title.font.color, "title")
     if (!is.null(subtitle.font.color))
-        checkHexColor(subtitle.font.color, "subtitle")
+        checkColor(subtitle.font.color, "subtitle")
     if (!is.null(footer.font.color))
-        checkHexColor(footer.font.color, "footer")
+        checkColor(footer.font.color, "footer")
     if (!is.null(border.color) && border.color != "None")
-        checkHexColor(border.color, "border")
+        checkColor(border.color, "border")
 
     val.perc = values/sum(values)
     vmax = max(val.perc)
@@ -511,9 +511,11 @@ Donut <- function(
     )
 }
 
-checkHexColor <- function(hex.colors, input.name = NULL)
+checkColor <- function(colors, input.name = NULL)
 {
-    is.invalid <- !grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", hex.colors)
+    is.invalid <- !(gsub(" ", "", tolower(colors)) %in% .html.colors) &
+                  !grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", colors)
+
     if (any(is.invalid))
     {
         n.invalid <- sum(is.invalid)
@@ -522,10 +524,48 @@ checkHexColor <- function(hex.colors, input.name = NULL)
         if (!is.null(input.name))
             msg.prefix <- paste0(msg.prefix, " for the ", input.name)
 
-        stop(msg.prefix, ngettext(n.invalid, " has", " have"),
-             " an invalid hex format: ",
-             paste0(hex.colors[is.invalid], collapse = ", "),
-             ". A valid hex color consists of the character # followed by ",
+        stop(msg.prefix, ngettext(n.invalid, " is", " are"),
+             " invalid: ",
+             paste0(colors[is.invalid], collapse = ", "),
+             ". Colors need to be a valid HTML color ",
+             "(https://www.w3schools.com/colors/colors_names.asp) or a valid ",
+             "hex color consisting of the character # followed by ",
              "either 3 or 6 characters from 0-9 and A-F, e.g., #ABC123.")
     }
 }
+
+.html.colors <- c("aliceblue", "antiquewhite", "aqua", "aquamarine",
+                  "azure", "beige", "bisque", "black", "blanchedalmond",
+                  "blue", "blueviolet", "brown", "burlywood", "cadetblue",
+                  "chartreuse", "chocolate", "coral", "cornflowerblue",
+                  "cornsilk", "crimson", "cyan", "darkblue", "darkcyan",
+                  "darkgoldenrod", "darkgray", "darkgreen", "darkkhaki",
+                  "darkmagenta", "darkolivegreen", "darkorange",
+                  "darkorchid", "darkred", "darksalmon", "darkseagreen",
+                  "darkslateblue", "darkslategray", "darkturquoise",
+                  "darkviolet", "deeppink", "deepskyblue", "dimgray",
+                  "dodgerblue", "firebrick", "floralwhite", "forestgreen",
+                  "fuchsia", "gainsboro", "ghostwhite", "gold", "goldenrod",
+                  "gray", "green", "greenyellow", "honeydew", "hotpink",
+                  "indianred", "indigo", "ivory", "khaki", "lavender",
+                  "lavenderblush", "lawngreen", "lemonchiffon", "lightblue",
+                  "lightcoral", "lightcyan", "lightgoldenrodyellow",
+                  "lightgrey", "lightgreen", "lightpink", "lightsalmon",
+                  "lightseagreen", "lightskyblue", "lightslategray",
+                  "lightsteelblue", "lightyellow", "lime", "limegreen",
+                  "linen", "magenta", "maroon", "mediumaquamarine",
+                  "mediumblue", "mediumorchid", "mediumpurple",
+                  "mediumseagreen", "mediumslateblue", "mediumspringgreen",
+                  "mediumturquoise", "mediumvioletred", "midnightblue",
+                  "mintcream", "mistyrose", "moccasin", "navajowhite",
+                  "navy", "oldlace", "olive", "olivedrab", "orange",
+                  "orangered", "orchid", "palegoldenrod", "palegreen",
+                  "paleturquoise", "palevioletred", "papayawhip",
+                  "peachpuff", "peru", "pink", "plum", "powderblue",
+                  "purple", "rebeccapurple", "red", "rosybrown",
+                  "royalblue", "saddlebrown", "salmon", "sandybrown",
+                  "seagreen", "seashell", "sienna", "silver", "skyblue",
+                  "slateblue", "slategray", "snow", "springgreen",
+                  "steelblue", "tan", "teal", "thistle", "tomato",
+                  "turquoise", "violet", "wheat", "white", "whitesmoke",
+                  "yellow", "yellowgreen")
