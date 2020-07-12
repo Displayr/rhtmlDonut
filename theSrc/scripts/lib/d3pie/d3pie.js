@@ -84,10 +84,14 @@ class d3pie {
       if (!_.has(datum, 'id')) { datum.id = i }
     })
 
+    let startTime = Date.now()
+    let durations = {}
+
     let pieDimensions = {}
     let labelStats = { maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0 }
 
     if (this.options.labels.enabled) {
+      const buildLabelSet = Date.now()
       const initialLabelSet = outerLabeller.buildLabelSet({
         totalSize: this.totalSize,
         minAngle: this.options.data.minAngle,
@@ -100,7 +104,9 @@ class d3pie {
         displaySuffix: this.options.data.suffix,
         innerPadding: parseFloat(this.options.labels.outer.innerPadding)
       })
+      durations.buildLabelSet = Date.now() - buildLabelSet
 
+      const preproccessLabelSet = Date.now()
       this.outerLabelData = outerLabeller.preprocessLabelSet({
         parentContainer: this.svg,
         labelSet: initialLabelSet,
@@ -113,8 +119,11 @@ class d3pie {
         maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth,
         maxLabelLines: parseFloat(this.options.labels.outer.maxLines)
       })
+      durations.preproccessLabelSet = Date.now() - preproccessLabelSet
 
+      const computeLabelStats = Date.now()
       labelStats = outerLabeller.computeLabelStats(this.outerLabelData)
+      durations.computeLabelStats = Date.now() - computeLabelStats
 
       const extraVerticalSpace = (_.get(labelStats.densities, 'top') > 8)
         ? 2 * labelStats.maxLabelHeight
@@ -189,7 +198,9 @@ class d3pie {
     // TODO this is hard coded to false in R wrapper. Can delete
     // now create the pie chart segments, and gradients if the user desired
     if (this.options.misc.gradient.enabled) {
+      const startGradients = Date.now()
       segments.addGradients(this)
+      durations.gradients = Date.now() - startGradients
     }
     if (redraw) {
       this.options.effects.load.effect = 'none'
@@ -203,16 +214,22 @@ class d3pie {
     if (this.options.labels.outer.debugDrawFitLines) {
       outerLabeller.debugDrawFitLines(this)
     } else if (this.options.labels.enabled) {
+      const startLabelling = Date.now()
       outerLabeller.doLabelling(this)
+      durations.outer_labelling = Date.now() - startLabelling
     }
 
     if (this.options.groups.content && this.options.groups.labelsEnabled) {
+      const startLabelling = Date.now()
       groupLabeller.doLabelling(this)
+      durations.group_labelling = Date.now() - startLabelling
     }
 
     // add and position the tooltips
     if (this.options.tooltips.enabled) {
+      const startTooltips = Date.now()
       tooltip.addTooltips(this)
+      durations.tooltips = Date.now() - startTooltips
     }
 
     // position the title and subtitle
@@ -221,6 +238,10 @@ class d3pie {
     if (this.options.debug.draw_placement_lines) {
       outerLabeller.drawPlacementLines(this)
     }
+
+    durations.totalDuration = Date.now() - startTime
+    // TODO root logger is not logging under test ...
+    console.log(JSON.stringify(durations))
   }
 
   computePieLayoutDimensions ({

@@ -19,8 +19,9 @@
 #' @param labels.offset (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is 0.1.
 #' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
 #' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
-#' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.
-#' @param labels.advanced.removal.tiebreak (optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.
+#' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 80.
+#' @param labels.advanced.removal.tiebreak (optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement. The default is "best".
+#' @param labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled (optional) If enabled, add a strategy to the increases the max allowed line angle when labelling a dense ordered set. The default is true.
 #' @param tooltips.max.width (optional) the maximum tooltip width as a proportion of total width. The default is 0.3.
 #' @param tooltips.max.height (optional) the maximum tooltip height as a proportion of total height. The default is 0.3.
 #' @param tooltips.font.family (optional) font family for tooltips. The default is "Arial".
@@ -56,7 +57,16 @@
 #' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.
 #' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
 
-
+#' @param labels.outer.lines.straightMin TODO document
+#' @param labels.outer.lines.straightMax TODO document
+#' @param labels.outer.lines.basisInterpolatedMin TODO document
+#' @param labels.outer.lines.basisInterpolatedMax TODO document
+#' @param labels.outer.lines.bezierMin TODO document
+#' @param labels.outer.lines.bezierMax TODO document
+#' @param labels.outer.lines.bezierSegmentLean TODO document
+#' @param labels.outer.lines.bezierLabelLean TODO document
+#' @param labels.outer.lines.bezierSegmentPullInProportionMin TODO document
+#' @param labels.outer.lines.bezierSegmentPullInProportionMax TODO document
 
 #' @examples
 #' # load example data
@@ -108,8 +118,22 @@ Donut <- function(
     labels.offset = 0.1,
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
-    labels.advanced.line.max.angle = 60,
-    labels.advanced.removal.tiebreak = "last",
+    labels.advanced.line.max.angle = 80,
+    labels.advanced.removal.tiebreak = "best",
+    labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
+
+    labels.outer.lines.straightMin = 0,
+    labels.outer.lines.straightMax = 5,
+    labels.outer.lines.basisInterpolatedMin = 5,
+    labels.outer.lines.basisInterpolatedMax = 40,
+    labels.outer.lines.bezierMin = 40,
+    # NB this means "use bezier for anything with a label line angle of over 60"
+    labels.outer.lines.bezierMax = 360,
+    labels.outer.lines.bezierSegmentLean = 30,
+    labels.outer.lines.bezierLabelLean = 0,
+    labels.outer.lines.bezierSegmentPullInProportionMin = 0.25,
+    labels.outer.lines.bezierSegmentPullInProportionMax = 0.75,
+
     tooltips.max.width = 0.3,
     tooltips.max.height = 0.3,
     tooltips.font.family = "Arial",
@@ -452,6 +476,19 @@ Donut <- function(
         labelLiftOffAngle = labels.advanced.liftoff.angle,
         labelMaxLineAngle = labels.advanced.line.max.angle,
         labelUnorderedRemovalTiebreak = labels.advanced.removal.tiebreak,
+        labelStrategyIncreaseMaxLineAngleInDenseOrderedSets = labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled,
+
+        labelsOuterLinesStraightMin = labels.outer.lines.straightMin,
+        labelsOuterLinesStraightMax = labels.outer.lines.straightMax,
+        labelsOuterLinesBasisInterpolatedMin = labels.outer.lines.basisInterpolatedMin,
+        labelsOuterLinesBasisInterpolatedMax = labels.outer.lines.basisInterpolatedMax,
+        labelsOuterLinesBezierMin = labels.outer.lines.bezierMin,
+        labelsOuterLinesBezierMax = labels.outer.lines.bezierMax,
+        labelsOuterLinesBezierSegmentLean = labels.outer.lines.bezierSegmentLean,
+        labelsOuterLinesBezierLabelLean = labels.outer.lines.bezierLabelLean,
+        labelsOuterLinesBezierSegmentPullInProportionMin = labels.outer.lines.bezierSegmentPullInProportionMin,
+        labelsOuterLinesBezierSegmentPullInProportionMax = labels.outer.lines.bezierSegmentPullInProportionMax,
+
         tooltipMaxWidth = tooltips.max.width,
         tooltipMaxHeight = tooltips.max.height,
         tooltipFontFamily = tooltips.font.family,

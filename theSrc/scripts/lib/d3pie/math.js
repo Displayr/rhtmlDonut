@@ -2,13 +2,8 @@ const _ = require('lodash')
 
 let math = {
 
-  toRadians: function (degrees) {
-    return degrees * (Math.PI / 180)
-  },
-
-  toDegrees: function (radians) {
-    return radians * (180 / Math.PI)
-  },
+  toRadians: degrees => degrees * (Math.PI / 180),
+  toDegrees: radians => radians * (180 / Math.PI),
 
   getTotalPieSize: function (data) {
     let totalSize = 0
@@ -79,6 +74,19 @@ let math = {
     if (angle < 0) { angle += 360 }
 
     return angle
+  },
+
+  inclusiveBetween: (a, b, c) => (a <= b && b <= c),
+  exclusiveBetween: (a, b, c) => (a < b && b < c),
+  between: (a, b, c) => (a <= b && b < c),
+
+  angleAbsoluteDifference: (a1, a2) => {
+    const a1Greater = (a1 > a2)
+    const options = [
+      Math.abs(a1 - a2),
+      (a1Greater) ? ((360 - a1) + a2) : ((360 - a2) + a1)
+    ]
+    return Math.min(...options)
   }
 }
 
