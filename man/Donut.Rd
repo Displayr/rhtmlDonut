@@ -15,18 +15,20 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30,
   labels.advanced.line.max.angle = 60,
-  labels.advanced.removal.tiebreak = "last", tooltips.max.width = 0.3,
-  tooltips.max.height = 0.3, tooltips.font.family = "Arial",
-  tooltips.font.size = 10, tooltips.font.color = NULL,
-  tooltips.bg.color = NULL, tooltips.bg.opacity = 0.8, groups = NULL,
-  groups.color = NULL, groups.order = "initial",
-  groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8,
-  groups.labels.enabled = TRUE, labels.inner = FALSE, footer = "",
-  footer.font.family = "Arial", footer.font.size = 8,
-  footer.font.color = rgb(44, 44, 44, maxColorValue = 255),
-  title = NULL, title.font.family = "arial", title.font.size = 16,
-  title.font.color = "#333333", title.top.padding = 0, subtitle = "",
+  labels.advanced.removal.tiebreak = "last",
+  labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
+  tooltips.max.width = 0.3, tooltips.max.height = 0.3,
+  tooltips.font.family = "Arial", tooltips.font.size = 10,
+  tooltips.font.color = NULL, tooltips.bg.color = NULL,
+  tooltips.bg.opacity = 0.8, groups = NULL, groups.color = NULL,
+  groups.order = "initial", groups.font.family = "arial",
+  groups.font.color = "#333333", groups.font.size = 10,
+  groups.min.font.size = 8, groups.labels.enabled = TRUE,
+  labels.inner = FALSE, footer = "", footer.font.family = "Arial",
+  footer.font.size = 8, footer.font.color = rgb(44, 44, 44,
+  maxColorValue = 255), title = NULL, title.font.family = "arial",
+  title.font.size = 16, title.font.color = "#333333",
+  title.top.padding = 0, subtitle = "",
   subtitle.font.family = "Arial", subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
   prefix = NULL, suffix = NULL, border.color = "#ffffff",
@@ -74,6 +76,8 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 \item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.}
 
 \item{labels.advanced.removal.tiebreak}{(optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.}
+
+\item{labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled}{(optional) If enabled, add a strategy to the increases the max allowed line angle when labelling a dense ordered set. The default is true.}
 
 \item{tooltips.max.width}{(optional) the maximum tooltip width as a proportion of total width. The default is 0.3.}
 
