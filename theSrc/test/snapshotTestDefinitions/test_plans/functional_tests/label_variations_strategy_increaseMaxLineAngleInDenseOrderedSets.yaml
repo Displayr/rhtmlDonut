@@ -1,0 +1,13 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+general_comments:
+  - 'NB for these examples we set minAngle=0 to emphasize variations when the labeller_disable_increase_maxangle_in_dense_ordered_sets strategy is on and off'
+width: 600
+height: 600
+rowSize: 2
+data: data.decreasing_value_sets.100_decreasing_values
+comments: []
+config:
+  - '{ "settings" : { "title": "enabled", "minAngle": "0", "labelStrategyIncreaseMaxLineAngleInDenseOrderedSets": true } }|config.label_20'
+  - '{ "settings" : { "title": "disabled", "minAngle": "0", "labelStrategyIncreaseMaxLineAngleInDenseOrderedSets": false } }|config.label_20'

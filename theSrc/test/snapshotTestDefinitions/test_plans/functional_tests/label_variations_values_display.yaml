@@ -1,0 +1,18 @@
+version: 1
+type: multi_widget_single_page
+use_config_as_title: true
+rowSize: 4
+comments: []
+widgets:
+  - height: 500
+    width: 500
+    config:
+      - data.test_plan.abc_rbg_10x
+      - '{ "settings" : { "valuesDec": "0", "valuesDisplay": "percentage", "suffix": "%" } }'
+      - '{ "settings" : { "subtitle": "valuesDisplay=percentage and suffix=%" } }'
+  - height: 500
+    width: 500
+    config:
+      - data.test_plan.abc_rbg
+      - '{ "settings" : { "valuesDec": "3" } }'
+      - '{ "settings" : { "title": "valuesDec=3" } }'

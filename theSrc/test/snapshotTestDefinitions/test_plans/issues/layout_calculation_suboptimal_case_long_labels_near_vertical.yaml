@@ -1,0 +1,13 @@
+version: 1
+type: single_widget_single_page
+groupname: issues
+general_comments:
+  - 'The placement of the longest label at 90-100 degrees means the width allocated for labels on the RHS is larger than necessary'
+  - 'in a recent change this has regressed further and labels are now overlapping'
+width: 800
+height: 800
+comments: []
+config:
+  - data.test_plan.long_labels_at_30_degrees_above_horizontal
+  - config.label_24
+  - '{ "settings" : { "labelMaxLineAngle" : "150", "labelsMaxWidth": "0.35" } }'

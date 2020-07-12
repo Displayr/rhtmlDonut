@@ -1,0 +1,8 @@
+version: 1
+type: single_widget_single_page
+use_config_as_title: true
+width: 648
+height: 447
+rowSize: 3
+data: data.test_plan.500_decreasing_values
+

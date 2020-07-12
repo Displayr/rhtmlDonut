@@ -1,0 +1,23 @@
+version: 1
+type: multi_widget_single_page
+use_config_as_title: true
+rowSize: 4
+widgets:
+  - height: 500
+    width: 500
+    config:
+      - data.test_plan.abc_rbg
+      - '{ "settings": { "labelsSize": 10 } }'
+      - '{ "settings" : { "title" : "size=10" } }'
+  - height: 500
+    width: 500
+    config:
+      - data.test_plan.abc_rbg
+      - '{ "settings": { "labelsSize": 20 } }'
+      - '{ "settings" : { "title" : "size=20" } }'
+  - height: 500
+    width: 500
+    config:
+      - data.test_plan.abc_rbg
+      - '{ "settings": { "labelsSize": 30 } }'
+      - '{ "settings" : { "title" : "size=30" } }'

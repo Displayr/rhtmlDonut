@@ -1,0 +1,16 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+general_comments:
+  - 'NB for these examples we set minAngle=0 to emphasize variations in labelMaxLineAngle and we disabled the labeller_disable_increase_maxangle_in_dense_ordered_sets strategy'
+width: 350
+height: 350
+rowSize: 5
+data: data.decreasing_value_sets.100_decreasing_values
+comments: []
+config:
+  - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "30", "title" : "labelMaxLineAngle=30" } }|config.labeller_disable_increase_maxangle_in_dense_ordered_sets'
+  - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "45", "title" : "labelMaxLineAngle=45" } }|config.labeller_disable_increase_maxangle_in_dense_ordered_sets'
+  - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "60", "title" : "labelMaxLineAngle=60" } }|config.labeller_disable_increase_maxangle_in_dense_ordered_sets'
+  - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "75", "title" : "labelMaxLineAngle=75" } }|config.labeller_disable_increase_maxangle_in_dense_ordered_sets'
+  - '{ "settings" : { "minAngle": "0", "labelMaxLineAngle" : "90", "title" : "labelMaxLineAngle=90" } }|config.labeller_disable_increase_maxangle_in_dense_ordered_sets'

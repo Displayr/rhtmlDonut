@@ -1,0 +1,13 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+width: 190
+height: 190
+rowSize: 3
+data: data.test_plan.simple_groups
+comments:
+  - location: 0
+    text: too many labels being removed
+config:
+  - '{ "settings" : { "subtitle" : "too small <br>groups labels dont<br>get shown" } }'
+

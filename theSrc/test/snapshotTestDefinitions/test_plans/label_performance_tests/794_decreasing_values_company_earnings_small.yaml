@@ -1,0 +1,14 @@
+version: 1
+type: multi_widget_single_page
+groupname: label_placement
+rowSize: 1
+comments:
+  - location: 0
+    text: too many labels removed
+    status: red
+widgets:
+  - height: 565
+    width: 460
+    config:
+      - '{ "settings" : { "title" : "794_decreasing_values_company_earnings small" } }'
+      - data.decreasing_value_sets.794_decreasing_values_company_earnings

@@ -1,0 +1,16 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+general_comments:
+  - 'NB for these examples we set minAngle=0 and labelMaxLineAngle=180 to emphasize variations in labelMaxVerticalOffset'
+width: 300
+height: 600
+rowSize: 3
+comments: []
+config:
+  - 'data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 150, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=150" } }'
+  - 'data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 100, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=100" } }'
+  - 'data.test_plan.lots_of_values_at_top_and_bottom|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 50, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=50" } }'
+  - 'data.test_plan.lots_of_values_at_top_and_bottom_asymmertic|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 150, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=150" } }'
+  - 'data.test_plan.lots_of_values_at_top_and_bottom_asymmertic|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 100, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=100" } }'
+  - 'data.test_plan.lots_of_values_at_top_and_bottom_asymmertic|config.label_6|{ "settings" : { "labelMaxVerticalOffset": 50, "minAngle" : "0", "labelMaxLineAngle" : "180", "title" : "labelMaxVerticalOffset=50" } }'
