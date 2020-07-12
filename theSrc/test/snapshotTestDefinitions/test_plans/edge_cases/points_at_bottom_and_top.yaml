@@ -1,0 +1,14 @@
+version: 1
+groupname: edge_cases
+general_comments: the first example is final product, all others are intermediate stages
+type: single_page_one_example_per_config
+width: 500
+height: 500
+rowSize: 3
+data: data.test_plan.points_at_top_and_bottom
+config:
+  - config.labeller_stage_shorten_top_bottom_phase
+  - config.labeller_stage_up_down_sweep
+  - config.labeller_stage_initial_cluster_spacing
+  - config.labeller_stage_out_of_bounds_correction
+  - config.labeller_disable_all_collision_resolution

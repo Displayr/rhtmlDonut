@@ -1,9 +1,0 @@
-version: 1
-type: multi_widget_single_page
-rowSize: 1
-comments: []
-widgets:
-  - height: 640
-    width: 500
-    config:
-      - data.decreasing_value_sets.197_decreasing_values_real_data_vis_405
