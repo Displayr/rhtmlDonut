@@ -2,18 +2,17 @@ import _ from 'lodash'
 import d3 from 'd3'
 import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc, findIntersectingLabels } from './labelUtils'
 import helpers from '../helpers'
-import math from '../math'
+import { rotate, computeIntersection, inclusiveBetween, between, toRadians } from '../math'
 import segments from '../segments'
 import OuterLabel from './outerLabel'
 import InnerLabel from './innerLabel'
+import computeOuterConnectionLinePath from './computeOuterConnectionLinePath'
+import LabelCollision from '../interrupts/labelCollision'
 import AngleThresholdExceeded from '../interrupts/angleThresholdExceeded'
+import LabelPushedOffCanvas from '../interrupts/labelPushedOffCanvas'
 import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
-
-const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
-// const exclusiveBetween = (a, b, c) => (a < b && b < c)
-const between = (a, b, c) => (a <= b && b < c)
 
 // TODO bit of a temp hack
 const spacingBetweenUpperTrianglesAndCenterMeridian = 7
@@ -378,7 +377,7 @@ let labels = {
   }) {
     if (labelDatum.isTopApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+      const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
       const fitLineCoord = {
         x: segmentCoord.x,
@@ -390,7 +389,7 @@ let labels = {
       labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     } else if (labelDatum.isBottomApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+      const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
       const fitLineCoord = {
         x: segmentCoord.x,
@@ -441,7 +440,7 @@ let labels = {
     const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
 
     if (highYOffSetAngle(angle)) {
-      const radialCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+      const radialCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       const radialLine = [pieCenter, radialCoord]
 
       let placementLineCoord1 = {}
@@ -454,18 +453,18 @@ let labels = {
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
       } else if (between(90, angle, 180)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 + labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 + labelLiftOffAngle)
       } else if (between(180, angle, 270)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 - labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 - labelLiftOffAngle)
       } else {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 + labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 + labelLiftOffAngle)
       }
 
       const placementLine = [placementLineCoord1, placementLineCoord2]
 
-      const intersection = math.computeIntersection(radialLine, placementLine)
+      const intersection = computeIntersection(radialLine, placementLine)
 
       if (intersection) {
         fitLineCoord = intersection
@@ -474,122 +473,55 @@ let labels = {
         isLifted = true
       } else {
         labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label at angle ${angle}`)
-        fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+        fitLineCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       }
     } else {
-      fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+      fitLineCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
     }
 
     return { fitLineCoord, isLifted }
   },
 
   drawOuterLabelLines: function (pie) {
-    pie.outerLabelLines = pie.outerLabelData
-      .map(labelData => {
-        return labels.computeOuterLabelLine({
-          pie,
-          pieCenter: pie.pieCenter,
-          outerRadius: pie.outerRadius,
-          labelData
-        })
+    let basisInterpolationFunction = d3.svg.line()
+      .x(d => d.x)
+      .y(d => d.y)
+      .interpolate('basis')
+
+    const outerLabelLines = pie.outerLabelData.map(labelData => {
+      const { path, pathType } = computeOuterConnectionLinePath({
+        labelData,
+        basisInterpolationFunction,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight),
+        options: pie.options.labels.lines.outer
       })
+
+      return {
+        id: labelData.id,
+        color: labelData.color,
+        path,
+        pathType
+      }
+    })
 
     let lineGroups = pie.svg.insert('g', `.${pie.cssPrefix}pieChart`) // meaning, BEFORE .pieChart
       .attr('class', `${pie.cssPrefix}lineGroups-outer`)
       .style('opacity', 1)
 
     let lineGroup = lineGroups.selectAll(`.${pie.cssPrefix}lineGroup`)
-      .data(pie.outerLabelLines)
+      .data(outerLabelLines)
       .enter()
       .append('g')
-      .attr('class', function (d) { return `${pie.cssPrefix}lineGroup ${pie.cssPrefix}lineGroup-${d[0].id}` })
-
-    let lineFunctionBasis = d3.svg.line()
-      .x(d => d.x)
-      .y(d => d.y)
-      .interpolate('basis')
-
-    let linearLine = d3.svg.line() // TODO delete if still unused
-      .x(d => d.x)
-      .y(d => d.y)
-      .interpolate('linear')
+      .attr('class', d => `${pie.cssPrefix}lineGroup pathType-${d.pathType}`)
+      .attr('id', d => `${pie.cssPrefix}lineGroup-${d.id}`)
 
     lineGroup.append('path')
-      .attr('d', (d) => {
-        switch (d[0].lineType) {
-          case 'basis':
-            return lineFunctionBasis(d)
-          case 'linear':
-            return linearLine(d)
-          default:
-            throw new Error(`Invalid line type ${d[0].lineType}`)
-        }
-      })
-      .attr('stroke', d => d[0].color)
+      .attr('d', d => d.path)
+      .attr('stroke', d => d.color)
       .attr('stroke-width', 1)
       .attr('fill', 'none')
       .style('opacity', 1)
       .style('display', 'inline')
-  },
-
-  computeOuterLabelLine: function ({ pie, pieCenter, outerRadius, labelData }) {
-    let segmentCoord = _.clone(labelData.segmentMidpointCoord)
-    let labelCoord = labelData.lineConnectorCoord
-
-    segmentCoord.id = labelData.id
-    segmentCoord.color = labelData.color
-
-    let intermediateLineCoord = {}
-    if (labelData.linePointsToMeridian) {
-      segmentCoord.lineType = 'basis'
-      const totalXDelta = Math.abs(segmentCoord.x - labelCoord.x)
-      const totalYDelta = Math.abs(segmentCoord.y - labelCoord.y)
-
-      // approach 1: "y delta much (i.e. >10) larger than x delta"
-      //  * The intermediateLineCoord takes us at a 45 degree angle from segment to the meridian running through the line connector, then we go straight up via the end point
-      //  * If the y delta is not larger, this 45 degree approach causes us to overshoot the line connector, so we switch to approach 2
-      // approach 2: "y delta not much larger than x delta"
-      //  * The intermediateLineCoord takes us to 5 pixels inside of the lineConnector
-
-      if (totalXDelta + 10 < totalYDelta) {
-        intermediateLineCoord = {
-          x: (labelData.inLeftHalf)
-            ? segmentCoord.x + totalXDelta
-            : segmentCoord.x - totalXDelta,
-          y: (labelData.inTopHalf)
-            ? segmentCoord.y - totalXDelta
-            : segmentCoord.y + totalXDelta,
-          type: 'mid'
-        }
-      } else {
-        intermediateLineCoord = {
-          x: (labelData.inLeftHalf)
-            ? segmentCoord.x + totalXDelta
-            : segmentCoord.x - totalXDelta,
-          y: (labelData.inTopHalf)
-            ? segmentCoord.y - (totalYDelta - 10)
-            : segmentCoord.y + (totalYDelta - 10),
-          type: 'mid'
-        }
-      }
-    } else {
-      segmentCoord.lineType = 'basis'
-      intermediateLineCoord = {
-        x: segmentCoord.x + (labelCoord.x - segmentCoord.x) * 0.5,
-        y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5,
-        type: 'mid'
-      }
-      switch (labelData.inTopHalf) {
-        case true:
-          intermediateLineCoord.y -= Math.abs(labelCoord.y - segmentCoord.y) * 0.25
-          break
-        case false:
-          intermediateLineCoord.y += Math.abs(labelCoord.y - segmentCoord.y) * 0.25
-          break
-      }
-    }
-
-    return [segmentCoord, intermediateLineCoord, labelCoord]
   },
 
   drawInnerLabelLines: function (pie) {
@@ -628,7 +560,7 @@ let labels = {
 
   computeInnerLabelLine: function ({ pieCenter, innerRadius, labelData }) {
     const pointAtZeroDegrees = { x: pieCenter.x - innerRadius, y: pieCenter.y }
-    let originCoords = math.rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
+    let originCoords = rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
     originCoords.id = labelData.id
     originCoords.color = labelData.color
 
@@ -690,8 +622,8 @@ let labels = {
       .enter()
       .append('g')
       .attr('id', function (d) { return `${cssPrefix}labelGroup${d.id}-${labelType}` })
-      .attr('data-line-angle', function (d) { return d.angleBetweenLabelAndRadial.toFixed(3) })
-      .attr('data-segmentangle', function (d) { return d.segmentAngleMidpoint.toFixed(3) })
+      .attr('data-line-angle', d => (d.labelLineAngle) ? d.labelLineAngle.toFixed(3) : '')
+      .attr('data-segmentangle', d => (d.segmentAngleMidpoint) ? d.segmentAngleMidpoint.toFixed(3) : '')
       .attr('data-index', function (d) { return d.id })
       .attr('class', `${cssPrefix}labelGroup-${labelType}`)
       .attr('transform', function ({ topLeftCoord }) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
@@ -780,6 +712,7 @@ let labels = {
 
     // TODO normalize the config variables for initial vs max for both maxlineAngle and minValue
     labels._performCollisionResolutionIteration({
+      totalSegmentCount: pie.options.data.content.length,
       useInnerLabels: pie.options.labels.outer.innerLabels,
       minAngleThreshold: parseFloat(pie.options.data.minAngle),
       breakOutAngleThreshold: 0.1,
@@ -793,6 +726,8 @@ let labels = {
   },
 
   _performCollisionResolutionIteration ({
+    totalSegmentCount,
+    iterationCount = 0,
     useInnerLabels,
     minAngleThreshold,
     labelSet,
@@ -808,10 +743,11 @@ let labels = {
     }
   }) {
     const clonedLabelSet = _.cloneDeep(labelSet)
-    labelLogger.info(`collision iteration started. labelCount=${clonedLabelSet.length}`)
+    labelLogger.info(`collision iteration started. iterationCount=${iterationCount} labelCount=${clonedLabelSet.length}`)
 
     try {
       let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performCollisionResolutionAlgorithm({
+        iterationCount,
         pie,
         clonedAndFilteredLabelSet: clonedLabelSet,
         useInnerLabels,
@@ -825,14 +761,16 @@ let labels = {
         labelLogger.error(`collision resolution failed: it tried to removed all labels!`)
       }
     } catch (error) {
-      if (error.isInterrupt && error.type === 'AngleThresholdExceeded') {
+      if (error.isInterrupt) {
         const offendingLabel = error.labelDatum
-        labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' exceeded radial to labelLine angle threshold of ${maxLineAngleValue} (${offendingLabel.angleBetweenLabelAndRadial})`)
+        labelLogger.warn(`collision iteration failed: label '${offendingLabel.label}' triggered ${error.type}: ${error.description}`)
 
-        // three strategies :
-        //  1) lift top/bottom if not lifted. If both already lifted,
-        //  2) then increase minAngle (minValue) threshold
-        //  3) then increase maxLabelLineAngle threshold
+        /* four strategies :
+         * lift top/bottom if not lifted. If both already lifted,
+         * then start dropping the labels for the smallest segment
+         * then increase maxLabelLineAngle threshold
+           * not currently used, is enabled when maxLineAngleValue != maxLineAngleMaxValue via config
+        */
 
         const availableStrategies = {
           liftTop: offendingLabel.inTopHalf && !pie.topIsLifted,
@@ -842,6 +780,7 @@ let labels = {
         }
 
         let newMinAngleThreshold = minAngleThreshold
+
         if (availableStrategies.liftTop) {
           labelLogger.info('lifting top labels before next iteration')
           // note this is the 'master labelSet', not the clone passed to each iteration
@@ -904,7 +843,7 @@ let labels = {
 
             labelSet = _(labelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${pi(label)}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${pl(label)} ${label.segmentQuadrant}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -912,7 +851,7 @@ let labels = {
             const idToRemove = removalOrder.shift()
             labelSet = _(labelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${pi(label)}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${pl(label)} ${label.segmentQuadrant}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -926,6 +865,8 @@ let labels = {
         }
 
         labels._performCollisionResolutionIteration({
+          totalSegmentCount,
+          iterationCount: iterationCount + 1,
           useInnerLabels,
           minAngleThreshold: newMinAngleThreshold,
           labelSet: labelSet, // NB it is the original labelset (potentially w/ labels removed, topIsLifted modified, and bottomIsLifted modified), not the modified cloned version one from the failed iteration, as we do not want to start with the modified positions each time
@@ -945,6 +886,7 @@ let labels = {
   },
 
   _performCollisionResolutionAlgorithm ({
+    iterationCount,
     pie,
     clonedAndFilteredLabelSet: outerLabelSet,
     useInnerLabels,
@@ -1109,7 +1051,7 @@ let labels = {
     }
 
     const labelLiftOffAngleInRadians = ((labelDatum.inTopHalf && topIsLifted) || (labelDatum.inBottomHalf && bottomIsLifted))
-      ? math.toRadians(labelLiftOffAngle)
+      ? toRadians(labelLiftOffAngle)
       : 0
 
     const yPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.cos(labelLiftOffAngleInRadians)
@@ -1341,7 +1283,7 @@ let labels = {
             bottomIsLifted
           })
 
-          const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.angleBetweenLabelAndRadial
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.labelLineAngle
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             labelLogger.info(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded max angle threshold. OldY: ${oldY}`)
             labels.adjustLabelToNewY({
@@ -1396,7 +1338,7 @@ let labels = {
             bottomIsLifted
           })
 
-          const angleBetweenRadialAndLabelLinesAfter = labelToPushDown.angleBetweenLabelAndRadial
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushDown.labelLineAngle
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             labelLogger.debug(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded max angle threshold`)
             labels.adjustLabelToNewY({
@@ -1513,8 +1455,8 @@ let labels = {
     */
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
-    let phase1HitBottom = false
-    let phase1LineAngleExceeded = false
+    let downSweepHitBottom = false
+    let downSweepLineAngleExceeded = false
 
     let lp = `${hemisphere}:DOWN` // lp = logPrefix
     const inBounds = (candidateIndex, arrayLength = outerLabelSet.length) => candidateIndex >= 0 && candidateIndex < arrayLength
@@ -1534,18 +1476,17 @@ let labels = {
     if (stages.downSweep) {
       labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
       _(outerLabelSet).each((frontierLabel, frontierIndex) => {
-        labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
-        if (phase1HitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
-        if (phase1LineAngleExceeded) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
+        labelLogger.debug(`${lp} frontier: ${pl(frontierLabel)}`)
+        if (downSweepHitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
+        if (downSweepLineAngleExceeded) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isTopApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = outerLabelSet[frontierIndex + 1]
         if (nextLabel.hide) { return continueLoop }
 
         if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyAbove(frontierLabel)) {
-          labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
+          labelLogger.debug(` ${lp} intersect ${pl(frontierLabel)} v ${pl(nextLabel)}`)
           _(_.range(frontierIndex + 1, outerLabelSet.length)).each((gettingPushedIndex) => {
             const alreadyAdjustedLabel = getPreviousShownLabel(outerLabelSet, gettingPushedIndex)
             if (!alreadyAdjustedLabel) { return continueLoop }
@@ -1557,13 +1498,13 @@ let labels = {
             if (gettingPushedLabel.hide) { return continueLoop }
 
             if (gettingPushedLabel.isBottomApexLabel) {
-              labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} bottom label. cancelling inner`)
-              phase1HitBottom = true
+              labelLogger.debug(`  ${lp} attempt to push ${pl(gettingPushedLabel)} bottom label. cancelling inner`)
+              downSweepHitBottom = true
               return continueLoop
             }
 
-            if (phase1HitBottom) {
-              labelLogger.debug(`  ${lp} already hit bottom, placing ${pi(gettingPushedLabel)} at bottom`)
+            if (downSweepHitBottom) {
+              labelLogger.debug(`  ${lp} already hit bottom, placing ${pl(gettingPushedLabel)} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
               if (gettingPushedLabel.inLeftHalf) {
                 gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
@@ -1574,7 +1515,7 @@ let labels = {
             }
 
             if (gettingPushedLabel.isLowerThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
-              labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
+              labelLogger.debug(`   ${lp} ${pl(alreadyAdjustedLabel)} and ${pl(gettingPushedLabel)} no intersect. cancelling inner`)
               return terminateLoop
             }
 
@@ -1590,7 +1531,7 @@ let labels = {
                 return continueLoop
               } catch (error) {
                 if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                  labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
+                  labelLogger.debug(`${lp} could not move ${pl(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
                 } else {
                   throw error
                 }
@@ -1600,8 +1541,8 @@ let labels = {
             const newY = alreadyAdjustedLabel.topLeftCoord.y + alreadyAdjustedLabel.height + minGap
             const deltaY = newY - gettingPushedLabel.topLeftCoord.y
             if (newY + gettingPushedLabel.height > lowerBoundary) {
-              labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
-              phase1HitBottom = true
+              labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} exceeds canvas. placing remaining labels at bottom and cancelling inner`)
+              downSweepHitBottom = true
 
               if (gettingPushedLabel.inLeftHalf) {
                 gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
@@ -1611,7 +1552,7 @@ let labels = {
               return continueLoop
             }
 
-            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.labelLineAngle
 
             let apexLabelCorrection = 0
             if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -1632,13 +1573,12 @@ let labels = {
               bottomIsLifted
             })
 
-            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
-            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
+            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.labelLineAngle
+            labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
             if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
-              // throw new AngleThresholdExceeded(gettingPushedLabel)
-              labelLogger.warn(`  ${lp} ${pi(gettingPushedLabel)} line angle exceeds threshold of ${maxAngleBetweenRadialAndLabelLines}. Cancelling downSweep.`)
-              phase1LineAngleExceeded = true
+              labelLogger.warn(`  ${lp} ${pl(gettingPushedLabel)} line angle exceeds threshold of ${maxAngleBetweenRadialAndLabelLines}. Cancelling downSweep.`)
+              downSweepLineAngleExceeded = true
               return terminateLoop
             }
 
@@ -1648,7 +1588,7 @@ let labels = {
       })
     }
 
-    if ((phase1HitBottom || phase1LineAngleExceeded) && stages.upSweep) {
+    if (stages.upSweep && (downSweepHitBottom || downSweepLineAngleExceeded)) {
       // throw away our attempt at inner labelling and start again wrt inner labels!
       // XXX NB TODO strictly speaking we can only throw out our quadrant/hemisphere worth of inner labels
       _(innerLabelSet).each(innerLabel => {
@@ -1661,7 +1601,7 @@ let labels = {
             matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           }
         } else {
-          console.error(`should have found matching outer label for inner label ${pi(innerLabel)}`)
+          console.error(`should have found matching outer label for inner label ${pl(innerLabel)}`)
         }
       })
       innerLabelSet.length = 0 // NB must preserve array references !
@@ -1673,17 +1613,16 @@ let labels = {
 
       labelLogger.debug(`${lp} start. Size ${reversedLabelSet.length}`)
       _(reversedLabelSet).each((frontierLabel, frontierIndex) => {
-        labelLogger.debug(`${lp} frontier: ${pi(frontierLabel)}`)
+        labelLogger.debug(`${lp} frontier: ${pl(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isBottomApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = reversedLabelSet[frontierIndex + 1]
         if (nextLabel.hide) { return continueLoop }
 
         if (frontierLabel.intersectsWith(nextLabel) || nextLabel.isCompletelyBelow(frontierLabel)) {
-          labelLogger.debug(` ${lp} intersect ${pi(frontierLabel)} v ${pi(nextLabel)}`)
+          labelLogger.debug(` ${lp} intersect ${pl(frontierLabel)} v ${pl(nextLabel)}`)
           _(_.range(frontierIndex + 1, reversedLabelSet.length)).each((gettingPushedIndex) => {
             const alreadyAdjustedLabel = getPreviousShownLabel(reversedLabelSet, gettingPushedIndex)
             if (!alreadyAdjustedLabel) { return continueLoop }
@@ -1695,13 +1634,13 @@ let labels = {
             if (gettingPushedLabel.hide) { return continueLoop }
 
             if (gettingPushedLabel.isTopApexLabel) {
-              labelLogger.debug(`  ${lp} attempt to push ${pi(gettingPushedLabel)} top label. cancelling inner`)
+              labelLogger.debug(`  ${lp} attempt to push ${pl(gettingPushedLabel)} top label. cancelling inner`)
               phase2HitTop = true
               return terminateLoop
             }
 
             if (gettingPushedLabel.isHigherThan(alreadyAdjustedLabel) && !gettingPushedLabel.intersectsWith(alreadyAdjustedLabel)) {
-              labelLogger.debug(`   ${lp} ${pi(alreadyAdjustedLabel)} and ${pi(gettingPushedLabel)} no intersect. cancelling inner`)
+              labelLogger.debug(`   ${lp} ${pl(alreadyAdjustedLabel)} and ${pl(gettingPushedLabel)} no intersect. cancelling inner`)
               return terminateLoop
             }
 
@@ -1717,7 +1656,7 @@ let labels = {
                 return continueLoop
               } catch (error) {
                 if (error.isInterrupt && error.type === 'CannotMoveToInner') {
-                  labelLogger.debug(`${lp} could not move ${pi(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
+                  labelLogger.debug(`${lp} could not move ${pl(gettingPushedLabel)} to inner: "${error.description}". Proceed with adjustment`)
                 } else {
                   throw error
                 }
@@ -1727,13 +1666,13 @@ let labels = {
             const newY = alreadyAdjustedLabel.topLeftCoord.y - (gettingPushedLabel.height + minGap)
             const deltaY = gettingPushedLabel.topLeftCoord.y - newY
             if (newY < upperBoundary) {
-              labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} exceeds canvas. cancelling inner`)
+              labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} exceeds canvas. cancelling inner`)
               phase2HitTop = true
               // return terminateLoop
-              throw new AngleThresholdExceeded(gettingPushedLabel) // TODO better exception here
+              throw new LabelPushedOffCanvas(gettingPushedLabel, 'pushed off top')
             }
 
-            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.labelLineAngle
 
             let apexLabelCorrection = 0
             if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -1754,25 +1693,27 @@ let labels = {
               bottomIsLifted
             })
 
-            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.labelLineAngle
 
-            labelLogger.debug(`  ${lp} pushing ${pi(gettingPushedLabel)} up by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
+            labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} up by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
             if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
-              throw new AngleThresholdExceeded(gettingPushedLabel)
+              throw new AngleThresholdExceeded(gettingPushedLabel, `${angleBetweenRadialAndLabelLinesAfter} > ${maxAngleBetweenRadialAndLabelLines}`)
             }
 
             if (!inBounds(gettingPushedIndex + 1)) { return terminateLoop }
           })
         }
       })
+    }
 
+    if (stages.finalPass) {
       // final check for left over line angle violators
       _(outerLabelSet).each(label => {
-        const angleBetweenRadialAndLabelLine = label.angleBetweenLabelAndRadial
+        const angleBetweenRadialAndLabelLine = label.labelLineAngle
         if (angleBetweenRadialAndLabelLine > maxAngleBetweenRadialAndLabelLines) {
-          labelLogger.warn(`  final pass found ${pi(label)} line angle exceeds threshold.`)
-          throw new AngleThresholdExceeded(label)
+          labelLogger.warn(`  final pass found ${pl(label)} line angle exceeds threshold.`)
+          throw new AngleThresholdExceeded(label, `${angleBetweenRadialAndLabelLine} > ${maxAngleBetweenRadialAndLabelLines}`)
         }
       })
 
@@ -1780,7 +1721,7 @@ let labels = {
       const collidingLabels = findIntersectingLabels(outerLabelSet)
       if (collidingLabels.length > 0) {
         labelLogger.warn(`  final pass found ${collidingLabels.length} colliding labels.`)
-        throw new AngleThresholdExceeded(collidingLabels[0]) // TODO make new exception
+        throw new LabelCollision(collidingLabels[0], 'final check after up sweep')
       }
     }
   },
@@ -1801,6 +1742,7 @@ let labels = {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y - pie.outerRadius
       const baseLabelOffsetYCoord = pie.pieCenter.y - pie.outerRadius - pie.labelOffset
+      const labelMaxLineAngle = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
 
       const maxVerticalOffset = (pie.hasTopLabel)
         ? pie.maxVerticalOffset - pie.maxFontSize - labelPadding
@@ -1814,8 +1756,8 @@ let labels = {
       const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
 
       // NB TODO move leftPointWhereTriangleMeetsLabelRadius into set facts
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
 
       // TODO can I add this cloneDeep in the chain ?
       const setsSortedVerticallyOutward = {
@@ -1844,8 +1786,8 @@ let labels = {
         },
         right: {
           length: setsSortedVerticallyOutward.right.length,
-          originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
           totalHeight: _(setsSortedVerticallyOutward.right).map('height').sum(),
+          originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
           nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0])
         }
       }
@@ -1868,6 +1810,8 @@ let labels = {
 
       const idealLabelPadding = 2
 
+      // TODO setFacts.left.simpleWorked has not been set yet so it can be removed from conditionals below
+      // unless this is called iteratively ?
       const newApexYCoord = _([
         (_.isEmpty(setsSortedVerticallyOutward.left) || setFacts.left.simpleWorked) ? null : setFacts.left.idealStartingPoint - setFacts.left.totalHeight - (setFacts.left.length) * idealLabelPadding,
         (_.isEmpty(setsSortedVerticallyOutward.right) || setFacts.right.simpleWorked) ? null : setFacts.right.idealStartingPoint - setFacts.right.totalHeight - (setFacts.right.length) * idealLabelPadding,
@@ -1890,7 +1834,7 @@ let labels = {
           labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
             labelDatum: label,
             labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0,
+            labelLiftOffAngle: 0, // NB note the 0 lift off angle (this fn is effectively "place along radius")
             outerRadius: pie.outerRadius,
             pieCenter: pie.pieCenter,
             canvasHeight: parseFloat(pie.options.size.canvasHeight),
@@ -1903,7 +1847,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten top: placing left labels along label offset radius worked`)
         } else {
@@ -1930,18 +1877,26 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
-              labelLogger.debug(`shorten top: left side: placing ${pi(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
+              labelLogger.debug(`shorten top: left side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
                 x: intersection.x,
                 y: newLineConnectorY
               })
               leftFrontierYCoord = label.topY - newLabelPadding
             } else {
-              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pi(label)}`)
+              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pl(label)}`)
             }
           })
+        }
+
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten top: left side: labelLineAngle exceeded. Aborting`)
+          return
         }
 
         // getting here means success ! Apply the cloned labels back to the mainline
@@ -1974,7 +1929,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten top: placing right labels along label offset radius worked`)
         } else {
@@ -2001,18 +1959,26 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
-              labelLogger.debug(`shorten top: right side: placing ${pi(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
+              labelLogger.debug(`shorten top: right side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
                 x: intersection.x,
                 y: newLineConnectorY
               })
               rightFrontierYCoord = label.topY - newLabelPadding
             } else {
-              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pi(label)}`)
+              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pl(label)}`)
             }
           })
+        }
+
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten top: right side: labelLineAngle exceeded. Aborting`)
+          return
         }
 
         // getting here means success ! Apply the cloned labels back to the mainline
@@ -2057,6 +2023,7 @@ let labels = {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y + pie.outerRadius
       const baseLabelOffsetYCoord = pie.pieCenter.y + pie.outerRadius + pie.labelOffset
+      const labelMaxLineAngle = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
 
       const maxVerticalOffset = (pie.hasBottomLabel)
         ? pie.maxVerticalOffset - pie.maxFontSize - labelPadding
@@ -2068,8 +2035,8 @@ let labels = {
         y: pie.pieCenter.y
       }
       const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
 
       // TODO can I add this cloneDeep in the chain ?
       const setsSortedVerticallyOutward = {
@@ -2157,7 +2124,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten bottom: placing left labels along label offset radius worked`)
         } else {
@@ -2185,18 +2155,26 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
-              labelLogger.debug(`shorten bottom: left side: placing ${pi(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
+              labelLogger.debug(`shorten bottom: left side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
                 x: intersection.x,
                 y: newLineConnectorY
               })
               leftFrontierYCoord = label.bottomY + newlabelPadding
             } else {
-              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pi(label)}`)
+              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pl(label)}`)
             }
           })
+        }
+
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten bottom: left side: labelLineAngle exceeded. Aborting`)
+          return
         }
 
         // getting here means success ! Apply the cloned labels back to the mainline
@@ -2229,7 +2207,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten bottom: placing right labels along label offset radius worked`)
         } else {
@@ -2257,18 +2238,26 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
-              labelLogger.debug(`shorten bottom: right side: placing ${pi(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
+              labelLogger.debug(`shorten bottom: right side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
                 x: intersection.x,
                 y: newLineConnectorY
               })
               rightFrontierYCoord = label.bottomY + newLabelPadding
             } else {
-              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pi(label)}`)
+              labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pl(label)}`)
             }
           })
+        }
+
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten bottom: right side: labelLineAngle exceeded. Aborting`)
+          return
         }
 
         // getting here means success ! Apply the cloned labels back to the mainline
@@ -2280,7 +2269,7 @@ let labels = {
         })
       }
     } catch (error) {
-      console.error(error)
+      console.error(error.stack)
     }
   },
 
@@ -2455,7 +2444,7 @@ let labels = {
       y: pieCenter.y
     }
 
-    const innerRadiusLabelCoord = math.rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
+    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
     newInnerLabel.placeAlongFitLine(innerRadiusLabelCoord)
 
     if (!_.isEmpty(innerLabelSet)) {
@@ -2478,7 +2467,7 @@ let labels = {
 
       if (newInnerLabel.intersectsWith(previousLabel, 2) || !newLabelIsInOrderVertically) {
         if (newLabelShouldBeBelowPreviousLabel) {
-          labelLogger.debug(`inner collision between ${pi(previousLabel)} v ${pi(newInnerLabel)}(new). Moving new down`)
+          labelLogger.debug(`inner collision between ${pl(previousLabel)} v ${pl(newInnerLabel)}(new). Moving new down`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y + previousLabel.height + 2 // TODO now have a couple hard coded 2's about
 
           // place X along innerLabelRadius based on new y position
@@ -2490,7 +2479,7 @@ let labels = {
 
           newInnerLabel.setTopMedialPoint(innerRadiusLabelCoord)
         } else {
-          labelLogger.debug(`inner collision between ${pi(previousLabel)} v ${pi(newInnerLabel)}(new). Moving new up`)
+          labelLogger.debug(`inner collision between ${pl(previousLabel)} v ${pl(newInnerLabel)}(new). Moving new up`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
 
           // place X along innerLabelRadius based on new y position
@@ -2519,7 +2508,7 @@ let labels = {
       bottomRightCoordIsInArc
     )
 
-    labelLogger.debug(`attempt to move ${pi(newInnerLabel)} to inner : ${labelIsContainedWithinArc ? 'succeed' : 'fail'}`)
+    labelLogger.debug(`attempt to move ${pl(newInnerLabel)} to inner : ${labelIsContainedWithinArc ? 'succeed' : 'fail'}`)
 
     if (!labelIsContainedWithinArc) {
       throw new CannotMoveToInner(label, 'out of bounds after adjustment')
@@ -2529,7 +2518,7 @@ let labels = {
       throw new CannotMoveToInner(label, `label line angle excceds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
     }
 
-    labelLogger.info(`placed ${pi(label)} inside`)
+    labelLogger.info(`placed ${pl(label)} inside`)
     innerLabelSet.push(newInnerLabel)
     label.labelShown = false
   },
@@ -2608,7 +2597,7 @@ let labels = {
 }
 
 // helper function to print label. TODO make toString work
-function pi (labelData) {
+function pl (labelData) {
   const ellipsisThreshold = 11
   const labelName = (labelData.label.length > ellipsisThreshold)
     ? `${labelData.label.substr(0, ellipsisThreshold - 3)}...`
@@ -2616,5 +2605,10 @@ function pi (labelData) {
   // return `${labelName}(${labelData.id})`
   return labelName
 }
+
+const exceedsLabelLineAngleThresholdCount = ({ labels, threshold }) =>
+  labels
+    .filter(({ labelLineAngle }) => labelLineAngle > threshold)
+    .length
 
 module.exports = labels

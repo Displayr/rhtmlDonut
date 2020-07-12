@@ -1,10 +1,11 @@
 const Interrupt = require('./base')
 
 class AngleThresholdExceeded extends Interrupt {
-  constructor (labelDatum) {
+  constructor (labelDatum, description = '') {
     super('')
     this.type = 'AngleThresholdExceeded'
     this.labelDatum = labelDatum
+    this.description = description
   }
 }
 
