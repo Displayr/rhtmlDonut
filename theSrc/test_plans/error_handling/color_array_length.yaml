@@ -1,8 +1,0 @@
-version: 1
-type: single_page_one_example_per_config
-width: 300
-height: 300
-rowSize: 3
-data: data.test_plan.errors.invalid_color_array_length
-config:
-  - '{ "settings" : { "subtitle" : "color array length mismatch causes visible error" } }'

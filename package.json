@@ -6,12 +6,18 @@
   },
   "scripts": {
     "prepush": "node ./bin/prepush",
-    "test": "true"
+    "test": "npm run localTest",
+    "localTest": "gulp testVisual --env=local --branch=`git rev-parse --abbrev-ref HEAD`",
+    "travisTest": "gulp testVisual --env=travis --branch=`git rev-parse --abbrev-ref HEAD`",
+    "gatherDiffs": "rm -rf .tmp/diffs; mkdir -p .tmp/diffs/; BRANCH=`git rev-parse --abbrev-ref HEAD` && for I in `find theSrc/test/snapshots/local/$BRANCH -type d -name __diff_output__`; do cp $I/* .tmp/diffs/ 2> /dev/null; done; true",
+    "macOpenDiffs": "open .tmp/diffs",
+    "seeDiffs": "npm run gatherDiffs; npm run macOpenDiffs",
+    "deleteDiffs": "find theSrc/test/snapshots -iname '__diff_output__' | xargs rm -rf"
   },
   "devDependencies": {
     "gulp": "^4.0.2",
     "husky": "^0.13.3",
-    "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#4.0.0",
+    "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#5.0.5",
     "sinon": "^2.3.2"
   },
   "dependencies": {
@@ -20,8 +26,7 @@
     "d3": "3.5.11",
     "es6-promise": "^3.2.1",
     "jquery": "^3.5.1",
-    "js-yaml": "^3.13.1",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "loglevel": "^1.6.1",
     "rhtmlParts": "Displayr/rhtmlParts#3.0.0"
   }

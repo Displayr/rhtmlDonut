@@ -1,2 +1,12 @@
+.eslintignore
+.eslintrc
+.travis.yml
 ^.*\.Rproj$
 ^\.Rproj\.user$
+babel.config.js
+docs
+gulpfile.js
+node_modules
+package-lock.json
+package.json
+theSrc

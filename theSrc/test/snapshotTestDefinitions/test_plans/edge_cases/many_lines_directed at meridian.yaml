@@ -1,0 +1,13 @@
+version: 1
+groupname: edge_cases
+use_config_as_title: true
+type: single_page_one_example_per_config
+width: 500
+height: 750
+rowSize: 3
+data: config.label_16
+comments: []
+config:
+  - data.test_plan.many_lines_directed_at_meridian_working
+  - data.test_plan.many_lines_directed_at_meridian_working_reduced
+  - data.test_plan.many_lines_directed_at_meridian

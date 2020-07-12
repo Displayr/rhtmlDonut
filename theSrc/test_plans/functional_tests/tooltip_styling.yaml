@@ -1,9 +1,0 @@
-version: 1
-type: single_page_one_example_per_config
-width: 1000
-height: 1000
-rowSize: 1
-data: data.test_plan.tooltip_base
-config:
-  - config.tooltip_auto_color
-  - config.tooltip_pink_georgia_36
