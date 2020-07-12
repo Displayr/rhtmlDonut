@@ -21,6 +21,7 @@
 #' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
 #' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.
 #' @param labels.advanced.removal.tiebreak (optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.
+#' @param labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled (optional) If enabled, add a strategy to the increases the max allowed line angle when labelling a dense ordered set. The default is true.
 #' @param tooltips.max.width (optional) the maximum tooltip width as a proportion of total width. The default is 0.3.
 #' @param tooltips.max.height (optional) the maximum tooltip height as a proportion of total height. The default is 0.3.
 #' @param tooltips.font.family (optional) font family for tooltips. The default is "Arial".
@@ -110,6 +111,7 @@ Donut <- function(
     labels.advanced.liftoff.angle = 30,
     labels.advanced.line.max.angle = 60,
     labels.advanced.removal.tiebreak = "last",
+    labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
     tooltips.max.width = 0.3,
     tooltips.max.height = 0.3,
     tooltips.font.family = "Arial",
@@ -452,6 +454,7 @@ Donut <- function(
         labelLiftOffAngle = labels.advanced.liftoff.angle,
         labelMaxLineAngle = labels.advanced.line.max.angle,
         labelUnorderedRemovalTiebreak = labels.advanced.removal.tiebreak,
+        labelStrategyIncreaseMaxLineAngleInDenseOrderedSets = labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled,
         tooltipMaxWidth = tooltips.max.width,
         tooltipMaxHeight = tooltips.max.height,
         tooltipFontFamily = tooltips.font.family,

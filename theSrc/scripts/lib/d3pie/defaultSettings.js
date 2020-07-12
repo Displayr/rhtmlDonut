@@ -30,7 +30,8 @@ const defaultSettings = {
   labels: {
     enabled: true, // pieWrapper: settings.labelsEnabled, R: labels.enabled
     strategies: { //
-      unorderedTieBreak: 'best' // pieWrapper: settings.labelUnorderedRemovalTiebreak, R: labels.advanced.removal.tiebreak
+      unorderedTieBreak: 'best', // pieWrapper: settings.labelUnorderedRemovalTiebreak, R: labels.advanced.removal.tiebreak
+      increaseMaxLineAngleInDenseOrderedSets: true // pieWrapper: settings.labelStrategyIncreaseMaxLineAngleInDenseOrderedSets, R: labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled
     }, //
     stages: { //
       outOfBoundsCorrection: true, //

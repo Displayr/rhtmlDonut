@@ -32,7 +32,7 @@ class PieWrapper {
 
   draw (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    console.log(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
+    layoutLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
     $(element).find('*').remove()
 
     this.outerSvg = d3.select(element)
@@ -149,7 +149,8 @@ class PieWrapper {
       labels: {
         enabled: this._settings.labelsEnabled,
         strategies: {
-          unorderedTieBreak: this._settings.labelUnorderedRemovalTiebreak
+          unorderedTieBreak: this._settings.labelUnorderedRemovalTiebreak,
+          increaseMaxLineAngleInDenseOrderedSets: this._settings.labelStrategyIncreaseMaxLineAngleInDenseOrderedSets
         },
         stages: this._settings.stages,
         outer: {
@@ -209,7 +210,7 @@ class PieWrapper {
 
   resize (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    console.log(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
+    layoutLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
 
     if (width < 200 || height < 200) { return }
 
@@ -330,6 +331,22 @@ class PieWrapper {
         color: this._settings.valuesColor[i % this._settings.valuesColor.length],
         group: (this._settings.groups) ? this._settings.groups[i] : null
       })
+    }
+
+    // detect order
+    const isSortedAscending = _.every(this._values, (value, index, array) =>
+      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
+    )
+    if (isSortedAscending) {
+      layoutLogger.info(`setting valuesOrder to 'ascending'`)
+      this._settings.valuesOrder = 'ascending'
+    }
+    const isSortedDescending = _.every(this._values, (value, index, array) =>
+      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
+    )
+    if (isSortedDescending) {
+      layoutLogger.info(`setting valuesOrder to 'descending'`)
+      this._settings.valuesOrder = 'descending'
     }
   }
 

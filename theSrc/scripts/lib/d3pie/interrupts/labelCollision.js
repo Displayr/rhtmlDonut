@@ -1,12 +1,12 @@
 const Interrupt = require('./base')
 
-class CannotMoveToInner extends Interrupt {
+class LabelCollision extends Interrupt {
   constructor (labelDatum, description = '') {
     super('')
-    this.type = 'CannotMoveToInner'
+    this.type = 'LabelCollision'
     this.labelDatum = labelDatum
     this.description = description
   }
 }
 
-module.exports = CannotMoveToInner
+module.exports = LabelCollision
