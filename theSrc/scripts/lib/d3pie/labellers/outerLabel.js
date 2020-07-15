@@ -153,14 +153,14 @@ class OuterLabel {
     this.topLeftCoord.y -= verticalOffset
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   moveStraightDownBy (verticalOffset) {
     this.topLeftCoord.y += verticalOffset
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setTopMedialPoint (coord) {
@@ -170,7 +170,7 @@ class OuterLabel {
       : { x: coord.x + linePadding, y: coord.y }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setBottomMedialPoint (coord) {
@@ -180,7 +180,7 @@ class OuterLabel {
       : { x: coord.x + linePadding, y: coord.y - height }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   placeLabelViaConnectorCoord (lineConnectorCoord) {
@@ -188,7 +188,7 @@ class OuterLabel {
       this._placeLabelViaConnectorCoordOnTopApexLabel(lineConnectorCoord)
     } else if (this.isBottomApexLabel) {
       this._placeLabelViaConnectorCoordOnBottomApexLabel(lineConnectorCoord)
-    } else if (this.linePointsToMeridian) {
+    } else if (this.linePointsToYOrigin) {
       this._placeLabelViaConnectorCoordOnNormalLabel(lineConnectorCoord)
     } else {
       this._placeLabelViaConnectorCoordOnNormalLabel(lineConnectorCoord)
@@ -202,7 +202,7 @@ class OuterLabel {
     }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   _placeLabelViaConnectorCoordOnBottomApexLabel (lineConnectorCoord) {
@@ -212,7 +212,7 @@ class OuterLabel {
     }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   _placeLabelViaConnectorCoordOnNormalLabel (lineConnectorCoord) {
@@ -230,7 +230,7 @@ class OuterLabel {
       : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   // End Label movement calls
@@ -354,7 +354,7 @@ class OuterLabel {
   get inBottomLeftQuadrant () { return this.inBottomHalf && this.inLeftHalf }
   get inBottomRightQuadrant () { return this.inBottomHalf && this.inRightHalf }
 
-  get linePointsToMeridian () {
+  get linePointsToYOrigin () {
     return (this.inLeftHalf)
       ? (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x > this.segmentMidpointCoord.x)
       : (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x < this.segmentMidpointCoord.x)
@@ -430,6 +430,8 @@ class OuterLabel {
 
   get width () { return this._variants.width }
   set width (newValue) { this._variants.width = newValue }
+
+  get labelLineAngle () { return this._variants.angleBetweenLabelAndRadial }
 }
 
 module.exports = OuterLabel

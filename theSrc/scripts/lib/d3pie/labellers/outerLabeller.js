@@ -523,6 +523,8 @@ let labels = {
             return lineFunctionBasis(d)
           case 'linear':
             return linearLine(d)
+          case 'manual_bezier':
+            return d[0].path
           default:
             throw new Error(`Invalid line type ${d[0].lineType}`)
         }
@@ -542,7 +544,78 @@ let labels = {
     segmentCoord.color = labelData.color
 
     let intermediateLineCoord = {}
-    if (labelData.linePointsToMeridian) {
+
+    console.log(`${pl(labelData)} ${labelData.labelLineAngle}`)
+    if (labelData.labelLineAngle > 60 && labelData.inTopHalf && labelData.inLeftHalf) {
+      console.log('drawing a straight line')
+      console.log(pl(labelData))
+      console.log(labelData.segmentAngleMidpoint)
+
+      // tangent line interecting the segment coord
+      const tangentLine = [
+        segmentCoord,
+        {
+          // 1000 is arbitrary, just pick a point far away so we get a long line
+          x: segmentCoord.x + 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
+          y: segmentCoord.y - 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
+        },
+      ]
+
+      // line from label heading down and right, parallel but above the radial line, intersecting label coord
+      const shiftedRadialLine = [
+        labelCoord,
+        {
+          // 1000 is arbitrary, just pick a point far away so we get a long line
+          x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint)),
+          y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint))
+        },
+      ]
+
+      const bezierControlCoord2 = math.computeIntersection(shiftedRadialLine, tangentLine)
+
+      // TODO
+      const radialLineExtendingOut = [
+        segmentCoord,
+        {
+          x: segmentCoord.x - 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint)),
+          y: segmentCoord.x - 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint))
+        }
+      ]
+
+      // TODO
+      const shiftedTangentLine = [
+        labelCoord,
+        {
+          // 1000 is arbitrary, just pick a point far away so we get a long line
+          x: labelCoord.x - 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
+          y: labelCoord.y + 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
+        },
+      ]
+
+      const bezierControlCoord1 = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+
+
+      console.log('bezierControlCoord1', bezierControlCoord1)
+      console.log('bezierControlCoord2', bezierControlCoord2)
+
+      const { x: sx, y: sy } = segmentCoord
+      const { x: lx, y: ly } = labelCoord
+      const { x: c1x, y: c1y } = bezierControlCoord1
+      const { x: c2x, y: c2y } = bezierControlCoord2
+
+      // TODO the return type structure needs to be refactored
+      const result = [{
+        id: labelData.id,
+        color: labelData.color,
+        lineType: 'manual_bezier',
+        path: `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${lx} ${ly}`
+      }]
+
+      console.log(result[0].path)
+      return result
+    }
+
+    if (labelData.linePointsToYOrigin) {
       segmentCoord.lineType = 'basis'
       const totalXDelta = Math.abs(segmentCoord.x - labelCoord.x)
       const totalYDelta = Math.abs(segmentCoord.y - labelCoord.y)
@@ -692,7 +765,7 @@ let labels = {
       .enter()
       .append('g')
       .attr('id', function (d) { return `${cssPrefix}labelGroup${d.id}-${labelType}` })
-      .attr('data-line-angle', function (d) { return d.angleBetweenLabelAndRadial.toFixed(3) })
+      .attr('data-line-angle', function (d) { return d.labelLineAngle.toFixed(3) })
       .attr('data-segmentangle', function (d) { return d.segmentAngleMidpoint.toFixed(3) })
       .attr('data-index', function (d) { return d.id })
       .attr('class', `${cssPrefix}labelGroup-${labelType}`)
@@ -1365,7 +1438,7 @@ let labels = {
             bottomIsLifted
           })
 
-          const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.angleBetweenLabelAndRadial
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushUp.labelLineAngle
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             labelLogger.info(`cancelling pushLabelsUp in performInitialClusterSpacing : exceeded max angle threshold. OldY: ${oldY}`)
             labels.adjustLabelToNewY({
@@ -1420,7 +1493,7 @@ let labels = {
             bottomIsLifted
           })
 
-          const angleBetweenRadialAndLabelLinesAfter = labelToPushDown.angleBetweenLabelAndRadial
+          const angleBetweenRadialAndLabelLinesAfter = labelToPushDown.labelLineAngle
           if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
             labelLogger.debug(`cancelling pushLabelsDown in performInitialClusterSpacing : exceeded max angle threshold`)
             labels.adjustLabelToNewY({
@@ -1635,7 +1708,7 @@ let labels = {
               return continueLoop
             }
 
-            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.labelLineAngle
 
             let apexLabelCorrection = 0
             if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -1656,7 +1729,7 @@ let labels = {
               bottomIsLifted
             })
 
-            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.labelLineAngle
             labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} down by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
             if (angleBetweenRadialAndLabelLinesAfter > maxAngleBetweenRadialAndLabelLines) {
@@ -1756,7 +1829,7 @@ let labels = {
               throw new LabelPushedOffCanvas(gettingPushedLabel, 'pushed off top')
             }
 
-            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesBefore = gettingPushedLabel.labelLineAngle
 
             let apexLabelCorrection = 0
             if ((gettingPushedLabel.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -1777,7 +1850,7 @@ let labels = {
               bottomIsLifted
             })
 
-            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.angleBetweenLabelAndRadial
+            const angleBetweenRadialAndLabelLinesAfter = gettingPushedLabel.labelLineAngle
 
             labelLogger.debug(`  ${lp} pushing ${pl(gettingPushedLabel)} up by ${deltaY}. Angle before ${angleBetweenRadialAndLabelLinesBefore.toFixed(2)} and after ${angleBetweenRadialAndLabelLinesAfter.toFixed(2)}`)
 
@@ -1792,7 +1865,7 @@ let labels = {
 
       // final check for left over line angle violators
       _(outerLabelSet).each(label => {
-        const angleBetweenRadialAndLabelLine = label.angleBetweenLabelAndRadial
+        const angleBetweenRadialAndLabelLine = label.labelLineAngle
         if (angleBetweenRadialAndLabelLine > maxAngleBetweenRadialAndLabelLines) {
           labelLogger.warn(`  final pass found ${pl(label)} line angle exceeds threshold.`)
           throw new AngleThresholdExceeded(label, `${angleBetweenRadialAndLabelLine} > ${maxAngleBetweenRadialAndLabelLines}`)
