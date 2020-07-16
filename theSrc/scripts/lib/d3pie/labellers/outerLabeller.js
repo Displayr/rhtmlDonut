@@ -594,6 +594,13 @@ let labels = {
 
       const bezierControlCoord1 = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
 
+      /* Shorten distance to Bezier control point 1 by 50%
+         this provides a balance of:
+          * the middle parts of lines dont overlap too much
+          * it is which segment the line connects
+       */
+      bezierControlCoord1.x += 0.5 * Math.abs(segmentCoord.x - bezierControlCoord1.x)
+      bezierControlCoord1.y += 0.5 * Math.abs(segmentCoord.y - bezierControlCoord1.y)
 
       console.log('bezierControlCoord1', bezierControlCoord1)
       console.log('bezierControlCoord2', bezierControlCoord2)
