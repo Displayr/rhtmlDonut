@@ -1,0 +1,17 @@
+version: 1
+type: multi_widget_single_page
+groupname: label_placement
+general_comments: '100 point dataset with a varied offset to vary which quadrant the labeller must perform on'
+rowSize: 4
+comments: []
+height: 750
+width: 750
+widgets:
+    - config: '{"settings":{"title":"100-offset-00"   } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values'
+    - config: '{"settings":{"title":"100-offset-12.5" } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_12_5_percent'
+    - config: '{"settings":{"title":"100-offset-25"   } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_25_percent'
+    - config: '{"settings":{"title":"100-offset-37.5" } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_37_5_percent'
+    - config: '{"settings":{"title":"100-offset-50"   } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_50_percent'
+    - config: '{"settings":{"title":"100-offset-62.5" } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_62_5_percent'
+    - config: '{"settings":{"title":"100-offset-75"   } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_75_percent'
+    - config: '{"settings":{"title":"100-offset-87.5" } }|config.minAngle_0|data.increasing_value_sets.100_increasing_values_offset_87_5_percent'
