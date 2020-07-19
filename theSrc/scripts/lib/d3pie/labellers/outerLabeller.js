@@ -545,17 +545,29 @@ let labels = {
 
     let intermediateLineCoord = {}
 
-    console.log(`${pl(labelData)} ${labelData.labelLineAngle}`)
+    console.log(`${pl(labelData)} ${labelData.segmentAngleMidpoint}`)
     if (labelData.labelLineAngle > 60 && labelData.inTopHalf && labelData.inLeftHalf) {
       console.log('drawing a straight line')
-      console.log(pl(labelData))
-      console.log(labelData.segmentAngleMidpoint)
+      // console.log(pl(labelData))
+      // console.log(labelData.segmentAngleMidpoint)
+
+      // stratagy: instead of a bezier curve with control points forming a rectangle,
+      // lean the rectangle abit to make a rhomboid, this will make the connection angles not so sharp,
+      // which is similar to the existing "basis interpolation" method for placing lines
+      const segmentControlLeanDegrees = 30
+      const labelControlLeanDegrees = 30
+
+      // stratagy: vary pull in based vertical delta between segement and label
+      const heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment = (segmentCoord.y - labelCoord.y) / segmentCoord.y
+      let controlPointPullInPercentage = 0.25 + (0.5 * heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment)
+      console.log({ controlPointPullInPercentage, segmentControlLeanDegrees, labelControlLeanDegrees })
+
 
       // tangent line interecting the segment coord
       const tangentLine = [
         segmentCoord,
         {
-          // 1000 is arbitrary, just pick a point far away so we get a long line
+          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
           x: segmentCoord.x + 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
           y: segmentCoord.y - 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
         },
@@ -565,20 +577,20 @@ let labels = {
       const shiftedRadialLine = [
         labelCoord,
         {
-          // 1000 is arbitrary, just pick a point far away so we get a long line
-          x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint)),
-          y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint))
+          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
+          x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees)),
+          y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees))
         },
       ]
 
-      const bezierControlCoord2 = math.computeIntersection(shiftedRadialLine, tangentLine)
+      const bezierLabelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
 
       // TODO
       const radialLineExtendingOut = [
         segmentCoord,
         {
-          x: segmentCoord.x - 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint)),
-          y: segmentCoord.x - 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint))
+          x: segmentCoord.x - 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees)),
+          y: segmentCoord.y - 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees))
         }
       ]
 
@@ -586,29 +598,37 @@ let labels = {
       const shiftedTangentLine = [
         labelCoord,
         {
-          // 1000 is arbitrary, just pick a point far away so we get a long line
+          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
           x: labelCoord.x - 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
           y: labelCoord.y + 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
         },
       ]
 
-      const bezierControlCoord1 = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+      const bezierSegmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
 
-      /* Shorten distance to Bezier control point 1 by 50%
+      /* Shorten distance to Bezier control point 1
          this provides a balance of:
           * the middle parts of lines dont overlap too much
-          * it is which segment the line connects
+          * it is clear which segment the line connects
        */
-      bezierControlCoord1.x += 0.5 * Math.abs(segmentCoord.x - bezierControlCoord1.x)
-      bezierControlCoord1.y += 0.5 * Math.abs(segmentCoord.y - bezierControlCoord1.y)
 
-      console.log('bezierControlCoord1', bezierControlCoord1)
-      console.log('bezierControlCoord2', bezierControlCoord2)
+      // stratagy: vary pull in based on segmentAngle
+      // let controlPointPullInPercentage = 0
+      // if (between(0,labelData.segmentAngleMidpoint,30)) { controlPointPullInPercentage = 0.25 }
+      // if (between(30,labelData.segmentAngleMidpoint,60)) { controlPointPullInPercentage = (0.25 + 0.4 * labelData.segmentAngleMidpoint / 60) }
+      // if (between(60,labelData.segmentAngleMidpoint,90)) { controlPointPullInPercentage = 0.65 }
+
+      bezierSegmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - bezierSegmentControlCoord.x)
+      bezierSegmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - bezierSegmentControlCoord.y)
+
+      // // attempt to move the first control point towards the label coord (didn't work)
+      // bezierControlCoord1.x += 0.2 * Math.abs(labelCoord.x - bezierControlCoord1.x)
+      // bezierControlCoord1.y -= 0.2 * Math.abs(labelCoord.y - bezierControlCoord1.y)
 
       const { x: sx, y: sy } = segmentCoord
       const { x: lx, y: ly } = labelCoord
-      const { x: c1x, y: c1y } = bezierControlCoord1
-      const { x: c2x, y: c2y } = bezierControlCoord2
+      const { x: c1x, y: c1y } = bezierSegmentControlCoord
+      const { x: c2x, y: c2y } = bezierLabelControlCoord
 
       // TODO the return type structure needs to be refactored
       const result = [{
@@ -618,7 +638,6 @@ let labels = {
         path: `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${lx} ${ly}`
       }]
 
-      console.log(result[0].path)
       return result
     }
 
