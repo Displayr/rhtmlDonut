@@ -562,7 +562,6 @@ let labels = {
       let controlPointPullInPercentage = 0.25 + (0.5 * heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment)
       console.log({ controlPointPullInPercentage, segmentControlLeanDegrees, labelControlLeanDegrees })
 
-
       // tangent line interecting the segment coord
       const tangentLine = [
         segmentCoord,
@@ -570,7 +569,7 @@ let labels = {
           // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
           x: segmentCoord.x + 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
           y: segmentCoord.y - 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
-        },
+        }
       ]
 
       // line from label heading down and right, parallel but above the radial line, intersecting label coord
@@ -580,7 +579,7 @@ let labels = {
           // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
           x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees)),
           y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees))
-        },
+        }
       ]
 
       const bezierLabelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
@@ -601,7 +600,7 @@ let labels = {
           // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
           x: labelCoord.x - 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
           y: labelCoord.y + 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
-        },
+        }
       ]
 
       const bezierSegmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
