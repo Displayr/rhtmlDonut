@@ -15,7 +15,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30,
   labels.advanced.line.max.angle = 60,
-  labels.advanced.removal.tiebreak = "last",
+  labels.advanced.removal.tiebreak = "best",
   labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
   tooltips.max.width = 0.3, tooltips.max.height = 0.3,
   tooltips.font.family = "Arial", tooltips.font.size = 10,
@@ -75,7 +75,7 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.}
 
-\item{labels.advanced.removal.tiebreak}{(optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.}
+\item{labels.advanced.removal.tiebreak}{(optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement. The default is "best".}
 
 \item{labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled}{(optional) If enabled, add a strategy to the increases the max allowed line angle when labelling a dense ordered set. The default is true.}
 
