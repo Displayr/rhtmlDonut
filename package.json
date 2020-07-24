@@ -18,7 +18,8 @@
     "gulp": "^4.0.2",
     "husky": "^0.13.3",
     "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#5.0.5",
-    "sinon": "^2.3.2"
+    "sinon": "^2.3.2",
+    "yargs": "^15.4.1"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
