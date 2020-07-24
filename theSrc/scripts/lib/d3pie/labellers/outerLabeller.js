@@ -6,6 +6,7 @@ import math from '../math'
 import segments from '../segments'
 import OuterLabel from './outerLabel'
 import InnerLabel from './innerLabel'
+import computeOuterConnectionLinePath from './computeOuterConnectionLinePath'
 import LabelCollision from '../interrupts/labelCollision'
 import AngleThresholdExceeded from '../interrupts/angleThresholdExceeded'
 import LabelPushedOffCanvas from '../interrupts/labelPushedOffCanvas'
@@ -486,210 +487,35 @@ let labels = {
   },
 
   drawOuterLabelLines: function (pie) {
-    pie.outerLabelLines = pie.outerLabelData
-      .map(labelData => {
-        return labels.computeOuterLabelLine({
-          pie,
-          pieCenter: pie.pieCenter,
-          outerRadius: pie.outerRadius,
-          labelData
-        })
-      })
+    let basisInterpolationFunction = d3.svg.line()
+      .x(d => d.x)
+      .y(d => d.y)
+      .interpolate('basis')
+
+    const outerLabelLines = pie.outerLabelData.map(labelData => ({
+      id: labelData.id,
+      color: labelData.color,
+      path: computeOuterConnectionLinePath({ labelData, basisInterpolationFunction })
+    }))
 
     let lineGroups = pie.svg.insert('g', `.${pie.cssPrefix}pieChart`) // meaning, BEFORE .pieChart
       .attr('class', `${pie.cssPrefix}lineGroups-outer`)
       .style('opacity', 1)
 
     let lineGroup = lineGroups.selectAll(`.${pie.cssPrefix}lineGroup`)
-      .data(pie.outerLabelLines)
+      .data(outerLabelLines)
       .enter()
       .append('g')
-      .attr('class', function (d) { return `${pie.cssPrefix}lineGroup ${pie.cssPrefix}lineGroup-${d[0].id}` })
-
-    let lineFunctionBasis = d3.svg.line()
-      .x(d => d.x)
-      .y(d => d.y)
-      .interpolate('basis')
-
-    let linearLine = d3.svg.line() // TODO delete if still unused
-      .x(d => d.x)
-      .y(d => d.y)
-      .interpolate('linear')
+      .attr('class', d => `${pie.cssPrefix}lineGroup`)
+      .attr('id', d => `${pie.cssPrefix}lineGroup-${d.id}`)
 
     lineGroup.append('path')
-      .attr('d', (d) => {
-        switch (d[0].lineType) {
-          case 'basis':
-            return lineFunctionBasis(d)
-          case 'linear':
-            return linearLine(d)
-          case 'manual_bezier':
-            return d[0].path
-          default:
-            throw new Error(`Invalid line type ${d[0].lineType}`)
-        }
-      })
-      .attr('stroke', d => d[0].color)
+      .attr('d', d => d.path)
+      .attr('stroke', d => d.color)
       .attr('stroke-width', 1)
       .attr('fill', 'none')
       .style('opacity', 1)
       .style('display', 'inline')
-  },
-
-  computeOuterLabelLine: function ({ pie, pieCenter, outerRadius, labelData }) {
-    let segmentCoord = _.clone(labelData.segmentMidpointCoord)
-    let labelCoord = labelData.lineConnectorCoord
-
-    segmentCoord.id = labelData.id
-    segmentCoord.color = labelData.color
-
-    let intermediateLineCoord = {}
-
-    console.log(`${pl(labelData)} ${labelData.segmentAngleMidpoint}`)
-    if (labelData.labelLineAngle > 60 && labelData.inTopHalf && labelData.inLeftHalf) {
-      console.log('drawing a straight line')
-      // console.log(pl(labelData))
-      // console.log(labelData.segmentAngleMidpoint)
-
-      // stratagy: instead of a bezier curve with control points forming a rectangle,
-      // lean the rectangle abit to make a rhomboid, this will make the connection angles not so sharp,
-      // which is similar to the existing "basis interpolation" method for placing lines
-      const segmentControlLeanDegrees = 30
-      const labelControlLeanDegrees = 30
-
-      // stratagy: vary pull in based vertical delta between segement and label
-      const heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment = (segmentCoord.y - labelCoord.y) / segmentCoord.y
-      let controlPointPullInPercentage = 0.25 + (0.5 * heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment)
-      console.log({ controlPointPullInPercentage, segmentControlLeanDegrees, labelControlLeanDegrees })
-
-      // tangent line interecting the segment coord
-      const tangentLine = [
-        segmentCoord,
-        {
-          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-          x: segmentCoord.x + 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
-          y: segmentCoord.y - 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
-        }
-      ]
-
-      // line from label heading down and right, parallel but above the radial line, intersecting label coord
-      const shiftedRadialLine = [
-        labelCoord,
-        {
-          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-          x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees)),
-          y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees))
-        }
-      ]
-
-      const bezierLabelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
-
-      // TODO
-      const radialLineExtendingOut = [
-        segmentCoord,
-        {
-          x: segmentCoord.x - 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees)),
-          y: segmentCoord.y - 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees))
-        }
-      ]
-
-      // TODO
-      const shiftedTangentLine = [
-        labelCoord,
-        {
-          // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-          x: labelCoord.x - 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
-          y: labelCoord.y + 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
-        }
-      ]
-
-      const bezierSegmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
-
-      /* Shorten distance to Bezier control point 1
-         this provides a balance of:
-          * the middle parts of lines dont overlap too much
-          * it is clear which segment the line connects
-       */
-
-      // stratagy: vary pull in based on segmentAngle
-      // let controlPointPullInPercentage = 0
-      // if (between(0,labelData.segmentAngleMidpoint,30)) { controlPointPullInPercentage = 0.25 }
-      // if (between(30,labelData.segmentAngleMidpoint,60)) { controlPointPullInPercentage = (0.25 + 0.4 * labelData.segmentAngleMidpoint / 60) }
-      // if (between(60,labelData.segmentAngleMidpoint,90)) { controlPointPullInPercentage = 0.65 }
-
-      bezierSegmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - bezierSegmentControlCoord.x)
-      bezierSegmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - bezierSegmentControlCoord.y)
-
-      // // attempt to move the first control point towards the label coord (didn't work)
-      // bezierControlCoord1.x += 0.2 * Math.abs(labelCoord.x - bezierControlCoord1.x)
-      // bezierControlCoord1.y -= 0.2 * Math.abs(labelCoord.y - bezierControlCoord1.y)
-
-      const { x: sx, y: sy } = segmentCoord
-      const { x: lx, y: ly } = labelCoord
-      const { x: c1x, y: c1y } = bezierSegmentControlCoord
-      const { x: c2x, y: c2y } = bezierLabelControlCoord
-
-      // TODO the return type structure needs to be refactored
-      const result = [{
-        id: labelData.id,
-        color: labelData.color,
-        lineType: 'manual_bezier',
-        path: `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${lx} ${ly}`
-      }]
-
-      return result
-    }
-
-    if (labelData.linePointsToYOrigin) {
-      segmentCoord.lineType = 'basis'
-      const totalXDelta = Math.abs(segmentCoord.x - labelCoord.x)
-      const totalYDelta = Math.abs(segmentCoord.y - labelCoord.y)
-
-      // approach 1: "y delta much (i.e. >10) larger than x delta"
-      //  * The intermediateLineCoord takes us at a 45 degree angle from segment to the meridian running through the line connector, then we go straight up via the end point
-      //  * If the y delta is not larger, this 45 degree approach causes us to overshoot the line connector, so we switch to approach 2
-      // approach 2: "y delta not much larger than x delta"
-      //  * The intermediateLineCoord takes us to 5 pixels inside of the lineConnector
-
-      if (totalXDelta + 10 < totalYDelta) {
-        intermediateLineCoord = {
-          x: (labelData.inLeftHalf)
-            ? segmentCoord.x + totalXDelta
-            : segmentCoord.x - totalXDelta,
-          y: (labelData.inTopHalf)
-            ? segmentCoord.y - totalXDelta
-            : segmentCoord.y + totalXDelta,
-          type: 'mid'
-        }
-      } else {
-        intermediateLineCoord = {
-          x: (labelData.inLeftHalf)
-            ? segmentCoord.x + totalXDelta
-            : segmentCoord.x - totalXDelta,
-          y: (labelData.inTopHalf)
-            ? segmentCoord.y - (totalYDelta - 10)
-            : segmentCoord.y + (totalYDelta - 10),
-          type: 'mid'
-        }
-      }
-    } else {
-      segmentCoord.lineType = 'basis'
-      intermediateLineCoord = {
-        x: segmentCoord.x + (labelCoord.x - segmentCoord.x) * 0.5,
-        y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5,
-        type: 'mid'
-      }
-      switch (labelData.inTopHalf) {
-        case true:
-          intermediateLineCoord.y -= Math.abs(labelCoord.y - segmentCoord.y) * 0.25
-          break
-        case false:
-          intermediateLineCoord.y += Math.abs(labelCoord.y - segmentCoord.y) * 0.25
-          break
-      }
-    }
-
-    return [segmentCoord, intermediateLineCoord, labelCoord]
   },
 
   drawInnerLabelLines: function (pie) {
