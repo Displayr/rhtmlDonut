@@ -13,7 +13,7 @@ let series = _.range(setSize).map(x => x + 1)
 if (reverse) { series = series.reverse() }
 
 const sumWithoutLargeSlice = _(series).sum()
-const offsetSize = parseInt(sumWithoutLargeSlice / ((1-offsetProportion)/offsetProportion))
+const offsetSize = parseInt(sumWithoutLargeSlice / ((1 - offsetProportion) / offsetProportion))
 
 const donutConfig = {
   values: [offsetSize].concat(series),
