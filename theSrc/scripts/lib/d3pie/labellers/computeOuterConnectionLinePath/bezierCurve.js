@@ -1,87 +1,298 @@
 import math from '../../math'
-import _ from "lodash";
 
-module.exports = ({ labelData }) => {
-  let segmentCoord = _.clone(labelData.segmentMidpointCoord)
-  let labelCoord = labelData.lineConnectorCoord
+// strategy: instead of a bezier curve with control points forming a rectangle,
+// lean the rectangle a bit to make a rhomboid, this will make the connection angles not so sharp,
+// which is similar to the existing "basis interpolation" method for placing lines
 
-  // stratagy: instead of a bezier curve with control points forming a rectangle,
-  // lean the rectangle abit to make a rhomboid, this will make the connection angles not so sharp,
-  // which is similar to the existing "basis interpolation" method for placing lines
-  const segmentControlLeanDegrees = 30
-  const labelControlLeanDegrees = 30
+/* Shorten distance to Bezier control point 1
+   this provides a balance of:
+    * the middle parts of lines dont overlap too much
+    * it is clear which segment the line connects
+ */
 
-  // stratagy: vary pull in based vertical delta between segement and label
-  const heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment = (segmentCoord.y - labelCoord.y) / segmentCoord.y
-  let controlPointPullInPercentage = 0.25 + (0.5 * heightDifferenceBetweenSegmentAndLabelAsPercentageOfSpaceAboveSegment)
-  console.log({ controlPointPullInPercentage, segmentControlLeanDegrees, labelControlLeanDegrees })
+// NB on the use '1000' in line generation. It is arbitrary, just pick a point far away so we get a long line to ensure intersections
 
-  // tangent line interecting the segment coord
-  const tangentLine = [
-    segmentCoord,
-    {
-      // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-      x: segmentCoord.x + 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
-      y: segmentCoord.y - 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
-    }
-  ]
+const segmentControlLeanDegrees = 30 // TODO configure
+const labelControlLeanDegrees = 0 // TODO configure
+
+module.exports = ({ labelData, pieCenter, canvasHeight }) => {
+  const labelGreaterThanSegment = (labelData.inTopLeftQuadrant && labelData.labelAngle > 270)
+    ? false
+    : labelData.labelAngle > labelData.segmentAngleMidpoint
+
+  // 8 cases. Likely some can be combined
+  if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, pieCenter, labelGreaterThanSegment }) }
+  if (labelData.inTopRightQuadrant) { return bezierCurveInTopRight({ labelData, pieCenter, labelGreaterThanSegment }) }
+  if (labelData.inBottomLeftQuadrant) { return bezierCurveInBottomLeft({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) }
+  if (labelData.inBottomRightQuadrant) { return bezierCurveInBottomRight({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) }
+}
+
+const straightLine = ({ labelData }) => {
+  const { x: sx, y: sy } = labelData.segmentMidpointCoord
+  const { x: lx, y: ly } = labelData.lineConnectorCoord
+  return { path: `M ${sx} ${sy} L ${lx} ${ly}`, pathType: 'straight' }
+}
+
+const bezierCurveInTopLeft = ({ labelData, pieCenter, labelGreaterThanSegment }) => {
+  const {
+    sx, sy, lx, ly,
+    segmentCoord, labelCoord,
+    segmentAngle,
+  } = extractVars({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
+
+  const tangentLine = topLeftTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = topLeftTangentLine({ x: lx, y: ly, segmentAngle })
+
+  const labelLeanAngle = (labelGreaterThanSegment) ? segmentAngle + labelControlLeanDegrees : segmentAngle - labelControlLeanDegrees
+  const segmentLeanAngle = (labelGreaterThanSegment) ? segmentAngle + segmentControlLeanDegrees : segmentAngle - segmentControlLeanDegrees
 
   // line from label heading down and right, parallel but above the radial line, intersecting label coord
   const shiftedRadialLine = [
     labelCoord,
     {
       // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-      x: labelCoord.x + 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees)),
-      y: labelCoord.y + 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + labelControlLeanDegrees))
+      x: lx + 1000 * Math.cos(math.toRadians(labelLeanAngle)),
+      y: ly + 1000 * Math.sin(math.toRadians(labelLeanAngle))
     }
   ]
 
-  const bezierLabelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
+  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
 
-  // TODO
   const radialLineExtendingOut = [
     segmentCoord,
     {
-      x: segmentCoord.x - 1000 * Math.cos(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees)),
-      y: segmentCoord.y - 1000 * Math.sin(math.toRadians(labelData.segmentAngleMidpoint + segmentControlLeanDegrees))
+      x: sx - 1000 * Math.cos(math.toRadians(segmentLeanAngle)),
+      y: sy - 1000 * Math.sin(math.toRadians(segmentLeanAngle))
     }
   ]
 
-  // TODO
-  const shiftedTangentLine = [
+  const segmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+
+  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
+  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+
+  return {
+    path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
+    pathType: 'bezier-topleft'
+  }
+}
+
+const bezierCurveInTopRight = ({ labelData, pieCenter, labelGreaterThanSegment }) => {
+  const {
+    sx, sy, lx, ly,
+    segmentCoord, labelCoord,
+    segmentAngle,
+  } = extractVars({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
+
+  //TODO: should not use the topRight fns here, should rename it if it is indeed a correct usage
+  // also i think i incorrectly modified the angles here (try to fix i think it should by 180 - segmentAngle)
+  const tangentLine = topRightTangentLine({ x: sx, y: sy, segmentAngle: segmentAngle - 180 })
+  const shiftedTangentLine = topRightTangentLine({ x: lx, y: ly, segmentAngle: segmentAngle - 180 })
+
+  const labelLeanAngle = (labelGreaterThanSegment) ? (180 - segmentAngle) - labelControlLeanDegrees : (180 - segmentAngle) + labelControlLeanDegrees
+  const segmentLeanAngle = (labelGreaterThanSegment) ? (180 - segmentAngle) - segmentControlLeanDegrees : (180 - segmentAngle) + segmentControlLeanDegrees
+
+  // line from label heading down and left, parallel but above the radial line, intersecting label coord
+  const shiftedRadialLine = [
     labelCoord,
     {
       // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
-      x: labelCoord.x - 1000 * Math.cos(math.toRadians(90 - labelData.segmentAngleMidpoint)),
-      y: labelCoord.y + 1000 * Math.sin(math.toRadians(90 - labelData.segmentAngleMidpoint))
+      x: lx - 1000 * Math.cos(math.toRadians(labelLeanAngle)),
+      y: ly + 1000 * Math.sin(math.toRadians(labelLeanAngle))
     }
   ]
 
-  const bezierSegmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
 
-  /* Shorten distance to Bezier control point 1
-     this provides a balance of:
-      * the middle parts of lines dont overlap too much
-      * it is clear which segment the line connects
-   */
+  const radialLineExtendingOut = [
+    segmentCoord,
+    {
+      x: sx + 1000 * Math.cos(math.toRadians(segmentLeanAngle)),
+      y: sy - 1000 * Math.sin(math.toRadians(segmentLeanAngle))
+    }
+  ]
 
-  // stratagy: vary pull in based on segmentAngle
-  // let controlPointPullInPercentage = 0
-  // if (between(0,labelData.segmentAngleMidpoint,30)) { controlPointPullInPercentage = 0.25 }
-  // if (between(30,labelData.segmentAngleMidpoint,60)) { controlPointPullInPercentage = (0.25 + 0.4 * labelData.segmentAngleMidpoint / 60) }
-  // if (between(60,labelData.segmentAngleMidpoint,90)) { controlPointPullInPercentage = 0.65 }
+  const segmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
 
-  bezierSegmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - bezierSegmentControlCoord.x)
-  bezierSegmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - bezierSegmentControlCoord.y)
+  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
+  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
 
-  // // attempt to move the first control point towards the label coord (didn't work)
-  // bezierControlCoord1.x += 0.2 * Math.abs(labelCoord.x - bezierControlCoord1.x)
-  // bezierControlCoord1.y -= 0.2 * Math.abs(labelCoord.y - bezierControlCoord1.y)
+  return {
+    path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
+    pathType: 'bezier-topright'
+  }
+}
 
+const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) => {
+  const {
+    sx, sy, lx, ly,
+    segmentCoord, labelCoord,
+    segmentAngle,
+  } = extractVars({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight })
+
+  //TODO: should not use the topRight fns here, should rename it if it is indeed a correct usage
+  const tangentLine = topRightTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = topRightTangentLine({ x: lx, y: ly, segmentAngle })
+
+  // TODO 180 + segmentAngle looks wrong
+  const labelLeanAngle = (labelGreaterThanSegment) ? (180 + segmentAngle) + labelControlLeanDegrees : (180 + segmentAngle) - labelControlLeanDegrees
+  const segmentLeanAngle = (labelGreaterThanSegment) ? (180 + segmentAngle) + segmentControlLeanDegrees : (180 + segmentAngle) - segmentControlLeanDegrees
+
+  // line from label heading down and left, parallel but above the radial line, intersecting label coord
+  const shiftedRadialLine = [
+    labelCoord,
+    {
+      // 1000 is arbitrary, just pick a point far away so we get a long line to ensure intersection
+      x: lx - 1000 * Math.cos(math.toRadians(labelLeanAngle)),
+      y: ly - 1000 * Math.sin(math.toRadians(labelLeanAngle))
+    }
+  ]
+
+  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
+
+  const radialLineExtendingOut = [
+    segmentCoord,
+    {
+      x: sx + 1000 * Math.cos(math.toRadians(segmentLeanAngle)),
+      y: sy + 1000 * Math.sin(math.toRadians(segmentLeanAngle))
+    }
+  ]
+
+  const segmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+
+  segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
+  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+
+  return {
+    path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
+    pathType: 'bezier-bottomright'
+  }
+}
+
+const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) => {
+  const {
+    sx, sy, lx, ly,
+    segmentCoord, labelCoord,
+    segmentAngle,
+  } = extractVars({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight })
+  // console.log(`${labelData._label} ${ controlPointPullInPercentage }`)
+
+  //TODO: should not use the topLeft fns here, should rename it if it is indeed a correct usage
+  const tangentLine = bottomLeftTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = bottomLeftTangentLine({ x: lx, y: ly, segmentAngle })
+
+  const labelLeanAngle = Math.max(0,(labelGreaterThanSegment) ? (360 - segmentAngle) - labelControlLeanDegrees : (360 - segmentAngle) + labelControlLeanDegrees)
+  const segmentLeanAngle = Math.max(0,(labelGreaterThanSegment) ? (360 - segmentAngle) - segmentControlLeanDegrees : (360 - segmentAngle) + segmentControlLeanDegrees)
+
+  // line from label heading down and left, parallel but above the radial line, intersecting label coord
+  const shiftedRadialLine = [
+    labelCoord,
+    {
+      x: lx + 1000 * Math.cos(math.toRadians(labelLeanAngle)),
+      y: ly - 1000 * Math.sin(math.toRadians(labelLeanAngle))
+    }
+  ]
+
+  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
+
+  const radialLineExtendingOut = [
+    segmentCoord,
+    {
+      x: sx - 1000 * Math.cos(math.toRadians(segmentLeanAngle)),
+      y: sy + 1000 * Math.sin(math.toRadians(segmentLeanAngle))
+    }
+  ]
+
+  const segmentControlCoord = math.computeIntersection(radialLineExtendingOut, shiftedTangentLine)
+
+  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
+  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+
+  return {
+    path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
+    pathType: 'bezier-bottomleft'
+  }
+}
+
+const bezierPath = (segmentCoord, segmentControlCoord, labelControlCoord, labelCoord) => {
   const { x: sx, y: sy } = segmentCoord
   const { x: lx, y: ly } = labelCoord
-  const { x: c1x, y: c1y } = bezierSegmentControlCoord
-  const { x: c2x, y: c2y } = bezierLabelControlCoord
-
+  const { x: c1x, y: c1y } = segmentControlCoord
+  const { x: c2x, y: c2y } = labelControlCoord
   return `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${lx} ${ly}`
+}
+
+const topLeftTangentLine = ({ x, y, segmentAngle }) => {
+  const { xProportion, yProportion } = getAngleProportions(90 - segmentAngle)
+  return [
+    { x: x - 1000 * xProportion, y: y + 1000 * yProportion },
+    { x: x + 1000 * xProportion, y: y - 1000 * yProportion }
+  ]
+}
+
+const topRightTangentLine = ({ x, y, segmentAngle }) => {
+  const { xProportion, yProportion } = getAngleProportions(segmentAngle - 90)
+  return [
+    { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+  ]
+}
+
+const bottomLeftTangentLine = ({ x, y, segmentAngle }) => {
+  const { xProportion, yProportion } = getAngleProportions(segmentAngle - 270)
+  return [
+    { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+  ]
+}
+
+const getAngleProportions = (angleInDegrees) => ({
+  xProportion: Math.cos(math.toRadians(angleInDegrees)),
+  yProportion: Math.sin(math.toRadians(angleInDegrees))
+})
+
+const extractVars = ({ labelData }) => {
+  const segmentCoord = labelData.segmentMidpointCoord
+  const labelCoord = labelData.lineConnectorCoord
+  const { x: sx, y: sy } = segmentCoord
+  const { x: lx, y: ly } = labelCoord
+  const segmentAngle = labelData.segmentAngleMidpoint
+
+  return {
+    sx,
+    sy,
+    lx,
+    ly,
+    segmentCoord,
+    labelCoord,
+    segmentAngle
+  }
+}
+
+const getSegmentControlPointPullInPercentageForTopQuadrant = ({ labelData, pieCenter }) => {
+  const { y: sy } = labelData.segmentMidpointCoord
+  const { y: ly } = labelData.lineConnectorCoord
+
+  // strategy: vary pull in based vertical delta between segment and label
+  const labelAboveSegment = ly < sy
+  const relativeHeightDifferenceBetweenSegmentAndLabel = (labelAboveSegment)
+    ? Math.min(1, (sy - ly) / sy)
+    : Math.min(1, (ly - sy) / (pieCenter.y - sy))
+  return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
+}
+
+const getSegmentControlPointPullInPercentageForBottomQuadrant = ({ labelData, pieCenter, canvasHeight }) => {
+  const { y: sy } = labelData.segmentMidpointCoord
+  const { y: ly } = labelData.lineConnectorCoord
+
+  // strategy: vary pull in based vertical delta between segment and label
+  const labelAboveSegment = ly < sy
+  const relativeHeightDifferenceBetweenSegmentAndLabel = (labelAboveSegment)
+    ? Math.min(1, (sy - ly) / (sy - pieCenter.y))
+    : Math.min(1, (ly - sy) / (canvasHeight - sy))
+  return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
 }

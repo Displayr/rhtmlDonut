@@ -492,11 +492,21 @@ let labels = {
       .y(d => d.y)
       .interpolate('basis')
 
-    const outerLabelLines = pie.outerLabelData.map(labelData => ({
-      id: labelData.id,
-      color: labelData.color,
-      path: computeOuterConnectionLinePath({ labelData, basisInterpolationFunction })
-    }))
+    const outerLabelLines = pie.outerLabelData.map(labelData => {
+      const { path, pathType } = computeOuterConnectionLinePath({
+        labelData,
+        basisInterpolationFunction,
+        pieCenter: pie.pieCenter,
+        canvasHeight: parseFloat(pie.options.size.canvasHeight)
+      })
+
+      return {
+        id: labelData.id,
+        color: labelData.color,
+        path,
+        pathType
+      }
+    })
 
     let lineGroups = pie.svg.insert('g', `.${pie.cssPrefix}pieChart`) // meaning, BEFORE .pieChart
       .attr('class', `${pie.cssPrefix}lineGroups-outer`)
@@ -506,7 +516,7 @@ let labels = {
       .data(outerLabelLines)
       .enter()
       .append('g')
-      .attr('class', d => `${pie.cssPrefix}lineGroup`)
+      .attr('class', d => `${pie.cssPrefix}lineGroup pathType-${d.pathType}`)
       .attr('id', d => `${pie.cssPrefix}lineGroup-${d.id}`)
 
     lineGroup.append('path')

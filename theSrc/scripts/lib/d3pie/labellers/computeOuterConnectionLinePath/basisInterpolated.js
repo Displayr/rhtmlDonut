@@ -2,6 +2,7 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
   let segmentCoord = labelData.segmentMidpointCoord
   let intermediateLineCoord = { type: 'mid' } // TODO do I need type 'mid' ?
   let labelCoord = labelData.lineConnectorCoord
+  let pathType = null
 
   if (labelData.linePointsToYOrigin) {
 
@@ -15,6 +16,7 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
     //  * The intermediateLineCoord takes us to 5 pixels inside of the lineConnector
 
     if (totalXDelta + 10 < totalYDelta) {
+      pathType = 'basis-towardsYAxis-yDeltaMuchLarger'
       intermediateLineCoord = {
         x: (labelData.inLeftHalf)
           ? segmentCoord.x + totalXDelta
@@ -24,6 +26,7 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
           : segmentCoord.y + totalXDelta,
       }
     } else {
+      pathType = 'basis-towardsYAxis'
       intermediateLineCoord = {
         x: (labelData.inLeftHalf)
           ? segmentCoord.x + totalXDelta
@@ -34,6 +37,7 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
       }
     }
   } else {
+    pathType = 'basis-awayfromYAxis'
     intermediateLineCoord = {
       x: segmentCoord.x + (labelCoord.x - segmentCoord.x) * 0.5,
       y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5,
@@ -48,5 +52,8 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
     }
   }
 
-  return basisInterpolationFunction([segmentCoord, intermediateLineCoord, labelCoord])
+  return {
+    path: basisInterpolationFunction([segmentCoord, intermediateLineCoord, labelCoord]),
+    pathType
+  }
 }
