@@ -50,7 +50,7 @@ const defaultSettings = {
       minLabelOffset: 5, // TODO use these values and expose as configurable
       maxLabelOffset: 100, // TODO use these values and expose as configurable
       liftOffAngle: 30, // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
-      labelMaxLineAngle: 60, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
+      labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       hideWhenLessThanPercentage: null, // pieWrapper: null HARD CODE (minAngle is used instead) . TODO investigate this variable
       maxWidth: 0.3, // pieWrapper: settings.labelsMaxWidth. R: labels.max.width. wrap label text if label exceeds X% of canvasWidth
       maxVerticalOffset: null, // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90
