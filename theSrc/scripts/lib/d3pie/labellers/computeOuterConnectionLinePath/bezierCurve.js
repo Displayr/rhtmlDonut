@@ -1,14 +1,12 @@
 import { computeIntersection, between, toRadians } from '../../math'
 
-// strategy: instead of a bezier curve with control points forming a rectangle,
-// lean the rectangle a bit to make a rhomboid, this will make the connection angles not so sharp,
-// which is similar to the existing "basis interpolation" method for placing lines
-
-/* Shorten distance to Bezier control point 1
-   this provides a balance of:
-    * the middle parts of lines dont overlap too much
-    * it is clear which segment the line connects
- */
+// draw a bezier curve from the segment to the label
+// * start with a rectangle with the segment and label at opposite points ("kitty corner") on the rectangle
+// * optionally lean the rectangle based on segmentControlLeanDegrees and labelControlLeanDegrees
+//   * this is dont to reduce overlap of neighboring bezier lines
+// optionally "pull back the segment control point"
+//   * this is dont to reduce overlap of neighboring bezier lines
+// now draw the bezier curve using the point above the segment point as the first control point, and the point below the label as the second control point
 
 // NB on the use '1000' in line generation. It is arbitrary, just pick a point far away so we get a long line to ensure intersections
 
@@ -16,39 +14,19 @@ const segmentControlLeanDegrees = 30 // TODO configure
 const labelControlLeanDegrees = 0 // TODO configure
 
 module.exports = ({ labelData, pieCenter, canvasHeight }) => {
-  const labelGreaterThanSegment = (labelData.inTopLeftQuadrant && labelData.labelAngle > 270)
-    ? false
-    : labelData.labelAngle > labelData.segmentAngleMidpoint
-
-  if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, pieCenter, labelGreaterThanSegment }) }
-  if (labelData.inTopRightQuadrant) { return bezierCurveInTopRight({ labelData, pieCenter, labelGreaterThanSegment }) }
-  if (labelData.inBottomLeftQuadrant) { return bezierCurveInBottomLeft({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) }
-  if (labelData.inBottomRightQuadrant) { return bezierCurveInBottomRight({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) }
+  if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, pieCenter, canvasHeight }) }
+  if (labelData.inTopRightQuadrant) { return bezierCurveInTopRight({ labelData, pieCenter, canvasHeight }) }
+  if (labelData.inBottomLeftQuadrant) { return bezierCurveInBottomLeft({ labelData, pieCenter, canvasHeight }) }
+  if (labelData.inBottomRightQuadrant) { return bezierCurveInBottomRight({ labelData, pieCenter, canvasHeight }) }
 }
 
+const bezierCurveInTopLeft = ({ labelData, pieCenter, canvasHeight }) => {
+  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
+  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
 
-const bezierCurveInTopLeft = ({ labelData, pieCenter, labelGreaterThanSegment }) => {
-  const {
-    sx, sy, lx, ly,
-    segmentCoord, labelCoord,
-    segmentAngle,
-  } = extractVars({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
-
-  const labelLeanAngle = segmentAngle + (labelControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-  const segmentLeanAngle = segmentAngle + (segmentControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-
-  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
-
-  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
-  const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
-
-  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
-  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
-
-  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
-  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
+  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
@@ -56,28 +34,13 @@ const bezierCurveInTopLeft = ({ labelData, pieCenter, labelGreaterThanSegment })
   }
 }
 
-const bezierCurveInTopRight = ({ labelData, pieCenter, labelGreaterThanSegment }) => {
-  const {
-    sx, sy, lx, ly,
-    segmentCoord, labelCoord,
-    segmentAngle,
-  } = extractVars({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
+const bezierCurveInTopRight = ({ labelData, pieCenter, canvasHeight }) => {
+  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
+  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
 
-  const labelLeanAngle = segmentAngle + (labelControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-  const segmentLeanAngle = segmentAngle + (segmentControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-
-  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
-
-  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
-  const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
-
-  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
-
-  segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
-  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+  segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
+  segmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
@@ -85,28 +48,13 @@ const bezierCurveInTopRight = ({ labelData, pieCenter, labelGreaterThanSegment }
   }
 }
 
-const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) => {
-  const {
-    sx, sy, lx, ly,
-    segmentCoord, labelCoord,
-    segmentAngle,
-  } = extractVars({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight })
+const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight }) => {
+  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
+  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
 
-  const labelLeanAngle = segmentAngle + (labelControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-  const segmentLeanAngle = segmentAngle + (segmentControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-
-  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
-
-  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
-  const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
-
-  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
-
-  segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
-  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+  segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
+  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
@@ -114,28 +62,13 @@ const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight, labelGre
   }
 }
 
-const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight, labelGreaterThanSegment }) => {
-  const {
-    sx, sy, lx, ly,
-    segmentCoord, labelCoord,
-    segmentAngle,
-  } = extractVars({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight })
+const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight }) => {
+  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
+  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
 
-  const labelLeanAngle = segmentAngle + (labelControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-  const segmentLeanAngle = segmentAngle + (segmentControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
-
-  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
-
-  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
-  const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
-
-  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
-
-  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
-  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
+  segmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
+  segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
@@ -180,23 +113,41 @@ const getAngleProportions = (angleInDegrees) => ({
   yProportion: Math.sin(toRadians(angleInDegrees))
 })
 
-const extractVars = ({ labelData }) => {
-  const segmentCoord = labelData.segmentMidpointCoord
-  const labelCoord = labelData.lineConnectorCoord
-  const { x: sx, y: sy } = segmentCoord
-  const { x: lx, y: ly } = labelCoord
-  const segmentAngle = labelData.segmentAngleMidpoint
-
+const getSegmentAndLabelCoords = ({ labelData }) => {
   return {
-    sx,
-    sy,
-    lx,
-    ly,
-    segmentCoord,
-    labelCoord,
-    segmentAngle
+    segmentCoord: labelData.segmentMidpointCoord,
+    labelCoord: labelData.lineConnectorCoord
   }
 }
+
+const getControlCoordinates = ({ labelData }) => {
+  const segmentAngle = labelData.segmentAngleMidpoint
+  const segmentCoord = labelData.segmentMidpointCoord
+  const labelCoord = labelData.lineConnectorCoord
+
+  const labelGreaterThanSegment = (labelData.inTopLeftQuadrant && labelData.labelAngle > 270)
+    ? false
+    : labelData.labelAngle > labelData.segmentAngleMidpoint
+
+  const labelLeanAngle = segmentAngle + (labelControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
+  const segmentLeanAngle = segmentAngle + (segmentControlLeanDegrees * (labelGreaterThanSegment) ? 1 : -1)
+
+  const tangentLine = getTangentLine({ ...segmentCoord, segmentAngle })
+  const shiftedTangentLine = getTangentLine({ ...labelCoord, segmentAngle })
+
+  const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
+  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
+
+  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
+
+  return { segmentControlCoord, labelControlCoord }
+}
+
+const getSegmentControlPointPullInPercentage = ({ labelData, pieCenter, canvasHeight }) => {
+  if (labelData.this.inTopHalf) { return getSegmentControlPointPullInPercentageForTopQuadrant ({ labelData, pieCenter }) }
+  else { return getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight }) }
+})
 
 const getSegmentControlPointPullInPercentageForTopQuadrant = ({ labelData, pieCenter }) => {
   const { y: sy } = labelData.segmentMidpointCoord
