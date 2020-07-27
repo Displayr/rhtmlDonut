@@ -41,8 +41,8 @@ const bezierCurveInTopLeft = ({ labelData, pieCenter, labelGreaterThanSegment })
   } = extractVars({ labelData })
   const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
 
-  const tangentLine = topLeftTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = topLeftTangentLine({ x: lx, y: ly, segmentAngle })
+  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
 
   const labelLeanAngle = (labelGreaterThanSegment) ? segmentAngle + labelControlLeanDegrees : segmentAngle - labelControlLeanDegrees
   const segmentLeanAngle = (labelGreaterThanSegment) ? segmentAngle + segmentControlLeanDegrees : segmentAngle - segmentControlLeanDegrees
@@ -86,10 +86,8 @@ const bezierCurveInTopRight = ({ labelData, pieCenter, labelGreaterThanSegment }
   } = extractVars({ labelData })
   const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForTopQuadrant({ labelData, pieCenter })
 
-  //TODO: should not use the topRight fns here, should rename it if it is indeed a correct usage
-  // also i think i incorrectly modified the angles here (try to fix i think it should by 180 - segmentAngle)
-  const tangentLine = topRightTangentLine({ x: sx, y: sy, segmentAngle: segmentAngle - 180 })
-  const shiftedTangentLine = topRightTangentLine({ x: lx, y: ly, segmentAngle: segmentAngle - 180 })
+  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
 
   const labelLeanAngle = (labelGreaterThanSegment) ? (180 - segmentAngle) - labelControlLeanDegrees : (180 - segmentAngle) + labelControlLeanDegrees
   const segmentLeanAngle = (labelGreaterThanSegment) ? (180 - segmentAngle) - segmentControlLeanDegrees : (180 - segmentAngle) + segmentControlLeanDegrees
@@ -133,9 +131,8 @@ const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight, labelGre
   } = extractVars({ labelData })
   const controlPointPullInPercentage = getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight })
 
-  //TODO: should not use the topRight fns here, should rename it if it is indeed a correct usage
-  const tangentLine = topRightTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = topRightTangentLine({ x: lx, y: ly, segmentAngle })
+  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
 
   // TODO 180 + segmentAngle looks wrong
   const labelLeanAngle = (labelGreaterThanSegment) ? (180 + segmentAngle) + labelControlLeanDegrees : (180 + segmentAngle) - labelControlLeanDegrees
@@ -182,8 +179,8 @@ const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight, labelGrea
   // console.log(`${labelData._label} ${ controlPointPullInPercentage }`)
 
   //TODO: should not use the topLeft fns here, should rename it if it is indeed a correct usage
-  const tangentLine = bottomLeftTangentLine({ x: sx, y: sy, segmentAngle })
-  const shiftedTangentLine = bottomLeftTangentLine({ x: lx, y: ly, segmentAngle })
+  const tangentLine = getTangentLine({ x: sx, y: sy, segmentAngle })
+  const shiftedTangentLine = getTangentLine({ x: lx, y: ly, segmentAngle })
 
   const labelLeanAngle = Math.max(0,(labelGreaterThanSegment) ? (360 - segmentAngle) - labelControlLeanDegrees : (360 - segmentAngle) + labelControlLeanDegrees)
   const segmentLeanAngle = Math.max(0,(labelGreaterThanSegment) ? (360 - segmentAngle) - segmentControlLeanDegrees : (360 - segmentAngle) + segmentControlLeanDegrees)
@@ -226,24 +223,12 @@ const bezierPath = (segmentCoord, segmentControlCoord, labelControlCoord, labelC
   return `M ${sx} ${sy} C ${c1x} ${c1y} ${c2x} ${c2y} ${lx} ${ly}`
 }
 
-const topLeftTangentLine = ({ x, y, segmentAngle }) => {
-  const { xProportion, yProportion } = getAngleProportions(90 - segmentAngle)
-  return [
-    { x: x - 1000 * xProportion, y: y + 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y - 1000 * yProportion }
-  ]
-}
+const getTangentLine = ({ x, y, segmentAngle }) => {
+  let angleFromYAxis
+  if (between(0,segmentAngle,180)) { angleFromYAxis = segmentAngle - 90 }
+  if (between(180,segmentAngle,360)) { angleFromYAxis = segmentAngle - 270 }
 
-const topRightTangentLine = ({ x, y, segmentAngle }) => {
-  const { xProportion, yProportion } = getAngleProportions(segmentAngle - 90)
-  return [
-    { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
-  ]
-}
-
-const bottomLeftTangentLine = ({ x, y, segmentAngle }) => {
-  const { xProportion, yProportion } = getAngleProportions(segmentAngle - 270)
+  const { xProportion, yProportion } = getAngleProportions(angleFromYAxis)
   return [
     { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
     { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
@@ -296,3 +281,6 @@ const getSegmentControlPointPullInPercentageForBottomQuadrant = ({ labelData, pi
     : Math.min(1, (ly - sy) / (canvasHeight - sy))
   return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
 }
+
+// TODO duplicated with outerLabeller.js
+const between = (a, b, c) => (a <= b && b < c)
