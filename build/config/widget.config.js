@@ -16,8 +16,16 @@ const config = {
   },
   snapshotTesting: {
     snapshotDelay: 500,
-    consoleLogHandler: (msg, testName) => {}
-  }
+    consoleLogHandler: (msg, testName) => {},
+    pixelmatch: {
+      // smaller values -> more sensitive : https://github.com/mapbox/pixelmatch#pixelmatchimg1-img2-output-width-height-options
+      customDiffConfig: {
+        threshold: 0.0001
+      },
+      failureThreshold: 0.0001,
+      failureThresholdType: 'percent' // pixel or percent
+    },
+  },
 }
 
 const commandLineOverides = _.omit(cliArgs, ['_', '$0'])
