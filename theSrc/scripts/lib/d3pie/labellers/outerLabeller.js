@@ -16,6 +16,7 @@ const labelLogger = rootLog.getLogger('label')
 
 const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
 // const exclusiveBetween = (a, b, c) => (a < b && b < c)
+// TODO duplicated with bezierCurve.js
 const between = (a, b, c) => (a <= b && b < c)
 
 // TODO bit of a temp hack
