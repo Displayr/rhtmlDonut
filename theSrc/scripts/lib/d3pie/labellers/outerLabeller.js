@@ -2,7 +2,7 @@ import _ from 'lodash'
 import d3 from 'd3'
 import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc, findIntersectingLabels } from './labelUtils'
 import helpers from '../helpers'
-import math from '../math'
+import { rotate, computeIntersection, inclusiveBetween, between, toRadians } from '../math'
 import segments from '../segments'
 import OuterLabel from './outerLabel'
 import InnerLabel from './innerLabel'
@@ -13,11 +13,6 @@ import LabelPushedOffCanvas from '../interrupts/labelPushedOffCanvas'
 import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
-
-const inclusiveBetween = (a, b, c) => (a <= b && b <= c)
-// const exclusiveBetween = (a, b, c) => (a < b && b < c)
-// TODO duplicated with bezierCurve.js
-const between = (a, b, c) => (a <= b && b < c)
 
 // TODO bit of a temp hack
 const spacingBetweenUpperTrianglesAndCenterMeridian = 7
@@ -382,7 +377,7 @@ let labels = {
   }) {
     if (labelDatum.isTopApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+      const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
       const fitLineCoord = {
         x: segmentCoord.x,
@@ -394,7 +389,7 @@ let labels = {
       labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     } else if (labelDatum.isBottomApexLabel) {
       const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-      const segmentCoord = math.rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+      const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
 
       const fitLineCoord = {
         x: segmentCoord.x,
@@ -445,7 +440,7 @@ let labels = {
     const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
 
     if (highYOffSetAngle(angle)) {
-      const radialCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+      const radialCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       const radialLine = [pieCenter, radialCoord]
 
       let placementLineCoord1 = {}
@@ -458,18 +453,18 @@ let labels = {
 
       let placementLineCoord2 = null
       if (between(0, angle, 90)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
       } else if (between(90, angle, 180)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 + labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 + labelLiftOffAngle)
       } else if (between(180, angle, 270)) {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 - labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 - labelLiftOffAngle)
       } else {
-        placementLineCoord2 = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 + labelLiftOffAngle)
+        placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 270 + labelLiftOffAngle)
       }
 
       const placementLine = [placementLineCoord1, placementLineCoord2]
 
-      const intersection = math.computeIntersection(radialLine, placementLine)
+      const intersection = computeIntersection(radialLine, placementLine)
 
       if (intersection) {
         fitLineCoord = intersection
@@ -478,10 +473,10 @@ let labels = {
         isLifted = true
       } else {
         labelLogger.error(`unexpected condition. could not compute intersection with placementLine for label at angle ${angle}`)
-        fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+        fitLineCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
       }
     } else {
-      fitLineCoord = math.rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+      fitLineCoord = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
     }
 
     return { fitLineCoord, isLifted }
@@ -565,7 +560,7 @@ let labels = {
 
   computeInnerLabelLine: function ({ pieCenter, innerRadius, labelData }) {
     const pointAtZeroDegrees = { x: pieCenter.x - innerRadius, y: pieCenter.y }
-    let originCoords = math.rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
+    let originCoords = rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
     originCoords.id = labelData.id
     originCoords.color = labelData.color
 
@@ -1068,7 +1063,7 @@ let labels = {
     }
 
     const labelLiftOffAngleInRadians = ((labelDatum.inTopHalf && topIsLifted) || (labelDatum.inBottomHalf && bottomIsLifted))
-      ? math.toRadians(labelLiftOffAngle)
+      ? toRadians(labelLiftOffAngle)
       : 0
 
     const yPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.cos(labelLiftOffAngleInRadians)
@@ -1772,8 +1767,8 @@ let labels = {
       const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
 
       // NB TODO move leftPointWhereTriangleMeetsLabelRadius into set facts
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 - labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 90 + labelLiftOffAngle)
 
       // TODO can I add this cloneDeep in the chain ?
       const setsSortedVerticallyOutward = {
@@ -1888,7 +1883,7 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: left side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -1959,7 +1954,7 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: right side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -2026,8 +2021,8 @@ let labels = {
         y: pie.pieCenter.y
       }
       const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
-      const leftPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
-      const rightPointWhereTriangleMeetsLabelRadius = math.rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
+      const leftPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 + labelLiftOffAngle)
+      const rightPointWhereTriangleMeetsLabelRadius = rotate(pointAtZeroDegreesAlongLabelOffset, pie.pieCenter, 270 - labelLiftOffAngle)
 
       // TODO can I add this cloneDeep in the chain ?
       const setsSortedVerticallyOutward = {
@@ -2143,7 +2138,7 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: left side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -2215,7 +2210,7 @@ let labels = {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(pie.options.size.canvasWidth), y: newLineConnectorY }
             ]
-            const intersection = math.computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: right side: placing ${pl(label)} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -2413,7 +2408,7 @@ let labels = {
       y: pieCenter.y
     }
 
-    const innerRadiusLabelCoord = math.rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
+    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
     newInnerLabel.placeAlongFitLine(innerRadiusLabelCoord)
 
     if (!_.isEmpty(innerLabelSet)) {

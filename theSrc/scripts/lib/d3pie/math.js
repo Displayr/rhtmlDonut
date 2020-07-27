@@ -74,7 +74,11 @@ let math = {
     if (angle < 0) { angle += 360 }
 
     return angle
-  }
+  },
+
+  inclusiveBetween: (a, b, c) => (a <= b && b <= c),
+  exclusiveBetween: (a, b, c) => (a < b && b < c),
+  between: (a, b, c) => (a <= b && b < c)
 }
 
 module.exports = math

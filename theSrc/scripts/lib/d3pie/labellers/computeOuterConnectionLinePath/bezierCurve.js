@@ -1,4 +1,4 @@
-import math from '../../math'
+import { computeIntersection, between, toRadians } from '../../math'
 
 // strategy: instead of a bezier curve with control points forming a rectangle,
 // lean the rectangle a bit to make a rhomboid, this will make the connection angles not so sharp,
@@ -44,8 +44,8 @@ const bezierCurveInTopLeft = ({ labelData, pieCenter, labelGreaterThanSegment })
   const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
   const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
 
-  const segmentControlCoord = math.computeIntersection(radialLine, shiftedTangentLine)
-  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
+  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
 
   segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
   segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
@@ -73,8 +73,8 @@ const bezierCurveInTopRight = ({ labelData, pieCenter, labelGreaterThanSegment }
   const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
   const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
 
-  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = math.computeIntersection(radialLine, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
+  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
 
   segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
   segmentControlCoord.y += controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
@@ -102,8 +102,8 @@ const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight, labelGre
   const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
   const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
 
-  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = math.computeIntersection(radialLine, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
+  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
 
   segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
   segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
@@ -131,8 +131,8 @@ const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight, labelGrea
   const shiftedRadialLine = getLine({ ...labelCoord, angle: labelLeanAngle })
   const radialLine = getLine({ ...segmentCoord, angle: segmentLeanAngle })
 
-  const labelControlCoord = math.computeIntersection(shiftedRadialLine, tangentLine)
-  const segmentControlCoord = math.computeIntersection(radialLine, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
+  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
 
   segmentControlCoord.x += controlPointPullInPercentage * Math.abs(sx - segmentControlCoord.x)
   segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(sy - segmentControlCoord.y)
@@ -176,8 +176,8 @@ const getLine = ({ x, y, angle }) => {
 }
 
 const getAngleProportions = (angleInDegrees) => ({
-  xProportion: Math.cos(math.toRadians(angleInDegrees)),
-  yProportion: Math.sin(math.toRadians(angleInDegrees))
+  xProportion: Math.cos(toRadians(angleInDegrees)),
+  yProportion: Math.sin(toRadians(angleInDegrees))
 })
 
 const extractVars = ({ labelData }) => {
@@ -221,6 +221,3 @@ const getSegmentControlPointPullInPercentageForBottomQuadrant = ({ labelData, pi
     : Math.min(1, (ly - sy) / (canvasHeight - sy))
   return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
 }
-
-// TODO duplicated with outerLabeller.js
-const between = (a, b, c) => (a <= b && b < c)
