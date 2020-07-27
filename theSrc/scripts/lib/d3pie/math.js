@@ -2,13 +2,8 @@ const _ = require('lodash')
 
 let math = {
 
-  toRadians: function (degrees) {
-    return degrees * (Math.PI / 180)
-  },
-
-  toDegrees: function (radians) {
-    return radians * (180 / Math.PI)
-  },
+  toRadians: degrees => degrees * (Math.PI / 180),
+  toDegrees: radians => radians * (180 / Math.PI),
 
   getTotalPieSize: function (data) {
     let totalSize = 0
