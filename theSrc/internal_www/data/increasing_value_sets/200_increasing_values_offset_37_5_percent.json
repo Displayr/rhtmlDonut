@@ -1,6 +1,9 @@
 {
   "values": [
+<<<<<<< HEAD
     12060,
+=======
+>>>>>>> cb7b9c8... increasing order data sets update. change position of offset
     1,
     2,
     3,
@@ -200,10 +203,17 @@
     197,
     198,
     199,
+<<<<<<< HEAD
     200
   ],
   "labels": [
     "12060",
+=======
+    200,
+    12060
+  ],
+  "labels": [
+>>>>>>> cb7b9c8... increasing order data sets update. change position of offset
     "1",
     "2",
     "3",
@@ -403,7 +413,12 @@
     "197",
     "198",
     "199",
+<<<<<<< HEAD
     "200"
+=======
+    "200",
+    "12060"
+>>>>>>> cb7b9c8... increasing order data sets update. change position of offset
   ],
   "settings": {}
 }
