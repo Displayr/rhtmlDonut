@@ -78,7 +78,16 @@ let math = {
 
   inclusiveBetween: (a, b, c) => (a <= b && b <= c),
   exclusiveBetween: (a, b, c) => (a < b && b < c),
-  between: (a, b, c) => (a <= b && b < c)
+  between: (a, b, c) => (a <= b && b < c),
+
+  angleAbsoluteDifference: (a1, a2) => {
+    const a1Greater = (a1 > a2)
+    const options = [
+      Math.abs(a1 - a2),
+      (a1Greater) ? ((360 - a1) + a2) : ((360 - a2) + a1)
+    ]
+    return Math.min(...options)
+  }
 }
 
 module.exports = math
