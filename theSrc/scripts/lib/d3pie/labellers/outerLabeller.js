@@ -1718,7 +1718,9 @@ let labels = {
           })
         }
       })
+    }
 
+    if (stages.finalPass) {
       // final check for left over line angle violators
       _(outerLabelSet).each(label => {
         const angleBetweenRadialAndLabelLine = label.labelLineAngle
