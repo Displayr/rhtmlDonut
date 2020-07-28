@@ -144,31 +144,18 @@ const getControlCoordinates = ({ labelData }) => {
   return { segmentControlCoord, labelControlCoord }
 }
 
+// TODO combine top and bottom into single fn
 const getSegmentControlPointPullInPercentage = ({ labelData, pieCenter, canvasHeight }) => {
-  if (labelData.this.inTopHalf) { return getSegmentControlPointPullInPercentageForTopQuadrant ({ labelData, pieCenter }) }
-  else { return getSegmentControlPointPullInPercentageForBottomQuadrant({ labelData, pieCenter, canvasHeight }) }
-})
-
-const getSegmentControlPointPullInPercentageForTopQuadrant = ({ labelData, pieCenter }) => {
   const { y: sy } = labelData.segmentMidpointCoord
   const { y: ly } = labelData.lineConnectorCoord
-
-  // strategy: vary pull in based vertical delta between segment and label
   const labelAboveSegment = ly < sy
-  const relativeHeightDifferenceBetweenSegmentAndLabel = (labelAboveSegment)
-    ? Math.min(1, (sy - ly) / sy)
-    : Math.min(1, (ly - sy) / (pieCenter.y - sy))
-  return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
-}
 
-const getSegmentControlPointPullInPercentageForBottomQuadrant = ({ labelData, pieCenter, canvasHeight }) => {
-  const { y: sy } = labelData.segmentMidpointCoord
-  const { y: ly } = labelData.lineConnectorCoord
+  let maximumPossibleDelta
+  if (labelData.inTopHalf && labelAboveSegment) { maximumPossibleDelta = sy }
+  if (labelData.inTopHalf && !labelAboveSegment) { maximumPossibleDelta = pieCenter.y - sy } //NB TODO this is not true, label can cross quadrant by being pushed below/above y axis
+  if (!labelData.inTopHalf && labelAboveSegment) { maximumPossibleDelta = sy - pieCenter.y } //NB TODO this is not true, label can cross quadrant by being pushed below/above y axis
+  if (!labelData.inTopHalf && !labelAboveSegment) { maximumPossibleDelta = canvasHeight - sy }
 
-  // strategy: vary pull in based vertical delta between segment and label
-  const labelAboveSegment = ly < sy
-  const relativeHeightDifferenceBetweenSegmentAndLabel = (labelAboveSegment)
-    ? Math.min(1, (sy - ly) / (sy - pieCenter.y))
-    : Math.min(1, (ly - sy) / (canvasHeight - sy))
+  const relativeHeightDifferenceBetweenSegmentAndLabel = Math.min(1, Math.abs(sy - ly) / maximumPossibleDelta)
   return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
 }
