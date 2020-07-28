@@ -492,7 +492,6 @@ let labels = {
       const { path, pathType } = computeOuterConnectionLinePath({
         labelData,
         basisInterpolationFunction,
-        pieCenter: pie.pieCenter,
         canvasHeight: parseFloat(pie.options.size.canvasHeight)
       })
 

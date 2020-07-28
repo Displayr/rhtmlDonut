@@ -13,17 +13,17 @@ import { computeIntersection, between, toRadians } from '../../math'
 const segmentControlLeanDegrees = 30 // TODO configure
 const labelControlLeanDegrees = 0 // TODO configure
 
-module.exports = ({ labelData, pieCenter, canvasHeight }) => {
-  if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, pieCenter, canvasHeight }) }
-  if (labelData.inTopRightQuadrant) { return bezierCurveInTopRight({ labelData, pieCenter, canvasHeight }) }
-  if (labelData.inBottomLeftQuadrant) { return bezierCurveInBottomLeft({ labelData, pieCenter, canvasHeight }) }
-  if (labelData.inBottomRightQuadrant) { return bezierCurveInBottomRight({ labelData, pieCenter, canvasHeight }) }
+module.exports = ({ labelData, canvasHeight }) => {
+  if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, canvasHeight }) }
+  if (labelData.inTopRightQuadrant) { return bezierCurveInTopRight({ labelData, canvasHeight }) }
+  if (labelData.inBottomLeftQuadrant) { return bezierCurveInBottomLeft({ labelData, canvasHeight }) }
+  if (labelData.inBottomRightQuadrant) { return bezierCurveInBottomRight({ labelData, canvasHeight }) }
 }
 
-const bezierCurveInTopLeft = ({ labelData, pieCenter, canvasHeight }) => {
+const bezierCurveInTopLeft = ({ labelData, canvasHeight }) => {
   const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
   const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, canvasHeight })
 
   segmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
   segmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
@@ -34,10 +34,10 @@ const bezierCurveInTopLeft = ({ labelData, pieCenter, canvasHeight }) => {
   }
 }
 
-const bezierCurveInTopRight = ({ labelData, pieCenter, canvasHeight }) => {
+const bezierCurveInTopRight = ({ labelData, canvasHeight }) => {
   const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
   const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, canvasHeight })
 
   segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
   segmentControlCoord.y += controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
@@ -48,10 +48,10 @@ const bezierCurveInTopRight = ({ labelData, pieCenter, canvasHeight }) => {
   }
 }
 
-const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight }) => {
+const bezierCurveInBottomRight = ({ labelData, canvasHeight }) => {
   const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
   const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, canvasHeight })
 
   segmentControlCoord.x -= controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
   segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
@@ -62,10 +62,10 @@ const bezierCurveInBottomRight = ({ labelData, pieCenter, canvasHeight }) => {
   }
 }
 
-const bezierCurveInBottomLeft = ({ labelData, pieCenter, canvasHeight }) => {
+const bezierCurveInBottomLeft = ({ labelData, canvasHeight }) => {
   const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
   const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData })
-  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, pieCenter, canvasHeight })
+  const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, canvasHeight })
 
   segmentControlCoord.x += controlPointPullInPercentage * Math.abs(segmentCoord.x - segmentControlCoord.x)
   segmentControlCoord.y -= controlPointPullInPercentage * Math.abs(segmentCoord.y - segmentControlCoord.y)
@@ -145,17 +145,12 @@ const getControlCoordinates = ({ labelData }) => {
 }
 
 // TODO combine top and bottom into single fn
-const getSegmentControlPointPullInPercentage = ({ labelData, pieCenter, canvasHeight }) => {
+const getSegmentControlPointPullInPercentage = ({ labelData, canvasHeight }) => {
   const { y: sy } = labelData.segmentMidpointCoord
   const { y: ly } = labelData.lineConnectorCoord
   const labelAboveSegment = ly < sy
 
-  let maximumPossibleDelta
-  if (labelData.inTopHalf && labelAboveSegment) { maximumPossibleDelta = sy }
-  if (labelData.inTopHalf && !labelAboveSegment) { maximumPossibleDelta = pieCenter.y - sy } //NB TODO this is not true, label can cross quadrant by being pushed below/above y axis
-  if (!labelData.inTopHalf && labelAboveSegment) { maximumPossibleDelta = sy - pieCenter.y } //NB TODO this is not true, label can cross quadrant by being pushed below/above y axis
-  if (!labelData.inTopHalf && !labelAboveSegment) { maximumPossibleDelta = canvasHeight - sy }
-
+  let maximumPossibleDelta = (labelAboveSegment) ? sy : canvasHeight - sy
   const relativeHeightDifferenceBetweenSegmentAndLabel = Math.min(1, Math.abs(sy - ly) / maximumPossibleDelta)
   return 0.25 + (0.5 * relativeHeightDifferenceBetweenSegmentAndLabel)
 }
