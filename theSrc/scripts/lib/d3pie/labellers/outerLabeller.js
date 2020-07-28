@@ -1629,7 +1629,6 @@ let labels = {
         labelLogger.debug(`${lp} frontier: ${pl(frontierLabel)}`)
         if (phase2HitTop) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isBottomApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = reversedLabelSet[frontierIndex + 1]
