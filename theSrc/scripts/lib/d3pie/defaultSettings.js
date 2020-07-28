@@ -79,6 +79,24 @@ const defaultSettings = {
     }, //
     lines: { //
       enabled: true, // not used
+      outer: {
+        straight: {
+          min: 0,
+          max: 5
+        },
+        basisInterpolated: {
+          min: 5,
+          max: 60
+        },
+        bezier: {
+          min: 60,
+          max: 80,
+          segmentLeanAngle: 30,
+          labelLeanAngle: 0,
+          segmentPullInProportionMin: 0.25,
+          segmentPullInProportionMax: 0.75,
+        }
+      },
       style: 'aligned', // not used
       color: 'segment' // not used
     }, //

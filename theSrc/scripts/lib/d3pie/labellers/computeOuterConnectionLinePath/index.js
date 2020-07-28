@@ -1,14 +1,38 @@
 import bezierCurve from './bezierCurve'
 import basisInterpolated from './basisInterpolated'
 import straightLine from './straightLine'
+import { inclusiveBetween } from '../../math'
+const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, options }) => {
 
-const computePath = ({ labelData, basisInterpolationFunction, pieCenter, canvasHeight }) => {
-  if (labelData.labelLineAngle < 5) {
-    return straightLine({ labelData, pieCenter, canvasHeight })
-  } else if (labelData.labelLineAngle <= 60) {
+  // OPTIONS
+  // {
+  //   straight: {
+  //     min: 0,
+  //     max: 5
+  //   },
+  //   basisInterpolated: {
+  //     min: 5,
+  //     max: 60
+  //   },
+  //   bezier: {
+  //     min: 60,
+  //     max: 80,
+  //     segmentLeanAngle: 30,
+  //     labelLeanAngle: 0,
+  //     segmentPullInProportionMin: 0.25,
+  //     segmentPullInProportionMax: 0.75,
+  //   }
+  // }
+
+  if (inclusiveBetween(options.straight.min, labelData.labelLineAngle, options.straight.max)) {
+    return straightLine({ labelData })
+  } else if (inclusiveBetween(options.basisInterpolated.min, labelData.labelLineAngle, options.basisInterpolated.max)) {
     return basisInterpolated({ labelData, basisInterpolationFunction })
+  } else if (inclusiveBetween(options.bezier.min, labelData.labelLineAngle, options.bezier.max)) {
+    return bezierCurve({ labelData, canvasHeight, ...options.bezier })
   } else {
-    return bezierCurve({ labelData, pieCenter, canvasHeight })
+    console.warn(`unhandled labelLineAngle ${labelData.labelLineAngle}. Defaulting to straight line`)
+    return straightLine({labelData, canvasHeight})
   }
 }
 

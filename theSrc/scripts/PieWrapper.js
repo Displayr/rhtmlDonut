@@ -172,7 +172,25 @@ class PieWrapper {
           minFontSize: this._settings.labelsMinFontSize
         },
         lines: {
-          style: 'aligned'
+          style: 'aligned',
+          outer: {
+            straight: {
+              min: this._settings.labelsOuterLinesStraightMin,
+              max: this._settings.labelsOuterLinesStraightMax
+            },
+            basisInterpolated: {
+              min: this._settings.labelsOuterLinesBasisInterpolatedMin,
+              max: this._settings.labelsOuterLinesBasisInterpolatedMax
+            },
+            bezier: {
+              min: this._settings.labelsOuterLinesBezierMin,
+              max: this._settings.labelsOuterLinesBezierMax,
+              segmentLeanAngle: this._settings.labelsOuterLinesBezierSegmentLean,
+              labelLeanAngle: this._settings.labelsOuterLinesBezierLabelLean,
+              segmentPullInProportionMin: this._settings.labelsOuterLinesBezierSegmentPullInProportionMin,
+              segmentPullInProportionMax: this._settings.labelsOuterLinesBezierSegmentPullInProportionMax,
+            }
+          }
         }
       },
       tooltips: {
