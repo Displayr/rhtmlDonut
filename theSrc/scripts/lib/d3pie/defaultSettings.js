@@ -34,11 +34,12 @@ const defaultSettings = {
       increaseMaxLineAngleInDenseOrderedSets: true // pieWrapper: settings.labelStrategyIncreaseMaxLineAngleInDenseOrderedSets, R: labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled
     }, //
     stages: { //
-      outOfBoundsCorrection: true, //
-      initialClusterSpacing: true, //
-      downSweep: true, //
-      upSweep: true, //
-      shortenTopAndBottom: true //
+      outOfBoundsCorrection: true,
+      initialClusterSpacing: true,
+      downSweep: true,
+      upSweep: true,
+      shortenTopAndBottom: true,
+      finalPass: true
     }, //
     outer: { //
       innerLabels: false, // pieWrapper: settings.labelsInner, R: labels.inner
@@ -81,16 +82,16 @@ const defaultSettings = {
       enabled: true, // not used
       outer: {
         straight: {
-          min: 0,
-          max: 5
+          minAngle: 0,
+          maxAngle: 5
         },
         basisInterpolated: {
-          min: 5,
-          max: 60
+          minAngle: 5,
+          maxAngle: 60
         },
         bezier: {
-          min: 60,
-          max: 80,
+          minAngle: 60,
+          maxAngle: 360, // NB this means "use bezier for anything with a label line angle of over 60"
           segmentLeanAngle: 30,
           labelLeanAngle: 0,
           segmentPullInProportionMin: 0.25,

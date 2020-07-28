@@ -7,16 +7,16 @@ const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, opti
   // OPTIONS
   // {
   //   straight: {
-  //     min: 0,
-  //     max: 5
+  //     minAngle: 0,
+  //     maxAngle: 5
   //   },
   //   basisInterpolated: {
-  //     min: 5,
-  //     max: 60
+  //     minAngle: 5,
+  //     maxAngle: 60
   //   },
   //   bezier: {
-  //     min: 60,
-  //     max: 80,
+  //     minAngle: 60,
+  //     maxAngle: 80,
   //     segmentLeanAngle: 30,
   //     labelLeanAngle: 0,
   //     segmentPullInProportionMin: 0.25,
@@ -24,11 +24,11 @@ const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, opti
   //   }
   // }
 
-  if (inclusiveBetween(options.straight.min, labelData.labelLineAngle, options.straight.max)) {
+  if (inclusiveBetween(options.straight.minAngle, labelData.labelLineAngle, options.straight.maxAngle)) {
     return straightLine({ labelData })
-  } else if (inclusiveBetween(options.basisInterpolated.min, labelData.labelLineAngle, options.basisInterpolated.max)) {
+  } else if (inclusiveBetween(options.basisInterpolated.minAngle, labelData.labelLineAngle, options.basisInterpolated.maxAngle)) {
     return basisInterpolated({ labelData, basisInterpolationFunction })
-  } else if (inclusiveBetween(options.bezier.min, labelData.labelLineAngle, options.bezier.max)) {
+  } else if (inclusiveBetween(options.bezier.minAngle, labelData.labelLineAngle, options.bezier.maxAngle)) {
     return bezierCurve({ labelData, canvasHeight, ...options.bezier })
   } else {
     console.warn(`unhandled labelLineAngle ${labelData.labelLineAngle}. Defaulting to straight line`)
