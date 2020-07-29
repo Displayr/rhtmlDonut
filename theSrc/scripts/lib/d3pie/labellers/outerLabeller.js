@@ -1492,7 +1492,6 @@ let labels = {
         if (downSweepHitBottom) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (downSweepLineAngleExceeded) { labelLogger.debug(`${lp} cancelled`); return terminateLoop }
         if (isLast(frontierIndex)) { return terminateLoop }
-        if (frontierLabel.isTopApexLabel) { return continueLoop }
         if (frontierLabel.hide) { return continueLoop }
 
         const nextLabel = outerLabelSet[frontierIndex + 1]
