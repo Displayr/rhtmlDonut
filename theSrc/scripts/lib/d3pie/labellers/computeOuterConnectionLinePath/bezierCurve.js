@@ -84,8 +84,8 @@ const bezierPath = (segmentCoord, segmentControlCoord, labelControlCoord, labelC
 // NB segmentAngle: the pie segment angle, measured from the x-axis when rotating clockwise
 const getTangentLine = ({ x, y, segmentAngle }) => {
   let angleFromYAxis
-  if (between(0,segmentAngle,180)) { angleFromYAxis = segmentAngle - 90 }
-  if (between(180,segmentAngle,360)) { angleFromYAxis = segmentAngle - 270 }
+  if (between(0, segmentAngle, 180)) { angleFromYAxis = segmentAngle - 90 }
+  if (between(180, segmentAngle, 360)) { angleFromYAxis = segmentAngle - 270 }
 
   const { xProportion, yProportion } = getAngleProportions(angleFromYAxis)
   return [

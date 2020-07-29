@@ -3,7 +3,6 @@ import basisInterpolated from './basisInterpolated'
 import straightLine from './straightLine'
 import { inclusiveBetween } from '../../math'
 const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, options }) => {
-
   // OPTIONS
   // {
   //   straight: {
@@ -32,7 +31,7 @@ const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, opti
     return bezierCurve({ labelData, canvasHeight, ...options.bezier })
   } else {
     console.warn(`unhandled labelLineAngle ${labelData.labelLineAngle}. Defaulting to straight line`)
-    return straightLine({labelData, canvasHeight})
+    return straightLine({ labelData, canvasHeight })
   }
 }
 
