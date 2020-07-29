@@ -188,7 +188,7 @@ class PieWrapper {
               segmentLeanAngle: this._settings.labelsOuterLinesBezierSegmentLean,
               labelLeanAngle: this._settings.labelsOuterLinesBezierLabelLean,
               segmentPullInProportionMin: this._settings.labelsOuterLinesBezierSegmentPullInProportionMin,
-              segmentPullInProportionMax: this._settings.labelsOuterLinesBezierSegmentPullInProportionMax,
+              segmentPullInProportionMax: this._settings.labelsOuterLinesBezierSegmentPullInProportionMax
             }
           }
         }

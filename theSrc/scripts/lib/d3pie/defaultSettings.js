@@ -95,7 +95,7 @@ const defaultSettings = {
           segmentLeanAngle: 30,
           labelLeanAngle: 0,
           segmentPullInProportionMin: 0.25,
-          segmentPullInProportionMax: 0.75,
+          segmentPullInProportionMax: 0.75
         }
       },
       style: 'aligned', // not used
