@@ -24,8 +24,8 @@ const config = {
       },
       failureThreshold: 0.0001,
       failureThresholdType: 'percent' // pixel or percent
-    },
-  },
+    }
+  }
 }
 
 const commandLineOverides = _.omit(cliArgs, ['_', '$0'])
