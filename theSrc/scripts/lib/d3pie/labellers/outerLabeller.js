@@ -1755,6 +1755,7 @@ let labels = {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y - pie.outerRadius
       const baseLabelOffsetYCoord = pie.pieCenter.y - pie.outerRadius - pie.labelOffset
+      const labelMaxLineAngle = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
 
       const maxVerticalOffset = (pie.hasTopLabel)
         ? pie.maxVerticalOffset - pie.maxFontSize - labelPadding
@@ -1798,8 +1799,8 @@ let labels = {
         },
         right: {
           length: setsSortedVerticallyOutward.right.length,
-          originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
           totalHeight: _(setsSortedVerticallyOutward.right).map('height').sum(),
+          originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
           nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0])
         }
       }
@@ -1822,6 +1823,8 @@ let labels = {
 
       const idealLabelPadding = 2
 
+      // TODO setFacts.left.simpleWorked has not been set yet so it can be removed from conditionals below
+      // unless this is called iteratively ?
       const newApexYCoord = _([
         (_.isEmpty(setsSortedVerticallyOutward.left) || setFacts.left.simpleWorked) ? null : setFacts.left.idealStartingPoint - setFacts.left.totalHeight - (setFacts.left.length) * idealLabelPadding,
         (_.isEmpty(setsSortedVerticallyOutward.right) || setFacts.right.simpleWorked) ? null : setFacts.right.idealStartingPoint - setFacts.right.totalHeight - (setFacts.right.length) * idealLabelPadding,
@@ -1844,7 +1847,7 @@ let labels = {
           labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
             labelDatum: label,
             labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0,
+            labelLiftOffAngle: 0, // NB note the 0 lift off angle (this fn is effectively "place along radius")
             outerRadius: pie.outerRadius,
             pieCenter: pie.pieCenter,
             canvasHeight: parseFloat(pie.options.size.canvasHeight),
@@ -1857,7 +1860,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten top: placing left labels along label offset radius worked`)
         } else {
@@ -1898,6 +1904,14 @@ let labels = {
           })
         }
 
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten top: left side: labelLineAngle exceeded. Aborting`)
+          return
+        }
+
         // getting here means success ! Apply the cloned labels back to the mainline
         _(setsSortedVerticallyOutward.left).each(clonedLabel => {
           const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
@@ -1928,7 +1942,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten top: placing right labels along label offset radius worked`)
         } else {
@@ -1967,6 +1984,14 @@ let labels = {
               labelLogger.error(`unexpected condition. could not compute intersection with new placementTriangleLine and newLineConnectorLatitude for ${pl(label)}`)
             }
           })
+        }
+
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten top: right side: labelLineAngle exceeded. Aborting`)
+          return
         }
 
         // getting here means success ! Apply the cloned labels back to the mainline
@@ -2011,6 +2036,7 @@ let labels = {
       const labelPadding = parseFloat(pie.options.labels.outer.outerPadding)
       const outerRadiusYCoord = pie.pieCenter.y + pie.outerRadius
       const baseLabelOffsetYCoord = pie.pieCenter.y + pie.outerRadius + pie.labelOffset
+      const labelMaxLineAngle = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
 
       const maxVerticalOffset = (pie.hasBottomLabel)
         ? pie.maxVerticalOffset - pie.maxFontSize - labelPadding
@@ -2111,7 +2137,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten bottom: placing left labels along label offset radius worked`)
         } else {
@@ -2153,6 +2182,14 @@ let labels = {
           })
         }
 
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten bottom: left side: labelLineAngle exceeded. Aborting`)
+          return
+        }
+
         // getting here means success ! Apply the cloned labels back to the mainline
         _(setsSortedVerticallyOutward.left).each(clonedLabel => {
           const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
@@ -2183,7 +2220,10 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
-        if (collisions.length === 0) {
+        let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten bottom: placing right labels along label offset radius worked`)
         } else {
@@ -2225,6 +2265,14 @@ let labels = {
           })
         }
 
+        labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
+          labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
+        })
+        if (labelsExceedingMaxLineAngleCount > 0) {
+          labelLogger.info(`shorten bottom: right side: labelLineAngle exceeded. Aborting`)
+          return
+        }
+
         // getting here means success ! Apply the cloned labels back to the mainline
         _(setsSortedVerticallyOutward.right).each(clonedLabel => {
           const index = _.findIndex(pie.outerLabelData, { id: clonedLabel.id })
@@ -2234,7 +2282,7 @@ let labels = {
         })
       }
     } catch (error) {
-      console.error(error)
+      console.error(error.stack)
     }
   },
 
@@ -2570,5 +2618,10 @@ function pl (labelData) {
   // return `${labelName}(${labelData.id})`
   return labelName
 }
+
+const exceedsLabelLineAngleThresholdCount = ({ labels, threshold }) =>
+  labels
+    .filter(({ labelLineAngle }) => labelLineAngle > threshold)
+    .length
 
 module.exports = labels
