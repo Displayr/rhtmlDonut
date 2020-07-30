@@ -3,6 +3,7 @@ type: single_page_one_example_per_config
 use_config_as_title: true
 general_comments:
   - 'NB for these examples we set minAngle=0 and labelMaxLineAngle=180 to emphasize variations in labelMaxVerticalOffset'
+  - 'the actual maxVerticalOffset that is used is bounded by the available space. The examples below show that 150 is not actually respected due to hight limitations'
 width: 300
 height: 600
 rowSize: 3

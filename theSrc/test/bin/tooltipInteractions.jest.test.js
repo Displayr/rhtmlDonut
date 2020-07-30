@@ -10,7 +10,7 @@ const {
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
-configureImageSnapshotMatcher('tooltip_interaction')
+configureImageSnapshotMatcher({ collectionIdentifier: 'tooltip_interaction' })
 
 describe('tooltip_interaction', () => {
   let browser

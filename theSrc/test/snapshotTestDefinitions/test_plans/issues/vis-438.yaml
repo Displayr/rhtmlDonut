@@ -1,0 +1,7 @@
+version: 1
+type: single_widget_single_page
+groupname: issues
+comments: []
+width: 745
+height: 500
+data: data.issues.vis-438

@@ -10,7 +10,7 @@ const {
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
-configureImageSnapshotMatcher('resize')
+configureImageSnapshotMatcher({ collectionIdentifier: 'resize' })
 
 describe('resize', () => {
   let browser

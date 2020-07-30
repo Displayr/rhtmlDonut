@@ -10,7 +10,7 @@ const {
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
-configureImageSnapshotMatcher('multipleRerender')
+configureImageSnapshotMatcher({ collectionIdentifier: 'multipleRerender' })
 
 describe('multiple render tests', () => {
   let browser
