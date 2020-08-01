@@ -1,0 +1,89 @@
+type: multi_widget_multi_page
+width: 750
+height: 750
+configs:
+  - config: config.experiment_variable_config|data.issues.vis-438
+    width: 745
+    height: 500
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.100_decreasing_values_offset_87_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.150_decreasing_values_offset_87_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.197_decreasing_values_real_data_vis_405
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.200_decreasing_values_offset_87_5_percent
+  - config: config.experiment_variable_config|data.decreasing_value_sets.794_decreasing_values_company_earnings
+
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.100_increasing_values_offset_87_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.150_increasing_values_offset_87_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_12_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_25_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_37_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_50_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_62_5_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_75_percent
+  - config: config.experiment_variable_config|data.increasing_value_sets.200_increasing_values_offset_87_5_percent
+
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_range_1_to_10_v1
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_range_1_to_10_v2
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_range_1_to_5_v1
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_range_1_to_5_v2
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_v1
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_v2
+  - config: config.experiment_variable_config|data.unordered_value_sets.100_unordered_values_v3
+  - config: config.experiment_variable_config|data.unordered_value_sets.150_unordered_values_range_1_to_10_v1
+  - config: config.experiment_variable_config|data.unordered_value_sets.150_unordered_values_range_1_to_10_v2
+  - config: config.experiment_variable_config|data.unordered_value_sets.150_unordered_values_range_1_to_5_v1
+  - config: config.experiment_variable_config|data.unordered_value_sets.150_unordered_values_range_1_to_5_v2
+  - config: config.experiment_variable_config|data.unordered_value_sets.20_unordered_values
+
+  - config: config.experiment_variable_config|data.misc.450_companies
+  - config: config.experiment_variable_config|data.misc.australian_city_populations
+  - config: config.experiment_variable_config|data.misc.browser_stats_full_pie
+  - config: config.experiment_variable_config|data.misc.browser_stats_gradient
+  - config: config.experiment_variable_config|data.misc.browser_stats_grouped
+  - config: config.experiment_variable_config|data.misc.browser_stats_innerlabels2
+  - config: config.experiment_variable_config|data.misc.browser_stats_ordered
+  - config: config.experiment_variable_config|data.misc.browser_stats_unordered
+  - config: config.experiment_variable_config|data.misc.coke_zero_sentiment_unsorted
+  - config: config.experiment_variable_config|data.misc.diet_pepsi_sentiment_unsorted
+  - config: config.experiment_variable_config|data.misc.family_home_stats
+  - config: config.experiment_variable_config|data.misc.living_situation_grouped_by_gender
+  - config: config.experiment_variable_config|data.misc.presidential_traits
+  - config: config.experiment_variable_config|data.misc.time
+  - config: config.experiment_variable_config|data.misc.usage_example_diet_survey
+  - config: config.experiment_variable_config|data.misc.usage_example_employment_types
+  - config: config.experiment_variable_config|data.misc.usage_example_powers_of_2
