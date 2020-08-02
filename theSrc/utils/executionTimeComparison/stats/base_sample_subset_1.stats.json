@@ -1,0 +1,235 @@
+{
+  "tests": [
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 47,
+      "computeLabelStats": 1,
+      "outer_labelling": 29,
+      "group_labelling": 0,
+      "tooltips": 32,
+      "totalDuration": 116,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_1"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 37,
+      "computeLabelStats": 1,
+      "outer_labelling": 17,
+      "group_labelling": 3,
+      "tooltips": 30,
+      "totalDuration": 96,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_10"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 15,
+      "computeLabelStats": 1,
+      "outer_labelling": 19,
+      "group_labelling": 0,
+      "tooltips": 11,
+      "totalDuration": 59,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_11"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 20,
+      "computeLabelStats": 0,
+      "outer_labelling": 19,
+      "group_labelling": 0,
+      "tooltips": 15,
+      "totalDuration": 62,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_12"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 20,
+      "computeLabelStats": 0,
+      "outer_labelling": 16,
+      "group_labelling": 1,
+      "tooltips": 14,
+      "totalDuration": 59,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_13"
+    },
+    {
+      "buildLabelSet": 0,
+      "preproccessLabelSet": 23,
+      "computeLabelStats": 0,
+      "outer_labelling": 19,
+      "group_labelling": 0,
+      "tooltips": 15,
+      "totalDuration": 62,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_14"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 71,
+      "computeLabelStats": 0,
+      "outer_labelling": 32,
+      "group_labelling": 8,
+      "tooltips": 69,
+      "totalDuration": 189,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_15"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 15,
+      "computeLabelStats": 1,
+      "outer_labelling": 17,
+      "group_labelling": 0,
+      "tooltips": 14,
+      "totalDuration": 52,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_16"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 32,
+      "computeLabelStats": 1,
+      "outer_labelling": 14,
+      "group_labelling": 1,
+      "tooltips": 31,
+      "totalDuration": 86,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_17"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 25,
+      "computeLabelStats": 0,
+      "outer_labelling": 15,
+      "group_labelling": 1,
+      "tooltips": 21,
+      "totalDuration": 68,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_18"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 31,
+      "computeLabelStats": 1,
+      "outer_labelling": 18,
+      "group_labelling": 0,
+      "tooltips": 26,
+      "totalDuration": 84,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_19"
+    },
+    {
+      "buildLabelSet": 0,
+      "preproccessLabelSet": 25,
+      "computeLabelStats": 0,
+      "outer_labelling": 18,
+      "group_labelling": 0,
+      "tooltips": 23,
+      "totalDuration": 72,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_2"
+    },
+    {
+      "buildLabelSet": 0,
+      "preproccessLabelSet": 50,
+      "computeLabelStats": 0,
+      "outer_labelling": 26,
+      "group_labelling": 1,
+      "tooltips": 36,
+      "totalDuration": 117,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_20"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 42,
+      "computeLabelStats": 0,
+      "outer_labelling": 21,
+      "group_labelling": 0,
+      "tooltips": 29,
+      "totalDuration": 101,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_21"
+    },
+    {
+      "buildLabelSet": 0,
+      "preproccessLabelSet": 56,
+      "computeLabelStats": 0,
+      "outer_labelling": 36,
+      "group_labelling": 7,
+      "tooltips": 55,
+      "totalDuration": 160,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_22"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 9,
+      "computeLabelStats": 0,
+      "outer_labelling": 20,
+      "group_labelling": 0,
+      "tooltips": 6,
+      "totalDuration": 43,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_23"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 45,
+      "computeLabelStats": 0,
+      "outer_labelling": 15,
+      "group_labelling": 4,
+      "tooltips": 35,
+      "totalDuration": 105,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_3"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 43,
+      "computeLabelStats": 1,
+      "outer_labelling": 27,
+      "group_labelling": 7,
+      "tooltips": 41,
+      "totalDuration": 127,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_4"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 13,
+      "computeLabelStats": 0,
+      "outer_labelling": 18,
+      "group_labelling": 0,
+      "tooltips": 11,
+      "totalDuration": 47,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_5"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 55,
+      "computeLabelStats": 0,
+      "outer_labelling": 30,
+      "group_labelling": 8,
+      "tooltips": 56,
+      "totalDuration": 157,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_6"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 45,
+      "computeLabelStats": 0,
+      "outer_labelling": 39,
+      "group_labelling": 0,
+      "tooltips": 58,
+      "totalDuration": 148,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_7"
+    },
+    {
+      "buildLabelSet": 1,
+      "preproccessLabelSet": 48,
+      "computeLabelStats": 0,
+      "outer_labelling": 19,
+      "group_labelling": 1,
+      "tooltips": 37,
+      "totalDuration": 112,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_8"
+    },
+    {
+      "buildLabelSet": 0,
+      "preproccessLabelSet": 68,
+      "computeLabelStats": 1,
+      "outer_labelling": 40,
+      "group_labelling": 0,
+      "tooltips": 51,
+      "totalDuration": 166,
+      "scenario": "representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_9"
+    }
+  ],
+  "batchName": "base_sample_subset_1"
+}
