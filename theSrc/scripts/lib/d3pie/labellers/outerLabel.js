@@ -335,6 +335,12 @@ class OuterLabel {
   get leftX () { return this.topLeftCoord.x }
   get rightX () { return this.topRightCoord.x }
 
+  // compatability for RBush
+  get minY () { return this.topLeftCoord.y }
+  get maxY () { return this.bottomLeftCoord.y }
+  get minX () { return this.topLeftCoord.x }
+  get maxX () { return this.topRightCoord.x }
+
   // accessors for invariants
 
   get color () { return this._invariants.color }

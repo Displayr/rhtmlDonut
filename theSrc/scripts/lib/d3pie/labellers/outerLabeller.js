@@ -12,6 +12,8 @@ import AngleThresholdExceeded from '../interrupts/angleThresholdExceeded'
 import LabelPushedOffCanvas from '../interrupts/labelPushedOffCanvas'
 import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
+import RBush from 'rbush'
+
 const labelLogger = rootLog.getLogger('label')
 
 // TODO bit of a temp hack
@@ -1784,13 +1786,13 @@ let labels = {
           length: setsSortedVerticallyOutward.left.length,
           totalHeight: _(setsSortedVerticallyOutward.left).map('height').sum(),
           originalLineConnectorCoords: _(setsSortedVerticallyOutward.left).map('lineConnectorCoord').value(),
-          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.left[0]),
+          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.left[0])
         },
         right: {
           length: setsSortedVerticallyOutward.right.length,
           totalHeight: _(setsSortedVerticallyOutward.right).map('height').sum(),
           originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
-          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0]),
+          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0])
         }
       }
 
@@ -1831,28 +1833,18 @@ let labels = {
       if (setFacts.left.length === 0) {
         labelLogger.info(`shorten top: 0 left labels, skipping`)
       } else {
-        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected
-        _(setsSortedVerticallyOutward.left).each(label => {
-          labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
-            labelDatum: label,
-            labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0, // NB note the 0 lift off angle (this fn is effectively "place along radius")
-            outerRadius: pie.outerRadius,
-            pieCenter: pie.pieCenter,
-            canvasHeight: parseFloat(pie.options.size.canvasHeight),
-            maxFontSize: pie.maxFontSize,
-            maxVerticalOffset: pie.maxVerticalOffset,
-            hasTopLabel: pie.hasTopLabel,
-            hasBottomLabel: pie.hasBottomLabel,
-            minGap: parseFloat(pie.options.labels.outer.outerPadding)
-          })
+        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected or labels exceed maxLabelLineAngle
+        const collisionDetected = placeLabelsAlongLabelRadiusAndReportCollisions({
+          labelsToPlace: setsSortedVerticallyOutward.left,
+          labelsToTestForCollision: pie.outerLabelData.filter(label => label.inLeftHalf),
+          pie
         })
 
-        const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
         let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
           labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
         })
-        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
+
+        if (!collisionDetected && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten top: placing left labels along label offset radius worked`)
         } else {
@@ -1913,29 +1905,17 @@ let labels = {
       if (setFacts.right.length === 0) {
         labelLogger.info(`shorten top: 0 right labels, skipping`)
       } else {
-        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected
-        _(setsSortedVerticallyOutward.right).each(label => {
-          labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
-            labelDatum: label,
-            labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0,
-            outerRadius: pie.outerRadius,
-            pieCenter: pie.pieCenter,
-            canvasHeight: parseFloat(pie.options.size.canvasHeight),
-            maxFontSize: pie.maxFontSize,
-            maxVerticalOffset: pie.maxVerticalOffset,
-            hasTopLabel: pie.hasTopLabel,
-            hasBottomLabel: pie.hasBottomLabel,
-            minGap: parseFloat(pie.options.labels.outer.outerPadding)
-          })
+        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected or labels exceed maxLabelLineAngle
+        const collisionDetected = placeLabelsAlongLabelRadiusAndReportCollisions({
+          labelsToPlace: setsSortedVerticallyOutward.right,
+          labelsToTestForCollision: pie.outerLabelData.filter(label => label.inRightHalf),
+          pie
         })
-
-        const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
 
         let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
           labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
         })
-        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
+        if (!collisionDetected && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten top: placing right labels along label offset radius worked`)
         } else {
@@ -2109,28 +2089,17 @@ let labels = {
       if (setFacts.left.length === 0) {
         labelLogger.info(`shorten bottom: 0 left labels, skipping`)
       } else {
-        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected
-        _(setsSortedVerticallyOutward.left).each(label => {
-          labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
-            labelDatum: label,
-            labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0,
-            outerRadius: pie.outerRadius,
-            pieCenter: pie.pieCenter,
-            canvasHeight: parseFloat(pie.options.size.canvasHeight),
-            maxFontSize: pie.maxFontSize,
-            maxVerticalOffset: pie.maxVerticalOffset,
-            hasTopLabel: pie.hasTopLabel,
-            hasBottomLabel: pie.hasBottomLabel,
-            minGap: parseFloat(pie.options.labels.outer.outerPadding)
-          })
+        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected or labels exceed maxLabelLineAngle
+        const collisionDetected = placeLabelsAlongLabelRadiusAndReportCollisions({
+          labelsToPlace: setsSortedVerticallyOutward.left,
+          labelsToTestForCollision: pie.outerLabelData.filter(label => label.inLeftHalf),
+          pie
         })
 
-        const collisions = findIntersectingLabels([setFacts.left.nearestNeighborInwards].concat(setsSortedVerticallyOutward.left))
         let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
           labels: setsSortedVerticallyOutward.left, threshold: labelMaxLineAngle
         })
-        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
+        if (!collisionDetected && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.left.simpleWorked = true
           labelLogger.info(`shorten bottom: placing left labels along label offset radius worked`)
         } else {
@@ -2192,28 +2161,17 @@ let labels = {
       if (setFacts.right.length === 0) {
         labelLogger.info(`shorten bottom: 0 right labels, skipping`)
       } else {
-        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected
-        _(setsSortedVerticallyOutward.right).each(label => {
-          labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
-            labelDatum: label,
-            labelOffset: pie.labelOffset,
-            labelLiftOffAngle: 0,
-            outerRadius: pie.outerRadius,
-            pieCenter: pie.pieCenter,
-            canvasHeight: parseFloat(pie.options.size.canvasHeight),
-            maxFontSize: pie.maxFontSize,
-            maxVerticalOffset: pie.maxVerticalOffset,
-            hasTopLabel: pie.hasTopLabel,
-            hasBottomLabel: pie.hasBottomLabel,
-            minGap: parseFloat(pie.options.labels.outer.outerPadding)
-          })
+        // first try to just place them on the labelOffsetRadius, and only proceed to more complex steps below if collisions are detected or labels exceed maxLabelLineAngle
+        const collisionDetected = placeLabelsAlongLabelRadiusAndReportCollisions({
+          labelsToPlace: setsSortedVerticallyOutward.right,
+          labelsToTestForCollision: pie.outerLabelData.filter(label => label.inRightHalf),
+          pie
         })
 
-        const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
         let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
           labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
         })
-        if (collisions.length === 0 && labelsExceedingMaxLineAngleCount === 0) {
+        if (!collisionDetected && labelsExceedingMaxLineAngleCount === 0) {
           setFacts.right.simpleWorked = true
           labelLogger.info(`shorten bottom: placing right labels along label offset radius worked`)
         } else {
@@ -2597,6 +2555,46 @@ let labels = {
       return null
     }
   }
+
+}
+
+function placeLabelsAlongLabelRadiusAndReportCollisions ({ labelsToPlace, labelsToTestForCollision, pie }) {
+  const collisionTree = new RBush()
+  collisionTree.load(labelsToTestForCollision)
+  let collisionDetected = false
+  _(labelsToPlace).each(label => {
+    labels.placeLabelAlongLabelRadiusWithLiftOffAngle({
+      labelDatum: label,
+      labelOffset: pie.labelOffset,
+      labelLiftOffAngle: 0,
+      outerRadius: pie.outerRadius,
+      pieCenter: pie.pieCenter,
+      canvasHeight: parseFloat(pie.options.size.canvasHeight),
+      maxFontSize: pie.maxFontSize,
+      maxVerticalOffset: pie.maxVerticalOffset,
+      hasTopLabel: pie.hasTopLabel,
+      hasBottomLabel: pie.hasBottomLabel,
+      minGap: parseFloat(pie.options.labels.outer.outerPadding)
+    })
+
+    const newPosition = {
+      minY: label.minY,
+      maxY: label.maxY,
+      minX: label.minX,
+      maxX: label.maxX
+    }
+    const collisions = collisionTree.search(newPosition)
+      .filter(intersectingLabel => intersectingLabel.id !== label.id)
+    if (collisions.length > 0) {
+      collisionDetected = true
+      return terminateLoop
+    } else {
+      // TODO I should remove the old position first, but to do that, I need to maintain the old position coordinates
+      // see issue here : https://github.com/mourner/rbush/pull/101
+      collisionTree.insert(newPosition)
+    }
+  })
+  return collisionDetected
 }
 
 // helper function to print label. TODO make toString work
