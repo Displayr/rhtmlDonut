@@ -1708,11 +1708,13 @@ let labels = {
     }
 
     if (stages.finalPass) {
+      let lp = `${hemisphere}:final` // lp = logPrefix
+      console.log(`running ${lp}`)
       // final check for left over line angle violators
       _(outerLabelSet).each(label => {
         const angleBetweenRadialAndLabelLine = label.labelLineAngle
         if (angleBetweenRadialAndLabelLine > maxAngleBetweenRadialAndLabelLines) {
-          labelLogger.warn(`  final pass found ${pl(label)} line angle exceeds threshold.`)
+          labelLogger.warn(`${lp} found ${pl(label)} line angle exceeds threshold.`)
           throw new AngleThresholdExceeded(label, `${angleBetweenRadialAndLabelLine} > ${maxAngleBetweenRadialAndLabelLines}`)
         }
       })
@@ -1720,7 +1722,7 @@ let labels = {
       // final check for colliding labels
       const collidingLabels = findIntersectingLabels(outerLabelSet)
       if (collidingLabels.length > 0) {
-        labelLogger.warn(`  final pass found ${collidingLabels.length} colliding labels.`)
+        labelLogger.warn(`${lp} found ${collidingLabels.length} colliding labels.`)
         throw new LabelCollision(collidingLabels[0], 'final check after up sweep')
       }
     }
@@ -1782,13 +1784,13 @@ let labels = {
           length: setsSortedVerticallyOutward.left.length,
           totalHeight: _(setsSortedVerticallyOutward.left).map('height').sum(),
           originalLineConnectorCoords: _(setsSortedVerticallyOutward.left).map('lineConnectorCoord').value(),
-          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.left[0])
+          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.left[0]),
         },
         right: {
           length: setsSortedVerticallyOutward.right.length,
           totalHeight: _(setsSortedVerticallyOutward.right).map('height').sum(),
           originalLineConnectorCoords: _(setsSortedVerticallyOutward.right).map('lineConnectorCoord').value(),
-          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0])
+          nearestNeighborInwards: labels.nearestNeighborBelow(pie, setsSortedVerticallyOutward.right[0]),
         }
       }
 
@@ -1929,6 +1931,7 @@ let labels = {
         })
 
         const collisions = findIntersectingLabels([setFacts.right.nearestNeighborInwards].concat(setsSortedVerticallyOutward.right))
+
         let labelsExceedingMaxLineAngleCount = exceedsLabelLineAngleThresholdCount({
           labels: setsSortedVerticallyOutward.right, threshold: labelMaxLineAngle
         })
@@ -2099,7 +2102,7 @@ let labels = {
         .max()
 
       if (newApexYCoord > maxVerticalOffsetYValue) {
-        labelLogger.info(`not enough free vertical space to shorten. aborting shorten top`)
+        labelLogger.info(`not enough free vertical space to shorten. aborting shorten bottom`)
         return
       }
 
