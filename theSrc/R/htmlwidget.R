@@ -130,7 +130,7 @@ Donut <- function(
     # NB this means "use bezier for anything with a label line angle of over 60"
     labels.outer.lines.bezierMax = 360,
     labels.outer.lines.bezierSegmentLean = 30,
-    labels.outer.lines.bezierLabelLean = 0,
+    labels.outer.lines.bezierLabelLean = 20,
     labels.outer.lines.bezierSegmentPullInProportionMin = 0.25,
     labels.outer.lines.bezierSegmentPullInProportionMax = 0.75,
 
