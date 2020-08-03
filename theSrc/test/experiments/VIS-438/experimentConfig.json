@@ -1,6 +1,13 @@
 {
   "dimensions": [
-    ["baseline", "baseline_with_maxLabelLineAngle_80", "bezier_60_to_80", "bezier_40_to_80"]
+    [
+      "baseline",
+      "baseline_with_maxLabelLineAngle_80",
+      "bezier_60-80_sl-30_ll-0_spi-25-75_lpi-0",
+      "bezier_60-80_sl-30_ll-20_spi-25-75_lpi-0",
+      "bezier_40-80_sl-30_ll-0_spi-25-75_lpi-0",
+      "bezier_40-80_sl-30_ll-20_spi-25-75_lpi-0"
+    ]
   ],
   "experiments": [
     {
@@ -39,6 +46,38 @@
         "labelsOuterLinesBezierMax": 80,
         "labelsOuterLinesBezierSegmentLean":  30,
         "labelsOuterLinesBezierLabelLean": 0,
+        "labelsOuterLinesBezierSegmentPullInProportionMin":  0.25,
+        "labelsOuterLinesBezierSegmentPullInProportionMax": 0.75
+      } }
+    },
+    {
+      "name": "bezier_60-80_sl-30_ll-20_spi-25-75_lpi-0",
+      "override": { "settings": {
+        "labelMaxLineAngle": "80",
+        "labelsOuterLinesStraightMin":  0,
+        "labelsOuterLinesStraightMax": 5,
+        "labelsOuterLinesBasisInterpolatedMin":  5,
+        "labelsOuterLinesBasisInterpolatedMax": 60,
+        "labelsOuterLinesBezierMin":  60,
+        "labelsOuterLinesBezierMax": 80,
+        "labelsOuterLinesBezierSegmentLean":  30,
+        "labelsOuterLinesBezierLabelLean": 20,
+        "labelsOuterLinesBezierSegmentPullInProportionMin":  0.25,
+        "labelsOuterLinesBezierSegmentPullInProportionMax": 0.75
+      } }
+    },
+    {
+      "name": "bezier_40-80_sl-30_ll-20_spi-25-75_lpi-0",
+      "override": { "settings": {
+        "labelMaxLineAngle": "80",
+        "labelsOuterLinesStraightMin":  0,
+        "labelsOuterLinesStraightMax": 5,
+        "labelsOuterLinesBasisInterpolatedMin":  5,
+        "labelsOuterLinesBasisInterpolatedMax": 40,
+        "labelsOuterLinesBezierMin":  40,
+        "labelsOuterLinesBezierMax": 80,
+        "labelsOuterLinesBezierSegmentLean":  30,
+        "labelsOuterLinesBezierLabelLean": 20,
         "labelsOuterLinesBezierSegmentPullInProportionMin":  0.25,
         "labelsOuterLinesBezierSegmentPullInProportionMax": 0.75
       } }
