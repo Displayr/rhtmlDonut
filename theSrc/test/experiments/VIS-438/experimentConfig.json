@@ -12,7 +12,7 @@
       "override": { "settings": { "labelMaxLineAngle": "80" } }
     },
     {
-      "name": "bezier_60_to_80",
+      "name": "bezier_60-80_sl-30_ll-0_spi-25-75_lpi-0",
       "override": { "settings": {
         "labelMaxLineAngle": "80",
         "labelsOuterLinesStraightMin":  0,
@@ -28,7 +28,7 @@
       } }
     },
     {
-      "name": "bezier_40_to_80",
+      "name": "bezier_40-80_sl-30_ll-0_spi-25-75_lpi-0",
       "override": { "settings": {
         "labelMaxLineAngle": "80",
         "labelsOuterLinesStraightMin":  0,
