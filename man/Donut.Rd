@@ -26,7 +26,7 @@ Donut(
   labels.offset = 0.1,
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30,
-  labels.advanced.line.max.angle = 80,
+  labels.advanced.line.max.angle = 60,
   labels.advanced.removal.tiebreak = "best",
   labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
   labels.outer.lines.straightMin = 0,
@@ -36,7 +36,7 @@ Donut(
   labels.outer.lines.bezierMin = 40,
   labels.outer.lines.bezierMax = 360,
   labels.outer.lines.bezierSegmentLean = 30,
-  labels.outer.lines.bezierLabelLean = 0,
+  labels.outer.lines.bezierLabelLean = 20,
   labels.outer.lines.bezierSegmentPullInProportionMin = 0.25,
   labels.outer.lines.bezierSegmentPullInProportionMax = 0.75,
   tooltips.max.width = 0.3,
@@ -115,7 +115,7 @@ Donut(
 
 \item{labels.advanced.liftoff.angle}{(optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.}
 
-\item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 80.}
+\item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.}
 
 \item{labels.advanced.removal.tiebreak}{(optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement. The default is "best".}
 
