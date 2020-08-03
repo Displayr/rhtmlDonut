@@ -1,14 +1,20 @@
 {
-  "dimensions": [
-    [
-      "baseline",
-      "baseline_with_maxLabelLineAngle_80",
-      "bezier_60-80_sl-30_ll-0_spi-25-75_lpi-0",
-      "bezier_60-80_sl-30_ll-20_spi-25-75_lpi-0",
-      "bezier_40-80_sl-30_ll-0_spi-25-75_lpi-0",
-      "bezier_40-80_sl-30_ll-20_spi-25-75_lpi-0"
+  "ui": {
+    "grid": [
+      [
+        "baseline",
+        "baseline_with_maxLabelLineAngle_80"
+      ],
+      [
+        "bezier_60-80_sl-30_ll-0_spi-25-75_lpi-0",
+        "bezier_60-80_sl-30_ll-20_spi-25-75_lpi-0"
+      ],
+      [
+        "bezier_40-80_sl-30_ll-0_spi-25-75_lpi-0",
+        "bezier_40-80_sl-30_ll-20_spi-25-75_lpi-0"
+      ]
     ]
-  ],
+  },
   "experiments": [
     {
       "name": "baseline",
