@@ -19,7 +19,7 @@
 #' @param labels.offset (optional) the initial distance between outer radius and label placement, before adjustments, expressed as a proportion of the outer radius. The default is 0.1.
 #' @param labels.advanced.offset.yaxis.max (optional) At top and bottom of donut, labels begin to lift off (based on labels.advanced.liftoff.angle). labels.advanced.offset.yaxis.max controls the max offset (measured at 90 degrees) from the outerRadius. Default value is 100 (pixels).
 #' @param labels.advanced.liftoff.angle (optional) labels begin to pull away from the donut at this label, to alleviate crowding in the lower and upper regions of the pie. This setting controls the threshold where this occurs. The angle is computed between the radial line through the segment midpoint and the yaxis origin line. The default is 30.
-#' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 80.
+#' @param labels.advanced.line.max.angle (optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.
 #' @param labels.advanced.removal.tiebreak (optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement. The default is "best".
 #' @param labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled (optional) If enabled, add a strategy to the increases the max allowed line angle when labelling a dense ordered set. The default is true.
 #' @param tooltips.max.width (optional) the maximum tooltip width as a proportion of total width. The default is 0.3.
@@ -118,7 +118,7 @@ Donut <- function(
     labels.offset = 0.1,
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
-    labels.advanced.line.max.angle = 80,
+    labels.advanced.line.max.angle = 60,
     labels.advanced.removal.tiebreak = "best",
     labels.advanced.strategy.increaseMaxLineAngleInDenseOrderedSets.enabled = TRUE,
 

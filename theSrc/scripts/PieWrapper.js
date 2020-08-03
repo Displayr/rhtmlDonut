@@ -366,6 +366,20 @@ class PieWrapper {
       layoutLogger.info(`setting valuesOrder to 'descending'`)
       this._settings.valuesOrder = 'descending'
     }
+
+    // apply temp (hopefully) restriction to only allow bezier lines on ordered sets and to increase the max label line angle when using bezier curves
+    const useBezierOnTheseSortSettings = ['descending', 'ascending']
+    const canUseBezier = sortOrder => useBezierOnTheseSortSettings.indexOf(sortOrder) !== -1
+
+    if (canUseBezier(this._settings.valuesOrder)) {
+      this._settings.labelMaxLineAngle = 80
+    } else {
+      // effectively disable bezier lines
+      this._settings.labelsOuterLinesBasisInterpolatedMin = 5
+      this._settings.labelsOuterLinesBasisInterpolatedMax = 360
+      this._settings.labelsOuterLinesBezierMin = 360
+      this._settings.labelsOuterLinesBezierMax = 360
+    }
   }
 
   _computeColors () {
