@@ -87,10 +87,10 @@ const defaultSettings = {
         },
         basisInterpolated: {
           minAngle: 5,
-          maxAngle: 40
+          maxAngle: 60
         },
         bezier: {
-          minAngle: 40,
+          minAngle: 60,
           maxAngle: 360, // NB this means "use bezier for anything with a label line angle of over 60"
           segmentLeanAngle: 30,
           labelLeanAngle: 20,
