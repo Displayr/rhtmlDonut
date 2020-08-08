@@ -9,14 +9,14 @@ module.exports = function (element) {
         instance.setConfig(inputConfig)
         instance.draw(element)
       } catch (error) {
-        DisplayError.displayErrorMessage(element, error.message)
+        DisplayError.displayErrorMessage(element, error)
       }
     },
     resize () {
       try {
         instance.resize(element)
       } catch (error) {
-        DisplayError.displayErrorMessage(element, error.message)
+        DisplayError.displayErrorMessage(element, error)
       }
     }
   }

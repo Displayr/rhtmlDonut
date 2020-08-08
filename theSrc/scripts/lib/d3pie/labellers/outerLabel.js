@@ -382,6 +382,7 @@ class OuterLabel {
   get innerPadding () { return this._invariants.innerPadding }
   get label () { return this._invariants.label }
   get labelText () { return this._invariants.labelText }
+  get shortText () { return this._invariants.label.substr(0,8) }
   get linePadding () { return this._invariants.linePadding }
   get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
   get segmentQuadrant () { return this._invariants.segmentQuadrant }

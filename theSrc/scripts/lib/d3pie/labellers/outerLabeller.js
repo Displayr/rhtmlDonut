@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import d3 from 'd3'
-import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc, findIntersectingLabels } from './labelUtils'
+import { getLabelDimensionsUsingSvgApproximation, splitIntoLines, ptInArc, findLabelsIntersecting } from './labelUtils'
 import helpers from '../helpers'
 import { rotate, computeIntersection, inclusiveBetween, between, toRadians } from '../math'
 import segments from '../segments'
@@ -13,6 +13,8 @@ import LabelPushedOffCanvas from '../interrupts/labelPushedOffCanvas'
 import CannotMoveToInner from '../interrupts/cannotMoveToInner'
 import * as rootLog from 'loglevel'
 import RBush from 'rbush'
+import performAscendingOrderCollisionResolution from './outerLabeller/performAscendingOrderCollisionResolution'
+import performDescendingOrderCollisionResolution from './outerLabeller/performDescendingOrderCollisionResolution'
 
 const labelLogger = rootLog.getLogger('label')
 
@@ -20,6 +22,8 @@ const labelLogger = rootLog.getLogger('label')
 const spacingBetweenUpperTrianglesAndCenterMeridian = 7
 
 // NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the loop function returns false
+// TODO : push to a loopcontrol.js or something ?
+// NB duplicated
 const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
 const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
 
@@ -218,10 +222,10 @@ let labels = {
           labelStats = labels.computeLabelStats(filteredLabelSet, outerPadding)
           maxDesiredHeight = Math.max(labelStats.cumulativeLeftSideLabelHeight, labelStats.cumulativeRightSideLabelHeight)
 
-          labelLogger.info(`Applied new minAngle ${newMinAngle}. Before count ${beforeCount} after count ${afterCount}. New maxDesiredHeight:${maxDesiredHeight}, canvasHeight:${canvasHeight}`)
+          labelLogger.info(`Applied new minAngle ${newMinAngle.toFixed(4)}. Before count ${beforeCount} after count ${afterCount}. New maxDesiredHeight:${maxDesiredHeight}, canvasHeight:${canvasHeight}`)
 
           if (maxDesiredHeight <= canvasHeight) {
-            labelLogger.info(`new minDisplay angle ${newMinAngle} provided enough shrinkage. Moving on to next step`)
+            labelLogger.info(`new minDisplay angle ${newMinAngle.toFixed(4)} provided enough shrinkage. Moving on to next step`)
             return false // NB break
           }
         })
@@ -239,6 +243,8 @@ let labels = {
 
     // naively place label
     labels.computeInitialLabelCoordinates(pie)
+
+    labels.performOutOfBoundsCorrection(pie)
 
     // adjust label positions to try to accommodate conflicts
     labels.performCollisionResolution(pie)
@@ -317,7 +323,7 @@ let labels = {
 
     const topLabelsThatCouldBeLifted = pie.outerLabelData
       .filter(({ segmentAngleMidpoint }) => between(90 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 90 + parseFloat(pie.options.labels.outer.liftOffAngle)))
-    const collisionsInTopSet = findIntersectingLabels(topLabelsThatCouldBeLifted)
+    const collisionsInTopSet = findLabelsIntersecting(topLabelsThatCouldBeLifted)
     if (collisionsInTopSet.length > 0) {
       labelLogger.info(`Collisions between ${90 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${90 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
       pie.topIsLifted = true
@@ -340,7 +346,7 @@ let labels = {
 
     const bottomLabelsThatCouldBeLifted = pie.outerLabelData
       .filter(({ segmentAngleMidpoint }) => between(270 - parseFloat(pie.options.labels.outer.liftOffAngle), segmentAngleMidpoint, 270 + parseFloat(pie.options.labels.outer.liftOffAngle)))
-    const collisionsInBottomSet = findIntersectingLabels(bottomLabelsThatCouldBeLifted)
+    const collisionsInBottomSet = findLabelsIntersecting(bottomLabelsThatCouldBeLifted)
     if (collisionsInBottomSet.length > 0) {
       labelLogger.info(`Collisions between ${270 - parseFloat(pie.options.labels.outer.liftOffAngle)} - ${270 + parseFloat(pie.options.labels.outer.liftOffAngle)}, applying liftoff spacing`)
       pie.bottomIsLifted = true
@@ -684,9 +690,7 @@ let labels = {
     }, loadSpeed)
   },
 
-  performCollisionResolution: function (pie) {
-    if (pie.outerLabelData.length <= 1) { return }
-
+  performOutOfBoundsCorrection: function (pie) {
     if (pie.options.labels.stages.outOfBoundsCorrection) {
       labels.correctOutOfBoundLabelsPreservingOrder({
         outerRadius: pie.outerRadius,
@@ -705,29 +709,45 @@ let labels = {
         bottomIsLifted: pie.bottomIsLifted
       })
     }
-
-    // use to determine what order should we hide labels as necessary
-    const removalOrder = _(pie.outerLabelData)
-      .orderBy(['value', 'id'], ['acs', 'desc'])
-      .map('id')
-      .value()
-
-    // TODO normalize the config variables for initial vs max for both maxlineAngle and minValue
-    labels._performCollisionResolutionIteration({
-      totalSegmentCount: pie.options.data.content.length,
-      useInnerLabels: pie.options.labels.outer.innerLabels,
-      minAngleThreshold: parseFloat(pie.options.data.minAngle),
-      breakOutAngleThreshold: 0.1,
-      // for now make maxLineAngleValue == maxLineAngleMaxValue so that this strategy is temp dissabled
-      maxLineAngleValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      maxLineAngleMaxValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
-      maxLineAngleIncrement: 3,
-      labelSet: pie.outerLabelData,
-      removalOrder,
-      pie })
   },
 
-  _performCollisionResolutionIteration ({
+  performCollisionResolution: function (pie) {
+    const initialCollisions = findLabelsIntersecting(pie.outerLabelData)
+    if (initialCollisions.length === 0) {
+      labelLogger.info(`no collisions detected in initial layout. Terminating collision detection.`)
+      return
+    } else {
+      labelLogger.info(`collisions detected in initial layout. Proceeding with collision detection.`)
+    }
+
+    // NB why !pie.options.labels.outer.innerLabels : the performDescendingOrderCollisionResolution does not yet support innerLabels
+    if (pie.options.data.sortOrder === 'descending' && !pie.options.labels.outer.innerLabels) {
+      performDescendingOrderCollisionResolution(pie, labels)
+    } else {
+      // use to determine what order should we hide labels as necessary
+      const removalOrder = _(pie.outerLabelData)
+        .orderBy(['value', 'id'], ['acs', 'desc'])
+        .map('id')
+        .value()
+
+      // TODO normalize the config variables for initial vs max for both maxlineAngle and minValue
+      labels._performUnorderedCollisionResolutionIteration({
+        totalSegmentCount: pie.options.data.content.length,
+        useInnerLabels: pie.options.labels.outer.innerLabels,
+        minAngleThreshold: parseFloat(pie.options.data.minAngle),
+        breakOutAngleThreshold: 0.1,
+        // for now make maxLineAngleValue == maxLineAngleMaxValue so that this strategy is temp dissabled
+        maxLineAngleValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        maxLineAngleMaxValue: parseFloat(pie.options.labels.outer.labelMaxLineAngle),
+        maxLineAngleIncrement: 3,
+        labelSet: pie.outerLabelData,
+        removalOrder,
+        pie
+      })
+    }
+  },
+
+  _performUnorderedCollisionResolutionIteration ({
     totalSegmentCount,
     iterationCount = 0,
     useInnerLabels,
@@ -748,7 +768,7 @@ let labels = {
     labelLogger.info(`collision iteration started. iterationCount=${iterationCount} labelCount=${clonedLabelSet.length}`)
 
     try {
-      let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performCollisionResolutionAlgorithm({
+      let { candidateOuterLabelSet, candidateInnerLabelSet } = labels._performUnorderedCollisionResolutionAlgorithm({
         iterationCount,
         pie,
         clonedAndFilteredLabelSet: clonedLabelSet,
@@ -866,7 +886,7 @@ let labels = {
           labelLogger.error(`collision resolution failed: hit breakOutValue: ${breakOutAngleThreshold} and maxLineAngleMaxValue: ${maxLineAngleMaxValue}`)
         }
 
-        labels._performCollisionResolutionIteration({
+        labels._performUnorderedCollisionResolutionIteration({
           totalSegmentCount,
           iterationCount: iterationCount + 1,
           useInnerLabels,
@@ -887,7 +907,7 @@ let labels = {
     }
   },
 
-  _performCollisionResolutionAlgorithm ({
+  _performUnorderedCollisionResolutionAlgorithm ({
     iterationCount,
     pie,
     clonedAndFilteredLabelSet: outerLabelSet,
@@ -1364,7 +1384,7 @@ let labels = {
       })
     }
 
-    const collidingLabels = findIntersectingLabels(outerLabelSetSortedTopToBottom)
+    const collidingLabels = findLabelsIntersecting(outerLabelSetSortedTopToBottom)
     const collidingLabelSets = []
     let activeSet = []
     _(collidingLabels).each(collidingLabel => {
@@ -1722,7 +1742,7 @@ let labels = {
       })
 
       // final check for colliding labels
-      const collidingLabels = findIntersectingLabels(outerLabelSet)
+      const collidingLabels = findLabelsIntersecting(outerLabelSet)
       if (collidingLabels.length > 0) {
         labelLogger.warn(`${lp} found ${collidingLabels.length} colliding labels.`)
         throw new LabelCollision(collidingLabels[0], 'final check after up sweep')

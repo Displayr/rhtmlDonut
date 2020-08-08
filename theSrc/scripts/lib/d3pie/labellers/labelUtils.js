@@ -1,8 +1,12 @@
 import _ from 'lodash'
 import $ from 'jquery'
+import RBush from 'rbush'
 import math from '../math'
 
 import { rectIntersect, rectXaboveY, rectXbelowY } from '../../geometryUtils'
+import * as rootLog from 'loglevel'
+
+const labelLogger = rootLog.getLogger('label')
 
 // TODO this is from palmtrees labelUtils module
 let idSeed = 0
@@ -128,21 +132,39 @@ function labelXbelowY (label1, label2) {
   return rectXbelowY(labelToRect(label1), labelToRect(label2))
 }
 
-// TODO findIntersectingLabels assumes sorted labels. Make it agnostic of order
-// TODO why is this !_.has || ! necessary (should just be a simple not)
-function findIntersectingLabels (labels, within = 0) {
-  return _(labels)
-    .filter(frontierLabel => { return !_.has(frontierLabel.isTopApexLabel) || !frontierLabel.isTopApexLabel })
-    .filter(frontierLabel => { return !_.has(frontierLabel.isBottomApexLabel) || !frontierLabel.isBottomApexLabel })
-    .filter((frontierLabel, frontierIndex) => {
-      const otherLabels = []
-      if (!(frontierIndex === 0)) { otherLabels.push(labels[frontierIndex - 1]) }
-      if (!(frontierIndex === labels.length - 1)) { otherLabels.push(labels[frontierIndex + 1]) }
-      const intersects = _.some(otherLabels, otherLabel => frontierLabel.intersectsWith(otherLabel, within))
-      return intersects
+function findLabelsIntersecting (labels) {
+  // TODO test labels have minX maxX minY maxY - else RBush will ignore them
+  const collisionTree = new RBush()
+  collisionTree.load(labels)
+  return labels
+    .filter(label => {
+      const collisions = collisionTree.search(label)
+        .filter(intersectingLabel => intersectingLabel.id !== label.id)
+      return collisions.length
     })
-    .value()
 }
+
+function findLabelsOutOfBounds (labels, canvasWidth, canvasHeight) {
+  return labels.filter(({ minX, maxX, minY, maxY }) => {
+    return minX < 0 ||
+      maxX > canvasWidth ||
+      minY < 0 ||
+      maxY > canvasHeight
+  })
+}
+
+function findLabelsExceedingMaxLabelLineAngle (labels, maxLabelLineAngle) {
+  return labels.filter(({ labelLineAngle }) => labelLineAngle > maxLabelLineAngle)
+}
+
+function mergeLabelSets (master, toMergeIntoMaster) {
+  _(toMergeIntoMaster).each(label => {
+    const index = master.findIndex(element => element.id === label.id)
+    if (index !== -1) { master[index] = label }
+    else { labelLogger.warn(`mergeLabelSets encountered label not in master`) }
+  })
+}
+
 
 module.exports = {
   getLabelDimensionsUsingDivApproximation,
@@ -152,5 +174,8 @@ module.exports = {
   labelIntersect,
   labelXaboveY,
   labelXbelowY,
-  findIntersectingLabels
+  findLabelsExceedingMaxLabelLineAngle,
+  findLabelsIntersecting,
+  findLabelsOutOfBounds,
+  mergeLabelSets
 }
