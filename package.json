@@ -18,7 +18,7 @@
     "gulp": "^4.0.2",
     "husky": "^0.13.3",
     "inquirer": "^7.3.3",
-    "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#ff0cdf31dffa1e70bfb3c94023f01daacd7d0051",
+    "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#6.0.0",
     "sinon": "^2.3.2",
     "yargs": "^15.4.1"
   },
