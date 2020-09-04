@@ -20,6 +20,7 @@
   ],
   "rules": {
     "indent": 0,
-    "prefer-promise-reject-errors": 0
+    "prefer-promise-reject-errors": 0,
+    "comma-dangle": ["error", "always-multiline"]
   }
 }
