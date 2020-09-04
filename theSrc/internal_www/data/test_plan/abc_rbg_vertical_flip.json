@@ -41,7 +41,7 @@
     "orderControl": false,
     "gradient": false,
     "innerRadius": "0.8",
-    "minAngle": 0.003,
+    "minProportion": 0.003,
     "borderColor": "white"
   }
 }

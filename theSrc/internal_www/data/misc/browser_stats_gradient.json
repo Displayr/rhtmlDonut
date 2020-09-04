@@ -95,7 +95,7 @@
     "orderControl": false,
     "gradient": true,
     "innerRadius": "0.8",
-    "minAngle": 0,
+    "minProportion": 0,
     "borderColor": "none"
   }
 }

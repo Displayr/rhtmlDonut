@@ -169,7 +169,7 @@
     "orderControl": false,
     "gradient": false,
     "innerRadius": 0.7,
-    "minAngle": 3e-05,
+    "minProportion": 3e-05,
     "borderColor": "#FFFFFF"
   }
 }

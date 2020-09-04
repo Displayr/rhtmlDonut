@@ -37,7 +37,7 @@
       "#ff0000", "#ff0000",
       "#ff0000"
     ],
-     "minAngle": 0.000001,
+     "minProportion": 0.000001,
      "labelMaxLineAngle": 90
   }
 }

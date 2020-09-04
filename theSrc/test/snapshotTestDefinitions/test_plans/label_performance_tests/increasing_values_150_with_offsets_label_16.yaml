@@ -7,11 +7,11 @@ comments: []
 height: 750
 width: 750
 widgets:
-    - config: '{"settings":{"title":"150-offset-00"   } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values'
-    - config: '{"settings":{"title":"150-offset-12.5" } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_12_5_percent'
-    - config: '{"settings":{"title":"150-offset-25"   } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_25_percent'
-    - config: '{"settings":{"title":"150-offset-37.5" } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_37_5_percent'
-    - config: '{"settings":{"title":"150-offset-50"   } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_50_percent'
-    - config: '{"settings":{"title":"150-offset-62.5" } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_62_5_percent'
-    - config: '{"settings":{"title":"150-offset-75"   } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_75_percent'
-    - config: '{"settings":{"title":"150-offset-87.5" } }|config.minAngle_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_87_5_percent'
+    - config: '{"settings":{"title":"150-offset-00"   } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values'
+    - config: '{"settings":{"title":"150-offset-12.5" } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_12_5_percent'
+    - config: '{"settings":{"title":"150-offset-25"   } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_25_percent'
+    - config: '{"settings":{"title":"150-offset-37.5" } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_37_5_percent'
+    - config: '{"settings":{"title":"150-offset-50"   } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_50_percent'
+    - config: '{"settings":{"title":"150-offset-62.5" } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_62_5_percent'
+    - config: '{"settings":{"title":"150-offset-75"   } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_75_percent'
+    - config: '{"settings":{"title":"150-offset-87.5" } }|config.minProportion_0|config.label_16|data.increasing_value_sets.150_increasing_values_offset_87_5_percent'
