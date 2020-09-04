@@ -6,7 +6,7 @@ const {
   configureImageSnapshotMatcher,
   puppeteerSettings,
   testSnapshots,
-  jestTimeout
+  jestTimeout,
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
@@ -28,7 +28,7 @@ describe('resize', () => {
       browser,
       configName: 'data.test_plan.abc_rbg',
       width: 300,
-      height: 200
+      height: 200,
     })
 
     await testSnapshots({ page, snapshotName: 'basic_initial' })
@@ -40,7 +40,7 @@ describe('resize', () => {
       { width: 225, height: 200 },
       { width: 225, height: 200 },
       { width: 400, height: 300 },
-      { width: 500, height: 400 }
+      { width: 500, height: 400 },
     ]
 
     for (const size of sizesToSnapshot) {
@@ -61,14 +61,14 @@ describe('resize', () => {
       browser,
       configName: 'data.test_plan.long_title_subtitle_footer',
       width: 600,
-      height: 600
+      height: 600,
     })
 
     await testSnapshots({ page, snapshotName: 'with_title_initial' })
 
     const sizesToSnapshot = [
       { width: 400, height: 600 },
-      { width: 250, height: 600 }
+      { width: 250, height: 600 },
     ]
 
     for (const size of sizesToSnapshot) {

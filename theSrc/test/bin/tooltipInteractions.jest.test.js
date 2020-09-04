@@ -6,7 +6,7 @@ const {
   configureImageSnapshotMatcher,
   puppeteerSettings,
   testSnapshots,
-  jestTimeout
+  jestTimeout,
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
@@ -28,7 +28,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.groups_with_some_hidden_labels',
       width: 650,
-      height: 650
+      height: 650,
     })
 
     await donutPlot.hoverOverSegment(10)
@@ -57,7 +57,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.simple_groups',
       width: 190,
-      height: 190
+      height: 190,
     })
 
     await donutPlot.hoverOverGroupSegment(0)
@@ -74,7 +74,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.tooltip_base',
       width: 1000,
-      height: 1000
+      height: 1000,
     })
 
     await donutPlot.hoverOverSegment(4)
@@ -91,7 +91,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.tooltip_base|config.tooltip_wrapping_max_10_percent',
       width: 1000,
-      height: 1000
+      height: 1000,
     })
 
     await donutPlot.hoverOverSegment(4)
@@ -108,7 +108,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.tooltip_base|config.tooltip_pink_georgia_36',
       width: 1000,
-      height: 1000
+      height: 1000,
     })
 
     await donutPlot.hoverOverSegment(4)
@@ -125,7 +125,7 @@ describe('tooltip_interaction', () => {
       browser,
       configName: 'data.test_plan.tooltip_base|config.tooltip_auto_color',
       width: 1000,
-      height: 1000
+      height: 1000,
     })
 
     await donutPlot.hoverOverSegment(4)
