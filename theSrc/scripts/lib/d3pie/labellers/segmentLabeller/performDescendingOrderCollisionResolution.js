@@ -2,18 +2,11 @@ import {
   findLabelsIntersecting,
   findLabelsExceedingMaxLabelLineAngle,
   findLabelsOutOfBounds,
-  mergeLabelSets
 } from '../labelUtils'
 import _ from 'lodash'
 import * as rootLog from 'loglevel'
 import UnexpectedCondition from '../../interrupts/unexpectedCondition'
 const labelLogger = rootLog.getLogger('label')
-
-// NB fundamental for understanding a loop of the code : _.each iterations are cancelled if the loop function returns false
-// TODO : push to a loopcontrol.js or something ?
-// NB duplicated
-const terminateLoop = false // NB this is done for readability to make it more obvious what 'return false' does in a _.each loop
-const continueLoop = true // NB this is done for readability to make it more obvious what 'return true' does in a _.each loop
 
 /*
     start top left quadrant
@@ -49,7 +42,7 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
   const labelsToIgnore = pie.outerLabelData.filter(label => label.fractionalValue > ignoreThreshold)
   const labelsToPlace = pie.outerLabelData.filter(label => label.fractionalValue <= ignoreThreshold)
 
-  const { newMinValue: topLeftMinValue, acceptedLabels: topLeftAcceptedLabels }  = placeTopLeft({
+  const { newMinValue: topLeftMinValue, acceptedLabels: topLeftAcceptedLabels } = placeTopLeft({
     minValue,
     existingLabels: labelsToIgnore,
     labelSet: labelsToPlace,
@@ -57,11 +50,11 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
     outerLabeller,
     getMaxInvalidValue,
     moveLabelsDown,
-    moveLabelsUp
+    moveLabelsUp,
   })
   minValue = topLeftMinValue
 
-  const { newMinValue: rightMinValue, acceptedLabels: rightAcceptedLabels }  = placeRight({
+  const { newMinValue: rightMinValue, acceptedLabels: rightAcceptedLabels } = placeRight({
     minValue,
     existingLabels: labelsToIgnore.concat(topLeftAcceptedLabels),
     labelSet: labelsToPlace,
@@ -69,11 +62,11 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
     outerLabeller,
     getMaxInvalidValue,
     moveLabelsDown,
-    moveLabelsUp
+    moveLabelsUp,
   })
   minValue = rightMinValue
 
-  const { newMinValue: bottomLeftMinValue, acceptedLabels: bottomLeftAcceptedLabels }  = placeBottomLeft({
+  const { newMinValue: bottomLeftMinValue, acceptedLabels: bottomLeftAcceptedLabels } = placeBottomLeft({
     minValue,
     existingLabels: labelsToIgnore.concat(topLeftAcceptedLabels).concat(rightAcceptedLabels),
     labelSet: labelsToPlace,
@@ -81,16 +74,15 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
     outerLabeller,
     getMaxInvalidValue,
     moveLabelsDown,
-    moveLabelsUp
+    moveLabelsUp,
   })
   minValue = bottomLeftMinValue
-
 
   pie.outerLabelData = _([
     labelsToIgnore,
     topLeftAcceptedLabels,
     rightAcceptedLabels,
-    bottomLeftAcceptedLabels
+    bottomLeftAcceptedLabels,
   ])
     .flatten()
     .sortBy('value')
@@ -102,7 +94,7 @@ const placeTopLeft = ({ minValue: currentMinValue, existingLabels, labelSet, pie
   let acceptedLabels = null
   let newMinValue = null
 
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const canvasHeight = parseFloat(pie.options.size.canvasHeight)
   const topIsLifted = true
   const bottomIsLifted = true
@@ -143,14 +135,14 @@ const placeTopLeft = ({ minValue: currentMinValue, existingLabels, labelSet, pie
       const {
         collidingLabels,
         outOfBoundsLabels,
-        maxAngleExceededLabels
+        maxAngleExceededLabels,
       } = moveLabelsUp({
         phase: 'top left',
         placedSet: existingLabels,
         labelSet: workingLabelSet,
         startingY: startingBottomYPositionOfBiggestLabel,
         topIsLifted,
-        bottomIsLifted
+        bottomIsLifted,
       })
 
       allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
@@ -197,7 +189,7 @@ const placeRight = ({ existingLabels, labelSet, minValue: currentMinValue, pie, 
   let acceptedLabels = null
   let newMinValue = null
 
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const topIsLifted = true
   const bottomIsLifted = true
 
@@ -239,7 +231,7 @@ const placeRight = ({ existingLabels, labelSet, minValue: currentMinValue, pie, 
         labelSet: workingLabelSet,
         startingY: startingTopYPositionOfBiggestLabel,
         topIsLifted,
-        bottomIsLifted
+        bottomIsLifted,
       })
 
       allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
@@ -288,7 +280,7 @@ const placeBottomLeft = ({ minValue: currentMinValue, existingLabels, labelSet, 
   let acceptedLabels = null
   let newMinValue = null
 
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const canvasHeight = parseFloat(pie.options.size.canvasHeight)
   const topIsLifted = true
   const bottomIsLifted = true
@@ -329,14 +321,14 @@ const placeBottomLeft = ({ minValue: currentMinValue, existingLabels, labelSet, 
       const {
         collidingLabels,
         outOfBoundsLabels,
-        maxAngleExceededLabels
+        maxAngleExceededLabels,
       } = moveLabelsUp({
         phase: 'bottom left',
         placedSet: existingLabels,
         labelSet: workingLabelSet,
         startingY: startingBottomYPositionOfBiggestLabel,
         topIsLifted,
-        bottomIsLifted
+        bottomIsLifted,
       })
 
       allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
@@ -378,11 +370,11 @@ const placeBottomLeft = ({ minValue: currentMinValue, existingLabels, labelSet, 
 }
 
 const getMaxInvalidValueFactory = (pie) => {
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const canvasHeight = parseFloat(pie.options.size.canvasHeight)
-  const canvasWidth  = parseFloat(pie.options.size.canvasWidth)
+  const canvasWidth = parseFloat(pie.options.size.canvasWidth)
 
-  return ({workingSet, placedSet}) => _([
+  return ({ workingSet, placedSet }) => _([
     findLabelsIntersecting(placedSet.concat(workingSet)),
     findLabelsOutOfBounds(workingSet, canvasWidth, canvasHeight),
     findLabelsExceedingMaxLabelLineAngle(workingSet, maxLineAngleValue),
@@ -393,16 +385,16 @@ const getMaxInvalidValueFactory = (pie) => {
 }
 
 const moveLabelsDownFactory = (pie, outerLabeller) => {
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const canvasWidth = parseFloat(pie.options.size.canvasWidth)
   const canvasHeight = parseFloat(pie.options.size.canvasHeight)
   const labelRadius = pie.outerRadius + pie.labelOffset
   const outerRadius = pie.outerRadius
   const maxVerticalOffset = pie.maxVerticalOffset
   const apexLabelCorrection = 0 // TODO may need this
-  const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
+  const labelLiftOffAngle = parseFloat(pie.options.labels.segment.liftOffAngle)
   const pieCenter = pie.pieCenter
-  const minGap = parseFloat(pie.options.labels.outer.outerPadding)
+  const minGap = parseFloat(pie.options.labels.segment.outerPadding)
 
   return ({ phase, placedSet, labelSet, startingY, topIsLifted, bottomIsLifted }) => {
     _(labelSet).each((labelDatum, index) => {
@@ -419,7 +411,7 @@ const moveLabelsDownFactory = (pie, outerLabeller) => {
         labelDatum: labelDatum,
         pieCenter,
         topIsLifted,
-        bottomIsLifted
+        bottomIsLifted,
       })
     })
 
@@ -437,22 +429,22 @@ const moveLabelsDownFactory = (pie, outerLabeller) => {
     return {
       collidingLabels,
       outOfBoundsLabels,
-      maxAngleExceededLabels
+      maxAngleExceededLabels,
     }
   }
 }
 
 const moveLabelsUpFactory = (pie, outerLabeller) => {
-  const maxLineAngleValue = parseFloat(pie.options.labels.outer.labelMaxLineAngle)
+  const maxLineAngleValue = parseFloat(pie.options.labels.segment.labelMaxLineAngle)
   const canvasWidth = parseFloat(pie.options.size.canvasWidth)
   const canvasHeight = parseFloat(pie.options.size.canvasHeight)
   const labelRadius = pie.outerRadius + pie.labelOffset
   const outerRadius = pie.outerRadius
   const maxVerticalOffset = pie.maxVerticalOffset
   const apexLabelCorrection = 0 // TODO may need this
-  const labelLiftOffAngle = parseFloat(pie.options.labels.outer.liftOffAngle)
+  const labelLiftOffAngle = parseFloat(pie.options.labels.segment.liftOffAngle)
   const pieCenter = pie.pieCenter
-  const minGap = parseFloat(pie.options.labels.outer.outerPadding)
+  const minGap = parseFloat(pie.options.labels.segment.outerPadding)
 
   return ({ phase, placedSet, labelSet, startingY, topIsLifted, bottomIsLifted }) => {
     _(labelSet).each((labelDatum, index) => {
@@ -469,7 +461,7 @@ const moveLabelsUpFactory = (pie, outerLabeller) => {
         labelDatum: labelDatum,
         pieCenter,
         topIsLifted,
-        bottomIsLifted
+        bottomIsLifted,
       })
     })
 
@@ -487,7 +479,7 @@ const moveLabelsUpFactory = (pie, outerLabeller) => {
     return {
       collidingLabels,
       outOfBoundsLabels,
-      maxAngleExceededLabels
+      maxAngleExceededLabels,
     }
   }
 }

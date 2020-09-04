@@ -3,6 +3,6 @@ module.exports = ({ labelData }) => {
   const { x: lx, y: ly } = labelData.lineConnectorCoord
   return {
     path: `M ${sx} ${sy} L ${lx} ${ly}`,
-    pathType: 'straight'
+    pathType: 'straight',
   }
 }

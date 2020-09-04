@@ -50,15 +50,15 @@ let labels = {
       .text(function (d, i) {
         let val
         if (pie.options.data.display === 'percentage') {
-          val = pie.options.data.dataFormatter(d.value / pie.totalSize * 100)
+          val = pie.options.data.dataFormatter(d.value / pie.totalValue * 100)
         } else {
           val = pie.options.data.dataFormatter(d.value)
         }
-        if (pie.options.data.prefix) {
-          val = pie.options.data.prefix + val
+        if (pie.options.labels.segment.prefix) {
+          val = pie.options.labels.segment.prefix + val
         }
-        if (pie.options.data.suffix) {
-          val = val + pie.options.data.suffix
+        if (pie.options.labels.segment.suffix) {
+          val = val + pie.options.labels.segment.suffix
         }
         return val
       })
@@ -69,7 +69,7 @@ let labels = {
       const { stAngle, edAngle, label: labelText, x: labelX, y: labelY } = labelData
       let center = {
         x: labelX - pie.pieCenter.x,
-        y: labelY - pie.pieCenter.y
+        y: labelY - pie.pieCenter.y,
       }
 
       let r1 = 0
@@ -204,7 +204,7 @@ let labels = {
     }
     let labelGroupDims = labelGroupNode.getBBox()
 
-    let angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalSize, { midpoint: true })
+    let angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalValue, { midpoint: true })
 
     let pointAt90Degrees = { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.innerRadius * 0.6 }
     let newCoords = math.rotate(pointAt90Degrees, pie.pieCenter, angle - 90)
@@ -214,9 +214,9 @@ let labels = {
       x: newCoords.x,
       y: newCoords.y,
       w: labelGroupDims.width,
-      h: labelGroupDims.height
+      h: labelGroupDims.height,
     }
-  }
+  },
 }
 
 module.exports = labels

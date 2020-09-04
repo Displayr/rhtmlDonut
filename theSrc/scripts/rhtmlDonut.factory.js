@@ -18,6 +18,6 @@ module.exports = function (element) {
       } catch (error) {
         DisplayError.displayErrorMessage(element, error)
       }
-    }
+    },
   }
 }

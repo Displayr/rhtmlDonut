@@ -107,7 +107,7 @@ function labelToRect (label) {
     x: label.x || label.topLeftCoord.x,
     y: label.y || label.topLeftCoord.y,
     width: label.width,
-    height: label.height
+    height: label.height,
   }
 }
 
@@ -116,7 +116,7 @@ function expandBy (label, padding = 0) {
     x: label.x - padding,
     y: label.y - padding,
     width: label.width + 2 * padding,
-    height: label.height + 2 * padding
+    height: label.height + 2 * padding,
   }
 }
 
@@ -160,11 +160,9 @@ function findLabelsExceedingMaxLabelLineAngle (labels, maxLabelLineAngle) {
 function mergeLabelSets (master, toMergeIntoMaster) {
   _(toMergeIntoMaster).each(label => {
     const index = master.findIndex(element => element.id === label.id)
-    if (index !== -1) { master[index] = label }
-    else { labelLogger.warn(`mergeLabelSets encountered label not in master`) }
+    if (index !== -1) { master[index] = label } else { labelLogger.warn(`mergeLabelSets encountered label not in master`) }
   })
 }
-
 
 module.exports = {
   getLabelDimensionsUsingDivApproximation,
@@ -177,5 +175,5 @@ module.exports = {
   findLabelsExceedingMaxLabelLineAngle,
   findLabelsIntersecting,
   findLabelsOutOfBounds,
-  mergeLabelSets
+  mergeLabelSets,
 }

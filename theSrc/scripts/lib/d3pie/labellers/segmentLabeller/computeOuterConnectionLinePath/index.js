@@ -1,7 +1,7 @@
 import bezierCurve from './bezierCurve'
 import basisInterpolated from './basisInterpolated'
 import straightLine from './straightLine'
-import { inclusiveBetween } from '../../math'
+import { inclusiveBetween } from '../../../math'
 
 // OPTIONS
 // {

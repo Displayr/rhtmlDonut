@@ -1,4 +1,4 @@
-import { computeIntersection, between, toRadians } from '../../math'
+import { computeIntersection, between, toRadians } from '../../../math'
 
 // draw a bezier curve from the segment to the label
 // * start with a rectangle with the segment and label at opposite points ("kitty corner") on the rectangle
@@ -27,7 +27,7 @@ const bezierCurveInTopLeft = ({ labelData, canvasHeight, segmentLeanAngle, label
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-topleft'
+    pathType: 'bezier-topleft',
   }
 }
 
@@ -41,7 +41,7 @@ const bezierCurveInTopRight = ({ labelData, canvasHeight, segmentLeanAngle, labe
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-topright'
+    pathType: 'bezier-topright',
   }
 }
 
@@ -55,7 +55,7 @@ const bezierCurveInBottomRight = ({ labelData, canvasHeight, segmentLeanAngle, l
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-bottomright'
+    pathType: 'bezier-bottomright',
   }
 }
 
@@ -69,7 +69,7 @@ const bezierCurveInBottomLeft = ({ labelData, canvasHeight, segmentLeanAngle, la
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-bottomleft'
+    pathType: 'bezier-bottomleft',
   }
 }
 
@@ -90,7 +90,7 @@ const getTangentLine = ({ x, y, segmentAngle }) => {
   const { xProportion, yProportion } = getAngleProportions(angleFromYAxis)
   return [
     { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion },
   ]
 }
 
@@ -101,19 +101,19 @@ const getLine = ({ x, y, angle }) => {
   const { xProportion, yProportion } = getAngleProportions(angle)
   return [
     { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion },
   ]
 }
 
 const getAngleProportions = (angleInDegrees) => ({
   xProportion: Math.cos(toRadians(angleInDegrees)),
-  yProportion: Math.sin(toRadians(angleInDegrees))
+  yProportion: Math.sin(toRadians(angleInDegrees)),
 })
 
 const getSegmentAndLabelCoords = ({ labelData }) => {
   return {
     segmentCoord: labelData.segmentMidpointCoord,
-    labelCoord: labelData.lineConnectorCoord
+    labelCoord: labelData.lineConnectorCoord,
   }
 }
 

@@ -31,5 +31,5 @@ module.exports = {
   lineLength,
   rectIntersect,
   rectXaboveY,
-  rectXbelowY
+  rectXbelowY,
 }
