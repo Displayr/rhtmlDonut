@@ -175,8 +175,9 @@ class d3pie {
 
       // TODO this is temp assignment to this.outerLabelData to make it all keep working ...
       this.segmentLabeller.doLabelling()
-      const { outer } = this.segmentLabeller.getLabels()
+      const { inner, outer } = this.segmentLabeller.getLabels()
       this.outerLabelData = outer
+      this.innerLabelData = inner
 
       tempSegmentLabellerDrawFunctions.drawOuterLabels(this)
 

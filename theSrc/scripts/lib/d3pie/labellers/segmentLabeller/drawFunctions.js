@@ -186,35 +186,13 @@ const drawInnerLabelLines = (pie) => {
 
 const computeInnerLabelLine = ({ pieCenter, innerRadius, labelData }) => {
   const pointAtZeroDegrees = { x: pieCenter.x - innerRadius, y: pieCenter.y }
-  let originCoords = rotate(pointAtZeroDegrees, pieCenter, labelData.segmentAngleMidpoint)
+  let originCoords = rotate(pointAtZeroDegrees, pieCenter, labelData.angle)
   originCoords.id = labelData.id
   originCoords.color = labelData.color
 
   let end = labelData.lineConnectorCoord
 
-  let mid = {
-    x: originCoords.x + (end.x - originCoords.x) * 0.5,
-    y: originCoords.y + (end.y - originCoords.y) * 0.5,
-    type: 'mid',
-  }
-
-  switch (labelData.segmentQuadrant) {
-    case 4: // top left
-      mid.y += Math.abs(end.y - originCoords.y) * 0.25
-      break
-    case 3: // bottom left
-      mid.y -= Math.abs(end.y - originCoords.y) * 0.25
-      break
-    case 1: // top right
-      mid.y += Math.abs(end.y - originCoords.y) * 0.25
-      break
-    case 2: // bottom right
-      mid.y -= Math.abs(end.y - originCoords.y) * 0.25
-      break
-  }
-
   return [originCoords, end]
-  // return [originCoords, mid, end]
 }
 
 module.exports = {
