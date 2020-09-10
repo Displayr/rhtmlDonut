@@ -116,12 +116,13 @@ class d3pie {
     }
 
     pieDimensions = this.computePieLayoutDimensions({
+      labelsEnabled: this.options.labels.enabled,
       canvasHeight: this.options.size.canvasHeight,
       canvasWidth: this.options.size.canvasWidth,
-      idealBottomWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
-      idealLeftWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-      idealRightWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-      idealTopWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
+      idealBottomWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
+      idealLeftWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealRightWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealTopWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
       innerRadiusProportion: this.options.size.pieInnerRadius,
       labelOffsetProportion: this.options.size.labelOffset,
       maxFontSize: labelStats.maxFontSize,
@@ -220,6 +221,7 @@ class d3pie {
   }
 
   computePieLayoutDimensions ({
+    labelsEnabled,
     maxFontSize,
     canvasWidth,
     canvasHeight,
@@ -237,11 +239,11 @@ class d3pie {
 
     const halfMaxFontSizeMinusMagicHardCode = 8 // NB based on experimenting with label_variations_wrapping.yaml examples
     const labelOffset = Math.max(
-      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize ( minus some fudge)  to prevent labels from overlapping segments
+      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize (minus some fudge)  to prevent labels from overlapping segments
       Math.ceil(outerRadiusIncludingLabelOffset * (1 - (1 / (1 + labelOffsetProportion))))
     )
 
-    const outerRadius = outerRadiusIncludingLabelOffset - labelOffset
+    const outerRadius = outerRadiusIncludingLabelOffset - (labelsEnabled ? labelOffset : 0)
     const innerRadius = Math.floor(outerRadius * innerRadiusProportion)
     const constrained = (availableHeight > availableWidth) ? 'width' : 'height'
 
