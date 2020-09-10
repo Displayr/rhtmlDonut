@@ -9,14 +9,14 @@ const labelLogger = rootLog.getLogger('label')
 //  The loop deletes in set order - not ascending value order - and terminates mid loop once constraint is met ..
 
 const mutationName = 'removeLabelsUntilLabelsFitCanvasVertically'
-const mutationFn = ({ outerLabelSet: labelSet, variant, invariant }) => {
+const mutationFn = ({ outerLabelSet: labelSet, variant, invariant, canvas }) => {
   const extractAndThrowIfNull = extractAndThrowIfNullFactory(mutationName)
   const stats = { completed: false }
   const originalLabelCount = labelSet.length
 
   const outerPadding = extractAndThrowIfNull(invariant, 'outerPadding')
-  const canvasHeight = extractAndThrowIfNull(invariant, 'canvasHeight')
   const minProportion = extractAndThrowIfNull(variant, 'minProportion')
+  const canvasHeight = extractAndThrowIfNull(canvas, 'height')
 
   // TODO make 0.0005 configurable, or use one of the existing iteration values
   _(_.range(minProportion, 1, 0.0005)).each((newMinProportion) => {

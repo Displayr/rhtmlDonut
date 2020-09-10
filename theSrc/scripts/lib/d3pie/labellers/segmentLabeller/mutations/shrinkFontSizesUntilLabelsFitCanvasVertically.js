@@ -8,14 +8,14 @@ import { extractAndThrowIfNullFactory } from '../mutationHelpers'
 const labelLogger = rootLog.getLogger('label')
 
 const mutationName = 'shrinkFontSizesUntilLabelsFitCanvasVertically'
-const mutationFn = ({ outerLabelSet: labelSet, invariant }) => {
+const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
   const extractAndThrowIfNull = extractAndThrowIfNullFactory(mutationName)
   const stats = { completed: false }
 
   const outerPadding = extractAndThrowIfNull(invariant, 'outerPadding')
   const maxFontSize = extractAndThrowIfNull(invariant, 'maxFontSize')
   const minFontSize = extractAndThrowIfNull(invariant, 'minFontSize')
-  const canvasHeight = extractAndThrowIfNull(invariant, 'canvasHeight')
+  const canvasHeight = extractAndThrowIfNull(canvas, 'height')
 
   let labelStats = computeLabelStats(labelSet, outerPadding)
   let heightDeficit = labelStats.totalDesiredHeight - canvasHeight

@@ -122,10 +122,10 @@ class SegmentLabeller {
   doMutation ({ mutationName, mutationFn }) {
     const start = Date.now()
     const {
-      newInnerLabelSet,
-      newOuterLabelSet,
-      newVariants,
-      stats,
+      newInnerLabelSet = null,
+      newOuterLabelSet = null,
+      newVariants = {},
+      stats = {},
     } = mutationFn({
       outerLabelSet: _.cloneDeep(this.labelSets.primary.outer),
       innerLabelSet: _.cloneDeep(this.labelSets.primary.inner),
@@ -236,7 +236,7 @@ class SegmentLabeller {
   }
 
   preprocessLabelSet () {
-    const canvasHeight = this._invariant.canvasHeight
+    const canvasHeight = this.interface.canvas.height
 
     let labelStats = this.getLabelStats()
     if (labelStats.totalDesiredHeight > canvasHeight) {
