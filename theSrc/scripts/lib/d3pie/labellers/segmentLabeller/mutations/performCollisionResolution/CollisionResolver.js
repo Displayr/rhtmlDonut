@@ -244,8 +244,8 @@ class CollisionResolver {
         : null
     }
 
-    const pushLabelsUp = (labelsToPushUp) => {
-      _(labelsToPushUp).each(labelToPushUp => {
+    const pushLabelsUp = (labelsToPushUpSortedBottomToTop) => {
+      _(labelsToPushUpSortedBottomToTop).each(labelToPushUp => {
         const labelBelow = getLabelBelow(labelToPushUp)
         if (labelBelow) {
           const newY = labelBelow.topLeftCoord.y - outerPadding
@@ -282,8 +282,8 @@ class CollisionResolver {
       })
     }
 
-    const pushLabelsDown = (labelsToPushDown) => {
-      _(labelsToPushDown).each(labelToPushDown => {
+    const pushLabelsDown = (labelsToPushDownSortedTopToBottom) => {
+      _(labelsToPushDownSortedTopToBottom).each(labelToPushDown => {
         const labelAbove = getLabelAbove(labelToPushDown)
 
         if (labelAbove) {
@@ -341,35 +341,59 @@ class CollisionResolver {
       collidingLabelSets.push(activeSet)
     }
 
+    labelLogger.debug(`initial cluster spacing found ${collidingLabelSets.length} clusters of colliding labels`)
+
     _(collidingLabelSets).each(collidingLabelSet => {
       let verticalSpaceAbove = 0
-      const nearestNonIntersectingLabelAbove = getLabelAbove(_.first(collidingLabelSet))
+      const highestCollidingLabel = _(collidingLabelSet)
+        .sortBy('minY')
+        .first()
+      const nearestNonIntersectingLabelAbove = getLabelAbove(highestCollidingLabel)
       if (nearestNonIntersectingLabelAbove) {
         verticalSpaceAbove = collidingLabelSet[0].topLeftCoord.y - nearestNonIntersectingLabelAbove.bottomLeftCoord.y
       }
 
       let verticalSpaceBelow = 0
-      const nearestNonIntersectingLabelBelow = getLabelBelow(_.last(collidingLabelSet))
+      const lowestCollidingLabel = _(collidingLabelSet)
+        .sortBy('maxY')
+        .last()
+      const nearestNonIntersectingLabelBelow = getLabelBelow(lowestCollidingLabel)
       if (nearestNonIntersectingLabelBelow) {
         verticalSpaceBelow = nearestNonIntersectingLabelBelow.topLeftCoord.y - collidingLabelSet[collidingLabelSet.length - 1].bottomLeftCoord.y
       }
 
-      labelLogger.debug(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
+      labelLogger.debug(`collidingLabelSet: ${collidingLabelSet.map(label => label.shortText).join(', ')}`)
       labelLogger.debug(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
 
       let differenceInVerticalSpace = Math.abs(verticalSpaceBelow - verticalSpaceAbove)
       let sumOfVerticalSpace = verticalSpaceBelow + verticalSpaceAbove
       if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceAbove > verticalSpaceBelow) {
         labelLogger.debug(`pushing whole set up`)
-        pushLabelsUp(_.reverse(collidingLabelSet))
+        const labelsToPushUpSortedBottomToTop = _(collidingLabelSet)
+          .sortBy('maxY')
+          .reverse()
+          .value()
+        pushLabelsUp(labelsToPushUpSortedBottomToTop)
       } else if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceBelow > verticalSpaceAbove) {
         labelLogger.debug(`pushing whole set down`)
-        pushLabelsDown(collidingLabelSet)
+        const labelsToPushUpSortedTopToBottom = _(collidingLabelSet)
+          .sortBy('minY')
+          .value()
+        pushLabelsDown(labelsToPushUpSortedTopToBottom)
       } else if (sumOfVerticalSpace > 10) {
         labelLogger.debug(`pushing 1/2 up and 1/2 down`)
-        const [labelsToPushUp, labelsToPushDown] = _.chunk(collidingLabelSet, Math.ceil(collidingLabelSet.length / 2))
-        pushLabelsUp(_.reverse(labelsToPushUp))
-        pushLabelsDown(labelsToPushDown)
+        const labelsSortedTopToBottom = _(collidingLabelSet)
+          .sortBy('minY')
+          .value()
+
+        const [labelsToPushUpTopToBottom, labelsToPushDownTopToBottom] = _.chunk(labelsSortedTopToBottom, Math.ceil(collidingLabelSet.length / 2))
+
+        const labelsToPushUpBottomToTop = _(labelsToPushUpTopToBottom)
+          .sortBy('maxY')
+          .reverse()
+          .value()
+        pushLabelsUp(labelsToPushUpBottomToTop)
+        pushLabelsDown(labelsToPushDownTopToBottom)
       } else {
         labelLogger.debug(`no room to space cluster. Skipping`)
       }

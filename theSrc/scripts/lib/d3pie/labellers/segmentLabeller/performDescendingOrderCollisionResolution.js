@@ -39,12 +39,12 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
 
   let minValue = 0
   const ignoreThreshold = 0.1
-  const labelsToIgnore = pie.outerLabelData.filter(label => label.fractionalValue > ignoreThreshold)
+  const bigLabelsToIgnore = pie.outerLabelData.filter(label => label.fractionalValue > ignoreThreshold)
   const labelsToPlace = pie.outerLabelData.filter(label => label.fractionalValue <= ignoreThreshold)
 
   const { newMinValue: topLeftMinValue, acceptedLabels: topLeftAcceptedLabels } = placeTopLeft({
     minValue,
-    existingLabels: labelsToIgnore,
+    existingLabels: bigLabelsToIgnore,
     labelSet: labelsToPlace,
     pie,
     outerLabeller,
@@ -56,7 +56,7 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
 
   const { newMinValue: rightMinValue, acceptedLabels: rightAcceptedLabels } = placeRight({
     minValue,
-    existingLabels: labelsToIgnore.concat(topLeftAcceptedLabels),
+    existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels),
     labelSet: labelsToPlace,
     pie,
     outerLabeller,
@@ -68,7 +68,7 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
 
   const { newMinValue: bottomLeftMinValue, acceptedLabels: bottomLeftAcceptedLabels } = placeBottomLeft({
     minValue,
-    existingLabels: labelsToIgnore.concat(topLeftAcceptedLabels).concat(rightAcceptedLabels),
+    existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels).concat(rightAcceptedLabels),
     labelSet: labelsToPlace,
     pie,
     outerLabeller,
@@ -79,7 +79,7 @@ const performDescendingOrderCollisionResolution = (pie, outerLabeller) => {
   minValue = bottomLeftMinValue
 
   pie.outerLabelData = _([
-    labelsToIgnore,
+    bigLabelsToIgnore,
     topLeftAcceptedLabels,
     rightAcceptedLabels,
     bottomLeftAcceptedLabels,
