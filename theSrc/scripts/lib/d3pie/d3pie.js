@@ -10,20 +10,10 @@ import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
 import SegmentLabeller from './labellers/segmentLabeller'
 import tempSegmentLabellerDrawFunctions from './labellers/segmentLabeller/drawFunctions'
+import { name, version } from '../../../../package'
 
 import * as rootLog from 'loglevel'
 const layoutLogger = rootLog.getLogger('layout')
-
-/*!
- * This is not the standard d3pie. It was edited by Xiaoting Wang and then Kyle Zeeuwen
- * @author Ben Keen, Xiaoting Wang, Kyle Zeeuwen
- * @original_repo http://github.com/benkeen/d3pie
- * @repo http://github.com/Displayr/rhtmlDonut
- */
-
-// TODO pull from package.json
-const _scriptName = 'rhtmlDonut'
-const _version = '2.0.0'
 
 class d3pie {
   constructor (element, options) {
@@ -52,8 +42,8 @@ class d3pie {
     }
 
     // add a data-role to the DOM node to let anyone know that it contains a d3pie instance, and the d3pie version
-    d3.select(this.element).attr(_scriptName, _version)
-    d3.select(this.element).attr(`${_scriptName}-status`, 'loading')
+    d3.select(this.element).attr(name, version)
+    d3.select(this.element).attr(`${name}-status`, 'loading')
 
     // things that are done once
     this.totalValue = math.getTotalValueOfDataSet(this.options.data.content)
@@ -76,7 +66,7 @@ class d3pie {
     }
 
     this._init()
-    d3.select(this.element).attr(`${_scriptName}-status`, 'ready')
+    d3.select(this.element).attr(`${name}-status`, 'ready')
   }
 
   redrawWithoutLoading () {
