@@ -26,6 +26,6 @@ widgets:
   - width: 600
     height: 600
     config:
-      - '{ "settings" : { "title" : "outer: enabled, no groups" } }'
+      - '{ "settings" : { "title" : "outer: disabled, no groups" } }'
       - data.test_plan.abc_rbg
       - config.label_disabled
