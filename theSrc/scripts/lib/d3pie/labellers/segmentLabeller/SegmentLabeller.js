@@ -189,11 +189,26 @@ class SegmentLabeller {
         maxLabelLines: this._invariant.maxLines,
       })
     }
-    canvas.placeLabelAlongLabelRadiusWithLiftOffAngle = ({ label, hasTopLabel, hasBottomLabel, labelLiftOffAngle }) => {
+    canvas.placeLabelAlongLabelRadiusWithLift = ({ label, hasTopLabel, hasBottomLabel, labelLiftOffAngle }) => {
       return placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
         labelOffset: this.interface.canvas.labelOffset,
-        labelLiftOffAngle, // NB although this is an invariant, callees sometimes set it to 0 to achieve placement along radius
+        labelLiftOffAngle: this._invariant.liftOffAngle,
+        outerRadius: this.interface.canvas.outerRadius,
+        pieCenter: this.interface.canvas.pieCenter,
+        canvasHeight: this.interface.canvas.height,
+        maxFontSize: this._variant.maxFontSize,
+        maxVerticalOffset: this.interface.canvas.maxVerticalOffset,
+        hasTopLabel,
+        hasBottomLabel,
+        minGap: this._invariant.outerPadding,
+      })
+    }
+    canvas.placeLabelAlongLabelRadius = ({ label, hasTopLabel, hasBottomLabel }) => {
+      return placeLabelAlongLabelRadiusWithLiftOffAngle({
+        labelDatum: label,
+        labelOffset: this.interface.canvas.labelOffset,
+        labelLiftOffAngle: 0,
         outerRadius: this.interface.canvas.outerRadius,
         pieCenter: this.interface.canvas.pieCenter,
         canvasHeight: this.interface.canvas.height,

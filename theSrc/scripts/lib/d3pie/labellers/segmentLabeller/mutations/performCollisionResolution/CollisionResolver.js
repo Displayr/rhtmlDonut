@@ -105,11 +105,10 @@ class CollisionResolver {
           _(this.inputLabelSet)
             .filter(({ segmentAngleMidpoint }) => between(90 - this.invariant.liftOffAngle, segmentAngleMidpoint, 90 + this.invariant.liftOffAngle))
             .each(label => {
-              this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+              this.canvas.placeLabelAlongLabelRadiusWithLift({
                 label,
                 hasTopLabel: this.variant.hasTopLabel,
                 hasBottomLabel: this.variant.hasBottomLabel,
-                labelLiftOffAngle: this.invariant.liftOffAngle,
               })
           })
         } else if (availableStrategies.liftBottom) {
@@ -119,11 +118,10 @@ class CollisionResolver {
           _(this.inputLabelSet)
             .filter(({ segmentAngleMidpoint }) => between(270 - this.invariant.liftOffAngle, segmentAngleMidpoint, 270 + this.invariant.liftOffAngle))
             .each(label => {
-                this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+                this.canvas.placeLabelAlongLabelRadiusWithLift({
                   label,
                   hasTopLabel: this.variant.hasTopLabel,
                   hasBottomLabel: this.variant.hasBottomLabel,
-                  labelLiftOffAngle: this.invariant.liftOffAngle,
                 })
             })
         } else if (availableStrategies.removeLabel) {

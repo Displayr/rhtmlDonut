@@ -653,11 +653,10 @@ class ShortenTopAndBottom {
         maxX: label.maxX,
       }
 
-      this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+      this.canvas.placeLabelAlongLabelRadius({
         label,
         hasTopLabel: this.variant.hasTopLabel,
         hasBottomLabel: this.variant.hasBottomLabel,
-        labelLiftOffAngle: 0, // TODO : doing this is confusing. Make two fns !!
       })
 
       const newPosition = {

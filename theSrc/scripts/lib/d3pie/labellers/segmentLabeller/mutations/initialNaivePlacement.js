@@ -41,9 +41,8 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
   // First place labels using a liftOff of 0, then check for collisions and only lift
   // if there are any collisions do we apply a liftOffAngle
   _(labelSet).each(label => {
-    canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+    canvas.placeLabelAlongLabelRadius({
       label,
-      labelLiftOffAngle: 0,
       hasTopLabel: newVariants.hasTopLabel,
       hasBottomLabel: newVariants.hasBottomLabel,
     })
@@ -56,9 +55,8 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
     labelLogger.info(`Collisions between ${90 - liftOffAngle} - ${90 + liftOffAngle}, applying liftoff spacing`)
     newVariants.topIsLifted = true
     _(topLabelsThatCouldBeLifted).each(label => {
-      canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+      canvas.placeLabelAlongLabelRadiusWithLift({
         label,
-        labelLiftOffAngle: liftOffAngle,
         hasTopLabel: newVariants.hasTopLabel,
         hasBottomLabel: newVariants.hasBottomLabel,
       })
@@ -72,9 +70,8 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
     labelLogger.info(`Collisions between ${270 - liftOffAngle} - ${270 + liftOffAngle}, applying liftoff spacing`)
     newVariants.bottomIsLifted = true
     _(bottomLabelsThatCouldBeLifted).each(label => {
-      canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+      canvas.placeLabelAlongLabelRadiusWithLift({
         label,
-        labelLiftOffAngle: liftOffAngle,
         hasTopLabel: newVariants.hasTopLabel,
         hasBottomLabel: newVariants.hasBottomLabel,
       })
