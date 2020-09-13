@@ -10,11 +10,12 @@ const labelLogger = rootLog.getLogger('label')
 const mutationName = 'shrinkFontSizesUntilLabelsFitCanvasVertically'
 const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
   const extractAndThrowIfNull = extractAndThrowIfNullFactory(mutationName)
+  const newVariants = {}
   const stats = { completed: false }
 
   const outerPadding = extractAndThrowIfNull(invariant, 'outerPadding')
-  const maxFontSize = extractAndThrowIfNull(invariant, 'maxFontSize')
-  const minFontSize = extractAndThrowIfNull(invariant, 'minFontSize')
+  const preferredMaxFontSize = extractAndThrowIfNull(invariant, 'preferredMaxFontSize')
+  const preferredMinFontSize = extractAndThrowIfNull(invariant, 'preferredMinFontSize')
   const canvasHeight = extractAndThrowIfNull(canvas, 'height')
 
   let labelStats = computeLabelStats(labelSet, outerPadding)
@@ -22,10 +23,10 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
 
   if (heightDeficit > 0) {
     // apply increasingly aggressive font size scales, until everything is minFontSize
-    const fontSizeScaleOptions = _.range(maxFontSize, minFontSize - 1).map((newMaxFontSize, i) => {
+    const fontSizeScaleOptions = _.range(preferredMaxFontSize, preferredMinFontSize - 1).map((newMaxFontSize, i) => {
       return {
-        scale: d3.scale.linear().domain([0, labelSet.length]).range([newMaxFontSize, minFontSize]),
-        minFontSize,
+        scale: d3.scale.linear().domain([0, labelSet.length]).range([newMaxFontSize, preferredMinFontSize]),
+        minFontSize: preferredMinFontSize,
         maxFontSize: newMaxFontSize,
         id: i,
       }
@@ -44,6 +45,8 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
       if (labelStats.totalDesiredHeight <= canvasHeight) {
         labelLogger.info(`labelFontScale option(${id}):[${minFontSize}:${maxFontSize}] provided enough shrinkage. Moving on to next step`)
         stats.completed = true
+        newVariants.maxFontSize = maxFontSize
+        newVariants.minFontSize = minFontSize
         return terminateLoop
       }
     })
@@ -52,7 +55,7 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
   return {
     newOuterLabelSet: labelSet,
     newInnerLabelSet: [],
-    newVariants: {},
+    newVariants,
     stats,
   }
 }

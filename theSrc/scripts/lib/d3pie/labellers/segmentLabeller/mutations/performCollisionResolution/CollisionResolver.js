@@ -16,11 +16,11 @@ const labelLogger = rootLog.getLogger('label')
 const spacingBetweenUpperTrianglesAndCenterMeridian = 7
 
 const VARIABLE_CONFIG = [
-  'actualMaxFontSize',
   'bottomIsLifted',
   'hasBottomLabel',
   'hasTopLabel',
   'labelMaxLineAngle',
+  'maxFontSize',
   'minProportion',
   'topIsLifted',
 ]
@@ -224,7 +224,7 @@ class CollisionResolver {
     outerLabelSetSortedTopToBottom,
   }) {
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { bottomIsLifted, hasTopLabel, hasBottomLabel, actualMaxFontSize: maxFontSize, topIsLifted } = this.variant
+    const { bottomIsLifted, hasTopLabel, hasBottomLabel, maxFontSize, topIsLifted } = this.variant
     const { outerPadding } = this.invariant
 
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
@@ -424,7 +424,7 @@ class CollisionResolver {
     */
 
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, actualMaxFontSize: maxFontSize, labelMaxLineAngle } = this.variant
+    const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, maxFontSize, labelMaxLineAngle } = this.variant
     const { canUseInnerLabelsInTheseQuadrants, outerPadding } = this.invariant
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false

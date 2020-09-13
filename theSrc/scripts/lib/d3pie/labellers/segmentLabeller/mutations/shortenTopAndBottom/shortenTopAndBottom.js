@@ -10,12 +10,12 @@ const labelLogger = rootLog.getLogger('label')
 const spacingBetweenUpperTrianglesAndCenterMeridian = 7
 
 const VARIABLE_CONFIG = [
-  'actualMaxFontSize',
   'bottomIsLifted',
   'hasBottomLabel',
   'hasTopLabel',
-  'topIsLifted',
   'labelMaxLineAngle',
+  'maxFontSize',
+  'topIsLifted',
 ]
 
 const INVARIABLE_CONFIG = [
@@ -62,7 +62,7 @@ class ShortenTopAndBottom {
 
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
-      const { hasTopLabel, actualMaxFontSize: maxFontSize } = this.variant
+      const { hasTopLabel, maxFontSize } = this.variant
       const { liftOffAngle, outerPadding } = this.invariant
       const outerRadiusYCoord = pieCenter.y - outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord - labelOffset
@@ -320,7 +320,7 @@ class ShortenTopAndBottom {
 
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
-      const { hasBottomLabel, actualMaxFontSize: maxFontSize } = this.variant
+      const { hasBottomLabel, maxFontSize } = this.variant
       const { liftOffAngle, outerPadding } = this.invariant
       const outerRadiusYCoord = pieCenter.y + outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord + labelOffset

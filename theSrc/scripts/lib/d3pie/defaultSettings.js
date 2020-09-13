@@ -36,11 +36,11 @@ const defaultSettings = {
       maxLines: 6, // pieWrapper: settings.labelMaxLines, R: labels.max.lines. Truncate after X vertical lines of text
       maxVerticalOffset: null, // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90
       maxWidthProportion: 0.3, // pieWrapper: settings.labelsMaxWidth. R: labels.max.width. wrap label text if label exceeds X% of canvasWidth // TODO change to settings.labelsMaxWidthProportion
-      minFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
-      maxFontSize: 10, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       minLabelOffset: 5, // TODO use these values and expose as configurable
       minProportion: 0.003, // pieWrapper: settings.minProportion, R: values.display.thres
       outerPadding: 1, // pieWrapper: settings.labelsOuterPadding, R: labels.outer.padding
+      preferredMinFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
+      preferredMaxFontSize: 10, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       prefix: null, // pieWrapper: settings.prefix, R: prefix
       suffix: null, // pieWrapper: settings.suffix, R: suffix
     },

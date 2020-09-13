@@ -17,6 +17,7 @@ import {
 
 const labelLogger = rootLog.getLogger('label')
 
+// define the rest of the variants that get set later - do this in the config data class
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',
   'minProportion',
@@ -32,14 +33,14 @@ const INVARIABLE_CONFIG = [
   'innerPadding',
   'liftOffAngle',
   'linePadding',
-  'maxFontSize',
   'maxLabelOffset',
   'maxLines',
   'maxVerticalOffset',
   'maxWidthProportion',
-  'minFontSize',
   'minLabelOffset',
   'outerPadding',
+  'preferredMaxFontSize',
+  'preferredMinFontSize',
   'useInnerLabels',
 ]
 
@@ -56,6 +57,8 @@ class SegmentLabeller {
     this._variant.hasTopLabel = false
     this._variant.bottomIsLifted = false
     this._variant.topIsLifted = false
+    this._variant.maxFontSize = this._invariant.preferredMaxFontSize
+    this._variant.minFontSize = this._invariant.preferredMinFontSize
 
     this._invariant.maxLabelWidth = this.canvas.width * this._invariant.maxWidthProportion
     this._invariant.originalDataPoints = dataPoints
@@ -105,7 +108,7 @@ class SegmentLabeller {
           prefix: this._invariant.prefix,
           suffix: this._invariant.suffix,
           fontFamily: this._invariant.fontFamily,
-          fontSize: this._invariant.maxFontSize,
+          fontSize: this._invariant.preferredMaxFontSize,
           fractionalValue: dataPoint.value / totalValue,
           group: dataPoint.group,
           id: dataPoint.id,
@@ -176,9 +179,9 @@ class SegmentLabeller {
     canvas.getLabelSize = ({ labelText, fontSize, fontFamily }) => {
       return wrapAndFormatLabelUsingSvgApproximation({
         parentContainer: this.canvas.svg,
-        labelText: labelText,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
+        labelText,
+        fontSize,
+        fontFamily,
         maxLabelWidth: this._invariant.maxLabelWidth,
         innerPadding: this._invariant.innerPadding,
         maxLabelLines: this._invariant.maxLines,
@@ -192,7 +195,7 @@ class SegmentLabeller {
         outerRadius: this.interface.canvas.outerRadius,
         pieCenter: this.interface.canvas.pieCenter,
         canvasHeight: this.interface.canvas.height,
-        maxFontSize: this._variant.actualMaxFontSize,
+        maxFontSize: this._variant.maxFontSize,
         maxVerticalOffset: this.interface.canvas.maxVerticalOffset,
         hasTopLabel,
         hasBottomLabel,
@@ -203,7 +206,7 @@ class SegmentLabeller {
     canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted }) => {
       let { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
       let { liftOffAngle, outerPadding } = this._invariant
-      let { hasTopLabel, hasBottomLabel, actualMaxFontSize: maxFontSize } = this._variant
+      let { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
 
       let apexLabelCorrection = 0
       if ((label.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -245,16 +248,12 @@ class SegmentLabeller {
 
     labelStats = this.getLabelStats()
     if (labelStats.totalDesiredHeight > canvasHeight) {
-      labelLogger.info(`all font shrinking options exhausted, must now start removing labels by increasing minProportion`)
+      labelLogger.info('all font shrinking options exhausted, must now start removing labels by increasing minProportion')
       this.doMutation(removeLabelsUntilLabelsFitCanvasVertically)
     }
 
-    // TODO this is a bit out of place. Perhaps delete the min/max or store as temp vars,
-    //  then throw them away and keep this and call it maxFontSize
-    this._variant.actualMaxFontSize = _(this.labelSets.primary.outer).map('fontSize').max()
-
-    console.log('Done Preprocessing Labelset. MutationHistory:')
-    console.log(JSON.stringify(this.mutationHistory, {}, 2))
+    labelLogger.info('Done Preprocessing Labelset. MutationHistory:')
+    labelLogger.info(JSON.stringify(this.mutationHistory, {}, 2))
   }
 
   processConfig (config) {

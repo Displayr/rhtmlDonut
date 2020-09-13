@@ -158,8 +158,8 @@ class d3pie {
       labelOffset: ${this.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}
-      idealTopWhiteSpaceSize: ${this.options.labels.segment.maxFontSize}
-      idealBottomWhiteSpaceSize: ${this.options.labels.segment.maxFontSize}
+      idealTopWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
+      idealBottomWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
     `)
 
     if (redraw) {
