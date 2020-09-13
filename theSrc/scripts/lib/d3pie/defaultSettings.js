@@ -42,6 +42,7 @@ const defaultSettings = {
       preferredMinFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
       preferredMaxFontSize: 10, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       prefix: null, // pieWrapper: settings.prefix, R: prefix
+      spacingBetweenUpperTrianglesAndCenterMeridian: 7, // hard code
       suffix: null, // pieWrapper: settings.suffix, R: suffix
     },
     lines: {

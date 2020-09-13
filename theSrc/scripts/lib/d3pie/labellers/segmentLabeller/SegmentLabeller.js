@@ -42,6 +42,7 @@ const INVARIABLE_CONFIG = [
   'outerPadding',
   'preferredMaxFontSize',
   'preferredMinFontSize',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
   'useInnerLabels',
 ]
 
@@ -202,6 +203,7 @@ class SegmentLabeller {
         hasTopLabel,
         hasBottomLabel,
         minGap: this._invariant.outerPadding,
+        spacingBetweenUpperTrianglesAndCenterMeridian: this._invariant.spacingBetweenUpperTrianglesAndCenterMeridian,
       })
     }
     canvas.placeLabelAlongLabelRadius = ({ label, hasTopLabel, hasBottomLabel }) => {
@@ -217,12 +219,13 @@ class SegmentLabeller {
         hasTopLabel,
         hasBottomLabel,
         minGap: this._invariant.outerPadding,
+        spacingBetweenUpperTrianglesAndCenterMeridian: this._invariant.spacingBetweenUpperTrianglesAndCenterMeridian,
       })
     }
 
     canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted }) => {
       let { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
-      let { liftOffAngle, outerPadding } = this._invariant
+      let { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
       let { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
 
       let apexLabelCorrection = 0
@@ -241,6 +244,7 @@ class SegmentLabeller {
         pieCenter: pieCenter,
         topIsLifted,
         bottomIsLifted,
+        spacingBetweenUpperTrianglesAndCenterMeridian,
       })
     }
     return canvas

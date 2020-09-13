@@ -1,8 +1,5 @@
 import { toRadians } from '../../../math'
 
-// TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
-
 module.exports = ({
   anchor, // top or bottom
   newY,
@@ -13,6 +10,7 @@ module.exports = ({
   pieCenter,
   topIsLifted,
   bottomIsLifted,
+  spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
   let newTopYCoord = null
   let isLifted = false

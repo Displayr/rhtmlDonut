@@ -6,9 +6,6 @@ import { terminateLoop } from '../../../../../loopControls'
 import { computeIntersection, rotate } from '../../../../math'
 const labelLogger = rootLog.getLogger('label')
 
-// TODO temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
-
 const VARIABLE_CONFIG = [
   'bottomIsLifted',
   'hasBottomLabel',
@@ -21,6 +18,7 @@ const VARIABLE_CONFIG = [
 const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
 ]
 
 class ShortenTopAndBottom {
@@ -63,7 +61,7 @@ class ShortenTopAndBottom {
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
       const { hasTopLabel, maxFontSize } = this.variant
-      const { liftOffAngle, outerPadding } = this.invariant
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
       const outerRadiusYCoord = pieCenter.y - outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord - labelOffset
       const labelMaxLineAngle = this.variant.labelMaxLineAngle
@@ -321,7 +319,7 @@ class ShortenTopAndBottom {
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
       const { hasBottomLabel, maxFontSize } = this.variant
-      const { liftOffAngle, outerPadding } = this.invariant
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
       const outerRadiusYCoord = pieCenter.y + outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord + labelOffset
       const labelMaxLineAngle = this.variant.labelMaxLineAngle

@@ -12,9 +12,6 @@ import InnerLabel from '../../innerLabel'
 import CannotMoveToInner from '../../../../interrupts/cannotMoveToInner'
 const labelLogger = rootLog.getLogger('label')
 
-// TODO temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
-
 const VARIABLE_CONFIG = [
   'bottomIsLifted',
   'hasBottomLabel',
@@ -30,6 +27,7 @@ const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
   'sortOrder',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
   'useInnerLabels',
 ]
 
@@ -423,7 +421,7 @@ class CollisionResolver {
 
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
     const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, maxFontSize, labelMaxLineAngle } = this.variant
-    const { canUseInnerLabelsInTheseQuadrants, outerPadding } = this.invariant
+    const { canUseInnerLabelsInTheseQuadrants, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
     let downSweepHitBottom = false

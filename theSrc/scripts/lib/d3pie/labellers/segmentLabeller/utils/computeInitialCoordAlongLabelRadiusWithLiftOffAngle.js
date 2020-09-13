@@ -2,9 +2,6 @@ import { between, computeIntersection, rotate } from '../../../math'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
 
-// TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
-
 module.exports = ({
   angle,
   labelHeight,
@@ -18,6 +15,7 @@ module.exports = ({
   hasTopLabel = false,
   hasBottomLabel = false,
   minGap = 1,
+  spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
   let fitLineCoord = null
   let isLifted = false

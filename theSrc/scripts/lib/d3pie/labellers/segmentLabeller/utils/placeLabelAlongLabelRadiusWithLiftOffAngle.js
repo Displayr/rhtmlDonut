@@ -15,6 +15,7 @@ module.exports = ({
   hasTopLabel = false,
   hasBottomLabel = false,
   minGap = 1,
+  spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
   if (labelDatum.isTopApexLabel) {
     const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
@@ -54,6 +55,7 @@ module.exports = ({
       hasTopLabel,
       hasBottomLabel,
       minGap,
+      spacingBetweenUpperTrianglesAndCenterMeridian,
     })
     labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
     labelDatum.isLifted = isLifted
