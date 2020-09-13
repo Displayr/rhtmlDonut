@@ -16,7 +16,8 @@ const config = {
   },
   snapshotTesting: {
     snapshotDelay: 500,
-    consoleLogHandler,
+    // consoleLogHandler: (msg, testName) => console.log(msg._text), // this will get all the output
+    consoleLogHandler, // this will only output the stats lines
     pixelmatch: {
       // smaller values -> more sensitive : https://github.com/mapbox/pixelmatch#pixelmatchimg1-img2-output-width-height-options
       customDiffConfig: {
