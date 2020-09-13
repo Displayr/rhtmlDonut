@@ -4,6 +4,7 @@ import computeLabelStats from './computeLabelStats'
 import wrapAndFormatLabelUsingSvgApproximation from './utils/wrapAndFormatLabelUsingSvgApproximation'
 import placeLabelAlongLabelRadiusWithLiftOffAngle from './utils/placeLabelAlongLabelRadiusWithLiftOffAngle'
 import adjustLabelToNewY from './utils/adjustLabelToNewY'
+import drawFunctions from './drawFunctions'
 
 import * as rootLog from 'loglevel'
 import {
@@ -45,9 +46,10 @@ const INVARIABLE_CONFIG = [
 ]
 
 class SegmentLabeller {
-  constructor ({ parentContainer, dataPoints, sortOrder, config, canvas }) {
-    this.parentContainer = parentContainer
+  constructor ({ dataPoints, sortOrder, config, linesConfig, animationConfig, canvas }) {
     this.canvas = canvas
+    this.linesConfig = linesConfig
+    this.animationConfig = animationConfig
 
     const { variant, invariant } = this.processConfig(config)
     this._variant = variant
@@ -260,6 +262,57 @@ class SegmentLabeller {
     const variant = _.pick(config, VARIABLE_CONFIG)
     const invariant = _.pick(config, INVARIABLE_CONFIG)
     return { variant, invariant }
+  }
+
+  clearPreviousFromCanvas () {
+    const { svg, cssPrefix } = this.interface.canvas
+    svg.selectAll(`.${cssPrefix}labels-outer`).remove()
+    svg.selectAll(`.${cssPrefix}labels-inner`).remove()
+    svg.selectAll(`.${cssPrefix}labels-extra`).remove() // TODO dont need
+    svg.selectAll(`.${cssPrefix}labels-group`).remove() // TODO shouldn't be done here
+    svg.selectAll(`.${cssPrefix}lineGroups-outer`).remove()
+    svg.selectAll(`.${cssPrefix}lineGroups-inner`).remove()
+    svg.selectAll(`.${cssPrefix}tooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
+    svg.selectAll(`.${cssPrefix}gtooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
+  }
+
+  draw () {
+    const { canvas } = this.interface
+    const { color, innerPadding } = this._invariant
+    const { inner, outer } = this.labelSets.primary
+
+    drawFunctions.drawLabelSet({
+      canvas,
+      labels: outer,
+      labelColor: color,
+      innerPadding: innerPadding,
+      labelType: 'outer',
+    })
+
+    drawFunctions.drawLabelSet({
+      canvas,
+      labels: inner,
+      labelColor: color,
+      innerPadding: innerPadding,
+      labelType: 'inner',
+    })
+
+    if (this.linesConfig.enabled) {
+      drawFunctions.drawOuterLabelLines({
+        canvas,
+        labels: outer,
+        config: this.linesConfig.outer,
+      })
+      drawFunctions.drawInnerLabelLines({
+        canvas,
+        labels: inner,
+      })
+    }
+
+    drawFunctions.fadeInLabelsAndLines({
+      canvas,
+      animationConfig: this.animationConfig,
+    })
   }
 }
 

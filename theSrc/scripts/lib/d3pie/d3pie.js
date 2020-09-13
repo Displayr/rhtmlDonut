@@ -9,7 +9,6 @@ import validate from './validate'
 import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
 import SegmentLabeller from './labellers/segmentLabeller'
-import tempSegmentLabellerDrawFunctions from './labellers/segmentLabeller/drawFunctions'
 import { name, version } from '../../../../package'
 
 import * as rootLog from 'loglevel'
@@ -53,12 +52,11 @@ class d3pie {
     this.svg = this.svgContainer.append('g').attr('class', 'mainPlot')
     this.floating = this.svgContainer.append('g').attr('class', 'floating')
 
-    this.outerLabelData = [] // TODO delete completely
-    this.innerLabelData = []
     this.groupLabelData = []
 
     this.interface = {
       canvas: {
+        cssPrefix: this.cssPrefix,
         width: this.options.size.canvasWidth,
         height: this.options.size.canvasHeight,
         svg: this.svg,
@@ -90,8 +88,10 @@ class d3pie {
 
     if (this.options.labels.enabled) {
       this.segmentLabeller = new SegmentLabeller({
+        animationConfig: this.options.effects.load,
         dataPoints: this.options.data.content,
         sortOrder: this.options.data.sortOrder,
+        linesConfig: this.options.labels.lines, // TODO move this into this.options.labels.segment
         config: this.options.labels.segment,
         canvas: this.interface.canvas,
       })
@@ -162,25 +162,12 @@ class d3pie {
     if (this.options.labels.enabled) {
       const startLabelling = Date.now()
 
-      tempSegmentLabellerDrawFunctions.clearPrevious(this.svg, this.cssPrefix)
+      this.segmentLabeller.clearPreviousFromCanvas()
 
       // TODO this is temp assignment to this.outerLabelData to make it all keep working ...
       this.segmentLabeller.doLabelling()
-      const { inner, outer } = this.segmentLabeller.getLabels()
-      this.outerLabelData = outer
-      this.innerLabelData = inner
 
-      tempSegmentLabellerDrawFunctions.drawOuterLabels(this)
-
-      tempSegmentLabellerDrawFunctions.drawInnerLabels(this)
-
-      // only add them if they're actually enabled
-      if (this.options.labels.lines.enabled) {
-        tempSegmentLabellerDrawFunctions.drawOuterLabelLines(this)
-        tempSegmentLabellerDrawFunctions.drawInnerLabelLines(this)
-      }
-
-      tempSegmentLabellerDrawFunctions.fadeInLabelsAndLines(this)
+      this.segmentLabeller.draw()
 
       durations.outer_labelling = Date.now() - startLabelling
     }
@@ -199,7 +186,8 @@ class d3pie {
     }
 
     // TODO this is pretty inefficient. will do 2n^2 scans
-    const isLabelShown = (id) => (_.some(this.innerLabelData, { id }) || _.some(this.outerLabelData, { id }))
+    const { inner, outer } = this.segmentLabeller.getLabels()
+    const isLabelShown = (id) => (_.some(inner, { id }) || _.some(outer, { id }))
     const labelsShownLookup = _.transform(this.options.data.content, (result, dataPoint) => {
       result[dataPoint.id] = isLabelShown(dataPoint.id)
     }, {})

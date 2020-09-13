@@ -121,7 +121,6 @@ const defaultSettings = {
     labelsEnabled: true, // pieWrapper: settings.groupLabelsEnabled, R: groups.labels.enabled
   },
   callbacks: { //
-    onload: null, // not used
     onMouseoverSegment: null, // not used
     onMouseoutSegment: null, // not used
     onClickSegment: null, // not used

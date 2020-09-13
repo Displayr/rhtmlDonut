@@ -3,52 +3,19 @@ import _ from 'lodash'
 import computeOuterConnectionLinePath from './computeOuterConnectionLinePath'
 import { rotate } from '../../math'
 
-const clearPrevious = (parentContainer, cssPrefix) => {
-  parentContainer.selectAll(`.${cssPrefix}labels-outer`).remove()
-  parentContainer.selectAll(`.${cssPrefix}labels-inner`).remove()
-  parentContainer.selectAll(`.${cssPrefix}labels-extra`).remove() // TODO dont need
-  parentContainer.selectAll(`.${cssPrefix}labels-group`).remove()
-  parentContainer.selectAll(`.${cssPrefix}lineGroups-outer`).remove()
-  parentContainer.selectAll(`.${cssPrefix}lineGroups-inner`).remove()
-  parentContainer.selectAll(`.${cssPrefix}tooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in parentContainer)
-  parentContainer.selectAll(`.${cssPrefix}gtooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in parentContainer)
-}
-
-const drawOuterLabels = (pie) => {
-  drawLabelSet({
-    outerContainer: pie.svg,
-    cssPrefix: pie.cssPrefix,
-    labelData: pie.outerLabelData,
-    labelColor: pie.options.labels.segment.color,
-    innerPadding: pie.options.labels.segment.innerPadding,
-    labelType: 'outer',
-  })
-}
-
-const drawInnerLabels = (pie) => {
-  drawLabelSet({
-    outerContainer: pie.svg,
-    cssPrefix: pie.cssPrefix,
-    labelData: pie.innerLabelData,
-    labelColor: pie.options.labels.segment.color,
-    innerPadding: pie.options.labels.segment.innerPadding,
-    labelType: 'inner',
-  })
-}
-
 const drawLabelSet = ({
-  outerContainer,
-  cssPrefix,
-  labelData,
+  canvas,
+  labels,
   labelColor,
   innerPadding,
   labelType,
 }) => {
-  let labelContainer = outerContainer.insert('g', `.${cssPrefix}labels-${labelType}`)
+  const { svg, cssPrefix } = canvas
+  let labelContainer = svg.insert('g', `.${cssPrefix}labels-${labelType}`)
     .attr('class', `${cssPrefix}labels-${labelType}`)
 
   let labelGroup = labelContainer.selectAll(`.${cssPrefix}labelGroup-${labelType}`)
-    .data(labelData)
+    .data(labels)
     .enter()
     .append('g')
     .attr('id', function (d) { return `${cssPrefix}labelGroup${d.id}-${labelType}` })
@@ -81,45 +48,42 @@ const drawLabelSet = ({
     })
 }
 
-const fadeInLabelsAndLines = (pie) => {
+const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
+  const { effect, speed } = animationConfig
+  const { svg, cssPrefix } = canvas
+
   // fade in the labels when the load effect is complete - or immediately if there's no load effect
-  let loadSpeed = (pie.options.effects.load.effect === 'default') ? pie.options.effects.load.speed : 1
+  let loadSpeed = (effect === 'default') ? speed : 1
+
   setTimeout(function () {
-    let labelFadeInTime = (pie.options.effects.load.effect === 'default') ? 400 : 1 // 400 is hardcoded for the present
+    let labelFadeInTime = (effect === 'default') ? 400 : 1 // 400 is hardcoded for the present
 
-    d3.selectAll('.' + pie.cssPrefix + 'labelGroup-outer')
+    svg.selectAll('.' + cssPrefix + 'labelGroup-outer')
       .transition()
       .duration(labelFadeInTime)
       .style('opacity', 1)
 
-    d3.selectAll('g.' + pie.cssPrefix + 'lineGroups')
+    svg.selectAll('g.' + cssPrefix + 'lineGroups')
       .transition()
       .duration(labelFadeInTime)
       .style('opacity', 1)
-
-    // once everything's done loading, trigger the onload callback if defined
-    if (_.isFunction(pie.options.callbacks.onload)) {
-      setTimeout(function () {
-        try {
-          pie.options.callbacks.onload()
-        } catch (e) { }
-      }, labelFadeInTime)
-    }
   }, loadSpeed)
 }
 
-const drawOuterLabelLines = (pie) => {
+const drawOuterLabelLines = ({canvas, labels, config }) => {
+  const { svg, cssPrefix } = canvas
+  
   let basisInterpolationFunction = d3.svg.line()
     .x(d => d.x)
     .y(d => d.y)
     .interpolate('basis')
 
-  const outerLabelLines = pie.outerLabelData.map(labelData => {
+  const outerLabelLines = labels.map(labelData => {
     const { path, pathType } = computeOuterConnectionLinePath({
       labelData,
       basisInterpolationFunction,
-      canvasHeight: parseFloat(pie.options.size.canvasHeight),
-      options: pie.options.labels.lines.outer,
+      canvasHeight: parseFloat(canvas.height),
+      options: config,
     })
 
     return {
@@ -130,16 +94,16 @@ const drawOuterLabelLines = (pie) => {
     }
   })
 
-  let lineGroups = pie.svg.insert('g', `.${pie.cssPrefix}pieChart`) // meaning, BEFORE .pieChart
-    .attr('class', `${pie.cssPrefix}lineGroups-outer`)
+  let lineGroups = svg.insert('g', `.${cssPrefix}pieChart`) // NB meaning, BEFORE .pieChart
+    .attr('class', `${cssPrefix}lineGroups-outer`)
     .style('opacity', 1)
 
-  let lineGroup = lineGroups.selectAll(`.${pie.cssPrefix}lineGroup`)
+  let lineGroup = lineGroups.selectAll(`.${cssPrefix}lineGroup`)
     .data(outerLabelLines)
     .enter()
     .append('g')
-    .attr('class', d => `${pie.cssPrefix}lineGroup pathType-${d.pathType}`)
-    .attr('id', d => `${pie.cssPrefix}lineGroup-${d.id}`)
+    .attr('class', d => `${cssPrefix}lineGroup pathType-${d.pathType}`)
+    .attr('id', d => `${cssPrefix}lineGroup-${d.id}`)
 
   lineGroup.append('path')
     .attr('d', d => d.path)
@@ -150,25 +114,19 @@ const drawOuterLabelLines = (pie) => {
     .style('display', 'inline')
 }
 
-const drawInnerLabelLines = (pie) => {
-  pie.innerLabelLines = pie.innerLabelData
-    .map(labelData => {
-      return computeInnerLabelLine({
-        pieCenter: pie.pieCenter,
-        innerRadius: pie.innerRadius,
-        labelData,
-      })
-    })
+const drawInnerLabelLines = ({ canvas, labels }) => {
+  const { svg, cssPrefix, pieCenter, innerRadius } = canvas
+  const innerLabelLines = labels.map(labelData => computeInnerLabelLine({pieCenter, innerRadius, labelData }))
 
-  let lineGroups = pie.svg.insert('g', `.${pie.cssPrefix}pieChart`) // meaning, BEFORE .pieChart
-    .attr('class', `${pie.cssPrefix}lineGroups-inner`)
+  let lineGroups = svg.insert('g', `.${cssPrefix}pieChart`) // meaning, BEFORE .pieChart
+    .attr('class', `${cssPrefix}lineGroups-inner`)
     .style('opacity', 1)
 
-  let lineGroup = lineGroups.selectAll(`.${pie.cssPrefix}lineGroup`)
-    .data(pie.innerLabelLines)
+  let lineGroup = lineGroups.selectAll(`.${cssPrefix}lineGroup`)
+    .data(innerLabelLines)
     .enter()
     .append('g')
-    .attr('class', function (d) { return `${pie.cssPrefix}lineGroup ${pie.cssPrefix}lineGroup-${d[0].id}` })
+    .attr('class', function (d) { return `${cssPrefix}lineGroup ${cssPrefix}lineGroup-${d[0].id}` })
 
   let lineFunction = d3.svg.line()
     .x(function (d) { return d.x })
@@ -196,9 +154,7 @@ const computeInnerLabelLine = ({ pieCenter, innerRadius, labelData }) => {
 }
 
 module.exports = {
-  clearPrevious,
-  drawOuterLabels,
-  drawInnerLabels,
+  drawLabelSet,
   drawOuterLabelLines,
   drawInnerLabelLines,
   fadeInLabelsAndLines,
