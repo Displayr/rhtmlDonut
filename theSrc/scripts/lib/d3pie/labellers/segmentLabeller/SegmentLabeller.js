@@ -4,12 +4,13 @@ import computeLabelStats from './computeLabelStats'
 import wrapAndFormatLabelUsingSvgApproximation from './utils/wrapAndFormatLabelUsingSvgApproximation'
 import placeLabelAlongLabelRadiusWithLiftOffAngle from './utils/placeLabelAlongLabelRadiusWithLiftOffAngle'
 import adjustLabelToNewY from './utils/adjustLabelToNewY'
-import drawFunctions from './drawFunctions'
+import draw from './draw'
 
 import * as rootLog from 'loglevel'
 import {
   initialNaivePlacement,
   performCollisionResolution,
+  performDescendingOrderCollisionResolution,
   performOutOfBoundsCorrection,
   removeLabelsUntilLabelsFitCanvasVertically,
   shortenTopAndBottom,
@@ -74,7 +75,7 @@ class SegmentLabeller {
     /* NB this is odd. Rationale
         * The label sets are constantly cloned.
         * The canvas object is updated in the parent
-        * If a label clone is done, then an update to canvas is made, the label will have a copy of the old canvas
+        * If a label clone is done, and later an update to canvas is made, the cloned label will have a copy of the old canvas
           that does not include the updates. By passing a fn, the updated canvas can always be retrieved
      */
     const canvasInterface = () => this.interface.canvas
@@ -169,13 +170,19 @@ class SegmentLabeller {
   }
 
   doLabelling () {
-    this.doMutation(initialNaivePlacement)
-    this.doMutation(performOutOfBoundsCorrection) // TODO add if stages.outOfBoundsCorrection
-    this.doMutation(performCollisionResolution)
-    this.doMutation(shortenTopAndBottom)
+    if (this._invariant.sortOrder === 'descending') {
+      this.doMutation(initialNaivePlacement)
+      this.doMutation(performOutOfBoundsCorrection)
+      this.doMutation(performDescendingOrderCollisionResolution)
+    } else {
+      this.doMutation(initialNaivePlacement)
+      this.doMutation(performOutOfBoundsCorrection)
+      this.doMutation(performCollisionResolution)
+      this.doMutation(shortenTopAndBottom)
+    }
 
-    console.log('Done labelling. MutationHistory:')
-    console.log(JSON.stringify(this.mutationHistory, {}, 2))
+    labelLogger.info('Done labelling. MutationHistory:')
+    labelLogger.info(JSON.stringify(this.mutationHistory, {}, 2))
   }
 
   extendCanvasInterface (canvas) {
@@ -300,7 +307,7 @@ class SegmentLabeller {
     const { color, innerPadding } = this._invariant
     const { inner, outer } = this.labelSets.primary
 
-    drawFunctions.drawLabelSet({
+    draw.drawLabelSet({
       canvas,
       labels: outer,
       labelColor: color,
@@ -308,7 +315,7 @@ class SegmentLabeller {
       labelType: 'outer',
     })
 
-    drawFunctions.drawLabelSet({
+    draw.drawLabelSet({
       canvas,
       labels: inner,
       labelColor: color,
@@ -317,18 +324,18 @@ class SegmentLabeller {
     })
 
     if (this.linesConfig.enabled) {
-      drawFunctions.drawOuterLabelLines({
+      draw.drawOuterLabelLines({
         canvas,
         labels: outer,
         config: this.linesConfig.outer,
       })
-      drawFunctions.drawInnerLabelLines({
+      draw.drawInnerLabelLines({
         canvas,
         labels: inner,
       })
     }
 
-    drawFunctions.fadeInLabelsAndLines({
+    draw.fadeInLabelsAndLines({
       canvas,
       animationConfig: this.animationConfig,
     })
