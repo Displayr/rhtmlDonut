@@ -4,7 +4,7 @@ import { rotate } from '../../../math'
 import computeInitialCoordAlongLabelRadiusWithLiftOffAngle from './computeInitialCoordAlongLabelRadiusWithLiftOffAngle'
 
 module.exports = ({
-  labelDatum,
+  labelDatum: label,
   labelOffset,
   labelLiftOffAngle,
   outerRadius,
@@ -17,34 +17,34 @@ module.exports = ({
   minGap = 1,
   spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
-  if (labelDatum.isTopApexLabel) {
+  if (label.isTopApexLabel) {
     const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-    const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+    const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, label.segmentAngleMidpoint)
 
     const fitLineCoord = {
       x: segmentCoord.x,
       y: Math.min( // NB do not allow really big labels to push pack inside outerRadius mark
-        pieCenter.y - (outerRadius + maxVerticalOffset - labelDatum.height),
+        pieCenter.y - (outerRadius + maxVerticalOffset - label.height),
         pieCenter.y - outerRadius - labelOffset
       ),
     }
-    labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
-  } else if (labelDatum.isBottomApexLabel) {
+    label.placeLabelViaConnectorCoord(fitLineCoord)
+  } else if (label.isBottomApexLabel) {
     const coordAtZeroDegreesAlongOuterRadius = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-    const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, labelDatum.segmentAngleMidpoint)
+    const segmentCoord = rotate(coordAtZeroDegreesAlongOuterRadius, pieCenter, label.segmentAngleMidpoint)
 
     const fitLineCoord = {
       x: segmentCoord.x,
       y: Math.max( // NB do not allow really big labels to push pack inside outerRadius mark
-        pieCenter.y + (outerRadius + maxVerticalOffset - labelDatum.height),
+        pieCenter.y + (outerRadius + maxVerticalOffset - label.height),
         pieCenter.y + outerRadius + labelOffset
       ),
     }
-    labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
+    label.placeLabelViaConnectorCoord(fitLineCoord)
   } else {
     const { fitLineCoord, isLifted } = computeInitialCoordAlongLabelRadiusWithLiftOffAngle({
-      angle: labelDatum.segmentAngleMidpoint,
-      labelHeight: labelDatum.height,
+      angle: label.segmentAngleMidpoint,
+      labelHeight: label.height,
       labelOffset,
       labelLiftOffAngle,
       outerRadius,
@@ -57,7 +57,7 @@ module.exports = ({
       minGap,
       spacingBetweenUpperTrianglesAndCenterMeridian,
     })
-    labelDatum.placeLabelViaConnectorCoord(fitLineCoord)
-    labelDatum.isLifted = isLifted
+    label.placeLabelViaConnectorCoord(fitLineCoord)
+    label.isLifted = isLifted
   }
 }

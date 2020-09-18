@@ -1,9 +1,11 @@
 import { toRadians } from '../../../math'
+import * as rootLog from 'loglevel'
+const labelLogger = rootLog.getLogger('label')
 
 module.exports = ({
   anchor, // top or bottom
   newY,
-  labelDatum,
+  labelDatum: label,
   labelRadius,
   yRange,
   labelLiftOffAngle,
@@ -17,12 +19,12 @@ module.exports = ({
   if (anchor === 'top') {
     newTopYCoord = newY
   } else if (anchor === 'bottom') {
-    newTopYCoord = newY - labelDatum.height
+    newTopYCoord = newY - label.height
   }
 
   // TODO move to label
-  let numTextRows = labelDatum.labelTextLines.length
-  let { innerPadding, lineHeight } = labelDatum
+  let numTextRows = label.labelTextLines.length
+  let { innerPadding, lineHeight } = label
   let newLineConnectorYCoord = (newTopYCoord < pieCenter.y)
     ? newTopYCoord + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
     : newTopYCoord + 0.5 * lineHeight
@@ -30,11 +32,11 @@ module.exports = ({
   let yOffset = Math.abs(pieCenter.y - newLineConnectorYCoord)
 
   if (yOffset > yRange) {
-    console.warn(`yOffset(${yOffset}) cannot be greater than yRange(${yRange})`)
+    labelLogger.warn(`moving label ${label.shortText} : yOffset limited to ${yRange}`)
     yOffset = yRange
   }
 
-  const labelLiftOffAngleInRadians = ((labelDatum.inTopHalf && topIsLifted) || (labelDatum.inBottomHalf && bottomIsLifted))
+  const labelLiftOffAngleInRadians = ((label.inTopHalf && topIsLifted) || (label.inBottomHalf && bottomIsLifted))
     ? toRadians(labelLiftOffAngle)
     : 0
 
@@ -60,14 +62,14 @@ module.exports = ({
   }
 
   const newLineConnectorCoord = {
-    x: (labelDatum.hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
+    x: (label.hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
     y: newY,
   }
 
-  labelDatum.isLifted = isLifted
+  label.isLifted = isLifted
   if (anchor === 'top') {
-    labelDatum.setTopMedialPoint(newLineConnectorCoord)
+    label.setTopMedialPoint(newLineConnectorCoord)
   } else {
-    labelDatum.setBottomMedialPoint(newLineConnectorCoord)
+    label.setBottomMedialPoint(newLineConnectorCoord)
   }
 }
