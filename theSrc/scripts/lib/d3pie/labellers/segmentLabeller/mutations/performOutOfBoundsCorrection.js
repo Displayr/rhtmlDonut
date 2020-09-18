@@ -119,12 +119,15 @@ const mutationFn = ({ outerLabelSet: labelSet, variant, invariant, canvas }) => 
     })
     .size()
 
-  labelLogger.info(`corrected ${leftLabelsOverTop.size()} left labels over top`)
-  labelLogger.info(`corrected ${rightLabelsOverTop.size()} right labels over top`)
-  labelLogger.info(`corrected ${leftLabelsUnderBottom.size()} left labels under bottom`)
-  labelLogger.info(`corrected ${rightLabelsUnderBottom.size()} right labels under bottom`)
-  labelLogger.info(`corrected ${labelsOverlappingRightEdgeCount} labels over left`)
-  labelLogger.info(`corrected ${labelsOverlappingLeftEdgeCount} labels over right`)
+  labelLogger.info([
+    'corrected',
+    `${leftLabelsOverTop.size()} L above,`,
+    `${rightLabelsOverTop.size()} R above`,
+    `${leftLabelsUnderBottom.size()} L under`,
+    `${rightLabelsUnderBottom.size()} R under`,
+    `${labelsOverlappingRightEdgeCount} labels left`,
+    `${labelsOverlappingLeftEdgeCount} labels right`,
+  ].join(' '))
 
   stats.completed = true
   return {
