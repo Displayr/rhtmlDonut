@@ -122,6 +122,8 @@ class CollisionResolver {
                   hasBottomLabel: this.variant.hasBottomLabel,
                 })
             })
+        // TODO need to update this.variant.minProportion.
+        //   * No imapct yet as nothing downstream uses it, but should be done
         } else if (availableStrategies.removeLabel) {
           if (this.invariant.sortOrder === 'initial') {
             // sort by value, then as a tiebreak choose the label closest to the current offending label
