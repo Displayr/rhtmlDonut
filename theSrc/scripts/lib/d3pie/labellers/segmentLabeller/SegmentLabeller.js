@@ -171,8 +171,6 @@ class SegmentLabeller {
 
   doLabelling () {
     if (this._invariant.sortOrder === 'descending') {
-      this.doMutation(initialNaivePlacement)
-      this.doMutation(performOutOfBoundsCorrection)
       this.doMutation(performDescendingOrderCollisionResolution)
     } else {
       this.doMutation(initialNaivePlacement)
@@ -281,8 +279,7 @@ class SegmentLabeller {
       this.doMutation(removeLabelsUntilLabelsFitCanvasVertically)
     }
 
-    labelLogger.info('Done Preprocessing Labelset. MutationHistory:')
-    labelLogger.info(JSON.stringify(this.mutationHistory, {}, 2))
+    labelLogger.info('Done Preprocessing Labelset')
   }
 
   processConfig (config) {

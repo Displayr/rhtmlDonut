@@ -6,17 +6,6 @@ const labelLogger = rootLog.getLogger('label')
 
 const mutationName = 'performDescendingOrderCollisionResolution'
 const mutationFn = ({ innerLabelSet, outerLabelSet, variant, invariant, canvas }) => {
-  const initialCollisions = findLabelsIntersecting(outerLabelSet)
-  if (initialCollisions.length === 0) {
-    labelLogger.info(`no collisions detected in initial layout. Terminating collision detection.`)
-    return {
-      newVariants: {},
-      stats: { skipped: true },
-    }
-  }
-
-  labelLogger.info(`collisions detected in initial layout. Proceeding with descending order collision detection.`)
-
   const collisionResolver = new DescendingOrderCollisionResolver({
     labelSet: outerLabelSet,
     variant,
