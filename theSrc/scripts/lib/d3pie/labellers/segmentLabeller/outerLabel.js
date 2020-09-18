@@ -90,11 +90,6 @@ class OuterLabel {
     return Object.assign(this, this.interface.canvas().getLabelSize(this))
   }
 
-  // these facts are not available at constructor time, so add them later via calling addLayoutFacts
-  addLayoutFacts ({ segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset }) {
-    _.assign(this._invariant, { segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset })
-  }
-
   // NB TODO dont think this works
   toString () {
     return this.label
