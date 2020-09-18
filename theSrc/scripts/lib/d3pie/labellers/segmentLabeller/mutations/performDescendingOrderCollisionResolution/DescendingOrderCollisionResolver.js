@@ -8,6 +8,7 @@ const labelLogger = rootLog.getLogger('label')
 
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',
+  'minProportion'
 ]
 
 const INVARIABLE_CONFIG = [
@@ -35,31 +36,24 @@ class DescendingOrderCollisionResolver {
   }
 
   go () {
-    let minValue = 0
     const ignoreThreshold = 0.1
     const bigLabelsToIgnore = this.inputLabelSet.filter(label => label.fractionalValue > ignoreThreshold)
     const labelsToPlace = this.inputLabelSet.filter(label => label.fractionalValue <= ignoreThreshold)
-
-    const { newMinValue: topLeftMinValue, acceptedLabels: topLeftAcceptedLabels } = this.placeTopLeft({
-      minValue,
+    
+    const { acceptedLabels: topLeftAcceptedLabels } = this.placeTopLeft({
       existingLabels: bigLabelsToIgnore,
-      labelSet: labelsToPlace,
+      labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
     })
-    minValue = topLeftMinValue
 
-    const { newMinValue: rightMinValue, acceptedLabels: rightAcceptedLabels } = this.placeRight({
-      minValue,
+    const { acceptedLabels: rightAcceptedLabels } = this.placeRight({
       existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels),
-      labelSet: labelsToPlace,
+      labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
     })
-    minValue = rightMinValue
 
-    const { newMinValue: bottomLeftMinValue, acceptedLabels: bottomLeftAcceptedLabels } = this.placeBottomLeft({
-      minValue,
+    const { acceptedLabels: bottomLeftAcceptedLabels } = this.placeBottomLeft({
       existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels).concat(rightAcceptedLabels),
-      labelSet: labelsToPlace,
+      labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
     })
-    minValue = bottomLeftMinValue
 
     const outer = _([
       bigLabelsToIgnore,
@@ -76,16 +70,13 @@ class DescendingOrderCollisionResolver {
     return {
       inner: [],
       outer,
-      newVariants: {
-        minValue
-      },
+      newVariants: this.variant,
       stats: this.stats
     }
   }
 
-  placeTopLeft ({ minValue: currentMinValue, existingLabels, labelSet }) {
+  placeTopLeft ({ existingLabels, labelSet }) {
     let acceptedLabels = null
-    let newMinValue = null
 
     const { labelMaxLineAngle } = this.variant
     const { height: canvasHeight } = this.canvas
@@ -94,7 +85,7 @@ class DescendingOrderCollisionResolver {
 
     const topLeftLabels = _(labelSet)
       .filter('inTopLeftQuadrant')
-      .filter(({ value }) => value > currentMinValue)
+      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
       .value()
     const collisionsInTopLeft = findLabelsIntersecting(existingLabels.concat(topLeftLabels))
 
@@ -121,7 +112,7 @@ class DescendingOrderCollisionResolver {
       const initialLargestLabelMaxY = startingBottomYPositionOfBiggestLabel
       while (!allLabelsSuccessfullyPlaced && !haveHitBottom && !largestLabelExceedsMaxLabelLineAngle) {
         startingBottomYPositionOfBiggestLabel += stepSize
-        labelLogger.info(`placing largest label ${largestLabel.maxY} ${startingBottomYPositionOfBiggestLabel - initialLargestLabelMaxY} px below ideal placement`)
+        labelLogger.info(`placing largest label ${largestLabel.shortText} ${startingBottomYPositionOfBiggestLabel - initialLargestLabelMaxY} px below ideal placement`)
         if (startingBottomYPositionOfBiggestLabel > canvasHeight) {
           haveHitBottom = true
           break
@@ -159,8 +150,8 @@ class DescendingOrderCollisionResolver {
 
         // must use the previous run, not the current run, because this test runs after mod of workingSet, so working set is invalid
         if (lastPlacementLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
-          acceptedLabels = lastPlacementLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
+          acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else if (haveHitBottom) {
         // NB this condition should be impossible as maxLineAngle will always be exceeded before we go off bottom,
@@ -168,20 +159,19 @@ class DescendingOrderCollisionResolver {
         labelLogger.info('descending placement: top left: Hit bottom')
 
         if (workingLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
+          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('descending placement: top left: Unexplained loop break')
       }
     }
 
-    return { newMinValue, acceptedLabels }
+    return { acceptedLabels }
   }
 
-  placeRight ({ existingLabels, labelSet, minValue: currentMinValue }) {
+  placeRight ({ existingLabels, labelSet }) {
     let acceptedLabels = null
-    let newMinValue = null
 
     const { labelMaxLineAngle } = this.variant
     const topIsLifted = true
@@ -189,7 +179,7 @@ class DescendingOrderCollisionResolver {
 
     const rightLabels = _(labelSet)
       .filter('inRightHalf')
-      .filter(({ value }) => value > currentMinValue)
+      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
       .value()
     const collisionsInRight = findLabelsIntersecting(existingLabels.concat(rightLabels))
 
@@ -252,27 +242,26 @@ class DescendingOrderCollisionResolver {
 
         // must use the previous run, not the current run, because currently the largestLabelExceedsMaxLabelLineAngle test run after modification of workingSet, therefore workingset at this point is "one loop iteration too far"
         if (lastPlacementLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
-          acceptedLabels = lastPlacementLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
+          acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else if (haveHitTop) {
         labelLogger.info('descending placement: right: Hit top')
 
         if (workingLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
+          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('descending placement: right: Unexplained loop break')
       }
     }
 
-    return { newMinValue, acceptedLabels }
+    return { acceptedLabels }
   }
 
-  placeBottomLeft ({ minValue: currentMinValue, existingLabels, labelSet }) {
+  placeBottomLeft ({ existingLabels, labelSet }) {
     let acceptedLabels = null
-    let newMinValue = null
 
     const { labelMaxLineAngle } = this.variant
     const { height: canvasHeight } = this.canvas
@@ -281,7 +270,7 @@ class DescendingOrderCollisionResolver {
 
     const bottomLeftLabels = _(labelSet)
       .filter('inBottomLeftQuadrant')
-      .filter(({ value }) => value > currentMinValue)
+      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
       .value()
     const collisionsInBottomLeft = findLabelsIntersecting(existingLabels.concat(bottomLeftLabels))
 
@@ -343,36 +332,52 @@ class DescendingOrderCollisionResolver {
 
         // must use the previous run, not the current run, because currently this test run after mod of workingSet
         if (lastPlacementLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
-          acceptedLabels = lastPlacementLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
+          acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else if (haveHitBottom) {
         labelLogger.info('descending placement: bottom left: Hit bottom')
 
         if (workingLabelSet) {
-          newMinValue = this.getMaxInvalidValue({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.value > newMinValue)
+          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
+          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('descending placement: bottom left: Unexplained loop break')
       }
     }
 
-    return { newMinValue, acceptedLabels }
+    return { acceptedLabels }
   }
 
-  getMaxInvalidValue ({ workingSet, placedSet }) {
+  /* assume:
+    * every label in the placed set is greater than every label in the working set
+    * placedSet is sorted in value order descending
+   */
+  getNewMinProportion ({ workingSet, placedSet }) {
     const { labelMaxLineAngle } = this.variant
     const { width: canvasWidth, height: canvasHeight } = this.canvas
+    const minPlacedFractionalValue = _(placedSet).map('fractionalValue').min()
 
-    return _([
+    const largestInvalidLabel = _([
       findLabelsIntersecting(placedSet.concat(workingSet)),
       findLabelsOutOfBounds(workingSet, canvasWidth, canvasHeight),
       findLabelsExceedingMaxLabelLineAngle(workingSet, labelMaxLineAngle),
     ])
       .flatten()
-      .map('value')
-      .max()
+      .filter(({ fractionalValue }) => fractionalValue < minPlacedFractionalValue) // TODO fix : not strictly true. what if they are == to each other
+      .sortBy('fractionalValue')
+      .last()
+
+    if (!largestInvalidLabel) {
+      return this.variant.minProportion
+    } else {
+      const indexOfLargestInvalidLabelInWorkingSet = workingSet.findIndex(largestInvalidLabel)
+      const smallestValidLabel = (indexOfLargestInvalidLabelInWorkingSet === 0)
+        ? _.last(placedSet)
+        : workingSet[indexOfLargestInvalidLabelInWorkingSet - 1]
+      return smallestValidLabel.fractionalValue
+    }
   }
 
   moveLabelsDown ({ phase, placedSet, labelSet, startingY, topIsLifted, bottomIsLifted }) {
@@ -399,7 +404,13 @@ class DescendingOrderCollisionResolver {
     const maxAngleExceededLabels = findLabelsExceedingMaxLabelLineAngle(labelSet, labelMaxLineAngle)
 
     const largestLabel = labelSet[0]
-    labelLogger.info(`descending placement: ${phase}: placement offset for ${largestLabel.shortText} : ${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}`, {
+    labelLogger.info([
+      `descending placement: ${phase}:`,
+      `placement offset for ${largestLabel.shortText}:`,
+      `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
+      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
+    ].join(' '))
+    labelLogger.debug('details', {
       collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),
       outOfBoundsLabels: outOfBoundsLabels.map(({ shortText }) => shortText).join(','),
       maxAngleExceededLabels: maxAngleExceededLabels.map(({ shortText, labelLineAngle }) => `${shortText}:${labelLineAngle.toFixed(2)}`).join(','),
@@ -436,7 +447,13 @@ class DescendingOrderCollisionResolver {
     const maxAngleExceededLabels = findLabelsExceedingMaxLabelLineAngle(labelSet, labelMaxLineAngle)
 
     const largestLabel = labelSet[0]
-    labelLogger.info(`descending placement: ${phase}: placement offset for ${largestLabel.shortText} : ${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}`, {
+    labelLogger.info([
+      `descending placement: ${phase}:`,
+      `placement offset for ${largestLabel.shortText}:`,
+      `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
+      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
+    ].join(' '))
+    labelLogger.debug('details', {
       collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),
       outOfBoundsLabels: outOfBoundsLabels.map(({ shortText }) => shortText).join(','),
       maxAngleExceededLabels: maxAngleExceededLabels.map(({ shortText, labelLineAngle }) => `${shortText}:${labelLineAngle.toFixed(2)}`).join(','),
