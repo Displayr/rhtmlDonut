@@ -84,15 +84,18 @@ class OuterLabel {
     this._label = label
 
     this.computeDimensions()
+    this.computeValidLabelRange()
   }
 
   computeDimensions () {
     return Object.assign(this, this.interface.canvas().getLabelSize(this))
   }
 
-  // NB TODO dont think this works
-  toString () {
-    return this.label
+  computeValidLabelRange () {
+    this.labelRange = {}
+
+
+
   }
 
   formatLabelText ({

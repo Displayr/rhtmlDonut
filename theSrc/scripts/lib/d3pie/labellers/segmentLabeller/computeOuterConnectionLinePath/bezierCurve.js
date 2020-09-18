@@ -1,4 +1,4 @@
-import { computeIntersection, between, toRadians } from '../../../math'
+import { computeIntersectionOfTwoLines, between, toRadians } from '../../../math'
 
 // draw a bezier curve from the segment to the label
 // * start with a rectangle with the segment and label at opposite points ("kitty corner") on the rectangle
@@ -136,8 +136,8 @@ const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle }) 
   const radialLineWithLean = getLine({ ...segmentCoord, angle: segmentAngleAfterLean })
   const shiftedRadialLineWithLean = getLine({ ...labelCoord, angle: labelAngleAfterLean })
 
-  const segmentControlCoord = computeIntersection(radialLineWithLean, shiftedTangentLine)
-  const labelControlCoord = computeIntersection(shiftedRadialLineWithLean, tangentLine)
+  const segmentControlCoord = computeIntersectionOfTwoLines(radialLineWithLean, shiftedTangentLine)
+  const labelControlCoord = computeIntersectionOfTwoLines(shiftedRadialLineWithLean, tangentLine)
 
   return { segmentControlCoord, labelControlCoord }
 }

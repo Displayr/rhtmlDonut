@@ -40,9 +40,9 @@ let math = {
   },
 
   // https://stackoverflow.com/questions/385305/efficient-maths-algorithm-to-calculate-intersections
-  computeIntersection: function ([{ x: x1, y: y1 }, { x: x2, y: y2 }], [{ x: x3, y: y3 }, { x: x4, y: y4 }]) {
+  computeIntersectionOfTwoLines: function ([{ x: x1, y: y1 }, { x: x2, y: y2 }], [{ x: x3, y: y3 }, { x: x4, y: y4 }]) {
     if (!_.every([x1, y1, x2, y2, x3, y3, x4, y4], x => !_.isNaN(x))) {
-      throw new Error(`computeIntersection called with NaN`)
+      throw new Error(`computeIntersectionOfTwoLines called with NaN`)
     }
 
     const x12 = x1 - x2
@@ -88,6 +88,7 @@ let math = {
     ]
     return Math.min(...options)
   },
+
 }
 
 module.exports = math

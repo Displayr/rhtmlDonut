@@ -1,4 +1,4 @@
-import { between, computeIntersection, rotate } from '../../../math'
+import { between, computeIntersectionOfTwoLines, rotate } from '../../../math'
 import * as rootLog from 'loglevel'
 const labelLogger = rootLog.getLogger('label')
 
@@ -51,7 +51,7 @@ module.exports = ({
 
     const placementLine = [placementLineCoord1, placementLineCoord2]
 
-    const intersection = computeIntersection(radialLine, placementLine)
+    const intersection = computeIntersectionOfTwoLines(radialLine, placementLine)
 
     if (intersection) {
       fitLineCoord = intersection

@@ -3,7 +3,7 @@ import * as rootLog from 'loglevel'
 import RBush from 'rbush'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
-import { computeIntersection, rotate } from '../../../../math'
+import { computeIntersectionOfTwoLines, rotate } from '../../../../math'
 const labelLogger = rootLog.getLogger('label')
 
 const VARIABLE_CONFIG = [
@@ -186,7 +186,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: left side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -256,7 +256,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: right side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -441,7 +441,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: left side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -511,7 +511,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: right side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
