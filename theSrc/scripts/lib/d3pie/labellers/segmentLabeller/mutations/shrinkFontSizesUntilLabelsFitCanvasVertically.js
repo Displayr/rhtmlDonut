@@ -36,6 +36,8 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
     const descendingValuesLabelSet = _(labelSet).orderBy(['value'], ['desc']).value()
 
     _(fontSizeScaleOptions).each(({ scale, minFontSize, maxFontSize, id }) => {
+      newVariants.maxFontSize = maxFontSize
+      newVariants.minFontSize = minFontSize
       stats.lastIteration = id
       _(descendingValuesLabelSet).each((label, i) => { label.fontSize = Math.round(scale(i)) })
       labelStats = computeLabelStats(labelSet, outerPadding)
@@ -45,8 +47,6 @@ const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {
       if (labelStats.totalDesiredHeight <= canvasHeight) {
         labelLogger.info(`labelFontScale option(${id}):[${minFontSize}:${maxFontSize}] provided enough shrinkage. Moving on to next step`)
         stats.completed = true
-        newVariants.maxFontSize = maxFontSize
-        newVariants.minFontSize = minFontSize
         return terminateLoop
       }
     })
