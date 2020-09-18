@@ -39,7 +39,7 @@ class DescendingOrderCollisionResolver {
     const ignoreThreshold = 0.1
     const bigLabelsToIgnore = this.inputLabelSet.filter(label => label.fractionalValue > ignoreThreshold)
     const labelsToPlace = this.inputLabelSet.filter(label => label.fractionalValue <= ignoreThreshold)
-    
+
     const { acceptedLabels: topLeftAcceptedLabels } = this.placeTopLeft({
       existingLabels: bigLabelsToIgnore,
       labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
@@ -372,7 +372,7 @@ class DescendingOrderCollisionResolver {
     if (!largestInvalidLabel) {
       return this.variant.minProportion
     } else {
-      const indexOfLargestInvalidLabelInWorkingSet = workingSet.findIndex(largestInvalidLabel)
+      const indexOfLargestInvalidLabelInWorkingSet = workingSet.indexOf(largestInvalidLabel)
       const smallestValidLabel = (indexOfLargestInvalidLabelInWorkingSet === 0)
         ? _.last(placedSet)
         : workingSet[indexOfLargestInvalidLabelInWorkingSet - 1]
