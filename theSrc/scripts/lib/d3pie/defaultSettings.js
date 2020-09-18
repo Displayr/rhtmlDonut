@@ -40,7 +40,7 @@ const defaultSettings = {
       minProportion: 0.003, // pieWrapper: settings.minProportion, R: values.display.thres
       outerPadding: 1, // pieWrapper: settings.labelsOuterPadding, R: labels.outer.padding
       preferredMinFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
-      preferredMaxFontSize: 10, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
+      preferredMaxFontSize: 8, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       prefix: null, // pieWrapper: settings.prefix, R: prefix
       spacingBetweenUpperTrianglesAndCenterMeridian: 7, // hard code
       suffix: null, // pieWrapper: settings.suffix, R: suffix
