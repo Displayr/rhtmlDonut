@@ -230,7 +230,7 @@ class SegmentLabeller {
       })
     }
 
-    canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted }) => {
+    canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted, hemisphere }) => {
       let { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
       let { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
       let { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
@@ -252,6 +252,7 @@ class SegmentLabeller {
         topIsLifted,
         bottomIsLifted,
         spacingBetweenUpperTrianglesAndCenterMeridian,
+        hemisphere
       })
     }
     return canvas

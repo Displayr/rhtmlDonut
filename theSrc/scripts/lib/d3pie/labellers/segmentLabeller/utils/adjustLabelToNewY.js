@@ -13,7 +13,9 @@ module.exports = ({
   topIsLifted,
   bottomIsLifted,
   spacingBetweenUpperTrianglesAndCenterMeridian,
+  hemisphere: inputHemisphere
 }) => {
+  const hemisphere = inputHemisphere || label.hemisphere
   let newTopYCoord = null
   let isLifted = false
   if (anchor === 'top') {
@@ -62,7 +64,7 @@ module.exports = ({
   }
 
   const newLineConnectorCoord = {
-    x: (label.hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
+    x: (hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
     y: newY,
   }
 
