@@ -5,6 +5,8 @@ import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import {findLabelsExceedingMaxLabelLineAngle, findLabelsIntersecting, findLabelsOutOfBounds} from '../../../labelUtils'
 import UnexpectedCondition from '../../../../interrupts/unexpectedCondition'
 import { toRadians, computeIntersectionOfLineAndCircle } from '../../../../math'
+import computeLabelLineMaxAngleCoords from '../../utils/computeLabelLineMaxAngleCoords'
+
 const labelLogger = rootLog.getLogger('label')
 
 const VARIABLE_CONFIG = [
@@ -17,6 +19,7 @@ const INVARIABLE_CONFIG = [
   'outerPadding',
 ]
 
+// NB DOCR in logger statemeents : DescendingOrderCollisionResolver
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
     this.extractConfig({ variant, invariant })
@@ -37,7 +40,6 @@ class DescendingOrderCollisionResolver {
   }
 
   go () {
-
     // First place labels using a liftOff of 0
     // if there are any collisions do we apply a liftOffAngle
     _(this.inputLabelSet).each(label => {
@@ -99,7 +101,7 @@ class DescendingOrderCollisionResolver {
     let acceptedLabels = null
 
     const { labelMaxLineAngle } = this.variant
-    const { height: canvasHeight } = this.canvas
+    const { height: canvasHeight, pieCenter, outerRadius, labelOffset } = this.canvas
     const topIsLifted = false
     const bottomIsLifted = false
 
@@ -113,33 +115,33 @@ class DescendingOrderCollisionResolver {
       acceptedLabels = topLeftLabels
     } else {
       const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('descending placement: top left: collisions detected')
+      labelLogger.info('DOCR: top left: collisions detected')
       const stepSize = 5
 
-      // loop conditions
-      let allLabelsSuccessfullyPlaced = false
-      let largestLabelExceedsMaxLabelLineAngle = false
-      let haveHitBottom = false
-
-      // data structures to persist out of loop
-      let workingLabelSet = null
-      let lastPlacementLabelSet = null
-
       // each iteration: move the starting point of the "lowest and largest" label lower,
-      //   and then place the remaining labels going up
+      // and then place the remaining labels going up
       let largestLabel = getLargestLabel(topLeftLabels)
-      let startingBottomYPositionOfBiggestLabel = largestLabel.maxY
-      const initialLargestLabelMaxY = startingBottomYPositionOfBiggestLabel
+      let startingBottomYPositionOfBiggestLabel = largestLabel.maxY - stepSize // NB ensure at least one iteration
+      const initialLabelStartingY = largestLabel.maxY
 
-      const lowestAllowableLargestLabelMaxY = computeLabelLineMaxAngleCoords({ label: largestLabel, labelMaxLineAngle, canvas: this.canvas}).y
+      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
+        pieCenter: pieCenter,
+        segmentAngle : largestLabel.segmentAngleMidpoint,
+        labelMaxLineAngle,
+        segmentRadius: outerRadius,
+        labelRadius: outerRadius + labelOffset,
+      })
+      const maxAllowableLargestLabelY = _([
+        _.get(maxLabelLineAngleCoords, 'counterClockwiseCoord.y', canvasHeight),
+        canvasHeight
+      ]).min()
+      console.log(`maxAllowableLargestLabelY for largestLabel: ${maxAllowableLargestLabelY}`)
 
-      while (!allLabelsSuccessfullyPlaced && !haveHitBottom && !largestLabelExceedsMaxLabelLineAngle && startingBottomYPositionOfBiggestLabel + stepSize < lowestAllowableLargestLabelMaxY) {
+      let allLabelsSuccessfullyPlaced = false // loop condition
+      let workingLabelSet = null // persist outside of loop
+      while (!allLabelsSuccessfullyPlaced && startingBottomYPositionOfBiggestLabel + stepSize < maxAllowableLargestLabelY) {
         startingBottomYPositionOfBiggestLabel += stepSize
-        labelLogger.info(`placing largest label ${largestLabel.shortText} ${startingBottomYPositionOfBiggestLabel - initialLargestLabelMaxY} px below ideal placement`)
-        if (startingBottomYPositionOfBiggestLabel > canvasHeight) {
-          haveHitBottom = true
-          break
-        }
+        labelLogger.info(`placing largest label ${largestLabel.shortText} ${startingBottomYPositionOfBiggestLabel - initialLabelStartingY} px below ideal placement`)
 
         workingLabelSet = _.cloneDeep(topLeftLabels)
         const {
@@ -156,47 +158,19 @@ class DescendingOrderCollisionResolver {
         })
 
         allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
-
-        if (getLargestLabel(workingLabelSet).labelLineAngle > labelMaxLineAngle) {
-          labelLogger.info(`largestLabel ${getLargestLabel(workingLabelSet).shortText} exceeds angle with ${getLargestLabel(workingLabelSet).labelLineAngle.toFixed}`)
-          largestLabelExceedsMaxLabelLineAngle = true
-          break
-        }
-
-        lastPlacementLabelSet = workingLabelSet
       }
 
       if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('descending placement: top left: worked - all labels placed')
+        labelLogger.info('DOCR: top left: worked - all labels placed')
         acceptedLabels = workingLabelSet
-      } else if (largestLabelExceedsMaxLabelLineAngle) {
-        labelLogger.info('descending placement: top left: Largest label exceeds maxLabelLineAngle')
-
-        // must use the previous run, not the current run, because this test runs after mod of workingSet, so working set is invalid
-        if (lastPlacementLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
-          acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
-      } else if (haveHitBottom) {
-        // NB this condition should be impossible as maxLineAngle will always be exceeded before we go off bottom,
-        // but for symmetry with placeRight and placeBottomLeft we keep it
-        labelLogger.info('descending placement: top left: Hit bottom')
-
-        if (workingLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
-      } else if (startingBottomYPositionOfBiggestLabel + stepSize >= lowestAllowableLargestLabelMaxY) {
-        // NB this condition should be impossible as maxLineAngle will always be exceeded before we go off bottom,
-        // but for symmetry with placeRight and placeBottomLeft we keep it
-        labelLogger.info('descending placement: top left: Hit lowestAllowableLargestLabelMaxY')
-
+      } else if (startingBottomYPositionOfBiggestLabel + stepSize >= maxAllowableLargestLabelY) {
+        labelLogger.info('DOCR: top left: Hit maxAllowableLargestLabelY')
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
           acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
-        throw new UnexpectedCondition('descending placement: top left: Unexplained loop break')
+        throw new UnexpectedCondition('DOCR: top left: Unexplained loop break')
       }
     }
 
@@ -205,8 +179,8 @@ class DescendingOrderCollisionResolver {
 
   placeRight ({ existingLabels, labelSet }) {
     let acceptedLabels = null
-
     const { labelMaxLineAngle } = this.variant
+    const { pieCenter, outerRadius, labelOffset } = this.canvas
     const topIsLifted = false
     const bottomIsLifted = false
 
@@ -220,23 +194,40 @@ class DescendingOrderCollisionResolver {
       acceptedLabels = rightLabels
     } else {
       const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('descending placement: right: collisions detected')
-
+      labelLogger.info('DOCR: right: collisions detected')
       const stepSize = 5
 
-      // loop conditions
-      let allLabelsSuccessfullyPlaced = false
-      let largestLabelExceedsMaxLabelLineAngle = false
-      let haveHitTop = false
-
-      // data structures to persist out of loop
-      let workingLabelSet = null
-      let lastPlacementLabelSet = null
-
       // each iteration: move the starting point of the "highest and largest" label higher,
-      //   and then place the remaining labels going down
-      let startingTopYPositionOfBiggestLabel = getLargestLabel(rightLabels).minY
-      while (!allLabelsSuccessfullyPlaced && !haveHitTop && !largestLabelExceedsMaxLabelLineAngle) {
+      // and then place the remaining labels going down
+      let largestLabel = getLargestLabel(rightLabels)
+      let startingTopYPositionOfBiggestLabel = largestLabel.minY + stepSize // NB ensure at least one iteration
+      const initialLabelStartingY = largestLabel.minY
+
+      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
+        pieCenter: pieCenter,
+        segmentAngle : largestLabel.segmentAngleMidpoint,
+        labelMaxLineAngle,
+        segmentRadius: outerRadius,
+        labelRadius: outerRadius + labelOffset,
+      })
+      const minYFromCounterClockwiseCoord = (maxLabelLineAngleCoords.counterClockwiseCoord.x >= pieCenter.x)
+        ? maxLabelLineAngleCoords.counterClockwiseCoord.y
+        : null
+
+      const minAllowableLargestLabelY = _([
+        minYFromCounterClockwiseCoord,
+        pieCenter.y - outerRadius - labelOffset - largestLabel.height
+      ])
+        .filter(y => !_.isNull(y))
+        .max()
+
+      console.log(`minAllowableLargestLabelY for largestLabel: ${minAllowableLargestLabelY}`)
+
+      let allLabelsSuccessfullyPlaced = false // loop condition
+      let workingLabelSet = null // persist outside of loop
+      while (!allLabelsSuccessfullyPlaced && startingTopYPositionOfBiggestLabel - stepSize > minAllowableLargestLabelY) {
+        startingTopYPositionOfBiggestLabel -= stepSize
+        labelLogger.info(`placing largest label ${largestLabel.shortText} ${initialLabelStartingY - startingTopYPositionOfBiggestLabel} px above ideal placement`)
         workingLabelSet = _.cloneDeep(rightLabels)
         const {
           collidingLabels,
@@ -252,41 +243,19 @@ class DescendingOrderCollisionResolver {
         })
 
         allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
-
-        if (getLargestLabel(workingLabelSet).labelLineAngle > labelMaxLineAngle) {
-          largestLabelExceedsMaxLabelLineAngle = true
-          break
-        }
-
-        startingTopYPositionOfBiggestLabel -= stepSize
-        if (startingTopYPositionOfBiggestLabel < 0) {
-          haveHitTop = true
-          break
-        }
-
-        lastPlacementLabelSet = workingLabelSet
       }
 
       if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('descending placement: right: worked - all labels placed')
+        labelLogger.info('DOCR: right: worked - all labels placed')
         acceptedLabels = workingLabelSet
-      } else if (largestLabelExceedsMaxLabelLineAngle) {
-        labelLogger.info('descending placement: right: Largest label exceeds maxLabelLineAngle')
-
-        // must use the previous run, not the current run, because currently the largestLabelExceedsMaxLabelLineAngle test run after modification of workingSet, therefore workingset at this point is "one loop iteration too far"
-        if (lastPlacementLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: lastPlacementLabelSet })
-          acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
-      } else if (haveHitTop) {
-        labelLogger.info('descending placement: right: Hit top')
-
+      } else if (startingTopYPositionOfBiggestLabel - stepSize <= minAllowableLargestLabelY) {
+        labelLogger.info('DOCR: right: Hit minAllowableLargestLabelY')
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
           acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
-        throw new UnexpectedCondition('descending placement: right: Unexplained loop break')
+        throw new UnexpectedCondition('DOCR: right: Unexplained loop break')
       }
     }
 
@@ -311,7 +280,7 @@ class DescendingOrderCollisionResolver {
       acceptedLabels = bottomLeftLabels
     } else {
       const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('descending placement: bottom left: collisions detected')
+      labelLogger.info('DOCR: bottom left: collisions detected')
       const stepSize = 5
 
       // loop conditions
@@ -358,10 +327,10 @@ class DescendingOrderCollisionResolver {
       }
 
       if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('descending placement: bottom left: worked - all labels placed')
+        labelLogger.info('DOCR: bottom left: worked - all labels placed')
         acceptedLabels = workingLabelSet
       } else if (largestLabelExceedsMaxLabelLineAngle) {
-        labelLogger.info('descending placement: bottom left: Largest label exceeds maxLabelLineAngle')
+        labelLogger.info('DOCR: bottom left: Largest label exceeds maxLabelLineAngle')
 
         // must use the previous run, not the current run, because currently this test run after mod of workingSet
         if (lastPlacementLabelSet) {
@@ -369,14 +338,14 @@ class DescendingOrderCollisionResolver {
           acceptedLabels = lastPlacementLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else if (haveHitBottom) {
-        labelLogger.info('descending placement: bottom left: Hit bottom')
+        labelLogger.info('DOCR: bottom left: Hit bottom')
 
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
           acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
         }
       } else {
-        throw new UnexpectedCondition('descending placement: bottom left: Unexplained loop break')
+        throw new UnexpectedCondition('DOCR: bottom left: Unexplained loop break')
       }
     }
 
@@ -438,7 +407,7 @@ class DescendingOrderCollisionResolver {
 
     const largestLabel = labelSet[0]
     labelLogger.info([
-      `descending placement: ${phase}:`,
+      `DOCR: ${phase}:`,
       `placement offset for ${largestLabel.shortText}:`,
       `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
       `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
@@ -463,21 +432,24 @@ class DescendingOrderCollisionResolver {
 
     _(labelSet).each((label, index) => {
 
-      const labelCoordAtMaxAngleCounterClockwiseFromSegment = computeLabelLineMaxAngleCoords({
-        label,
+      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
+        pieCenter: this.canvas.pieCenter,
+        segmentAngle : label.segmentAngleMidpoint,
         labelMaxLineAngle,
-        canvas: this.canvas
+        segmentRadius: this.canvas.outerRadius,
+        labelRadius: this.canvas.outerRadius + this.canvas.labelOffset,
       })
+      const { counterClockwiseCoord } = maxLabelLineAngleCoords
 
-      let newY = (index === 0)
+        let newY = (index === 0)
         ? startingY
         : labelSet[index - 1].minY - outerPadding
 
-      // console.log(`label at ${label.segmentAngleMidpoint.toFixed(2)}(${label.shortText}) newY ${newY} dodgy coord ${_.get(labelCoordAtMaxAngleCounterClockwiseFromSegment, 'y', 'null')}`)
+      // console.log(`label at ${label.segmentAngleMidpoint.toFixed(2)}(${label.shortText}) newY ${newY} dodgy coord ${_.get(counterClockwiseCoord, 'y', 'null')}`)
 
-      if (labelCoordAtMaxAngleCounterClockwiseFromSegment && newY > labelCoordAtMaxAngleCounterClockwiseFromSegment.y) {
+      if (counterClockwiseCoord && newY > counterClockwiseCoord.y) {
         console.log(`limiting ${label.shortText} based on maxLineAngle`)
-        newY = labelCoordAtMaxAngleCounterClockwiseFromSegment.y
+        newY = counterClockwiseCoord.y
       }
 
       this.canvas.adjustLabelToNewY({
@@ -495,7 +467,7 @@ class DescendingOrderCollisionResolver {
 
     const largestLabel = labelSet[0]
     labelLogger.info([
-      `descending placement: ${phase}:`,
+      `DOCR: ${phase}:`,
       `placement offset for ${largestLabel.shortText}:`,
       `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
       `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
@@ -515,50 +487,3 @@ class DescendingOrderCollisionResolver {
 }
 
 module.exports = DescendingOrderCollisionResolver
-
-const ensurePositive = x => (x > 0) ? x : -1 * x
-const ensureNegative = x => (x < 0) ? x : -1 * -x
-
-//https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine
-const computeLabelLineMaxAngleCoords = ({ label, labelMaxLineAngle, canvas }) => {
-  // NB var naming is consistent with triangle math on link. a,b,c are sides, A,B,C are angles
-  // triangle in question:
-  // b - side from pie center to segmentMidPoint on outerCircle - known length = outerRadius
-  // a - side from pie center to the "labels furthest allowable placement" on labelCircle - known length = outerRadius + labelOffset
-  // c - side from segmentMidPoint to "labels furthest allowable placement"
-  // start with A, a, b
-  const A = 180 - labelMaxLineAngle
-  const a = canvas.outerRadius + canvas.labelOffset
-  const b = canvas.outerRadius
-
-  // get B using sine rule
-  const B = Math.asin( b * Math.sin(toRadians(A)) / a )
-
-  // get C using sum(angle) = 180
-  const C = 180 - B - A
-  const radC = toRadians(C)
-
-  // get c using cosine rule
-  const c = Math.sqrt(a * a + B * b - 2 * a * b * Math.cos(radC))
-
-  if (label.inTopLeftQuadrant) {
-    // counterclockwise calcs
-    const angle = label.segmentAngleMidpoint - labelMaxLineAngle
-    let counterClockwiseCoord, clockwiseCoord
-    if (angle >= 0) {
-      counterClockwiseCoord = {
-        x: label.segmentMidpointCoord.x - c * Math.cos(radC),
-        y: label.segmentMidpointCoord.y - c * Math.cos(radC)
-      }
-      clockwiseCoord = {}
-    } else {
-      counterClockwiseCoord = {
-        x: label.segmentMidpointCoord.x - c * Math.cos(radC),
-        y: label.segmentMidpointCoord.y + c * Math.cos(radC)
-      }
-      clockwiseCoord = {}
-    }
-    return counterClockwiseCoord
-  }
-  return null
-}
