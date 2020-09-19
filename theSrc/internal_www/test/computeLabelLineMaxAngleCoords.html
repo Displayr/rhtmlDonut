@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<h2>To run a test in dev tools execute something like this:</h2>
+<pre>renderLabel({text: "Label 1","fontSize":"20", "fontFamily":"Arial","fontWeight":"lighter","offset":{"x":0,"y":50}})</pre>
+<pre>resetSvgContents()</pre>
+<svg class="canvas" id="svg-canvas" width="4000" height="4000"></svg>
+<script src="/external/d3.js"></script>
+<script src="/external/lodash.js"></script>
+<script src="/js/addTestFixturesToWindow.js"></script>
+<script type="text/javascript">
+
+  window.resetSvgContents = () => {
+    d3.select('#svg-canvas').selectAll("*").remove();
+  }
+
+  window.addCircle = ({ cx, cy, r, stroke, fill = 'none' }) => {
+    d3.select('#svg-canvas').append('circle')
+      .attr('cx', cx)
+      .attr('cy', cy)
+      .attr('r', r)
+      .attr('fill', fill)
+      .attr('stroke', stroke)
+  }
+
+  window.addLine = ({ c1, c2, stroke, fill = 'none', width = 1, opacity = 1 }) => {
+    const linePath = `M ${c1.x} ${c1.y} L ${c2.x} ${c2.y}`
+    d3.select('#svg-canvas').append('path')
+      .attr('d', linePath)
+      .attr('stroke', stroke)
+      .attr('stroke-width', width)
+      .attr('fill', fill)
+      .style('opacity', opacity)
+      .style('display', 'inline')
+  }
+
+  const coordToString = (coord) => (coord) ? `x:${coord.x},y:${coord.y}` : 'null'
+
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('foo html main')
+    window.resetSvgContents()
+    window.addCircle({ cx: 500, cy: 500, r: 200, stroke: 'black' })
+    window.addCircle({ cx: 500, cy: 500, r: 300, stroke: 'black' })
+
+
+    const { rotate } = window.testFixtures.math
+    const pieCenter = { x: 500, y: 500 }
+    const segmentPointAtZeroDegrees = { x: 500 - 200, y: 500 }
+
+    var colorScale = d3.scale.category10()
+    _.range(0,360,10).map((segmentAngle,index) => {
+      const color = colorScale(index)
+      const segmentCoord = rotate(segmentPointAtZeroDegrees, pieCenter, segmentAngle)
+      window.addCircle({ cx: segmentCoord.x, cy: segmentCoord.y, r: 4, fill: color })
+      const { clockwiseCoord, counterClockwiseCoord } = window.testFixtures.computeLabelLineMaxAngleCoords({
+        pieCenter,
+        segmentAngle,
+        labelMaxLineAngle: 80,
+        segmentRadius: 200,
+        labelRadius: 300
+      })
+      console.log(`angle ${segmentAngle} yields C: ${coordToString(clockwiseCoord)} CC: ${coordToString(counterClockwiseCoord)}`)
+
+      if (clockwiseCoord) {
+        window.addCircle({ cx: clockwiseCoord.x, cy: clockwiseCoord.y, r: 3, fill: color })
+        window.addLine({ c1: segmentCoord, c2: clockwiseCoord, opacity: 0.7, fill: color, stroke: color, width: 2 })
+      }
+      if (counterClockwiseCoord) {
+        window.addCircle({ cx: counterClockwiseCoord.x, cy: counterClockwiseCoord.y, r: 3, fill: color })
+        window.addLine({ c1: segmentCoord, c2: counterClockwiseCoord, opacity: 0.7, fill: color, stroke: color, width: 2 })
+      }
+    })
+  })
+
+
+</script>
+
+</body>
+</html>
