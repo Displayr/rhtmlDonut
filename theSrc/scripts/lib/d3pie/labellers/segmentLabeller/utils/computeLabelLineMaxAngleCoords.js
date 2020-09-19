@@ -23,41 +23,36 @@ const { toRadians, toDegrees } = math
 
 const computeLabelLineMaxAngleCoords = ({
   pieCenter,
-  segmentAngle : SEGd,
+  segmentAngle: SEGd,
   labelMaxLineAngle,
-  segmentRadius,
-  labelRadius
+  segmentRadius: b,
+  labelRadius: a,
 }) => {
   const Ad = 180 - labelMaxLineAngle
-  const a = labelRadius
-  const b = segmentRadius
 
   // get B using sine rule
-  const Br = Math.asin( b * Math.sin(toRadians(Ad)) / a )
+  const Br = Math.asin(b * Math.sin(toRadians(Ad)) / a)
   const Bd = toDegrees(Br)
 
   // get C using sum(angle) = 180
   const Cd = 180 - Bd - Ad
-  const Cr = toRadians(Cd)
 
-  // get c using cosine rule
-  const c = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(Cr))
+  // NB get c using cosine rule - not currently needed, leaving for posterity
+  // const Cr = toRadians(Cd)
+  // const c = Math.sqrt(a * a + b * b - 2 * a * b * Math.cos(Cr))
 
-  if (true) {
-    const counterClockwiseAngle = SEGd - Cd
-    let counterClockwiseCoord = {
-      x: pieCenter.x - a * Math.cos(toRadians(counterClockwiseAngle)),
-      y: pieCenter.y - a * Math.sin(toRadians(counterClockwiseAngle))
-    }
-    const clockwiseAngle = SEGd + Cd
-    let clockwiseCoord = {
-      x: pieCenter.x - a * Math.cos(toRadians(clockwiseAngle)),
-      y: pieCenter.y - a * Math.sin(toRadians(clockwiseAngle))
-    }
-
-    return { counterClockwiseCoord, clockwiseCoord }
+  const counterClockwiseAngle = SEGd - Cd
+  let counterClockwiseCoord = {
+    x: pieCenter.x - a * Math.cos(toRadians(counterClockwiseAngle)),
+    y: pieCenter.y - a * Math.sin(toRadians(counterClockwiseAngle)),
   }
-  return { counterClockwiseCoord: null, clockwiseCoord: null }
+  const clockwiseAngle = SEGd + Cd
+  let clockwiseCoord = {
+    x: pieCenter.x - a * Math.cos(toRadians(clockwiseAngle)),
+    y: pieCenter.y - a * Math.sin(toRadians(clockwiseAngle)),
+  }
+
+  return { counterClockwiseCoord, clockwiseCoord }
 }
 
 module.exports = computeLabelLineMaxAngleCoords

@@ -2,16 +2,15 @@ import _ from 'lodash'
 import * as rootLog from 'loglevel'
 
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
-import {findLabelsExceedingMaxLabelLineAngle, findLabelsIntersecting, findLabelsOutOfBounds} from '../../../labelUtils'
+import { findLabelsExceedingMaxLabelLineAngle, findLabelsIntersecting, findLabelsOutOfBounds } from '../../../labelUtils'
 import UnexpectedCondition from '../../../../interrupts/unexpectedCondition'
-import { toRadians, computeIntersectionOfLineAndCircle } from '../../../../math'
 import computeLabelLineMaxAngleCoords from '../../utils/computeLabelLineMaxAngleCoords'
 
 const labelLogger = rootLog.getLogger('label')
 
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',
-  'minProportion'
+  'minProportion',
 ]
 
 const INVARIABLE_CONFIG = [
@@ -93,7 +92,7 @@ class DescendingOrderCollisionResolver {
       inner: [],
       outer: this.inputLabelSet,
       newVariants: this.variant,
-      stats: this.stats
+      stats: this.stats,
     }
   }
 
@@ -126,14 +125,14 @@ class DescendingOrderCollisionResolver {
 
       const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
         pieCenter: pieCenter,
-        segmentAngle : largestLabel.segmentAngleMidpoint,
+        segmentAngle: largestLabel.segmentAngleMidpoint,
         labelMaxLineAngle,
         segmentRadius: outerRadius,
         labelRadius: outerRadius + labelOffset,
       })
       const maxAllowableLargestLabelY = _([
         _.get(maxLabelLineAngleCoords, 'counterClockwiseCoord.y', canvasHeight),
-        canvasHeight
+        canvasHeight,
       ]).min()
 
       let allLabelsSuccessfullyPlaced = false // loop condition
@@ -204,7 +203,7 @@ class DescendingOrderCollisionResolver {
 
       const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
         pieCenter: pieCenter,
-        segmentAngle : largestLabel.segmentAngleMidpoint,
+        segmentAngle: largestLabel.segmentAngleMidpoint,
         labelMaxLineAngle,
         segmentRadius: outerRadius,
         labelRadius: outerRadius + labelOffset,
@@ -215,11 +214,10 @@ class DescendingOrderCollisionResolver {
 
       const minAllowableLargestLabelY = _([
         minYFromCounterClockwiseCoord,
-        pieCenter.y - outerRadius - labelOffset - largestLabel.height
+        pieCenter.y - outerRadius - labelOffset - largestLabel.height,
       ])
         .filter(y => !_.isNull(y))
         .max()
-
 
       let allLabelsSuccessfullyPlaced = false // loop condition
       let workingLabelSet = null // persist outside of loop
@@ -289,7 +287,7 @@ class DescendingOrderCollisionResolver {
 
       const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
         pieCenter: pieCenter,
-        segmentAngle : largestLabel.segmentAngleMidpoint,
+        segmentAngle: largestLabel.segmentAngleMidpoint,
         labelMaxLineAngle,
         segmentRadius: outerRadius,
         labelRadius: outerRadius + labelOffset,
@@ -300,7 +298,7 @@ class DescendingOrderCollisionResolver {
 
       const maxAllowableLargestLabelY = _([
         maxYFromCounterClockwiseCoord,
-        canvasHeight
+        canvasHeight,
       ])
         .filter(y => !_.isNull(y))
         .min()
@@ -383,7 +381,7 @@ class DescendingOrderCollisionResolver {
     _(labelSet).each((label, index) => {
       const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
         pieCenter: this.canvas.pieCenter,
-        segmentAngle : label.segmentAngleMidpoint,
+        segmentAngle: label.segmentAngleMidpoint,
         labelMaxLineAngle,
         segmentRadius: this.canvas.outerRadius,
         labelRadius: this.canvas.outerRadius + this.canvas.labelOffset,
@@ -417,7 +415,7 @@ class DescendingOrderCollisionResolver {
       `DOCR: ${phase}:`,
       `placement offset for ${largestLabel.shortText}:`,
       `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
-      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
+      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`,
     ].join(' '))
     labelLogger.debug('details', {
       collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),
@@ -440,7 +438,7 @@ class DescendingOrderCollisionResolver {
     _(labelSet).each((label, index) => {
       const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
         pieCenter: this.canvas.pieCenter,
-        segmentAngle : label.segmentAngleMidpoint,
+        segmentAngle: label.segmentAngleMidpoint,
         labelMaxLineAngle,
         segmentRadius: this.canvas.outerRadius,
         labelRadius: this.canvas.outerRadius + this.canvas.labelOffset,
@@ -474,7 +472,7 @@ class DescendingOrderCollisionResolver {
       `DOCR: ${phase}:`,
       `placement offset for ${largestLabel.shortText}:`,
       `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
-      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`
+      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`,
     ].join(' '))
     labelLogger.debug('details', {
       collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),

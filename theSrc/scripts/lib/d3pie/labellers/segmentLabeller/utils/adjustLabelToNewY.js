@@ -13,7 +13,7 @@ module.exports = ({
   topIsLifted,
   bottomIsLifted,
   spacingBetweenUpperTrianglesAndCenterMeridian,
-  hemisphere: inputHemisphere
+  hemisphere: inputHemisphere,
 }) => {
   const hemisphere = inputHemisphere || label.hemisphere
   let newTopYCoord = null

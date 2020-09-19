@@ -250,7 +250,7 @@ class SegmentLabeller {
         topIsLifted,
         bottomIsLifted,
         spacingBetweenUpperTrianglesAndCenterMeridian,
-        hemisphere
+        hemisphere,
       })
     }
     return canvas

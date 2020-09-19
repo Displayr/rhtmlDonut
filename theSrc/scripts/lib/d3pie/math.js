@@ -91,7 +91,7 @@ let math = {
       // insert into quadratic formula
       var intersections = [
         (-b + Math.sqrt(sq(b) - 4 * a * c)) / (2 * a),
-        (-b - Math.sqrt(sq(b) - 4 * a * c)) / (2 * a)
+        (-b - Math.sqrt(sq(b) - 4 * a * c)) / (2 * a),
       ]
       if (Math.abs(d - 0) < 0.0001) {
         // only 1 intersection
@@ -105,7 +105,7 @@ let math = {
 
   computeIntersectionOfLineAndCircle ({ r, cx, cy, slope, y0 }) {
     const xCoords = math._computeXCoordsOfIntersectionOfLineAndCircle({ r, cx, cy, slope, y0 })
-    return xCoords.map(x => ({x, y: slope * x + y0}))
+    return xCoords.map(x => ({ x, y: slope * x + y0 }))
   },
 
   getAngleOfCoord (pieCenter, outerCoord) {

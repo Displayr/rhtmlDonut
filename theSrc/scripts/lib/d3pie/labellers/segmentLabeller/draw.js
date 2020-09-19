@@ -70,9 +70,9 @@ const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   }, loadSpeed)
 }
 
-const drawOuterLabelLines = ({canvas, labels, config }) => {
+const drawOuterLabelLines = ({ canvas, labels, config }) => {
   const { svg, cssPrefix } = canvas
-  
+
   let basisInterpolationFunction = d3.svg.line()
     .x(d => d.x)
     .y(d => d.y)
@@ -116,7 +116,7 @@ const drawOuterLabelLines = ({canvas, labels, config }) => {
 
 const drawInnerLabelLines = ({ canvas, labels }) => {
   const { svg, cssPrefix, pieCenter, innerRadius } = canvas
-  const innerLabelLines = labels.map(labelData => computeInnerLabelLine({pieCenter, innerRadius, labelData }))
+  const innerLabelLines = labels.map(labelData => computeInnerLabelLine({ pieCenter, innerRadius, labelData }))
 
   let lineGroups = svg.insert('g', `.${cssPrefix}pieChart`) // meaning, BEFORE .pieChart
     .attr('class', `${cssPrefix}lineGroups-inner`)
