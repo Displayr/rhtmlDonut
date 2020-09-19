@@ -83,6 +83,9 @@ class OuterLabel {
     // strictly for debugging. Add label to root of class so we can inspect easier
     this._label = label
 
+    this.positionHistoryStackSize = 5
+    this.positionHistory = []
+
     this.computeDimensions()
   }
 
@@ -113,20 +116,6 @@ class OuterLabel {
 
   /// /////////////////////////
   // Label movement calls
-
-  moveStraightUpBy (verticalOffset) {
-    this.topLeftCoord.y -= verticalOffset
-    this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
-  }
-
-  moveStraightDownBy (verticalOffset) {
-    this.topLeftCoord.y += verticalOffset
-    this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
-  }
 
   setTopMedialPoint (coord) {
     const { width, linePadding, hemisphere } = this
@@ -196,6 +185,19 @@ class OuterLabel {
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  /* assumptions/constraints:
+    * cannot reset the first placement, only the second and onward
+   */
+  reset () {
+    if (this.positionHistory.length === 0) {
+      throw new Error('cannot reset label that has not been moved')
+    }
+    const previousPosition = this.positionHistory.shift()
+    this.placeLabelViaConnectorCoord(previousPosition)
+    // NB the placeLabelViaConnectorCoord will push the "coord being reset" onto the stack which we do not want
+    this.positionHistory.shift()
   }
 
   // End Label movement calls
@@ -401,6 +403,12 @@ class OuterLabel {
   get lineConnectorCoord () { return this._variant.lineConnectorCoord }
   set lineConnectorCoord (newValue) {
     this.validateCoord(newValue)
+
+    const newPositionHistoryLength = this.positionHistory.unshift(this._variant.lineConnectorCoord)
+    if (newPositionHistoryLength > this.positionHistoryStackSize) {
+      this.positionHistory = this.positionHistory.slice(0, this.positionHistoryStackSize)
+    }
+
     this._variant.lineConnectorCoord = newValue
   }
 
