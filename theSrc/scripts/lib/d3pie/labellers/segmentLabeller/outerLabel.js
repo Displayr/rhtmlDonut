@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { lineLength } from '../../../geometryUtils'
 import { labelIntersect } from '../labelUtils'
-import math from '../../math'
+import { getAngleOfCoord, inclusiveBetween, rotate, toDegrees } from '../../math'
 
 const quadrants = [4, 1, 2, 3] // TODO I never want to see a numeric quadrant again
 
@@ -123,7 +123,7 @@ class OuterLabel {
       ? { x: coord.x - width - linePadding, y: coord.y }
       : { x: coord.x + linePadding, y: coord.y }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.labelAngle = getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
@@ -133,7 +133,7 @@ class OuterLabel {
       ? { x: coord.x - width - linePadding, y: coord.y - height }
       : { x: coord.x + linePadding, y: coord.y - height }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.labelAngle = getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
@@ -155,7 +155,7 @@ class OuterLabel {
       y: lineConnectorCoord.y - this.height,
     }
     this.lineConnectorCoord = lineConnectorCoord
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.labelAngle = getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
@@ -165,7 +165,7 @@ class OuterLabel {
       y: lineConnectorCoord.y,
     }
     this.lineConnectorCoord = lineConnectorCoord
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.labelAngle = getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
@@ -179,11 +179,38 @@ class OuterLabel {
       : lineConnectorCoord.y - 0.5 * lineHeight
 
     const { width, linePadding, hemisphere } = this
-    this.topLeftCoord = (hemisphere === 'left')
+    this.topLeftCoord = (lineConnectorCoord.x < this.pieCenter.x)
       ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
       : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
     this.lineConnectorCoord = lineConnectorCoord
-    this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this.labelAngle = getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+  }
+
+  placeLabelViaConnectorCoordOnEllipse (lineConnectorCoord, labelAngle) {
+    const { height, hemisphere, innerPadding, labelTextLines, lineHeight, linePadding, width } = this
+    const numTextRows = labelTextLines.length
+
+    const nearTopOrBottom = inclusiveBetween(75,labelAngle,105) || inclusiveBetween(255,labelAngle,285)
+
+    if (nearTopOrBottom) {
+      const leftX = lineConnectorCoord.x - width / 2
+      const topY = (lineConnectorCoord.y < this.pieCenter.y)
+        ? lineConnectorCoord.y - linePadding - height
+        : lineConnectorCoord.y
+      this.topLeftCoord = { x: leftX, y: topY }
+    } else {
+      // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
+      const topLeftY = (lineConnectorCoord.y < this.pieCenter.y)
+        ? lineConnectorCoord.y - 0.5 * lineHeight - (lineHeight * (numTextRows - 1)) - (innerPadding * (numTextRows - 1))
+        : lineConnectorCoord.y - 0.5 * lineHeight
+      this.topLeftCoord = (lineConnectorCoord.x < this.pieCenter.x)
+        ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
+        : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
+    }
+
+    this.lineConnectorCoord = lineConnectorCoord
+    this.labelAngle = labelAngle
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
@@ -225,7 +252,7 @@ class OuterLabel {
     const { lineConnectorCoord, pieCenter, outerRadius, segmentAngleMidpoint } = this
 
     const pointAtZeroDegrees = { x: pieCenter.x - outerRadius, y: pieCenter.y }
-    const outerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
+    const outerRadiusCoord = rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
 
     // consider a triangle with three sides
     // a : line from pieCenter to outerRadiusCoord
@@ -241,7 +268,7 @@ class OuterLabel {
 
     // Cosine rule : C = Arccos ((a2 + b2 - c2) / 2ab)
     const angleCinRadians = Math.acos((Math.pow(a, 2) + Math.pow(b, 2) - Math.pow(c, 2)) / (2 * a * b))
-    const angleCInDegrees = math.toDegrees(angleCinRadians)
+    const angleCInDegrees = toDegrees(angleCinRadians)
 
     return (_.isNaN(angleCInDegrees)) ? 0 : 180 - angleCInDegrees
   }
@@ -359,7 +386,7 @@ class OuterLabel {
     if (!_.has(this._invariant, 'segmentMidpointCoord')) {
       const pieCenter = this.interface.canvas().pieCenter
       const coordAtZeroDegrees = { x: pieCenter.x - this.outerRadius, y: pieCenter.y }
-      this._invariant.segmentMidpointCoord = math.rotate(coordAtZeroDegrees, pieCenter, this.segmentAngleMidpoint)
+      this._invariant.segmentMidpointCoord = rotate(coordAtZeroDegrees, pieCenter, this.segmentAngleMidpoint)
     }
     return this._invariant.segmentMidpointCoord
   }
