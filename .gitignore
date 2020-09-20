@@ -11,5 +11,6 @@ __diff_output__
 browser
 docs/experiments
 docs/oneoff
+theSrc/internal_www/scratch.html
 node_modules
 s3
