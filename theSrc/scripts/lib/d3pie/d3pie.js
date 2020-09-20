@@ -122,11 +122,12 @@ class d3pie {
     this.outerRadius = pieDimensions.outerRadius
     this.labelOffset = pieDimensions.labelOffset
 
-    const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
-    const unboundedMaxVerticalOffset = (_.isNull(this.options.labels.segment.maxVerticalOffset))
-      ? this.outerRadius
-      : this.options.labels.segment.maxVerticalOffset
-    this.maxVerticalOffset = Math.min(unboundedMaxVerticalOffset, largestAllowableMaxVerticalOffset)
+    this.maxVerticalOffset = _([
+      (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
+      this.options.labels.segment.maxVerticalOffset
+    ])
+      .filter(x => !_.isNull(x))
+      .min()
 
     this.pieCenter = {
       x: this.options.size.canvasWidth / 2,

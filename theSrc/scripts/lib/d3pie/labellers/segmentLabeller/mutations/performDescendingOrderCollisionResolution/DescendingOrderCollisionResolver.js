@@ -1,7 +1,6 @@
 import _ from 'lodash'
 import * as rootLog from 'loglevel'
 
-import { rotate, toRadians, between } from '../../../../math'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
@@ -29,6 +28,7 @@ class DescendingOrderCollisionResolver {
     this.canvas = canvas
     this.stats = {}
     this.labels = labelSet
+    this.attempts = []
   }
 
   extractConfig ({ variant, invariant }) {
@@ -42,65 +42,13 @@ class DescendingOrderCollisionResolver {
     /* eslint-enable no-return-assign */
   }
 
-  buildCollisionTree () {
-    this.collisionTree = new RBush()
-    this.collisionTree.load(this.labels)
-  }
-
-  findAllCollisions () {
-    return this.labels
-      .filter(label => {
-        const collisions = this.collisionTree.search(label)
-          .filter(intersectingLabel => intersectingLabel.id !== label.id)
-        return collisions.length
-      })
-  }
-
-  findAllCollisionsWithGreaterLabels (label) {
-    return this.collisionTree.search(label)
-      .filter(intersectingLabel => intersectingLabel.id < label.id)
-  }
-
-  findAllCollisionsWithLesserLabels (label) {
-    return this.collisionTree.search(label)
-      .filter(intersectingLabel => intersectingLabel.id > label.id)
-  }
-
-  moveLabel (label, newLineConnectorCoord, labelAngle) {
-    this.collisionTree.remove(label)
-    // label.placeLabelViaConnectorCoord(newLineConnectorCoord) // for circle
-    label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, labelAngle) // for ellipse
-    this.collisionTree.insert(label)
-  }
-
-  resetLabel (label) {
-    this.collisionTree.remove(label)
-    label.reset()
-    this.collisionTree.insert(label)
-  }
-
   go () {
-    //
-    // this.canvas.svg.append('ellipse')
-    //   .attr('cx', this.canvas.pieCenter.x)
-    //   .attr('cy', this.canvas.pieCenter.y)
-    //   .attr('rx', a)
-    //   .attr('ry', b)
-    //   .attr('fill', 'none')
-    //   .attr('stroke', 'black')
-    //   .attr('stroke-width', 1)
-    //   .attr('opacity', 0.3)
-
     // First place labels using a liftOff of 0
     // if there are any collisions do we apply a liftOffAngle
+    const radialWidth = this.canvas.outerRadius + this.canvas.labelOffset
+    const radialHeight = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
     _(this.labels).each(label => {
-      // this.canvas.placeLabelAlongLabelRadius({
-      //   label,
-      //   hasTopLabel: false,
-      //   hasBottomLabel: false,
-      // })
-
-      const newLineConnectorCoord = this.getPointOnLabelEllipse(label.segmentAngleMidpoint)
+      const newLineConnectorCoord = this.canvas.computeCoordOnEllipse({angle: label.segmentAngleMidpoint, radialWidth, radialHeight})
       label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, label.segmentAngleMidpoint)
     })
 
@@ -120,24 +68,6 @@ class DescendingOrderCollisionResolver {
       stats: this.stats,
     }
   }
-
-  /*
-  start at first collision
-    * "CW sweep" adjusting the minimum until done or until maxLabelLineAngleReached
-      * DONE: sweet !
-      * "CW sweep" maxLabelLineAngle + collision :
-        * note label that hit maxLabelLineAngle + collision
-        * perform "CC backsweep", pushing labels CC X degrees by increment
-        * if maxLabelLineAngleReached on "CC backsweep" -> remove all invalidLabels
-        * if "CC backsweep" successful
-          * start "CW sweep" at "label that hit maxLabelLineAngle + collision"
-
-  sweep progress
-  * the largest label frontier has its labelLineAngle increased in CC direction
-  * the smallest label frontier has its labelLineAngle increased in CW direction
-  * the smallest label frontier changes labels because minProportion is increased
-
- */
 
   sweepBackAndForthUntilComplete () {
     const maxSweeps = 10
@@ -183,7 +113,6 @@ class DescendingOrderCollisionResolver {
         )
       )
     }
-
     const keepSweeping = () => {
       const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, barrierAngleExceeded } = this.sweepState
       if (placedAllLabels) { return false }
@@ -198,17 +127,10 @@ class DescendingOrderCollisionResolver {
       return true
     }
 
-    const { pieCenter, labelOffset, outerRadius } = this.canvas
     const { labelMaxLineAngle } = this.variant
-
-    // to place on circle
-    // const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
-    // const getLabelCoordAt = angle => rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
-
-    // to place on ellipse
-    const getLabelCoordAt = (newAngle) => this.getPointOnLabelEllipse(newAngle)
-
-
+    const radialWidth = this.canvas.outerRadius + this.canvas.labelOffset
+    const radialHeight = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
+    const getLabelCoordAt = (angle) => this.canvas.computeCoordOnEllipse({ angle, radialWidth, radialHeight })
 
     while (keepSweeping()) {
       const { direction } = this.sweepState
@@ -334,26 +256,41 @@ class DescendingOrderCollisionResolver {
     }
   }
 
-  // https://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle?newreg
-  getPointOnLabelEllipse (labelAngle) {
-    const labelAngleRads = toRadians(labelAngle)
-    const slope = Math.tan(labelAngleRads)
-    const inLeftHalf = (labelAngle < 90 || labelAngle > 270)
-    const inTopHalf = (labelAngle < 180)
+  buildCollisionTree () {
+    this.collisionTree = new RBush()
+    this.collisionTree.load(this.labels)
+  }
 
-    const a = this.canvas.outerRadius + this.canvas.labelOffset
-    const b = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
+  findAllCollisions () {
+    return this.labels
+      .filter(label => {
+        const collisions = this.collisionTree.search(label)
+          .filter(intersectingLabel => intersectingLabel.id !== label.id)
+        return collisions.length
+      })
+  }
 
-    let xOffsetAbs = a * b / Math.sqrt(b * b + a * a * slope * slope)
-    let yOffsetAbs = a * b / Math.sqrt(a * a + (b * b / (slope * slope)))
+  findAllCollisionsWithGreaterLabels (label) {
+    return this.collisionTree.search(label)
+      .filter(intersectingLabel => intersectingLabel.id < label.id)
+  }
 
-    let xOffset = (inLeftHalf) ? -1 * xOffsetAbs : xOffsetAbs
-    let yOffset = (inTopHalf) ? -1 * yOffsetAbs : yOffsetAbs
+  findAllCollisionsWithLesserLabels (label) {
+    return this.collisionTree.search(label)
+      .filter(intersectingLabel => intersectingLabel.id > label.id)
+  }
 
-    return {
-      x: this.canvas.pieCenter.x + xOffset,
-      y: this.canvas.pieCenter.y + yOffset
-    }
+  moveLabel (label, newLineConnectorCoord, labelAngle) {
+    this.collisionTree.remove(label)
+    // label.placeLabelViaConnectorCoord(newLineConnectorCoord) // for circle
+    label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, labelAngle) // for ellipse
+    this.collisionTree.insert(label)
+  }
+
+  resetLabel (label) {
+    this.collisionTree.remove(label)
+    label.reset()
+    this.collisionTree.insert(label)
   }
 }
 

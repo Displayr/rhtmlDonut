@@ -4,6 +4,7 @@ import computeLabelStats from './computeLabelStats'
 import wrapAndFormatLabelUsingSvgApproximation from './utils/wrapAndFormatLabelUsingSvgApproximation'
 import placeLabelAlongLabelRadiusWithLiftOffAngle from './utils/placeLabelAlongLabelRadiusWithLiftOffAngle'
 import adjustLabelToNewY from './utils/adjustLabelToNewY'
+import computeCoordOnEllipse from './utils/computeCoordOnEllipse'
 import draw from './draw'
 
 import * as rootLog from 'loglevel'
@@ -229,9 +230,9 @@ class SegmentLabeller {
     }
 
     canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted, hemisphere }) => {
-      let { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
-      let { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
-      let { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
+      const { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
+      const { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
 
       let apexLabelCorrection = 0
       if ((label.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
@@ -253,6 +254,17 @@ class SegmentLabeller {
         hemisphere,
       })
     }
+
+    canvas.computeCoordOnEllipse = ({ angle, radialWidth, radialHeight }) => {
+      const { pieCenter, outerRadius, labelOffset } = this.interface.canvas
+      return computeCoordOnEllipse({
+        angle,
+        radialWidth: radialWidth || outerRadius + labelOffset, // default to the labelPlacementCircle
+        radialHeight: radialHeight || outerRadius + labelOffset, // default to the labelPlacementCircle
+        pieCenter
+      })
+    }
+
     return canvas
   }
 
