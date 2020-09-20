@@ -298,14 +298,14 @@ class ShortenTopAndBottom {
       const nearestNeighbors = []
       if (topLabelIndex > 0) { nearestNeighbors.push(this.inputLabelSet[topLabelIndex - 1]) }
       if (topLabelIndex < this.inputLabelSet.length - 1) { nearestNeighbors.push(this.inputLabelSet[topLabelIndex + 1]) }
-      const topYOfNearestLabel = _(nearestNeighbors).map('topLeftCoord.y').min()
+      const topYOfNearestLabel = _(nearestNeighbors).map('minY').min()
 
       const newBottomYCoord = _.min([
         topYOfNearestLabel - parseFloat(this.invariant.outerPadding),
         this.canvas.pieCenter.y - this.canvas.outerRadius - this.canvas.labelOffset,
       ])
 
-      if (newBottomYCoord > topLabel.bottomLeftCoord.y) {
+      if (newBottomYCoord > topLabel.maxY) {
         topLabel.placeLabelViaConnectorCoord({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
       }
     }
@@ -553,14 +553,14 @@ class ShortenTopAndBottom {
       const nearestNeighbors = []
       if (bottomLabelIndex > 0) { nearestNeighbors.push(this.inputLabelSet[bottomLabelIndex - 1]) }
       if (bottomLabelIndex < this.inputLabelSet.length - 1) { nearestNeighbors.push(this.inputLabelSet[bottomLabelIndex + 1]) }
-      const bottomYOfNearestLabel = _(nearestNeighbors).map('bottomLeftCoord.y').max()
+      const bottomYOfNearestLabel = _(nearestNeighbors).map('maxY').max()
 
       const newTopYCoord = _.max([
         bottomYOfNearestLabel + parseFloat(this.invariant.outerPadding),
         this.canvas.pieCenter.y + this.canvas.outerRadius + this.canvas.labelOffset,
       ])
 
-      if (newTopYCoord < bottomLabel.topLeftCoord.y) {
+      if (newTopYCoord < bottomLabel.minY) {
         bottomLabel.placeLabelViaConnectorCoord({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
       }
     }

@@ -117,7 +117,7 @@ class OuterLabel {
   /// /////////////////////////
   // Label movement calls
 
-  setTopMedialPoint (coord) {
+  placeLabelViaTopPoint (coord) {
     const { width, linePadding, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y }
@@ -127,7 +127,7 @@ class OuterLabel {
     this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setBottomMedialPoint (coord) {
+  placeLabelViaBottomPoint (coord) {
     const { width, height, linePadding, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'left')
       ? { x: coord.x - width - linePadding, y: coord.y - height }

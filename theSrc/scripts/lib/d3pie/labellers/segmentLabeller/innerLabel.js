@@ -60,7 +60,7 @@ class InnerLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setTopMedialPoint (coord) {
+  placeLabelViaTopPoint (coord) {
     const { width, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'right')
       ? { x: coord.x - width, y: coord.y }
@@ -70,7 +70,7 @@ class InnerLabel {
     this.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
-  setBottomMedialPoint (coord) {
+  placeLabelViaBottomPoint (coord) {
     const { width, height, hemisphere } = this
     this.topLeftCoord = (hemisphere === 'right')
       ? { y: coord.y - height, x: coord.x - width }

@@ -58,7 +58,7 @@ module.exports = ({
     const xLengthOfUpperTriangle = xPosWhereLabelRadiusAndUpperTriangleMeet
     const upperTriangleYAngleInRadians = Math.atan(xLengthOfUpperTriangle / yLengthOfUpperTriangle)
 
-    // step 2. Given the upperTriangleYAngle and the yOffset, determine the xOffset that places the label that places it along the upperTriange
+    // step 2. Given the upperTriangleYAngle and the yOffset, determine the xOffset that places the label that places it along the upperTriangle
     const yLengthOfLabelOnUpperTriangle = yRange - yOffset
     xOffset = yLengthOfLabelOnUpperTriangle * Math.tan(upperTriangleYAngleInRadians) + spacingBetweenUpperTrianglesAndCenterMeridian
   }
@@ -70,8 +70,8 @@ module.exports = ({
 
   label.isLifted = isLifted
   if (anchor === 'top') {
-    label.setTopMedialPoint(newLineConnectorCoord)
+    label.placeLabelViaTopPoint(newLineConnectorCoord)
   } else {
-    label.setBottomMedialPoint(newLineConnectorCoord)
+    label.placeLabelViaBottomPoint(newLineConnectorCoord)
   }
 }

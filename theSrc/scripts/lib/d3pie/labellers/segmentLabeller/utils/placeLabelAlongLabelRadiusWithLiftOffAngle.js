@@ -57,7 +57,7 @@ module.exports = ({
       minGap,
       spacingBetweenUpperTrianglesAndCenterMeridian,
     })
-    label.placeLabelViaConnectorCoord(fitLineCoord)
     label.isLifted = isLifted
+    label.placeLabelViaConnectorCoord(fitLineCoord)
   }
 }

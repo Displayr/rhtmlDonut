@@ -479,9 +479,9 @@ class CollisionResolver {
               labelLogger.debug(`  ${lp} already hit bottom, placing ${gettingPushedLabel.shortText} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -514,9 +514,9 @@ class CollisionResolver {
               downSweepHitBottom = true
 
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -553,9 +553,9 @@ class CollisionResolver {
         if (matchingOuterLabel) {
           matchingOuterLabel.labelShown = true
           if (matchingOuterLabel.inLeftHalf) {
-            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           } else {
-            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           }
         } else {
           console.error(`should have found matching outer label for inner label ${innerLabel.shortText}`)
@@ -722,7 +722,7 @@ class CollisionResolver {
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setTopMedialPoint(innerRadiusLabelCoord)
+          newInnerLabel.placeLabelViaTopPoint(innerRadiusLabelCoord)
         } else {
           labelLogger.debug(`inner collision between ${previousLabel.shortText} v ${newInnerLabel.shortText}(new). Moving new up`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
@@ -734,7 +734,7 @@ class CollisionResolver {
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setBottomMedialPoint(innerRadiusLabelCoord)
+          newInnerLabel.placeLabelViaBottomPoint(innerRadiusLabelCoord)
         }
       }
     }
