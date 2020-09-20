@@ -361,7 +361,7 @@ class PieWrapper {
       ? 'descending'
       : ((isSortedAscending) ? 'ascending' : 'unordered')
     layoutLogger.info(`setting valuesOrder to '${valuesOrder}'`)
-    this._settings.valuesOrder = 'descending'
+    this._settings.valuesOrder = valuesOrder
 
     // apply temp (hopefully) restriction to only allow bezier lines on ordered sets and to increase the max label line angle when using bezier curves
     const useBezierOnTheseSortSettings = ['descending', 'ascending']
