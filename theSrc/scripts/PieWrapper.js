@@ -349,20 +349,19 @@ class PieWrapper {
     }
 
     // detect order
+    // TODO use enums for ascending / descending / unordered
+    const firstValueEqualLastValue = _.first(this._values) === _.last(this._values)
     const isSortedAscending = _.every(this._values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
-    )
-    if (isSortedAscending) {
-      layoutLogger.info(`setting valuesOrder to 'ascending'`)
-      this._settings.valuesOrder = 'ascending'
-    }
+    ) && !firstValueEqualLastValue
     const isSortedDescending = _.every(this._values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
-    )
-    if (isSortedDescending) {
-      layoutLogger.info(`setting valuesOrder to 'descending'`)
-      this._settings.valuesOrder = 'descending'
-    }
+    ) && !firstValueEqualLastValue
+    const valuesOrder = (isSortedDescending)
+      ? 'descending'
+      : ((isSortedAscending) ? 'ascending' : 'unordered')
+    layoutLogger.info(`setting valuesOrder to '${valuesOrder}'`)
+    this._settings.valuesOrder = 'descending'
 
     // apply temp (hopefully) restriction to only allow bezier lines on ordered sets and to increase the max label line angle when using bezier curves
     const useBezierOnTheseSortSettings = ['descending', 'ascending']

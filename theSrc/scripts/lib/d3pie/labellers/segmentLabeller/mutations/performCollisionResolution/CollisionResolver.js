@@ -125,7 +125,8 @@ class CollisionResolver {
         // TODO need to update this.variant.minProportion.
         //   * No imapct yet as nothing downstream uses it, but should be done
         } else if (availableStrategies.removeLabel) {
-          if (this.invariant.sortOrder === 'initial') {
+          // TODO soon we can assume this (as this  collision resolver will be renamed to "unordered"
+          if (this.invariant.sortOrder === 'unordered') {
             // sort by value, then as a tiebreak choose the label closest to the current offending label
             // removing a label closer to the offending label is more likely to solve the current labelling issue
             let idToRemove = _(this.inputLabelSet)

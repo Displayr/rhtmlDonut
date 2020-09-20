@@ -6,7 +6,6 @@ const defaultSettings = {
     labelOffset: 0.1, // pieWrapper: settings.labelOffset, R: labels.offset
   },
   data: {
-    sortOrder: 'descending', // pieWrapper: settings.valuesOrder, R: values.order
     color: null, // pieWrapper: settings.valuesColor, values.color
     dataFormatter: null, // pieWrapper: settings.valuesDec, R: values.decimal.places
     display: null, // pieWrapper: settings.valuesDisplay, R: values.display.as
