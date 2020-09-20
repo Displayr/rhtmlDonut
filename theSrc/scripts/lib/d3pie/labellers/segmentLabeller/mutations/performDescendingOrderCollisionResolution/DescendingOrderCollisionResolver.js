@@ -1,12 +1,14 @@
 import _ from 'lodash'
 import * as rootLog from 'loglevel'
 
+import { rotate } from '../../../../math'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
-import { findLabelsExceedingMaxLabelLineAngle, findLabelsIntersecting, findLabelsOutOfBounds } from '../../../labelUtils'
-import UnexpectedCondition from '../../../../interrupts/unexpectedCondition'
-import computeLabelLineMaxAngleCoords from '../../utils/computeLabelLineMaxAngleCoords'
-
+import { terminateLoop } from '../../../../../loopControls'
+import RBush from 'rbush'
 const labelLogger = rootLog.getLogger('label')
+
+const CC = 'COUNTER_CLOCKWISE'
+const CW = 'CLOCKWISE'
 
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',
@@ -18,13 +20,12 @@ const INVARIABLE_CONFIG = [
   'outerPadding',
 ]
 
-// NB DOCR in logger statemeents : DescendingOrderCollisionResolver
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
     this.extractConfig({ variant, invariant })
     this.canvas = canvas
     this.stats = {}
-    this.inputLabelSet = labelSet // TODO rename to this.labelSet
+    this.labels = labelSet
   }
 
   extractConfig ({ variant, invariant }) {
@@ -38,10 +39,46 @@ class DescendingOrderCollisionResolver {
     /* eslint-enable no-return-assign */
   }
 
+  buildCollisionTree () {
+    this.collisionTree = new RBush()
+    this.collisionTree.load(this.labels)
+  }
+
+  findAllCollisions () {
+    return this.labels
+      .filter(label => {
+        const collisions = this.collisionTree.search(label)
+          .filter(intersectingLabel => intersectingLabel.id !== label.id)
+        return collisions.length
+      })
+  }
+
+  findAllCollisionsWithGreaterLabels (label) {
+    return this.collisionTree.search(label)
+      .filter(intersectingLabel => intersectingLabel.id < label.id)
+  }
+
+  findAllCollisionsWithLesserLabels (label) {
+    return this.collisionTree.search(label)
+      .filter(intersectingLabel => intersectingLabel.id > label.id)
+  }
+
+  moveLabel (label, newLineConnectorCoord) {
+    this.collisionTree.remove(label)
+    label.placeLabelViaConnectorCoord(newLineConnectorCoord)
+    this.collisionTree.insert(label)
+  }
+
+  resetLabel (label) {
+    this.collisionTree.remove(label)
+    label.reset()
+    this.collisionTree.insert(label)
+  }
+
   go () {
     // First place labels using a liftOff of 0
     // if there are any collisions do we apply a liftOffAngle
-    _(this.inputLabelSet).each(label => {
+    _(this.labels).each(label => {
       this.canvas.placeLabelAlongLabelRadius({
         label,
         hasTopLabel: false,
@@ -49,441 +86,193 @@ class DescendingOrderCollisionResolver {
       })
     })
 
-    const initialCollisions = findLabelsIntersecting(this.inputLabelSet)
+    this.buildCollisionTree()
+    const initialCollisions = this.findAllCollisions()
     if (initialCollisions.length === 0) {
       labelLogger.info(`no collisions detected in initial layout. Terminating collision detection.`)
       this.stats.skipped = true
     } else {
-      labelLogger.info(`collisions detected in initial layout. Proceeding with descending order collision detection.`)
-
-      const ignoreThreshold = 0.1
-      const bigLabelsToIgnore = this.inputLabelSet.filter(label => label.fractionalValue > ignoreThreshold)
-      const labelsToPlace = this.inputLabelSet.filter(label => label.fractionalValue <= ignoreThreshold)
-
-      const { acceptedLabels: topLeftAcceptedLabels } = this.placeTopLeft({
-        existingLabels: bigLabelsToIgnore,
-        labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
-      })
-
-      const { acceptedLabels: rightAcceptedLabels } = this.placeRight({
-        existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels),
-        labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
-      })
-
-      const { acceptedLabels: bottomLeftAcceptedLabels } = this.placeBottomLeft({
-        existingLabels: bigLabelsToIgnore.concat(topLeftAcceptedLabels).concat(rightAcceptedLabels),
-        labelSet: labelsToPlace, // TODO the fn does the filtering, but maybe we should do the filtering in the callee ?
-      })
-
-      this.inputLabelSet = _([
-        bigLabelsToIgnore,
-        topLeftAcceptedLabels,
-        rightAcceptedLabels,
-        bottomLeftAcceptedLabels,
-      ])
-        .flatten()
-        .filter(label => !_.isNull(label))
-        .sortBy('value')
-        .reverse()
-        .value()
+      this.sweepBackAndForthUntilComplete()
     }
 
     return {
       inner: [],
-      outer: this.inputLabelSet,
+      outer: this.labels,
       newVariants: this.variant,
       stats: this.stats,
     }
   }
 
-  placeTopLeft ({ existingLabels, labelSet }) {
-    let acceptedLabels = null
+  /*
+  start at first collision
+    * "CW sweep" adjusting the minimum until done or until maxLabelLineAngleReached
+      * DONE: sweet !
+      * "CW sweep" maxLabelLineAngle + collision :
+        * note label that hit maxLabelLineAngle + collision
+        * perform "CC backsweep", pushing labels CC X degrees by increment
+        * if maxLabelLineAngleReached on "CC backsweep" -> remove all invalidLabels
+        * if "CC backsweep" successful
+          * start "CW sweep" at "label that hit maxLabelLineAngle + collision"
 
+  sweep progress
+  * the largest label frontier has its labelLineAngle increased in CC direction
+  * the smallest label frontier has its labelLineAngle increased in CW direction
+  * the smallest label frontier changes labels because minProportion is increased
+
+ */
+
+  sweepBackAndForthUntilComplete () {
+    const maxSweeps = 10
+    const angleIncrement = 0.5
+
+    this.sweepState = {
+      direction: CW,
+      sweepCount: 0,
+      placedAllLabels: false,
+      barrierAngle: this.labels[0].labelAngle,
+      frontierPerSweep: [],
+      hasHitMaxAngle: {
+        [CW]: false,
+        [CC]: false,
+      },
+      barrierAngleExceeded: false,
+    }
+    const startNewSweep = () => {
+      this.sweepState.sweepCount++
+    }
+    const recordSweepLimit = (index) => {
+      this.sweepState.frontierPerSweep.push(index)
+    }
+    const recordHitMaxAngle = (type) => {
+      this.sweepState.hasHitMaxAngle[type] = true
+    }
+    const recordBarrierAngleExceeded = () => {
+      this.sweepState.barrierAngleExceeded = true
+    }
+    const lastTwoFrontiersAreSame = () => {
+      const numSweepRecords = this.sweepState.frontierPerSweep.length
+      if (numSweepRecords < 2) { return null }
+      return this.sweepState.frontierPerSweep[numSweepRecords - 1] === this.sweepState.frontierPerSweep[numSweepRecords - 2]
+    }
+    const isBarrierAngleExceeded = (label) => {
+      const barrierAngleIsInBottomLeftQuadrant = (this.sweepState.barrierAngle >= 270)
+      const newLabelAngleInTopLeftQuadrant = (label.labelAngle < 90)
+      return (
+        label.inBottomLeftQuadrant && // NB this is actually "the segment is in bottom left quadrant"
+        (
+          (barrierAngleIsInBottomLeftQuadrant && label.labelAngle >= this.sweepState.barrierAngle) ||
+          (!barrierAngleIsInBottomLeftQuadrant && newLabelAngleInTopLeftQuadrant && label.labelAngle >= this.sweepState.barrierAngle)
+        )
+      )
+    }
+
+    const keepSweeping = () => {
+      const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, barrierAngleExceeded } = this.sweepState
+      if (placedAllLabels) { return false }
+      const lastPhaseCompleted = (direction === CW) ? CC : CW
+      if (lastPhaseCompleted === CC) { return true } // always finish with a CW sweep
+
+      if (barrierAngleExceeded) { return false }
+      if (sweepCount > maxSweeps) { return false }
+      if (!hasHitMaxAngle[CW] || !hasHitMaxAngle[CC]) { return true }
+      if (lastTwoFrontiersAreSame()) { return false }
+
+      return true
+    }
+
+    const { pieCenter, labelOffset, outerRadius } = this.canvas
     const { labelMaxLineAngle } = this.variant
-    const { height: canvasHeight, pieCenter, outerRadius, labelOffset } = this.canvas
-    const topIsLifted = false
-    const bottomIsLifted = false
+    const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
+    const getLabelCoordAt = angle => rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
 
-    const topLeftLabels = _(labelSet)
-      .filter('inTopLeftQuadrant')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
-      .value()
-    const collisionsInTopLeft = findLabelsIntersecting(existingLabels.concat(topLeftLabels))
+    while (keepSweeping()) {
+      const { direction } = this.sweepState
+      if (direction === CW) {
+        startNewSweep()
+        labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} starting CW`)
+        const collisions = this.findAllCollisions()
+        const largestCollidingLabel = _(collisions).sortBy('fractionalValue').last()
+        const frontierIndex = this.labels.indexOf(largestCollidingLabel)
+        this.sweepState.frontierLabel = largestCollidingLabel
 
-    if (collisionsInTopLeft.length === 0 || topLeftLabels.length === 0) {
-      acceptedLabels = topLeftLabels
-    } else {
-      const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('DOCR: top left: collisions detected')
-      const stepSize = 5
+        _(_.range(frontierIndex + 1, this.labels.length - 1)).each(index => {
+          const label = this.labels[index]
+          // if (index === 0) { debugger }
 
-      // each iteration: move the starting point of the "lowest and largest" label lower,
-      // and then place the remaining labels going up
-      let largestLabel = getLargestLabel(topLeftLabels)
-      let startingBottomYPositionOfBiggestLabel = largestLabel.maxY - stepSize // NB ensure at least one iteration
-      const initialLabelStartingY = largestLabel.maxY
+          labelLogger.info([
+            `DOCR: sweep${this.sweepState.sweepCount}`,
+            `CW: frontier ${label.shortText}.`,
+            `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
+            `labelAngle: ${label.labelAngle.toFixed(2)}`,
+          ].join(' '))
 
-      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
-        pieCenter: pieCenter,
-        segmentAngle: largestLabel.segmentAngleMidpoint,
-        labelMaxLineAngle,
-        segmentRadius: outerRadius,
-        labelRadius: outerRadius + labelOffset,
-      })
-      const maxAllowableLargestLabelY = _([
-        _.get(maxLabelLineAngleCoords, 'counterClockwiseCoord.y', canvasHeight),
-        canvasHeight,
-      ]).min()
+          while (this.findAllCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
+            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: moving ${label.shortText}.`)
+            const newLineConnectorCoord = getLabelCoordAt(label.labelAngle + angleIncrement)
+            this.moveLabel(label, newLineConnectorCoord)
+          }
 
-      let allLabelsSuccessfullyPlaced = false // loop condition
-      let workingLabelSet = null // persist outside of loop
-      while (!allLabelsSuccessfullyPlaced && startingBottomYPositionOfBiggestLabel + stepSize < maxAllowableLargestLabelY) {
-        startingBottomYPositionOfBiggestLabel += stepSize
-        labelLogger.info(`DOCR: top left: placing largest label ${largestLabel.shortText} ${startingBottomYPositionOfBiggestLabel - initialLabelStartingY} px below ideal placement`)
+          this.sweepState.frontierLabel = label
 
-        workingLabelSet = _.cloneDeep(topLeftLabels)
-        const {
-          collidingLabels,
-          outOfBoundsLabels,
-          maxAngleExceededLabels,
-        } = this.moveLabelsUp({
-          phase: 'top left',
-          placedSet: existingLabels,
-          labelSet: workingLabelSet,
-          startingY: startingBottomYPositionOfBiggestLabel,
-          topIsLifted,
-          bottomIsLifted,
+          if (label.labelLineAngle > labelMaxLineAngle) {
+            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
+            this.resetLabel(label)
+            this.sweepState.direction = CC
+            recordSweepLimit(index)
+            recordHitMaxAngle(CW)
+            return terminateLoop
+          }
+
+          if (isBarrierAngleExceeded(label)) {
+            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
+            this.resetLabel(label)
+            this.sweepState.direction = CC
+            recordSweepLimit(index)
+            recordBarrierAngleExceeded()
+            return terminateLoop
+          }
         })
 
-        allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
-      }
-
-      if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('DOCR: top left: worked - all labels placed')
-        acceptedLabels = workingLabelSet
-      } else if (startingBottomYPositionOfBiggestLabel + stepSize >= maxAllowableLargestLabelY) {
-        labelLogger.info('DOCR: top left: Hit maxAllowableLargestLabelY')
-        if (workingLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
+        if (!this.sweepState.hasHitMaxAngle[CW] && !this.sweepState.barrierAngleExceeded) { this.sweepState.placedAllLabels = true }
       } else {
-        throw new UnexpectedCondition('DOCR: top left: Unexplained loop break')
-      }
-    }
+        labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} starting CC`)
+        const frontierIndex = this.labels.indexOf(this.sweepState.frontierLabel)
+        _(_.range(frontierIndex, -1, -1)).each(index => {
+          const label = this.labels[index]
 
-    return { acceptedLabels }
-  }
+          labelLogger.info([
+            `DOCR: sweep${this.sweepState.sweepCount}`,
+            `CC: frontier ${label.shortText}.`,
+            `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
+            `labelAngle: ${label.labelAngle.toFixed(2)}`,
+          ].join(' '))
 
-  placeRight ({ existingLabels, labelSet }) {
-    let acceptedLabels = null
-    const { labelMaxLineAngle } = this.variant
-    const { pieCenter, outerRadius, labelOffset } = this.canvas
-    const topIsLifted = false
-    const bottomIsLifted = false
+          while (this.findAllCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
+            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CC: moving ${label.shortText}.`)
+            const newLineConnectorCoord = getLabelCoordAt(label.labelAngle - angleIncrement)
+            this.moveLabel(label, newLineConnectorCoord)
+          }
 
-    const rightLabels = _(labelSet)
-      .filter('inRightHalf')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
-      .value()
-    const collisionsInRight = findLabelsIntersecting(existingLabels.concat(rightLabels))
+          if (label.labelLineAngle > labelMaxLineAngle) {
+            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
+            this.resetLabel(label)
+            recordHitMaxAngle(CC)
+          }
 
-    if (collisionsInRight.length === 0 || rightLabels.length === 0) {
-      acceptedLabels = rightLabels
-    } else {
-      const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('DOCR: right: collisions detected')
-      const stepSize = 5
-
-      // each iteration: move the starting point of the "highest and largest" label higher,
-      // and then place the remaining labels going down
-      let largestLabel = getLargestLabel(rightLabels)
-      let startingTopYPositionOfBiggestLabel = largestLabel.minY + stepSize // NB ensure at least one iteration
-      const initialLabelStartingY = largestLabel.minY
-
-      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
-        pieCenter: pieCenter,
-        segmentAngle: largestLabel.segmentAngleMidpoint,
-        labelMaxLineAngle,
-        segmentRadius: outerRadius,
-        labelRadius: outerRadius + labelOffset,
-      })
-      const minYFromCounterClockwiseCoord = (maxLabelLineAngleCoords.counterClockwiseCoord.x >= pieCenter.x)
-        ? maxLabelLineAngleCoords.counterClockwiseCoord.y
-        : null
-
-      const minAllowableLargestLabelY = _([
-        minYFromCounterClockwiseCoord,
-        pieCenter.y - outerRadius - labelOffset - largestLabel.height,
-      ])
-        .filter(y => !_.isNull(y))
-        .max()
-
-      let allLabelsSuccessfullyPlaced = false // loop condition
-      let workingLabelSet = null // persist outside of loop
-      while (!allLabelsSuccessfullyPlaced && startingTopYPositionOfBiggestLabel - stepSize > minAllowableLargestLabelY) {
-        startingTopYPositionOfBiggestLabel -= stepSize
-        labelLogger.info(`DOCR: right: placing largest label ${largestLabel.shortText} ${initialLabelStartingY - startingTopYPositionOfBiggestLabel} px above ideal placement`)
-        workingLabelSet = _.cloneDeep(rightLabels)
-        const {
-          collidingLabels,
-          outOfBoundsLabels,
-          maxAngleExceededLabels,
-        } = this.moveLabelsDown({
-          phase: 'right',
-          placedSet: existingLabels,
-          labelSet: workingLabelSet,
-          startingY: startingTopYPositionOfBiggestLabel,
-          topIsLifted,
-          bottomIsLifted,
+          if (index === 0) {
+            this.sweepState.barrierAngle = label.labelAngle
+          }
         })
 
-        allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
-      }
-
-      if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('DOCR: right: worked - all labels placed')
-        acceptedLabels = workingLabelSet
-      } else if (startingTopYPositionOfBiggestLabel - stepSize <= minAllowableLargestLabelY) {
-        labelLogger.info('DOCR: right: Hit minAllowableLargestLabelY')
-        if (workingLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
-      } else {
-        throw new UnexpectedCondition('DOCR: right: Unexplained loop break')
+        this.sweepState.direction = CW
       }
     }
 
-    return { acceptedLabels }
-  }
-
-  placeBottomLeft ({ existingLabels, labelSet }) {
-    let acceptedLabels = null
-
-    const { labelMaxLineAngle } = this.variant
-    const { height: canvasHeight, pieCenter, outerRadius, labelOffset } = this.canvas
-    const topIsLifted = false
-    const bottomIsLifted = false
-
-    const bottomLeftLabels = _(labelSet)
-      .filter('inBottomLeftQuadrant')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
-      .value()
-    const collisionsInBottomLeft = findLabelsIntersecting(existingLabels.concat(bottomLeftLabels))
-
-    if (collisionsInBottomLeft.length === 0 || bottomLeftLabels.length === 0) {
-      acceptedLabels = bottomLeftLabels
-    } else {
-      const getLargestLabel = labelSet => labelSet[0]
-      labelLogger.info('DOCR: bottom left: collisions detected')
-      const stepSize = 5
-
-      // each iteration: move the starting point of the "lowest and largest" label lower,
-      //   and then place the remaining labels going up
-      let largestLabel = getLargestLabel(bottomLeftLabels)
-      let startingBottomYPositionOfBiggestLabel = largestLabel.maxY - stepSize // NB ensure at least one iteration
-      const initialLabelStartingY = largestLabel.maxY
-
-      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
-        pieCenter: pieCenter,
-        segmentAngle: largestLabel.segmentAngleMidpoint,
-        labelMaxLineAngle,
-        segmentRadius: outerRadius,
-        labelRadius: outerRadius + labelOffset,
-      })
-      const maxYFromCounterClockwiseCoord = (maxLabelLineAngleCoords.counterClockwiseCoord.x <= pieCenter.x)
-        ? maxLabelLineAngleCoords.counterClockwiseCoord.y
-        : null
-
-      const maxAllowableLargestLabelY = _([
-        maxYFromCounterClockwiseCoord,
-        canvasHeight,
-      ])
-        .filter(y => !_.isNull(y))
-        .min()
-
-      let allLabelsSuccessfullyPlaced = false // loop condition
-      let workingLabelSet = null // persist outside of loop
-      while (!allLabelsSuccessfullyPlaced && startingBottomYPositionOfBiggestLabel + stepSize < maxAllowableLargestLabelY) {
-        startingBottomYPositionOfBiggestLabel += stepSize
-        labelLogger.info(`DOCR: bottom left: placing largest label ${largestLabel.shortText} ${startingBottomYPositionOfBiggestLabel - initialLabelStartingY} px below ideal placement`)
-
-        workingLabelSet = _.cloneDeep(bottomLeftLabels)
-        const {
-          collidingLabels,
-          outOfBoundsLabels,
-          maxAngleExceededLabels,
-        } = this.moveLabelsUp({
-          phase: 'bottom left',
-          placedSet: existingLabels,
-          labelSet: workingLabelSet,
-          startingY: startingBottomYPositionOfBiggestLabel,
-          topIsLifted,
-          bottomIsLifted,
-        })
-
-        allLabelsSuccessfullyPlaced = _.isEmpty(collidingLabels) && _.isEmpty(outOfBoundsLabels) && _.isEmpty(maxAngleExceededLabels)
-      }
-
-      if (allLabelsSuccessfullyPlaced) {
-        labelLogger.info('DOCR: bottom left: worked - all labels placed')
-        acceptedLabels = workingLabelSet
-      } else if (startingBottomYPositionOfBiggestLabel + stepSize >= maxAllowableLargestLabelY) {
-        labelLogger.info('DOCR: bottom left: Hit maxAllowableLargestLabelY')
-        if (workingLabelSet) {
-          this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
-        }
-      } else {
-        throw new UnexpectedCondition('DOCR: bottom left: Unexplained loop break')
-      }
-    }
-
-    return { acceptedLabels }
-  }
-
-  /* assume:
-    * every label in the placed set is greater than every label in the working set
-    * placedSet is sorted in value order descending
-   */
-  getNewMinProportion ({ workingSet, placedSet }) {
-    const { labelMaxLineAngle } = this.variant
-    const { width: canvasWidth, height: canvasHeight } = this.canvas
-    const minPlacedFractionalValue = _(placedSet).map('fractionalValue').min()
-
-    const largestInvalidLabel = _([
-      findLabelsIntersecting(placedSet.concat(workingSet)),
-      findLabelsOutOfBounds(workingSet, canvasWidth, canvasHeight),
-      findLabelsExceedingMaxLabelLineAngle(workingSet, labelMaxLineAngle),
-    ])
-      .flatten()
-      .filter(({ fractionalValue }) => fractionalValue < minPlacedFractionalValue) // TODO fix : not strictly true. what if they are == to each other
-      .sortBy('fractionalValue')
-      .last()
-
-    if (!largestInvalidLabel) {
-      return this.variant.minProportion
-    } else {
-      const indexOfLargestInvalidLabelInWorkingSet = workingSet.indexOf(largestInvalidLabel)
-      const smallestValidLabel = (indexOfLargestInvalidLabelInWorkingSet === 0)
-        ? _.last(placedSet)
-        : workingSet[indexOfLargestInvalidLabelInWorkingSet - 1]
-      return smallestValidLabel.fractionalValue
-    }
-  }
-
-  moveLabelsDown ({ phase, placedSet, labelSet, startingY, topIsLifted, bottomIsLifted }) {
-    const { labelMaxLineAngle } = this.variant
-    const { outerPadding } = this.invariant
-    const { width: canvasWidth, height: canvasHeight } = this.canvas
-
-    _(labelSet).each((label, index) => {
-      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
-        pieCenter: this.canvas.pieCenter,
-        segmentAngle: label.segmentAngleMidpoint,
-        labelMaxLineAngle,
-        segmentRadius: this.canvas.outerRadius,
-        labelRadius: this.canvas.outerRadius + this.canvas.labelOffset,
-      })
-      const { clockwiseCoord } = maxLabelLineAngleCoords
-
-      let newY = (index === 0)
-        ? startingY
-        : labelSet[index - 1].maxY + outerPadding
-
-      if (clockwiseCoord && newY > clockwiseCoord.y) {
-        labelLogger.debug(`DOCR: moveDown: limiting ${label.shortText} based on maxLineAngle`)
-        newY = clockwiseCoord.y
-      }
-
-      this.canvas.adjustLabelToNewY({
-        anchor: 'top',
-        newY: Math.min(canvasHeight - label.height, newY),
-        label,
-        topIsLifted,
-        bottomIsLifted,
-      })
-    })
-
-    const collidingLabels = findLabelsIntersecting(placedSet.concat(labelSet))
-    const outOfBoundsLabels = findLabelsOutOfBounds(labelSet, canvasWidth, canvasHeight)
-    const maxAngleExceededLabels = findLabelsExceedingMaxLabelLineAngle(labelSet, labelMaxLineAngle)
-
-    const largestLabel = labelSet[0]
-    labelLogger.info([
-      `DOCR: ${phase}:`,
-      `placement offset for ${largestLabel.shortText}:`,
-      `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
-      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`,
-    ].join(' '))
-    labelLogger.debug('details', {
-      collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),
-      outOfBoundsLabels: outOfBoundsLabels.map(({ shortText }) => shortText).join(','),
-      maxAngleExceededLabels: maxAngleExceededLabels.map(({ shortText, labelLineAngle }) => `${shortText}:${labelLineAngle.toFixed(2)}`).join(','),
-    })
-
-    return {
-      collidingLabels,
-      outOfBoundsLabels,
-      maxAngleExceededLabels,
-    }
-  }
-
-  moveLabelsUp ({ phase, placedSet, labelSet, startingY, topIsLifted, bottomIsLifted }) {
-    const { labelMaxLineAngle } = this.variant
-    const { outerPadding } = this.invariant
-    const { width: canvasWidth, height: canvasHeight } = this.canvas
-
-    _(labelSet).each((label, index) => {
-      const maxLabelLineAngleCoords = computeLabelLineMaxAngleCoords({
-        pieCenter: this.canvas.pieCenter,
-        segmentAngle: label.segmentAngleMidpoint,
-        labelMaxLineAngle,
-        segmentRadius: this.canvas.outerRadius,
-        labelRadius: this.canvas.outerRadius + this.canvas.labelOffset,
-      })
-      const { counterClockwiseCoord } = maxLabelLineAngleCoords
-
-        let newY = (index === 0)
-        ? startingY
-        : labelSet[index - 1].minY - outerPadding
-
-      if (counterClockwiseCoord && newY > counterClockwiseCoord.y) {
-        labelLogger.debug(`DOCR: moveUp: limiting ${label.shortText} based on maxLineAngle`)
-        newY = counterClockwiseCoord.y
-      }
-
-      this.canvas.adjustLabelToNewY({
-        anchor: 'bottom',
-        newY: Math.max(label.height, newY),
-        label,
-        topIsLifted,
-        bottomIsLifted,
-      })
-    })
-
-    const collidingLabels = findLabelsIntersecting(placedSet.concat(labelSet))
-    const outOfBoundsLabels = findLabelsOutOfBounds(labelSet, canvasWidth, canvasHeight)
-    const maxAngleExceededLabels = findLabelsExceedingMaxLabelLineAngle(labelSet, labelMaxLineAngle)
-
-    const largestLabel = labelSet[0]
-    labelLogger.info([
-      `DOCR: ${phase}:`,
-      `placement offset for ${largestLabel.shortText}:`,
-      `${startingY.toFixed(2)} (labelLineAngle: ${largestLabel.labelLineAngle.toFixed(2)}.`,
-      `collidingLabels: ${collidingLabels.length} outOfBoundsLabels: ${outOfBoundsLabels.length} maxAngleExceededLabels: ${maxAngleExceededLabels.length}`,
-    ].join(' '))
-    labelLogger.debug('details', {
-      collidingLabels: collidingLabels.map(({ shortText }) => shortText).join(','),
-      outOfBoundsLabels: outOfBoundsLabels.map(({ shortText }) => shortText).join(','),
-      maxAngleExceededLabels: maxAngleExceededLabels.map(({ shortText, labelLineAngle }) => `${shortText}:${labelLineAngle.toFixed(2)}`).join(','),
-    })
-
-    return {
-      collidingLabels,
-      outOfBoundsLabels,
-      maxAngleExceededLabels,
+    if (!this.sweepState.placedAllLabels) {
+      const indexOfFrontier = this.labels.indexOf(this.sweepState.frontierLabel)
+      this.labels = this.labels
+        .filter((label, index) => index < indexOfFrontier)
+      this.variant.minProportion = _(this.labels).map('fractionalValue').min()
     }
   }
 }
