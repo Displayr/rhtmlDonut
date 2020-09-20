@@ -1,4 +1,4 @@
-import {toRadians} from '../../../math'
+import { toRadians } from '../../../math'
 
 // https://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle?newreg
 const getPointOnLabelEllipse = ({ angle, radialWidth, radialHeight, pieCenter }) => {
@@ -15,7 +15,7 @@ const getPointOnLabelEllipse = ({ angle, radialWidth, radialHeight, pieCenter })
 
   return {
     x: pieCenter.x + xOffset,
-    y: pieCenter.y + yOffset
+    y: pieCenter.y + yOffset,
   }
 }
 

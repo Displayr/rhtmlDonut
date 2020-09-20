@@ -178,7 +178,7 @@ class OuterLabel {
       ? lineConnectorCoord.y - 0.5 * lineHeight - (lineHeight * (numTextRows - 1)) - (innerPadding * (numTextRows - 1))
       : lineConnectorCoord.y - 0.5 * lineHeight
 
-    const { width, linePadding, hemisphere } = this
+    const { width, linePadding } = this
     this.topLeftCoord = (lineConnectorCoord.x < this.pieCenter.x)
       ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
       : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
@@ -188,10 +188,10 @@ class OuterLabel {
   }
 
   placeLabelViaConnectorCoordOnEllipse (lineConnectorCoord, labelAngle) {
-    const { height, hemisphere, innerPadding, labelTextLines, lineHeight, linePadding, width } = this
+    const { height, innerPadding, labelTextLines, lineHeight, linePadding, width } = this
     const numTextRows = labelTextLines.length
 
-    const nearTopOrBottom = inclusiveBetween(75,labelAngle,105) || inclusiveBetween(255,labelAngle,285)
+    const nearTopOrBottom = inclusiveBetween(75, labelAngle, 105) || inclusiveBetween(255, labelAngle, 285)
 
     if (nearTopOrBottom) {
       const leftX = lineConnectorCoord.x - width / 2

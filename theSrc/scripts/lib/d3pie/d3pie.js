@@ -124,7 +124,7 @@ class d3pie {
 
     this.maxVerticalOffset = _([
       (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
-      this.options.labels.segment.maxVerticalOffset
+      this.options.labels.segment.maxVerticalOffset,
     ])
       .filter(x => !_.isNull(x))
       .min()

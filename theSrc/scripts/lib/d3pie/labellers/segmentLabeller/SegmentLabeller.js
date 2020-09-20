@@ -261,7 +261,7 @@ class SegmentLabeller {
         angle,
         radialWidth: radialWidth || outerRadius + labelOffset, // default to the labelPlacementCircle
         radialHeight: radialHeight || outerRadius + labelOffset, // default to the labelPlacementCircle
-        pieCenter
+        pieCenter,
       })
     }
 
