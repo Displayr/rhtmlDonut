@@ -455,7 +455,6 @@ Donut <- function(
     settings <- list(
         valuesColor = values.color,
         valuesDisplay = values.display.as,
-        valuesOrder = values.order,
         valuesDec = values.decimal.places,
         labelsEnabled = labels.enabled,
         labelsFont = labels.font.family,
