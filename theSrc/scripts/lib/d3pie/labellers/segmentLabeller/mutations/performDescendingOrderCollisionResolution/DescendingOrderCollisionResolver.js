@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import * as rootLog from 'loglevel'
 
-import { rotate } from '../../../../math'
+import { rotate, toRadians, between } from '../../../../math'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
@@ -19,6 +19,9 @@ const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
 ]
+
+const debugLogs = () => (rootLog.getLevel() <= rootLog.levels.DEBUG)
+const infoLogs = () => (rootLog.getLevel() <= rootLog.levels.INFO)
 
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
@@ -63,9 +66,10 @@ class DescendingOrderCollisionResolver {
       .filter(intersectingLabel => intersectingLabel.id > label.id)
   }
 
-  moveLabel (label, newLineConnectorCoord) {
+  moveLabel (label, newLineConnectorCoord, labelAngle) {
     this.collisionTree.remove(label)
-    label.placeLabelViaConnectorCoord(newLineConnectorCoord)
+    // label.placeLabelViaConnectorCoord(newLineConnectorCoord) // for circle
+    label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, labelAngle) // for ellipse
     this.collisionTree.insert(label)
   }
 
@@ -76,14 +80,28 @@ class DescendingOrderCollisionResolver {
   }
 
   go () {
+    //
+    // this.canvas.svg.append('ellipse')
+    //   .attr('cx', this.canvas.pieCenter.x)
+    //   .attr('cy', this.canvas.pieCenter.y)
+    //   .attr('rx', a)
+    //   .attr('ry', b)
+    //   .attr('fill', 'none')
+    //   .attr('stroke', 'black')
+    //   .attr('stroke-width', 1)
+    //   .attr('opacity', 0.3)
+
     // First place labels using a liftOff of 0
     // if there are any collisions do we apply a liftOffAngle
     _(this.labels).each(label => {
-      this.canvas.placeLabelAlongLabelRadius({
-        label,
-        hasTopLabel: false,
-        hasBottomLabel: false,
-      })
+      // this.canvas.placeLabelAlongLabelRadius({
+      //   label,
+      //   hasTopLabel: false,
+      //   hasBottomLabel: false,
+      // })
+
+      const newLineConnectorCoord = this.getPointOnLabelEllipse(label.segmentAngleMidpoint)
+      label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, label.segmentAngleMidpoint)
     })
 
     this.buildCollisionTree()
@@ -182,8 +200,15 @@ class DescendingOrderCollisionResolver {
 
     const { pieCenter, labelOffset, outerRadius } = this.canvas
     const { labelMaxLineAngle } = this.variant
-    const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
-    const getLabelCoordAt = angle => rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+
+    // to place on circle
+    // const pointAtZeroDegreesAlongLabelOffset = { x: pieCenter.x - outerRadius - labelOffset, y: pieCenter.y }
+    // const getLabelCoordAt = angle => rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, angle)
+
+    // to place on ellipse
+    const getLabelCoordAt = (newAngle) => this.getPointOnLabelEllipse(newAngle)
+
+
 
     while (keepSweeping()) {
       const { direction } = this.sweepState
@@ -197,19 +222,40 @@ class DescendingOrderCollisionResolver {
 
         _(_.range(frontierIndex + 1, this.labels.length - 1)).each(index => {
           const label = this.labels[index]
-          // if (index === 0) { debugger }
 
-          labelLogger.info([
-            `DOCR: sweep${this.sweepState.sweepCount}`,
-            `CW: frontier ${label.shortText}.`,
-            `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
-            `labelAngle: ${label.labelAngle.toFixed(2)}`,
-          ].join(' '))
+          if (infoLogs()) {
+            labelLogger.info([
+              `DOCR: sweep${this.sweepState.sweepCount}`,
+              `CW: frontier ${label.shortText}.`,
+              `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
+              `labelAngle: ${label.labelAngle.toFixed(2)}`,
+            ].join(' '))
+          }
 
           while (this.findAllCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
-            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: moving ${label.shortText}.`)
+            if (debugLogs()) {
+              labelLogger.debug(`DOCR: sweep${this.sweepState.sweepCount} CW: moving ${label.shortText}`)
+              const labelPositionSummary = label => [
+                `label ${label.shortText}(${label.labelAngle.toFixed(2)})`,
+                `x: ${label.minX.toFixed(2)}-${label.maxX.toFixed(2)}`,
+                `y: ${label.minY.toFixed(2)}-${label.maxY.toFixed(2)}`,
+              ].join(' ')
+              labelLogger.debug(labelPositionSummary(label))
+              // labelLogger.debug('collides with')
+              // this.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(labelPositionSummary(x)))
+            }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle + angleIncrement)
-            this.moveLabel(label, newLineConnectorCoord)
+            this.moveLabel(label, newLineConnectorCoord, label.labelAngle + angleIncrement)
+
+            // if (label.shortText === '173') {
+            //   debugger
+            //   this.canvas.svg.append('circle')
+            //     .attr('cx', newLineConnectorCoord.x)
+            //     .attr('cy', newLineConnectorCoord.y)
+            //     .attr('r', 3)
+            //     .attr('fill', 'black')
+            //     .attr('stroke', 'black')
+            // }
           }
 
           this.sweepState.frontierLabel = label
@@ -234,23 +280,35 @@ class DescendingOrderCollisionResolver {
         })
 
         if (!this.sweepState.hasHitMaxAngle[CW] && !this.sweepState.barrierAngleExceeded) { this.sweepState.placedAllLabels = true }
-      } else {
+      } else { // Start CC Sweep
         labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} starting CC`)
         const frontierIndex = this.labels.indexOf(this.sweepState.frontierLabel)
         _(_.range(frontierIndex, -1, -1)).each(index => {
           const label = this.labels[index]
 
-          labelLogger.info([
-            `DOCR: sweep${this.sweepState.sweepCount}`,
-            `CC: frontier ${label.shortText}.`,
-            `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
-            `labelAngle: ${label.labelAngle.toFixed(2)}`,
-          ].join(' '))
+          if (infoLogs()) {
+            labelLogger.info([
+              `DOCR: sweep${this.sweepState.sweepCount}`,
+              `CC: frontier ${label.shortText}.`,
+              `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
+              `labelAngle: ${label.labelAngle.toFixed(2)}`,
+            ].join(' '))
+          }
 
           while (this.findAllCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
-            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CC: moving ${label.shortText}.`)
+            if (debugLogs()) {
+              labelLogger.debug(`DOCR: sweep${this.sweepState.sweepCount} CC: moving ${label.shortText}`)
+              const labelPositionSummary = label => [
+                `label ${label.shortText}(${label.labelAngle.toFixed(2)})`,
+                `x: ${label.minX.toFixed(2)}-${label.maxX.toFixed(2)}`,
+                `y: ${label.minY.toFixed(2)}-${label.maxY.toFixed(2)}`,
+              ].join(' ')
+              labelLogger.debug(labelPositionSummary(label))
+              labelLogger.debug('collides with')
+              this.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(labelPositionSummary(x)))
+            }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle - angleIncrement)
-            this.moveLabel(label, newLineConnectorCoord)
+            this.moveLabel(label, newLineConnectorCoord, label.labelAngle - angleIncrement)
           }
 
           if (label.labelLineAngle > labelMaxLineAngle) {
@@ -273,6 +331,28 @@ class DescendingOrderCollisionResolver {
       this.labels = this.labels
         .filter((label, index) => index < indexOfFrontier)
       this.variant.minProportion = _(this.labels).map('fractionalValue').min()
+    }
+  }
+
+  // https://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle?newreg
+  getPointOnLabelEllipse (labelAngle) {
+    const labelAngleRads = toRadians(labelAngle)
+    const slope = Math.tan(labelAngleRads)
+    const inLeftHalf = (labelAngle < 90 || labelAngle > 270)
+    const inTopHalf = (labelAngle < 180)
+
+    const a = this.canvas.outerRadius + this.canvas.labelOffset
+    const b = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
+
+    let xOffsetAbs = a * b / Math.sqrt(b * b + a * a * slope * slope)
+    let yOffsetAbs = a * b / Math.sqrt(a * a + (b * b / (slope * slope)))
+
+    let xOffset = (inLeftHalf) ? -1 * xOffsetAbs : xOffsetAbs
+    let yOffset = (inTopHalf) ? -1 * yOffsetAbs : yOffsetAbs
+
+    return {
+      x: this.canvas.pieCenter.x + xOffset,
+      y: this.canvas.pieCenter.y + yOffset
     }
   }
 }
