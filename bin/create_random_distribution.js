@@ -19,9 +19,7 @@ orderedList.pop()
 const donutConfig = {
   values: orderedList,
   labels: orderedList.map(x => `${x}`),
-  settings: {
-    valuesOrder: 'initial' // necessary for donut to recognize as unordered
-  }
+  settings: {}
 }
 
 console.log(JSON.stringify(donutConfig, {}, 2))
