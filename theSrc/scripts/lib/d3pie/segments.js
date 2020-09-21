@@ -220,7 +220,7 @@ let segments = {
     const p = (labelDatum) => `${labelDatum.id}(${labelDatum.label.substr(0, 6)})`
 
     lb.on('mouseover', function (d) {
-      tooltipLogger.info(`mouseover label ${p(d)}`)
+      tooltipLogger.debug(`mouseover label ${p(d)}`)
 
       const id = d.id
       const currentEl = d3.select(this)
