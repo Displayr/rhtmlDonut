@@ -171,7 +171,9 @@ class SegmentLabeller {
   }
 
   doLabelling () {
-    if (this._invariant.sortOrder === 'descending') {
+    // TODO: future work. Add inner labels to performDescendingOrderCollisionResolution mutation
+    // until then, for compatibility with existing plots, if user requests inner labels then use old algo (i.e., performCollisionResolution)
+    if (this._invariant.sortOrder === 'descending' && !this._invariant.useInnerLabels) {
       this.doMutation(performDescendingOrderCollisionResolution)
     } else {
       this.doMutation(initialNaivePlacement)

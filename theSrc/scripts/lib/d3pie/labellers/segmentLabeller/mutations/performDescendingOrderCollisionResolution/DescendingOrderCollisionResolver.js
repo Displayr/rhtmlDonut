@@ -49,7 +49,8 @@ class DescendingOrderCollisionResolver {
     if (_.last(extraHeightOptions) !== availableHeightForLabelEllipse) { extraHeightOptions.push(availableHeightForLabelEllipse) }
 
     const solutions = []
-    _(extraHeightOptions).each(extraHeight => {
+    // TODO TODO TODO test code fix this
+    _([_.last(extraHeightOptions)]).each(extraHeight => {
       let labelSet = _.cloneDeep(this.inputLabelSet)
       const radialWidth = outerRadius + labelOffset
       const radialHeight = outerRadius + labelOffset + extraHeight
@@ -160,6 +161,14 @@ class DescendingOrderCollisionResolver {
 
     while (keepSweeping()) {
       const { direction } = sweepState
+
+      if (debugLogs()) {
+        const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
+        if (outOfOrderLabels.length > 0) {
+          labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount + 1} starting ${direction} out of order labels ${outOfOrderLabels.join(',')}`)
+        }
+      }
+
       if (direction === CW) {
         startNewSweep()
         labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CW`)
@@ -167,6 +176,11 @@ class DescendingOrderCollisionResolver {
         const largestCollidingLabel = _(collisions).sortBy('fractionalValue').last()
         const frontierIndex = wrappedLabelSet.getIndexByLabel(largestCollidingLabel)
         sweepState.frontierLabel = largestCollidingLabel
+
+        _(_.range(0, frontierIndex + 1)).each(index => {
+          const label = wrappedLabelSet.getLabelByIndex(index)
+          wrappedLabelSet.activateLabel(label)
+        })
 
         // NB frontierIndex + 1 as the largest colliding label doesn't need to be moved,
         // the labels colliding with it need to be moved and so on
@@ -182,17 +196,33 @@ class DescendingOrderCollisionResolver {
             ].join(' '))
           }
 
-          while (wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
+          // prevent "leap frogging" where a label is left behind and settles into a gap, causing the while loop to no adjust them forward
+          const nearestLargerNeighbor = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
+          if (nearestLargerNeighbor && nearestLargerNeighbor.labelAngle > label.labelAngle) {
+            labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: detected ${label.shortText} got left behind. Pushing Pushing ${CW}`)
+            const newLineConnectorCoord = getLabelCoordAt(nearestLargerNeighbor.labelAngle + angleIncrement)
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, nearestLargerNeighbor.labelAngle + angleIncrement)
+          }
+
+          while (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
               labelLogger.debug(`${label.labelPositionSummary} collides with`)
-              wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle + angleIncrement)
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle + angleIncrement)
           }
 
+          if (debugLogs()) {
+            const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
+            if (outOfOrderLabels.length > 0) {
+              labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${direction}. Finished moving label ${label.shortText} pre reset. Out of order labels ${outOfOrderLabels.join(',')}`)
+            }
+          }
+
           sweepState.frontierLabel = label
+          wrappedLabelSet.activateLabel(label)
 
           if (label.labelLineAngle > labelMaxLineAngle) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
@@ -216,7 +246,9 @@ class DescendingOrderCollisionResolver {
         if (
           (!sweepState.hasHitMaxAngle[CW] && !sweepState.barrierAngleExceeded) ||
           collisions.length === 0
-        ) { sweepState.placedAllLabels = true }
+        ) {
+          sweepState.placedAllLabels = true
+        }
       } else { // Start CC Sweep
         labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CC`)
         const frontierIndex = wrappedLabelSet.getIndexByLabel(sweepState.frontierLabel)
@@ -232,14 +264,29 @@ class DescendingOrderCollisionResolver {
             ].join(' '))
           }
 
-          while (wrappedLabelSet.findAllCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
+          // prevent "leap frogging" where a label is left behind and settles into a gap, causing the while loop to no adjust them forward
+          const nearestSmallerNeighbor = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
+          if (nearestSmallerNeighbor && nearestSmallerNeighbor.labelAngle < label.labelAngle) {
+            labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${CC}: detected ${label.shortText} got left behind. Pushing ${CC}`)
+            const newLineConnectorCoord = getLabelCoordAt(nearestSmallerNeighbor.labelAngle - angleIncrement)
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, nearestSmallerNeighbor.labelAngle - angleIncrement)
+          }
+
+          while (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
               labelLogger.debug(`${label.labelPositionSummary} collides with`)
-              wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle - angleIncrement)
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle - angleIncrement)
+          }
+
+          if (debugLogs()) {
+            const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
+            if (outOfOrderLabels.length > 0) {
+              labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${direction}. Finished moving label ${label.shortText} pre reset. Out of order labels ${outOfOrderLabels.join(',')}`)
+            }
           }
 
           if (label.labelLineAngle > labelMaxLineAngle) {
@@ -275,11 +322,31 @@ class LabelSet {
   constructor (labelSet) {
     this.labelSet = labelSet
     this._buildCollisionTree(labelSet)
+    this._buildActiveLookup(labelSet)
   }
 
   _buildCollisionTree (labels) {
     this.collisionTree = new RBush()
     this.collisionTree.load(labels)
+  }
+
+  _buildActiveLookup (labels) {
+    this.activeLookup = _.transform(labels, (result, label, index) => {
+      result[label.id] = false
+      return result
+    }, {})
+  }
+
+  isActive (label) {
+    return this.activeLookup[label.id]
+  }
+
+  activateLabel (label) {
+    this.activeLookup[label.id] = true
+  }
+
+  deactivateLabel (label) {
+    this.activeLookup[label.id] = false
   }
 
   findAllCollisions () {
@@ -291,20 +358,32 @@ class LabelSet {
       })
   }
 
-  findAllCollisionsWithGreaterLabels (label) {
-    return this.collisionTree.search(label)
-      .filter(intersectingLabel => intersectingLabel.id < label.id)
+  findAllActiveCollisions () {
+    return this.labelSet
+      .filter(label => this.isActive(label))
+      .filter(label => {
+        const collisions = this.collisionTree.search(label)
+          .filter(intersectingLabel => intersectingLabel.id !== label.id)
+          .filter(intersectingLabel => this.isActive(intersectingLabel))
+        return collisions.length
+      })
   }
 
-  findAllCollisionsWithLesserLabels (label) {
+  findAllActiveCollisionsWithGreaterLabels (label) {
+    return this.collisionTree.search(label)
+      .filter(intersectingLabel => intersectingLabel.id < label.id)
+      .filter(intersectingLabel => this.isActive(intersectingLabel))
+  }
+
+  findAllActiveCollisionsWithLesserLabels (label) {
     return this.collisionTree.search(label)
       .filter(intersectingLabel => intersectingLabel.id > label.id)
+      .filter(intersectingLabel => this.isActive(intersectingLabel))
   }
 
   moveLabel (label, newLineConnectorCoord, labelAngle) {
     this.collisionTree.remove(label)
-    // label.placeLabelViaConnectorCoord(newLineConnectorCoord) // for circle
-    label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, labelAngle) // for ellipse
+    label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, labelAngle)
     this.collisionTree.insert(label)
   }
 
@@ -318,6 +397,47 @@ class LabelSet {
   getIndexByLabel (label) { return this.labelSet.indexOf(label) }
   getLabels () { return this.labelSet }
   getLength () { return this.labelSet.length }
+
+  getNearestActiveLargerNeighbor (label) {
+    const index = this.getIndexByLabel(label)
+    let nearestLargerActiveNeighbor = null
+    _(_.range(index - 1 ,-1,-1)).each(largerLabelIndex => {
+      const largerLabel = this.getLabelByIndex(largerLabelIndex)
+      if (this.isActive(largerLabel)) {
+        nearestLargerActiveNeighbor = largerLabel
+        return terminateLoop
+      }
+    })
+    return nearestLargerActiveNeighbor
+  }
+
+  getNearestActiveSmallerNeighbor (label) {
+    const index = this.getIndexByLabel(label)
+    let nearestSmallerActiveNeighbor = null
+    _(_.range(index + 1 ,this.labelSet.length)).each(smallerLabelIndex => {
+      const smallerLabel = this.getLabelByIndex(smallerLabelIndex)
+      if (this.isActive(smallerLabel)) {
+        nearestSmallerActiveNeighbor = smallerLabel
+        return terminateLoop
+      }
+    })
+    return nearestSmallerActiveNeighbor
+  }
+}
+
+const getOutOfOrderSummary = (wrappedLabelSet) => {
+  return _(wrappedLabelSet.getLabels())
+    .filter(label => wrappedLabelSet.isActive(label))
+    .sortBy('labelAngle')
+    .filter((label,index) => {
+      const largerLabel = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
+      const smallerLabel = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
+      if (smallerLabel && smallerLabel.labelAngle < label.labelAngle) { return true }
+      if (largerLabel && largerLabel.labelAngle > label.labelAngle) { return true }
+      return false
+    })
+    .map(({shortText, labelAngle}) => `${shortText}(${labelAngle.toFixed(2)})`)
+    .value()
 }
 
 module.exports = DescendingOrderCollisionResolver
