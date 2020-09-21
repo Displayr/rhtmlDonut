@@ -188,12 +188,14 @@ class OuterLabel {
   }
 
   placeLabelViaConnectorCoordOnEllipse (lineConnectorCoord, labelAngle) {
-    const { height, innerPadding, labelTextLines, lineHeight, linePadding, width } = this
+    const { height, innerPadding, labelTextLines, lineHeight, linePadding, width, segmentAngleMidpoint } = this
     const numTextRows = labelTextLines.length
 
-    const nearTopOrBottom = inclusiveBetween(75, labelAngle, 105) || inclusiveBetween(255, labelAngle, 285)
+    const alignedApexLabel =
+      (inclusiveBetween(85, labelAngle, 95) && inclusiveBetween(85, segmentAngleMidpoint, 95)) ||
+      (inclusiveBetween(265, labelAngle, 275) && inclusiveBetween(265, segmentAngleMidpoint, 275))
 
-    if (nearTopOrBottom) {
+    if (alignedApexLabel) {
       const leftX = lineConnectorCoord.x - width / 2
       const topY = (lineConnectorCoord.y < this.pieCenter.y)
         ? lineConnectorCoord.y - linePadding - height
@@ -201,12 +203,13 @@ class OuterLabel {
       this.topLeftCoord = { x: leftX, y: topY }
     } else {
       // place the line connection at mid height of the nearest (i.e. closest to center) row of label text
-      const topLeftY = (lineConnectorCoord.y < this.pieCenter.y)
+      const topY = (lineConnectorCoord.y < this.pieCenter.y)
         ? lineConnectorCoord.y - 0.5 * lineHeight - (lineHeight * (numTextRows - 1)) - (innerPadding * (numTextRows - 1))
         : lineConnectorCoord.y - 0.5 * lineHeight
-      this.topLeftCoord = (lineConnectorCoord.x < this.pieCenter.x)
-        ? { x: lineConnectorCoord.x - linePadding - width, y: topLeftY }
-        : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
+      const leftX = (lineConnectorCoord.x < this.pieCenter.x)
+        ? lineConnectorCoord.x - linePadding - width
+        : lineConnectorCoord.x + linePadding
+      this.topLeftCoord = { x: leftX, y: topY }
     }
 
     this.lineConnectorCoord = lineConnectorCoord
