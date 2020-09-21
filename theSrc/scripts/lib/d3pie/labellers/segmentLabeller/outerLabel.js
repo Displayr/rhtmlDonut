@@ -449,6 +449,15 @@ class OuterLabel {
   set width (newValue) { this._variant.width = newValue }
 
   get labelLineAngle () { return this._variant.angleBetweenLabelAndRadial }
+
+  get labelPositionSummary () {
+    return [
+      `label ${this.shortText}(${this.labelAngle.toFixed(2)})`,
+      `x: ${this.minX.toFixed(2)}-${this.maxX.toFixed(2)}`,
+      `y: ${this.minY.toFixed(2)}-${this.maxY.toFixed(2)}`,
+    ].join(' ')
+  }
+
 }
 
 module.exports = OuterLabel

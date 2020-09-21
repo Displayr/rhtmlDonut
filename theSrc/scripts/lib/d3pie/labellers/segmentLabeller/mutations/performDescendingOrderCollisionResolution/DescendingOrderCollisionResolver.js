@@ -20,15 +20,12 @@ const INVARIABLE_CONFIG = [
 ]
 
 const debugLogs = () => (rootLog.getLevel() <= rootLog.levels.DEBUG)
-const infoLogs = () => (rootLog.getLevel() <= rootLog.levels.INFO)
 
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
     this.extractConfig({ variant, invariant })
     this.canvas = canvas
-    this.stats = {}
-    this.labels = labelSet
-    this.attempts = []
+    this.inputLabelSet = labelSet
   }
 
   extractConfig ({ variant, invariant }) {
@@ -43,41 +40,76 @@ class DescendingOrderCollisionResolver {
   }
 
   go () {
-    // First place labels using a liftOff of 0
-    // if there are any collisions do we apply a liftOffAngle
-    const radialWidth = this.canvas.outerRadius + this.canvas.labelOffset
-    const radialHeight = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
-    _(this.labels).each(label => {
-      const newLineConnectorCoord = this.canvas.computeCoordOnEllipse({angle: label.segmentAngleMidpoint, radialWidth, radialHeight})
-      label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, label.segmentAngleMidpoint)
+    const { maxVerticalOffset, labelOffset, outerRadius } = this.canvas
+    const safetyPadding = 10
+    const heightIncrement = 25
+    const availableHeightForLabelEllipse = Math.max(0, maxVerticalOffset - labelOffset - safetyPadding)
+    const numberOfVariationsToTry = Math.max(1, Math.floor(availableHeightForLabelEllipse / heightIncrement))
+    const extraHeightOptions = _.range(numberOfVariationsToTry).map(index => index * heightIncrement)
+    if (_.last(extraHeightOptions) !== availableHeightForLabelEllipse) { extraHeightOptions.push(availableHeightForLabelEllipse) }
+
+    const solutions = []
+    _(extraHeightOptions).each(extraHeight => {
+      let labelSet = _.cloneDeep(this.inputLabelSet)
+      const radialWidth = outerRadius + labelOffset
+      const radialHeight = outerRadius + labelOffset + extraHeight
+      
+      const { acceptedLabels, newVariants } = this.placeOnLabelEllipseAndResolveCollisions({ 
+        iterationName: extraHeight.toFixed(0), 
+        labelSet, 
+        radialWidth, 
+        radialHeight 
+      })
+      const loss = this.inputLabelSet.length - acceptedLabels.length
+      solutions.push({ extraHeight, acceptedLabels, loss, newVariants })
+
+      if (loss === 0) {
+        labelLogger.info(`DOCR: extraHeight ${extraHeight} yields solution with no loss. Done`)
+        return terminateLoop
+      } else {
+        labelLogger.info(`DOCR: extraHeight ${extraHeight} yields solution with loss of ${loss} labels.`)
+      }
     })
 
-    this.buildCollisionTree()
-    const initialCollisions = this.findAllCollisions()
-    if (initialCollisions.length === 0) {
-      labelLogger.info(`no collisions detected in initial layout. Terminating collision detection.`)
-      this.stats.skipped = true
-    } else {
-      this.sweepBackAndForthUntilComplete()
-    }
+    const bestSolution = _(solutions)
+      .sortBy('loss', 'extraHeight')
+      .first()
+
+    labelLogger.info(`DOCR: chose solution with extraHeight ${bestSolution.extraHeight} and loss of ${bestSolution.loss} labels`)
 
     return {
       inner: [],
-      outer: this.labels,
-      newVariants: this.variant,
-      stats: this.stats,
+      outer: bestSolution.acceptedLabels,
+      newVariants: bestSolution.newVariants,
+      stats: {},
     }
   }
 
-  sweepBackAndForthUntilComplete () {
+  placeOnLabelEllipseAndResolveCollisions ({ iterationName, labelSet, radialWidth, radialHeight }) {
+    const logPrefix = `DOCR(${iterationName}):`
+
+    // initial placement
+    _(labelSet).each(label => {
+      const newLineConnectorCoord = this.canvas.computeCoordOnEllipse({ angle: label.segmentAngleMidpoint, radialWidth, radialHeight })
+      label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, label.segmentAngleMidpoint)
+    })
+    
+    // TODO this is odd because I am alternating between accessing wrappedLabelSet and labelSet directly ...
+    const wrappedLabelSet = new LabelSet(labelSet)
+    const initialCollisions = wrappedLabelSet.findAllCollisions()
+    if (initialCollisions.length === 0) {
+      labelLogger.info(`${logPrefix} no collisions detected in initial layout. Terminating collision detection.`)
+      return { acceptedLabels: labelSet, newVariants: {} }
+    }
+
     const maxSweeps = 10
     const angleIncrement = 0.5
 
-    this.sweepState = {
+    const sweepState = {
       direction: CW,
       sweepCount: 0,
       placedAllLabels: false,
-      barrierAngle: this.labels[0].labelAngle,
+      barrierAngle: wrappedLabelSet.getLabelByIndex(0).labelAngle,
       frontierPerSweep: [],
       hasHitMaxAngle: {
         [CW]: false,
@@ -85,36 +117,32 @@ class DescendingOrderCollisionResolver {
       },
       barrierAngleExceeded: false,
     }
-    const startNewSweep = () => {
-      this.sweepState.sweepCount++
-    }
-    const recordSweepLimit = (index) => {
-      this.sweepState.frontierPerSweep.push(index)
-    }
-    const recordHitMaxAngle = (type) => {
-      this.sweepState.hasHitMaxAngle[type] = true
-    }
-    const recordBarrierAngleExceeded = () => {
-      this.sweepState.barrierAngleExceeded = true
-    }
+    const startNewSweep = () => sweepState.sweepCount++
+    const recordSweepLimit = (index) => sweepState.frontierPerSweep.push(index)
+    const recordHitMaxAngle = (type) => { sweepState.hasHitMaxAngle[type] = true }
+    const recordBarrierAngleExceeded = () => { sweepState.barrierAngleExceeded = true }
+
     const lastTwoFrontiersAreSame = () => {
-      const numSweepRecords = this.sweepState.frontierPerSweep.length
+      const numSweepRecords = sweepState.frontierPerSweep.length
       if (numSweepRecords < 2) { return null }
-      return this.sweepState.frontierPerSweep[numSweepRecords - 1] === this.sweepState.frontierPerSweep[numSweepRecords - 2]
+      return sweepState.frontierPerSweep[numSweepRecords - 1] === sweepState.frontierPerSweep[numSweepRecords - 2]
     }
+
+    //the "barrier angle" is where the largest label meets the smallest label (around 0 degrees)
     const isBarrierAngleExceeded = (label) => {
-      const barrierAngleIsInBottomLeftQuadrant = (this.sweepState.barrierAngle >= 270)
+      const barrierAngleIsInBottomLeftQuadrant = (sweepState.barrierAngle >= 270)
       const newLabelAngleInTopLeftQuadrant = (label.labelAngle < 90)
       return (
         label.inBottomLeftQuadrant && // NB this is actually "the segment is in bottom left quadrant"
         (
-          (barrierAngleIsInBottomLeftQuadrant && label.labelAngle >= this.sweepState.barrierAngle) ||
-          (!barrierAngleIsInBottomLeftQuadrant && newLabelAngleInTopLeftQuadrant && label.labelAngle >= this.sweepState.barrierAngle)
+          (barrierAngleIsInBottomLeftQuadrant && label.labelAngle >= sweepState.barrierAngle) ||
+          (!barrierAngleIsInBottomLeftQuadrant && newLabelAngleInTopLeftQuadrant && label.labelAngle >= sweepState.barrierAngle)
         )
       )
     }
+
     const keepSweeping = () => {
-      const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, barrierAngleExceeded } = this.sweepState
+      const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, barrierAngleExceeded } = sweepState
       if (placedAllLabels) { return false }
       const lastPhaseCompleted = (direction === CW) ? CC : CW
       if (lastPhaseCompleted === CC) { return true } // always finish with a CW sweep
@@ -128,141 +156,134 @@ class DescendingOrderCollisionResolver {
     }
 
     const { labelMaxLineAngle } = this.variant
-    const radialWidth = this.canvas.outerRadius + this.canvas.labelOffset
-    const radialHeight = this.canvas.outerRadius + this.canvas.maxVerticalOffset - 20
     const getLabelCoordAt = (angle) => this.canvas.computeCoordOnEllipse({ angle, radialWidth, radialHeight })
 
     while (keepSweeping()) {
-      const { direction } = this.sweepState
+      const { direction } = sweepState
       if (direction === CW) {
         startNewSweep()
-        labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} starting CW`)
-        const collisions = this.findAllCollisions()
+        labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CW`)
+        const collisions = wrappedLabelSet.findAllCollisions()
         const largestCollidingLabel = _(collisions).sortBy('fractionalValue').last()
-        const frontierIndex = this.labels.indexOf(largestCollidingLabel)
-        this.sweepState.frontierLabel = largestCollidingLabel
+        const frontierIndex = wrappedLabelSet.getIndexByLabel(largestCollidingLabel)
+        sweepState.frontierLabel = largestCollidingLabel
 
-        _(_.range(frontierIndex + 1, this.labels.length - 1)).each(index => {
-          const label = this.labels[index]
+        // NB frontierIndex + 1 as the largest colliding label doesn't need to be moved,
+        // the labels colliding with it need to be moved and so on
+        _(_.range(frontierIndex + 1, wrappedLabelSet.getLength())).each(index => {
+          const label = wrappedLabelSet.getLabelByIndex(index)
 
-          if (infoLogs()) {
-            labelLogger.info([
-              `DOCR: sweep${this.sweepState.sweepCount}`,
+          if (debugLogs()) {
+            labelLogger.debug([
+              `${logPrefix} sweep${sweepState.sweepCount}`,
               `CW: frontier ${label.shortText}.`,
               `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
               `labelAngle: ${label.labelAngle.toFixed(2)}`,
             ].join(' '))
           }
 
-          while (this.findAllCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
+          while (wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
             if (debugLogs()) {
-              labelLogger.debug(`DOCR: sweep${this.sweepState.sweepCount} CW: moving ${label.shortText}`)
-              const labelPositionSummary = label => [
-                `label ${label.shortText}(${label.labelAngle.toFixed(2)})`,
-                `x: ${label.minX.toFixed(2)}-${label.maxX.toFixed(2)}`,
-                `y: ${label.minY.toFixed(2)}-${label.maxY.toFixed(2)}`,
-              ].join(' ')
-              labelLogger.debug(labelPositionSummary(label))
-              // labelLogger.debug('collides with')
-              // this.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(labelPositionSummary(x)))
+              labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
+              labelLogger.debug(`${label.labelPositionSummary} collides with`)
+              wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle + angleIncrement)
-            this.moveLabel(label, newLineConnectorCoord, label.labelAngle + angleIncrement)
-
-            // if (label.shortText === '173') {
-            //   debugger
-            //   this.canvas.svg.append('circle')
-            //     .attr('cx', newLineConnectorCoord.x)
-            //     .attr('cy', newLineConnectorCoord.y)
-            //     .attr('r', 3)
-            //     .attr('fill', 'black')
-            //     .attr('stroke', 'black')
-            // }
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle + angleIncrement)
           }
 
-          this.sweepState.frontierLabel = label
+          sweepState.frontierLabel = label
 
           if (label.labelLineAngle > labelMaxLineAngle) {
-            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
-            this.resetLabel(label)
-            this.sweepState.direction = CC
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
+            wrappedLabelSet.resetLabel(label)
+            sweepState.direction = CC
             recordSweepLimit(index)
             recordHitMaxAngle(CW)
             return terminateLoop
           }
 
           if (isBarrierAngleExceeded(label)) {
-            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
-            this.resetLabel(label)
-            this.sweepState.direction = CC
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
+            wrappedLabelSet.resetLabel(label)
+            sweepState.direction = CC
             recordSweepLimit(index)
             recordBarrierAngleExceeded()
             return terminateLoop
           }
         })
 
-        if (!this.sweepState.hasHitMaxAngle[CW] && !this.sweepState.barrierAngleExceeded) { this.sweepState.placedAllLabels = true }
+        if (
+          (!sweepState.hasHitMaxAngle[CW] && !sweepState.barrierAngleExceeded) ||
+          collisions.length === 0
+        ) { sweepState.placedAllLabels = true }
       } else { // Start CC Sweep
-        labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} starting CC`)
-        const frontierIndex = this.labels.indexOf(this.sweepState.frontierLabel)
+        labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CC`)
+        const frontierIndex = wrappedLabelSet.getIndexByLabel(sweepState.frontierLabel)
         _(_.range(frontierIndex, -1, -1)).each(index => {
-          const label = this.labels[index]
+          const label = wrappedLabelSet.getLabelByIndex(index)
 
-          if (infoLogs()) {
-            labelLogger.info([
-              `DOCR: sweep${this.sweepState.sweepCount}`,
+          if (debugLogs()) {
+            labelLogger.debug([
+              `${logPrefix} sweep${sweepState.sweepCount}`,
               `CC: frontier ${label.shortText}.`,
               `labelLineAngle: ${label.labelLineAngle.toFixed(2)}`,
               `labelAngle: ${label.labelAngle.toFixed(2)}`,
             ].join(' '))
           }
 
-          while (this.findAllCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
+          while (wrappedLabelSet.findAllCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
             if (debugLogs()) {
-              labelLogger.debug(`DOCR: sweep${this.sweepState.sweepCount} CC: moving ${label.shortText}`)
-              const labelPositionSummary = label => [
-                `label ${label.shortText}(${label.labelAngle.toFixed(2)})`,
-                `x: ${label.minX.toFixed(2)}-${label.maxX.toFixed(2)}`,
-                `y: ${label.minY.toFixed(2)}-${label.maxY.toFixed(2)}`,
-              ].join(' ')
-              labelLogger.debug(labelPositionSummary(label))
-              labelLogger.debug('collides with')
-              this.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(labelPositionSummary(x)))
+              labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
+              labelLogger.debug(`${label.labelPositionSummary} collides with`)
+              wrappedLabelSet.findAllCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
             const newLineConnectorCoord = getLabelCoordAt(label.labelAngle - angleIncrement)
-            this.moveLabel(label, newLineConnectorCoord, label.labelAngle - angleIncrement)
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle - angleIncrement)
           }
 
           if (label.labelLineAngle > labelMaxLineAngle) {
-            labelLogger.info(`DOCR: sweep${this.sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
-            this.resetLabel(label)
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
+            wrappedLabelSet.resetLabel(label)
             recordHitMaxAngle(CC)
           }
 
           if (index === 0) {
-            this.sweepState.barrierAngle = label.labelAngle
+            sweepState.barrierAngle = label.labelAngle
           }
         })
 
-        this.sweepState.direction = CW
+        sweepState.direction = CW
       }
     }
 
-    if (!this.sweepState.placedAllLabels) {
-      const indexOfFrontier = this.labels.indexOf(this.sweepState.frontierLabel)
-      this.labels = this.labels
+    let acceptedLabels = wrappedLabelSet.getLabels()
+    let newVariants = {}
+
+    if (!sweepState.placedAllLabels) {
+      const indexOfFrontier = acceptedLabels.indexOf(sweepState.frontierLabel)
+      acceptedLabels = acceptedLabels
         .filter((label, index) => index < indexOfFrontier)
-      this.variant.minProportion = _(this.labels).map('fractionalValue').min()
+      newVariants.minProportion = _(acceptedLabels).map('fractionalValue').min()
     }
+
+    return { acceptedLabels, newVariants }
+  }
+}
+
+class LabelSet {
+  constructor (labelSet) {
+    this.labelSet = labelSet
+    this._buildCollisionTree(labelSet)
   }
 
-  buildCollisionTree () {
+  _buildCollisionTree (labels) {
     this.collisionTree = new RBush()
-    this.collisionTree.load(this.labels)
+    this.collisionTree.load(labels)
   }
 
   findAllCollisions () {
-    return this.labels
+    return this.labelSet
       .filter(label => {
         const collisions = this.collisionTree.search(label)
           .filter(intersectingLabel => intersectingLabel.id !== label.id)
@@ -292,6 +313,11 @@ class DescendingOrderCollisionResolver {
     label.reset()
     this.collisionTree.insert(label)
   }
+
+  getLabelByIndex (index) { return this.labelSet[index] }
+  getIndexByLabel (label) { return this.labelSet.indexOf(label) }
+  getLabels () { return this.labelSet }
+  getLength () { return this.labelSet.length }
 }
 
 module.exports = DescendingOrderCollisionResolver
