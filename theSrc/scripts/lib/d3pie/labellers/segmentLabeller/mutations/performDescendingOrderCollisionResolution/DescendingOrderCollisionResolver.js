@@ -20,6 +20,7 @@ const INVARIABLE_CONFIG = [
 ]
 
 const debugLogs = () => (rootLog.getLevel() <= rootLog.levels.DEBUG)
+const boundedAngle = (angle) => (angle < 0) ? 360 - angle : angle % 360
 
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
@@ -49,8 +50,7 @@ class DescendingOrderCollisionResolver {
     if (_.last(extraHeightOptions) !== availableHeightForLabelEllipse) { extraHeightOptions.push(availableHeightForLabelEllipse) }
 
     const solutions = []
-    // TODO TODO TODO test code fix this
-    _([_.last(extraHeightOptions)]).each(extraHeight => {
+    _(extraHeightOptions).each(extraHeight => {
       let labelSet = _.cloneDeep(this.inputLabelSet)
       const radialWidth = outerRadius + labelOffset
       const radialHeight = outerRadius + labelOffset + extraHeight
@@ -200,8 +200,8 @@ class DescendingOrderCollisionResolver {
           const nearestLargerNeighbor = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
           if (nearestLargerNeighbor && nearestLargerNeighbor.labelAngle > label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: detected ${label.shortText} got left behind. Pushing Pushing ${CW}`)
-            const newLineConnectorCoord = getLabelCoordAt(nearestLargerNeighbor.labelAngle + angleIncrement)
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, nearestLargerNeighbor.labelAngle + angleIncrement)
+            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
           }
 
           while (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
@@ -210,8 +210,8 @@ class DescendingOrderCollisionResolver {
               labelLogger.debug(`${label.labelPositionSummary} collides with`)
               wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
-            const newLineConnectorCoord = getLabelCoordAt(label.labelAngle + angleIncrement)
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle + angleIncrement)
+            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle + angleIncrement))
           }
 
           if (debugLogs()) {
@@ -268,8 +268,8 @@ class DescendingOrderCollisionResolver {
           const nearestSmallerNeighbor = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
           if (nearestSmallerNeighbor && nearestSmallerNeighbor.labelAngle < label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${CC}: detected ${label.shortText} got left behind. Pushing ${CC}`)
-            const newLineConnectorCoord = getLabelCoordAt(nearestSmallerNeighbor.labelAngle - angleIncrement)
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, nearestSmallerNeighbor.labelAngle - angleIncrement)
+            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
           }
 
           while (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
@@ -278,8 +278,8 @@ class DescendingOrderCollisionResolver {
               labelLogger.debug(`${label.labelPositionSummary} collides with`)
               wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
             }
-            const newLineConnectorCoord = getLabelCoordAt(label.labelAngle - angleIncrement)
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, label.labelAngle - angleIncrement)
+            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle - angleIncrement))
           }
 
           if (debugLogs()) {
