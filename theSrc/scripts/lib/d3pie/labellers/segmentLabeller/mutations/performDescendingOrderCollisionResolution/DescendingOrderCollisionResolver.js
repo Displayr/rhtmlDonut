@@ -103,7 +103,7 @@ class DescendingOrderCollisionResolver {
       return { acceptedLabels: labelSet, newVariants: {} }
     }
 
-    const maxSweeps = 10
+    const maxSweeps = 25
     const angleIncrement = 0.5
 
     const sweepState = {
@@ -297,6 +297,7 @@ class DescendingOrderCollisionResolver {
 
           if (index === 0) {
             sweepState.barrierAngle = label.labelAngle
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: complete. Largest label at labelLineAngle ${label.labelLineAngle.toFixed()} and label angle ${label.labelAngle.toFixed()}`)
           }
         })
 
