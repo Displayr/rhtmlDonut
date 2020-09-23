@@ -49,14 +49,14 @@ const defaultSettings = {
       outer: {
         straight: {
           minAngle: 0,
-          maxAngle: 5,
+          maxAngle: 0,
         },
         basisInterpolated: {
-          minAngle: 5,
-          maxAngle: 60,
+          minAngle: 90,
+          maxAngle: 90,
         },
         bezier: {
-          minAngle: 60,
+          minAngle: 0,
           maxAngle: 360, // NB this means "use bezier for anything with a label line angle of over 60"
           segmentLeanAngle: 30,
           labelLeanAngle: 20,

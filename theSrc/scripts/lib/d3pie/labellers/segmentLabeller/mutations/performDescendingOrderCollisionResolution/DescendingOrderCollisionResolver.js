@@ -103,7 +103,7 @@ class DescendingOrderCollisionResolver {
       return { acceptedLabels: labelSet, newVariants: {} }
     }
 
-    const maxSweeps = 25
+    const maxSweeps = 18
     const angleIncrement = 0.5
 
     const sweepState = {
