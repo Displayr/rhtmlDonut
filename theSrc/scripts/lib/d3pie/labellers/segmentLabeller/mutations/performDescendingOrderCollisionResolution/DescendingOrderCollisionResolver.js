@@ -204,7 +204,11 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
           }
 
-          while (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle) && !isBarrierAngleExceeded(label)) {
+          while (
+            (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
+            !(label.labelLineAngle > labelMaxLineAngle) &&
+            !isBarrierAngleExceeded(label)
+          ) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
               labelLogger.debug(`${label.labelPositionSummary} collides with`)
@@ -272,7 +276,10 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
           }
 
-          while (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 && !(label.labelLineAngle > labelMaxLineAngle)) {
+          while (
+            (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
+            !(label.labelLineAngle > labelMaxLineAngle)
+          ) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
               labelLogger.debug(`${label.labelPositionSummary} collides with`)

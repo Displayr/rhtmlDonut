@@ -198,6 +198,7 @@ class SegmentLabeller {
         maxLabelLines: this._invariant.maxLines,
       })
     }
+
     canvas.placeLabelAlongLabelRadiusWithLift = ({ label, hasTopLabel, hasBottomLabel }) => {
       return placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
@@ -214,6 +215,7 @@ class SegmentLabeller {
         spacingBetweenUpperTrianglesAndCenterMeridian: this._invariant.spacingBetweenUpperTrianglesAndCenterMeridian,
       })
     }
+
     canvas.placeLabelAlongLabelRadius = ({ label, hasTopLabel, hasBottomLabel }) => {
       return placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
@@ -265,6 +267,12 @@ class SegmentLabeller {
         radialHeight: radialHeight || outerRadius + labelOffset, // default to the labelPlacementCircle
         pieCenter,
       })
+    }
+
+    canvas.labelIsInBounds = (label) => {
+      const { minX, maxX, minY, maxY } = label
+      const { height, width } = this.interface.canvas
+      return (minX >= 0) && (maxX <= width) && (minY >= 0) && (maxY <= height)
     }
 
     return canvas
