@@ -206,13 +206,19 @@ class DescendingOrderCollisionResolver {
 
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            !(label.labelLineAngle > labelMaxLineAngle) &&
+            label.labelLineAngle <= labelMaxLineAngle &&
             !isBarrierAngleExceeded(label)
           ) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
-              labelLogger.debug(`${label.labelPositionSummary} collides with`)
-              wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              const collisions = wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label)
+              if (collisions) {
+                labelLogger.debug(`${label.labelPositionSummary} collides with`)
+                collisions.map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              }
+              if (!this.canvas.labelIsInBounds(label)) {
+                labelLogger.debug(`out of bounds`)
+              }
             }
             const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle + angleIncrement))
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle + angleIncrement))
@@ -277,13 +283,19 @@ class DescendingOrderCollisionResolver {
           }
 
           while (
-            (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            !(label.labelLineAngle > labelMaxLineAngle)
+            (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
+            label.labelLineAngle <= labelMaxLineAngle
           ) {
             if (debugLogs()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
-              labelLogger.debug(`${label.labelPositionSummary} collides with`)
-              wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              const collisions = wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label)
+              if (collisions) {
+                labelLogger.debug(`${label.labelPositionSummary} collides with`)
+                collisions.map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
+              }
+              if (!this.canvas.labelIsInBounds(label)) {
+                labelLogger.debug(`out of bounds`)
+              }
             }
             const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle - angleIncrement))
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle - angleIncrement))
