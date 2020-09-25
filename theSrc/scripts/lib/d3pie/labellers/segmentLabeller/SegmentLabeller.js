@@ -238,6 +238,7 @@ class SegmentLabeller {
       const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
       const { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
 
+      // TODO this was ported correctly but it looks like the X's should by Y's ?
       let apexLabelCorrection = 0
       if ((label.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
         (label.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {

@@ -185,7 +185,7 @@ class CollisionResolver {
 
     // TODO add stage check for pie.options.labels.stages.initialClusterSpacing
     // NB at some point we should do both innerLabelling and performInitialClusterSpacing. However,
-    // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred        the innerLabels to the spacing.
+    // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred the innerLabels to the spacing.
     if (!this.invariant.useInnerLabels) {
       this.performInitialClusterSpacing({
         outerLabelSetSortedTopToBottom: leftOuterLabelsSortedTopToBottom,
@@ -673,13 +673,13 @@ class CollisionResolver {
   //   * assuming that inner labels are added in order of fractionalValue descending,
   //       therefore if I cant place the current label, abort, leaving the existing inner labels as is (note this assumption is not valid, but in practice code works fine)
   moveToInnerLabel ({
-    label,
+    label: outerLabel,
     innerLabelSet,
   }) {
     const { labelOffset, innerRadius, pieCenter } = this.canvas
     const innerLabelRadius = innerRadius - labelOffset
 
-    const newInnerLabel = InnerLabel.fromOuterLabel(label)
+    const newInnerLabel = InnerLabel.fromOuterLabel(outerLabel)
     newInnerLabel.innerLabelRadius = innerLabelRadius
     newInnerLabel.innerRadius = innerRadius
     newInnerLabel.pieCenter = pieCenter
@@ -688,7 +688,7 @@ class CollisionResolver {
       y: pieCenter.y,
     }
 
-    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
+    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, outerLabel.segmentAngleMidpoint)
     newInnerLabel.placeAlongFitLine(innerRadiusLabelCoord)
 
     if (!_.isEmpty(innerLabelSet)) {
@@ -717,7 +717,7 @@ class CollisionResolver {
 
           // place X along innerLabelRadius based on new y position
           // Given the yOffset and the labelRadius, use pythagorem to compute the xOffset that places label along labelRadius
-          const xOffset = Math.hypot(innerLabelRadius, pieCenter.y - innerRadiusLabelCoord.y)
+          const xOffset = Math.sqrt(Math.pow(innerLabelRadius, 2) - Math.pow(Math.abs(pieCenter.y - innerRadiusLabelCoord.y), 2))
           innerRadiusLabelCoord.x = (hemisphere === 'left')
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
@@ -753,19 +753,21 @@ class CollisionResolver {
       bottomRightCoordIsInArc
     )
 
-    labelLogger.debug(`attempt to move ${newInnerLabel.shortText} to inner : ${labelIsContainedWithinArc ? 'succeed' : 'fail'}`)
+    const maxLabelLineAngleExceeded = newInnerLabel.angleBetweenLabelAndRadial > 45
+
+    labelLogger.debug(`attempt to move ${newInnerLabel.shortText} to inner : ${(labelIsContainedWithinArc && !maxLabelLineAngleExceeded) ? 'succeed' : 'fail'}`)
 
     if (!labelIsContainedWithinArc) {
-      throw new CannotMoveToInner(label, 'out of bounds after adjustment')
+      throw new CannotMoveToInner(outerLabel, 'out of bounds after adjustment')
     }
 
-    if (newInnerLabel.angleBetweenLabelAndRadial > 45) {
-      throw new CannotMoveToInner(label, `label line angle excceds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
+    if (maxLabelLineAngleExceeded) {
+      throw new CannotMoveToInner(outerLabel, `label line angle exceeds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
     }
 
-    labelLogger.info(`placed ${label.shortText} inside`)
+    labelLogger.info(`placed ${outerLabel.shortText} inside`)
     innerLabelSet.push(newInnerLabel)
-    label.labelShown = false
+    outerLabel.labelShown = false
   }
 }
 
