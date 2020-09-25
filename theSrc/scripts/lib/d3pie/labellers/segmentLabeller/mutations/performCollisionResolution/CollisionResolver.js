@@ -22,7 +22,6 @@ const VARIABLE_CONFIG = [
   'topIsLifted',
 ]
 
-// TODO sort out local invariant : canUseInnerLabelsInTheseQuadrants
 const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
@@ -54,10 +53,11 @@ class CollisionResolver {
     VARIABLE_CONFIG.forEach(key => this.variant[key] = extractAndThrowIfNull(variant, key))
     INVARIABLE_CONFIG.forEach(key => this.invariant[key] = extractAndThrowIfNull(invariant, key))
     /* eslint-enable no-return-assign */
+  }
 
-    this.invariant.canUseInnerLabelsInTheseQuadrants = (this.invariant.useInnerLabels)
-      ? [1, 2, 3]
-      : []
+  canUseInnerLabel (label) {
+    return this.invariant.useInnerLabels &&
+      between(90, label.segmentAngleMidpoint, 360)
   }
 
   go () {
@@ -139,7 +139,7 @@ class CollisionResolver {
 
             this.inputLabelSet = _(this.inputLabelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentQuadrant}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentAngleMidpoint}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -147,7 +147,7 @@ class CollisionResolver {
             const idToRemove = this.removalOrder.shift()
             this.inputLabelSet = _(this.inputLabelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentQuadrant}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentAngleMidpoint}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -424,7 +424,7 @@ class CollisionResolver {
 
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
     const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, maxFontSize, labelMaxLineAngle } = this.variant
-    const { canUseInnerLabelsInTheseQuadrants, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
+    const { outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
     let downSweepHitBottom = false
@@ -491,7 +491,7 @@ class CollisionResolver {
               return terminateLoop
             }
 
-            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+            if (this.canUseInnerLabel(gettingPushedLabel) && !immediatePreviousNeighborIsInInside) {
               try {
                 this.moveToInnerLabel({
                   label: gettingPushedLabel,
@@ -601,7 +601,7 @@ class CollisionResolver {
               return terminateLoop
             }
 
-            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+            if (this.canUseInnerLabel(gettingPushedLabel) && !immediatePreviousNeighborIsInInside) {
               try {
                 this.moveToInnerLabel({
                   label: gettingPushedLabel,

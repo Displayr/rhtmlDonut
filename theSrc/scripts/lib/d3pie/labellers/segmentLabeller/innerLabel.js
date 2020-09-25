@@ -170,7 +170,6 @@ class InnerLabel {
   get shortText () { return this._invariant.label.substr(0, 8) }
   get angle () { return this._invariant.segmentAngleMidpoint }
   get segmentAngleMidpoint () { return this._invariant.segmentAngleMidpoint } // TODO try to deprecate this in favour of angle
-  get segmentQuadrant () { return this._invariant.segmentQuadrant }
   get value () { return this._invariant.value }
 
   // accessors and mutators for variants

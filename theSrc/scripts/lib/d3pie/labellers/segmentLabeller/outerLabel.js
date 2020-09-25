@@ -3,8 +3,6 @@ import { lineLength } from '../../../geometryUtils'
 import { labelIntersect } from '../labelUtils'
 import { getAngleOfCoord, inclusiveBetween, rotate, toDegrees } from '../../math'
 
-const quadrants = [4, 1, 2, 3] // TODO I never want to see a numeric quadrant again
-
 // looks like some things are added directly and not accounted for still (e.g. pieCenter dont have get / set ) - same with innerlabel
 
 class OuterLabel {
@@ -29,8 +27,6 @@ class OuterLabel {
     const hemisphere = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270) ? 'left' : 'right'
     const inLeftHalf = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270)
     const inTopHalf = (segmentAngleMidpoint <= 180)
-    const segmentQuadrantIndex = Math.floor(4 * segmentAngleMidpoint / 360)
-    const segmentQuadrant = quadrants[segmentQuadrantIndex]
 
     const formattedLabelValue = this.formatLabelText({
       displayPercentage,
@@ -60,7 +56,6 @@ class OuterLabel {
       labelText,
       linePadding,
       segmentAngleMidpoint,
-      segmentQuadrant,
       value,
     }
 
@@ -382,7 +377,6 @@ class OuterLabel {
   get shortText () { return this._invariant.label.substr(0, 8) }
   get linePadding () { return this._invariant.linePadding }
   get segmentAngleMidpoint () { return this._invariant.segmentAngleMidpoint }
-  get segmentQuadrant () { return this._invariant.segmentQuadrant }
   get value () { return this._invariant.value }
 
   get segmentMidpointCoord () {
