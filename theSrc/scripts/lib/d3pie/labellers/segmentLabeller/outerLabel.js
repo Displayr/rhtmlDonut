@@ -13,7 +13,7 @@ class OuterLabel {
     displayPercentage = false,
     fontFamily,
     fontSize,
-    fractionalValue,
+    proportion,
     group,
     id,
     innerPadding,
@@ -33,7 +33,7 @@ class OuterLabel {
       displayDecimals,
       prefix,
       suffix,
-      fractionalValue,
+      proportion,
       value,
     })
     const labelText = `${label}: ${formattedLabelValue}`
@@ -46,7 +46,7 @@ class OuterLabel {
       inLeftHalf,
       inTopHalf,
       color,
-      fractionalValue,
+      proportion,
       fontFamily,
       group,
       hemisphere,
@@ -93,11 +93,11 @@ class OuterLabel {
     displayDecimals,
     prefix,
     suffix,
-    fractionalValue,
+    proportion,
     value,
   }) {
     let val = (displayPercentage)
-      ? (fractionalValue * 100).toFixed(displayDecimals)
+      ? (proportion * 100).toFixed(displayDecimals)
       : (value).toFixed(displayDecimals)
 
     if (prefix) {
@@ -337,7 +337,7 @@ class OuterLabel {
 
   get color () { return this._invariant.color }
   get fontFamily () { return this._invariant.fontFamily }
-  get fractionalValue () { return this._invariant.fractionalValue }
+  get proportion () { return this._invariant.proportion }
 
   // NB left includes, right excludes
   // NB top includes, bottom excludes

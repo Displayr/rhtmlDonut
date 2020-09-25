@@ -162,7 +162,7 @@ class InnerLabel {
 
   get color () { return this._invariant.color }
   get fontFamily () { return this._invariant.fontFamily }
-  get fractionalValue () { return this._invariant.fractionalValue }
+  get proportion () { return this._invariant.proportion }
   get hemisphere () { return this._invariant.hemisphere }
   get id () { return this._invariant.id }
   get label () { return this._invariant.label }

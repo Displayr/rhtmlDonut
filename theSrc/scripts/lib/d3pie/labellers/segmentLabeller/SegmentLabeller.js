@@ -114,7 +114,7 @@ class SegmentLabeller {
           suffix: this._invariant.suffix,
           fontFamily: this._invariant.fontFamily,
           fontSize: this._invariant.preferredMaxFontSize,
-          fractionalValue: dataPoint.value / totalValue,
+          proportion: dataPoint.value / totalValue,
           group: dataPoint.group,
           id: dataPoint.id,
           innerPadding: this._invariant.innerPadding,
@@ -124,7 +124,7 @@ class SegmentLabeller {
         })
       })
       // NB filter here after the creation map as we are tracking cumulative value above so must process ALL
-      .filter(({ fractionalValue }) => { return fractionalValue >= minProportion })
+      .filter(({ proportion }) => { return proportion >= minProportion })
   }
 
   doMutation ({ mutationName, mutationFn }) {

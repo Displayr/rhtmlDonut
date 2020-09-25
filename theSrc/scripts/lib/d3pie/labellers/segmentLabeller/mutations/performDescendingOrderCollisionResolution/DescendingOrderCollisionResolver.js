@@ -54,12 +54,12 @@ class DescendingOrderCollisionResolver {
       let labelSet = _.cloneDeep(this.inputLabelSet)
       const radialWidth = outerRadius + labelOffset
       const radialHeight = outerRadius + labelOffset + extraHeight
-      
-      const { acceptedLabels, newVariants } = this.placeOnLabelEllipseAndResolveCollisions({ 
-        iterationName: extraHeight.toFixed(0), 
-        labelSet, 
-        radialWidth, 
-        radialHeight 
+
+      const { acceptedLabels, newVariants } = this.placeOnLabelEllipseAndResolveCollisions({
+        iterationName: extraHeight.toFixed(0),
+        labelSet,
+        radialWidth,
+        radialHeight
       })
       const loss = this.inputLabelSet.length - acceptedLabels.length
       solutions.push({ extraHeight, acceptedLabels, loss, newVariants })
@@ -94,7 +94,7 @@ class DescendingOrderCollisionResolver {
       const newLineConnectorCoord = this.canvas.computeCoordOnEllipse({ angle: label.segmentAngleMidpoint, radialWidth, radialHeight })
       label.placeLabelViaConnectorCoordOnEllipse(newLineConnectorCoord, label.segmentAngleMidpoint)
     })
-    
+
     // TODO this is odd because I am alternating between accessing wrappedLabelSet and labelSet directly ...
     const wrappedLabelSet = new LabelSet(labelSet)
     const initialCollisions = wrappedLabelSet.findAllCollisions()
@@ -173,7 +173,7 @@ class DescendingOrderCollisionResolver {
         startNewSweep()
         labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CW`)
         const collisions = wrappedLabelSet.findAllCollisions()
-        const largestCollidingLabel = _(collisions).sortBy('fractionalValue').last()
+        const largestCollidingLabel = _(collisions).sortBy('proportion').last()
         const frontierIndex = wrappedLabelSet.getIndexByLabel(largestCollidingLabel)
         sweepState.frontierLabel = largestCollidingLabel
 
@@ -331,7 +331,7 @@ class DescendingOrderCollisionResolver {
       const indexOfFrontier = acceptedLabels.indexOf(sweepState.frontierLabel)
       acceptedLabels = acceptedLabels
         .filter((label, index) => index < indexOfFrontier)
-      newVariants.minProportion = _(acceptedLabels).map('fractionalValue').min()
+      newVariants.minProportion = _(acceptedLabels).map('proportion').min()
     }
 
     return { acceptedLabels, newVariants }

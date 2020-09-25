@@ -57,8 +57,8 @@ class DescendingOrderCollisionResolverFailedAttempt {
       labelLogger.info(`collisions detected in initial layout. Proceeding with descending order collision detection.`)
 
       const ignoreThreshold = 0.1
-      const bigLabelsToIgnore = this.inputLabelSet.filter(label => label.fractionalValue > ignoreThreshold)
-      const labelsToPlace = this.inputLabelSet.filter(label => label.fractionalValue <= ignoreThreshold)
+      const bigLabelsToIgnore = this.inputLabelSet.filter(label => label.proportion > ignoreThreshold)
+      const labelsToPlace = this.inputLabelSet.filter(label => label.proportion <= ignoreThreshold)
 
       const { acceptedLabels: topLeftAcceptedLabels } = this.placeTopLeft({
         existingLabels: bigLabelsToIgnore,
@@ -106,7 +106,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
 
     const topLeftLabels = _(labelSet)
       .filter('inTopLeftQuadrant')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
+      .filter(({ proportion }) => proportion >= this.variant.minProportion)
       .value()
     const collisionsInTopLeft = findLabelsIntersecting(existingLabels.concat(topLeftLabels))
 
@@ -165,7 +165,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
         labelLogger.info('DOCR: top left: Hit maxAllowableLargestLabelY')
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
+          acceptedLabels = workingLabelSet.filter(label => label.proportion > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('DOCR: top left: Unexplained loop break')
@@ -184,7 +184,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
 
     const rightLabels = _(labelSet)
       .filter('inRightHalf')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
+      .filter(({ proportion }) => proportion >= this.variant.minProportion)
       .value()
     const collisionsInRight = findLabelsIntersecting(existingLabels.concat(rightLabels))
 
@@ -248,7 +248,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
         labelLogger.info('DOCR: right: Hit minAllowableLargestLabelY')
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
+          acceptedLabels = workingLabelSet.filter(label => label.proportion > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('DOCR: right: Unexplained loop break')
@@ -268,7 +268,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
 
     const bottomLeftLabels = _(labelSet)
       .filter('inBottomLeftQuadrant')
-      .filter(({ fractionalValue }) => fractionalValue >= this.variant.minProportion)
+      .filter(({ proportion }) => proportion >= this.variant.minProportion)
       .value()
     const collisionsInBottomLeft = findLabelsIntersecting(existingLabels.concat(bottomLeftLabels))
 
@@ -333,7 +333,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
         labelLogger.info('DOCR: bottom left: Hit maxAllowableLargestLabelY')
         if (workingLabelSet) {
           this.variant.minProportion = this.getNewMinProportion({ placedSet: existingLabels, workingSet: workingLabelSet })
-          acceptedLabels = workingLabelSet.filter(label => label.fractionalValue > this.variant.minProportion)
+          acceptedLabels = workingLabelSet.filter(label => label.proportion > this.variant.minProportion)
         }
       } else {
         throw new UnexpectedCondition('DOCR: bottom left: Unexplained loop break')
@@ -350,7 +350,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
   getNewMinProportion ({ workingSet, placedSet }) {
     const { labelMaxLineAngle } = this.variant
     const { width: canvasWidth, height: canvasHeight } = this.canvas
-    const minPlacedFractionalValue = _(placedSet).map('fractionalValue').min()
+    const minPlacedFractionalValue = _(placedSet).map('proportion').min()
 
     const largestInvalidLabel = _([
       findLabelsIntersecting(placedSet.concat(workingSet)),
@@ -358,8 +358,8 @@ class DescendingOrderCollisionResolverFailedAttempt {
       findLabelsExceedingMaxLabelLineAngle(workingSet, labelMaxLineAngle),
     ])
       .flatten()
-      .filter(({ fractionalValue }) => fractionalValue < minPlacedFractionalValue) // TODO fix : not strictly true. what if they are == to each other
-      .sortBy('fractionalValue')
+      .filter(({ proportion }) => proportion < minPlacedFractionalValue) // TODO fix : not strictly true. what if they are == to each other
+      .sortBy('proportion')
       .last()
 
     if (!largestInvalidLabel) {
@@ -369,7 +369,7 @@ class DescendingOrderCollisionResolverFailedAttempt {
       const smallestValidLabel = (indexOfLargestInvalidLabelInWorkingSet === 0)
         ? _.last(placedSet)
         : workingSet[indexOfLargestInvalidLabelInWorkingSet - 1]
-      return smallestValidLabel.fractionalValue
+      return smallestValidLabel.proportion
     }
   }
 

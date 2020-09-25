@@ -29,7 +29,7 @@ const mutationFn = ({ outerLabelSet: labelSet, variant, invariant, canvas }) => 
     const beforeCount = labelSet.length
     for (let i = labelSet.length - 1; i >= 0; i--) {
       let label = labelSet[i]
-      if ((leftSideHeightDeficit > 0 || rightSideHeightDeficit > 0) && label.fractionalValue < newMinProportion) {
+      if ((leftSideHeightDeficit > 0 || rightSideHeightDeficit > 0) && label.proportion < newMinProportion) {
         label.labelShown = false
         if (label.hemisphere === 'left') {
           leftSideHeightDeficit -= (label.height + outerPadding)

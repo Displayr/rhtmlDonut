@@ -670,7 +670,7 @@ class CollisionResolver {
   }
 
   // Current Assumptions / Limitations:
-  //   * assuming that inner labels are added in order of fractionalValue descending,
+  //   * assuming that inner labels are added in order of proportion descending,
   //       therefore if I cant place the current label, abort, leaving the existing inner labels as is (note this assumption is not valid, but in practice code works fine)
   moveToInnerLabel ({
     label: outerLabel,
