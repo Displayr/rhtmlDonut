@@ -23,13 +23,13 @@ import { inclusiveBetween } from '../../../math'
 //   }
 // }
 
-const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, options }) => {
+const computePath = ({ labelData, basisInterpolationFunction, canvasHeight, labelMaxLineAngle, options }) => {
   if (inclusiveBetween(options.straight.minAngle, labelData.labelLineAngle, options.straight.maxAngle)) {
     return straightLine({ labelData })
   } else if (inclusiveBetween(options.basisInterpolated.minAngle, labelData.labelLineAngle, options.basisInterpolated.maxAngle)) {
     return basisInterpolated({ labelData, basisInterpolationFunction })
   } else if (inclusiveBetween(options.bezier.minAngle, labelData.labelLineAngle, options.bezier.maxAngle)) {
-    return bezierCurve({ labelData, canvasHeight, ...options.bezier })
+    return bezierCurve({ labelData, canvasHeight, labelMaxLineAngle, ...options.bezier })
   } else {
     console.warn(`unhandled labelLineAngle ${labelData.labelLineAngle}. Defaulting to straight line`)
     return straightLine({ labelData, canvasHeight })

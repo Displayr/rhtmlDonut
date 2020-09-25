@@ -70,7 +70,7 @@ const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   }, loadSpeed)
 }
 
-const drawOuterLabelLines = ({ canvas, labels, config }) => {
+const drawOuterLabelLines = ({ canvas, labels, labelMaxLineAngle, config }) => {
   const { svg, cssPrefix } = canvas
 
   let basisInterpolationFunction = d3.svg.line()
@@ -83,6 +83,7 @@ const drawOuterLabelLines = ({ canvas, labels, config }) => {
       labelData,
       basisInterpolationFunction,
       canvasHeight: parseFloat(canvas.height),
+      labelMaxLineAngle,
       options: config,
     })
 

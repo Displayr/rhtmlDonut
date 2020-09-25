@@ -326,6 +326,7 @@ class SegmentLabeller {
   draw () {
     const { canvas } = this.interface
     const { color, innerPadding } = this._invariant
+    const { labelMaxLineAngle } = this._variant
     const { inner, outer } = this.labelSets.primary
 
     draw.drawLabelSet({
@@ -348,6 +349,7 @@ class SegmentLabeller {
       draw.drawOuterLabelLines({
         canvas,
         labels: outer,
+        labelMaxLineAngle,
         config: this.linesConfig.outer,
       })
       draw.drawInnerLabelLines({

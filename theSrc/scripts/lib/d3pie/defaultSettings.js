@@ -28,7 +28,7 @@ const defaultSettings = {
       fontFamily: 'arial', // pieWrapper: settings.labelsFont, R: labels.font.family // TODO change to setting.fontFamily
       useInnerLabels: false, // pieWrapper: settings.labelsInner, R: labels.inner
       innerPadding: 1, // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
-      labelMaxLineAngle: 60, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
+      labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       liftOffAngle: 30, // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
       linePadding: 2, // pieWrapper: settings.linePadding, R: labels.line.padding
       maxLabelOffset: 100, // TODO use these values and expose as configurable
@@ -48,18 +48,18 @@ const defaultSettings = {
       enabled: true, // used but not currently configurable via R or JS
       outer: {
         straight: {
-          minAngle: 0,
-          maxAngle: 0,
+          minAngle: 360, // off
+          maxAngle: 360, // off
         },
         basisInterpolated: {
-          minAngle: 90,
-          maxAngle: 90,
+          minAngle: 360, // off
+          maxAngle: 360, // off
         },
         bezier: {
           minAngle: 0,
-          maxAngle: 360, // NB this means "use bezier for anything with a label line angle of over 60"
-          segmentLeanAngle: 30,
-          labelLeanAngle: 20,
+          maxAngle: 360,
+          segmentLeanAngle: 0,
+          labelLeanAngle: 0,
           segmentPullInProportionMin: 0.25,
           segmentPullInProportionMax: 0.75,
         },

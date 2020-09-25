@@ -10,13 +10,13 @@ import { computeIntersectionOfTwoLines, between, toRadians } from '../../../math
 
 // NB on the use of '2000' in line generation functions: It is arbitrary, just pick a point far away so we get a long line to ensure intersections
 
-module.exports = ({ labelData, canvasHeight, segmentLeanAngle, labelLeanAngle, segmentPullInProportionMin, segmentPullInProportionMax }) => {
+module.exports = ({ labelData, canvasHeight, segmentLeanAngle, labelLeanAngle, segmentPullInProportionMin, segmentPullInProportionMax, labelMaxLineAngle }) => {
   const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
-  const { segmentControlCoord, labelControlCoord } = getControlCoordinatesAlt({ labelData, segmentLeanAngle, labelLeanAngle })
+  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData, segmentLeanAngle, labelLeanAngle, labelMaxLineAngle })
   const controlPointPullInPercentage = getSegmentControlPointPullInPercentage({ labelData, canvasHeight, segmentPullInProportionMin, segmentPullInProportionMax })
 
-  segmentControlCoord.x = getWeightedAverage({ from: segmentControlCoord.x, to: segmentCoord.x, proportion: controlPointPullInPercentage })
-  segmentControlCoord.y = getWeightedAverage({ from: segmentControlCoord.y, to: segmentCoord.y, proportion: controlPointPullInPercentage })
+  segmentControlCoord.x = weightedAverage({ from: segmentControlCoord.x, to: segmentCoord.x, proportion: controlPointPullInPercentage })
+  segmentControlCoord.y = weightedAverage({ from: segmentControlCoord.y, to: segmentCoord.y, proportion: controlPointPullInPercentage })
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
@@ -68,7 +68,29 @@ const getSegmentAndLabelCoords = ({ labelData }) => {
   }
 }
 
-const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle }) => {
+const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle, labelMaxLineAngle }) => {
+  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
+  const { segmentControlCoord, labelControlCoord } = getLeanedBoxCoordinates({ labelData, segmentLeanAngle, labelLeanAngle })
+  const midPointBetweenSegmentAndLabelCoord = { x: (segmentCoord.x + labelCoord.x) / 2, y: (segmentCoord.y + labelCoord.y) / 2 }
+  const curviness = Math.min(1, labelData.labelLineAngle / labelMaxLineAngle)
+
+  const newSegmentControlCoord = {
+    x: weightedAverage({ from: midPointBetweenSegmentAndLabelCoord.x, to: segmentControlCoord.x, proportion: curviness }),
+    y: weightedAverage({ from: midPointBetweenSegmentAndLabelCoord.y, to: segmentControlCoord.y, proportion: curviness }),
+  }
+
+  const newLabelControlCoord = {
+    x: weightedAverage({ from: midPointBetweenSegmentAndLabelCoord.x, to: labelControlCoord.x, proportion: curviness }),
+    y: weightedAverage({ from: midPointBetweenSegmentAndLabelCoord.y, to: labelControlCoord.y, proportion: curviness }),
+  }
+
+  return  {
+    segmentControlCoord: newSegmentControlCoord,
+    labelControlCoord: newLabelControlCoord
+  }
+}
+
+const getLeanedBoxCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle }) => {
   const segmentAngle = labelData.segmentAngleMidpoint
   const segmentCoord = labelData.segmentMidpointCoord
   const labelCoord = labelData.lineConnectorCoord
@@ -93,31 +115,6 @@ const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle }) 
   return { segmentControlCoord, labelControlCoord }
 }
 
-const getControlCoordinatesAlt = ({ labelData }) => {
-  const { segmentCoord, labelCoord } = getSegmentAndLabelCoords({ labelData })
-  const { segmentControlCoord, labelControlCoord } = getControlCoordinates({ labelData, segmentLeanAngle: 0, labelLeanAngle: 0 })
-  const midPointBetweenSegmentAndLabelCoord = { x: (segmentCoord.x + labelCoord.x) / 2, y: (segmentCoord.y + labelCoord.y) / 2 }
-  const maxLabelLineAngle = 80
-  const angledNess = Math.min(1, labelData.labelLineAngle / maxLabelLineAngle)
-
-  const newSegmentControlCoord = {
-    x: segmentControlCoord.x * angledNess + midPointBetweenSegmentAndLabelCoord.x * (1 - angledNess),
-    y: segmentControlCoord.y * angledNess + midPointBetweenSegmentAndLabelCoord.y * (1 - angledNess),
-  }
-
-  const newLabelControlCoord = {
-    x: labelControlCoord.x * angledNess + midPointBetweenSegmentAndLabelCoord.x * (1 - angledNess),
-    y: labelControlCoord.y * angledNess + midPointBetweenSegmentAndLabelCoord.y * (1 - angledNess),
-  }
-
-  return  {
-    segmentControlCoord: newSegmentControlCoord,
-    labelControlCoord: newLabelControlCoord
-  }
-}
-
-const getWeightedAverage = ({ from, to, proportion }) => from * (1 - proportion) + to * proportion
-
 const getSegmentControlPointPullInPercentage = ({ labelData, canvasHeight, segmentPullInProportionMin, segmentPullInProportionMax }) => {
   const { y: sy } = labelData.segmentMidpointCoord
   const { y: ly } = labelData.lineConnectorCoord
@@ -128,3 +125,5 @@ const getSegmentControlPointPullInPercentage = ({ labelData, canvasHeight, segme
   const relativeHeightDifferenceBetweenSegmentAndLabel = Math.min(1, Math.abs(sy - ly) / maximumPossibleDelta)
   return segmentPullInProportionMin + (variablePortionOfPullIn * relativeHeightDifferenceBetweenSegmentAndLabel)
 }
+
+const weightedAverage = ({ from, to, proportion }) => from * (1 - proportion) + to * proportion
