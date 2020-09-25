@@ -3326,7 +3326,6 @@
     "labelsSize": 10,
     "labelsColor": "#2C2C2C",
     "labelsMinFontSize": 8,
-    "labelsInner": false,
     "labelsInnerPadding": 1,
     "labelsOuterPadding": 1,
     "labelsMaxWidth": 0.3,

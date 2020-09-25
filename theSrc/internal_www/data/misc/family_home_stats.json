@@ -32,7 +32,6 @@
     "labelsFont": "Arial",
     "labelsSize": 10,
     "labelsColor": "lightblue",
-    "labelsInner": false,
     "labelsBold": false,
     "labelsMinFontSize": 10,
     "groups": null,
