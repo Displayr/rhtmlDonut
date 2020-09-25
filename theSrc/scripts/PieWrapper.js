@@ -157,7 +157,7 @@ class PieWrapper {
           displayDecimals: absencePreservingParseFloat(this._settings.valuesDec),
           displayPercentage: (this._settings.valuesDisplay === 'percentage'),
           fontFamily: this._settings.labelsFont,
-          useInnerLabels: this._settings.labelsInner,
+          useInnerLabels: this._settings.useInnerLabels,
           innerPadding: absencePreservingParseFloat(this._settings.labelsInnerPadding),
           labelMaxLineAngle: absencePreservingParseFloat(this._settings.labelMaxLineAngle),
           liftOffAngle: absencePreservingParseFloat(this._settings.labelLiftOffAngle),

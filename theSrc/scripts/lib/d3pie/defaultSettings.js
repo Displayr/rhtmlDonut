@@ -26,7 +26,7 @@ const defaultSettings = {
       displayDecimals: 1, // pieWrapper: settings.valuesDec, R: values.decimal.places
       displayPercentage: false, // pieWrapper: settings.valuesDisplay, R: values.display.as
       fontFamily: 'arial', // pieWrapper: settings.labelsFont, R: labels.font.family // TODO change to setting.fontFamily
-      useInnerLabels: false, // pieWrapper: settings.labelsInner, R: labels.inner
+      useInnerLabels: false, // pieWrapper: settings.useInnerLabels, R: labels.inner
       innerPadding: 1, // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
       labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
       liftOffAngle: 30, // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
