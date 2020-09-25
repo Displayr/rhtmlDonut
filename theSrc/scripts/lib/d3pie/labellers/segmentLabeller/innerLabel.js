@@ -106,8 +106,8 @@ class InnerLabel {
     return (_.isNaN(angleCInDegrees)) ? 0 : angleCInDegrees
   }
 
-  intersectsWith (anotherLabel) {
-    return labelIntersect(this, anotherLabel)
+  intersectsWith (anotherLabel, within) {
+    return labelIntersect(this, anotherLabel, within)
   }
 
   isHigherThan (anotherLabel) {
@@ -151,6 +151,13 @@ class InnerLabel {
     }
   }
 
+  // compatability for RBush
+  get minY () { return this.topLeftCoord.y }
+  get maxY () { return this.bottomLeftCoord.y }
+  get minX () { return this.topLeftCoord.x }
+  get maxX () { return this.topRightCoord.x }
+
+
   // accessors for invariants
 
   get color () { return this._invariant.color }
@@ -162,6 +169,7 @@ class InnerLabel {
   get labelText () { return this._invariant.labelText }
   get shortText () { return this._invariant.label.substr(0, 8) }
   get angle () { return this._invariant.segmentAngleMidpoint }
+  get segmentAngleMidpoint () { return this._invariant.segmentAngleMidpoint } // TODO try to deprecate this in favour of angle
   get segmentQuadrant () { return this._invariant.segmentQuadrant }
   get value () { return this._invariant.value }
 
@@ -199,6 +207,14 @@ class InnerLabel {
 
   get width () { return this._variant.width }
   set width (newValue) { this._variant.width = newValue }
+
+  get labelPositionSummary () {
+    return [
+      `label ${this.shortText}(${this.labelAngle.toFixed(2)})`,
+      `x: ${this.minX.toFixed(2)}-${this.maxX.toFixed(2)}`,
+      `y: ${this.minY.toFixed(2)}-${this.maxY.toFixed(2)}`,
+    ].join(' ')
+  }
 }
 
 module.exports = InnerLabel
