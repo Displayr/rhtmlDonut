@@ -22,7 +22,7 @@ series = (reverse)
 const donutConfig = {
   values: series,
   labels: series.map(x => `${x}`),
-  settings: {}
+  settings: {},
 }
 
 console.log(JSON.stringify(donutConfig, {}, 2))

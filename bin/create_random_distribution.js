@@ -19,7 +19,7 @@ orderedList.pop()
 const donutConfig = {
   values: orderedList,
   labels: orderedList.map(x => `${x}`),
-  settings: {}
+  settings: {},
 }
 
 console.log(JSON.stringify(donutConfig, {}, 2))
