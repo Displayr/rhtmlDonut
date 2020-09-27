@@ -3369,7 +3369,6 @@
     "gradient": false,
     "innerRadius": 0.7,
     "minProportion": 0.003,
-    "borderColor": "#FFFFFF",
-    "logLevel": "info"
+    "borderColor": "#FFFFFF"
   }
 }

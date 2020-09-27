@@ -1,0 +1,10 @@
+{
+  "settings": {
+    "logLevel": {
+      "LAYOUT": "debug",
+      "TOOLTIP": "debug",
+      "LABEL": "info",
+      "ROOT": "error"
+    }
+  }
+}
