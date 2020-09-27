@@ -5,6 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('loading test fixtures onto window.testFixtures')
   window.testFixtures = {
     computeLabelLineMaxAngleCoords,
-    math
+    math,
   }
 }, false)
