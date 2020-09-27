@@ -7,8 +7,7 @@ module.exports = function (gulp) {
       gulp,
       entryPointFile: path.join(__dirname, '../../theSrc/test/utils/addTestFixturesToWindow.js'),
       destinationDirectory: path.join(__dirname, '../../browser/js/'),
-      callback: done
+      callback: done,
     })
   }
 }
-

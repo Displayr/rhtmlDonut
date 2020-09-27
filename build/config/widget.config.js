@@ -11,8 +11,8 @@ const config = {
     includeDimensionsOnWidgetDiv: true,
     default_border: true,
     css: [
-      '/styles/main.css'
-    ]
+      '/styles/main.css',
+    ],
   },
   snapshotTesting: {
     snapshotDelay: 500,
@@ -21,12 +21,12 @@ const config = {
     pixelmatch: {
       // smaller values -> more sensitive : https://github.com/mapbox/pixelmatch#pixelmatchimg1-img2-output-width-height-options
       customDiffConfig: {
-        threshold: 0.005
+        threshold: 0.005,
       },
       failureThreshold: 0.005,
-      failureThresholdType: 'percent' // pixel or percent
-    }
-  }
+      failureThresholdType: 'percent', // pixel or percent
+    },
+  },
 }
 
 const commandLineOverides = _.omit(cliArgs, ['_', '$0'])

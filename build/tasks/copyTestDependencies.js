@@ -17,7 +17,6 @@ module.exports = function (gulp) {
       .pipe(gulp.dest('browser/external/'))
       .on('finish', incrementFinishedCount)
 
-
     const intervalHandle = setInterval(() => {
       if (finishedCount >= requiredCount) {
         clearInterval(intervalHandle)
