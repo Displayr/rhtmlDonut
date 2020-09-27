@@ -57,7 +57,7 @@ class DescendingOrderCollisionResolver {
         iterationName: extraHeight.toFixed(0),
         labelSet,
         radialWidth,
-        radialHeight
+        radialHeight,
       })
       const loss = this.inputLabelSet.length - acceptedLabels.length
       solutions.push({ extraHeight, acceptedLabels, loss, newVariants })
@@ -127,7 +127,7 @@ class DescendingOrderCollisionResolver {
       return sweepState.frontierPerSweep[numSweepRecords - 1] === sweepState.frontierPerSweep[numSweepRecords - 2]
     }
 
-    //the "barrier angle" is where the largest label meets the smallest label (around 0 degrees)
+    // the "barrier angle" is where the largest label meets the smallest label (around 0 degrees)
     const isBarrierAngleExceeded = (label) => {
       const barrierAngleIsInBottomLeftQuadrant = (sweepState.barrierAngle >= 270)
       const newLabelAngleInTopLeftQuadrant = (label.labelAngle < 90)
@@ -419,7 +419,7 @@ class LabelSet {
   getNearestActiveLargerNeighbor (label) {
     const index = this.getIndexByLabel(label)
     let nearestLargerActiveNeighbor = null
-    _(_.range(index - 1 ,-1,-1)).each(largerLabelIndex => {
+    _(_.range(index - 1, -1, -1)).each(largerLabelIndex => {
       const largerLabel = this.getLabelByIndex(largerLabelIndex)
       if (this.isActive(largerLabel)) {
         nearestLargerActiveNeighbor = largerLabel
@@ -432,7 +432,7 @@ class LabelSet {
   getNearestActiveSmallerNeighbor (label) {
     const index = this.getIndexByLabel(label)
     let nearestSmallerActiveNeighbor = null
-    _(_.range(index + 1 ,this.labelSet.length)).each(smallerLabelIndex => {
+    _(_.range(index + 1, this.labelSet.length)).each(smallerLabelIndex => {
       const smallerLabel = this.getLabelByIndex(smallerLabelIndex)
       if (this.isActive(smallerLabel)) {
         nearestSmallerActiveNeighbor = smallerLabel
@@ -447,14 +447,14 @@ const getOutOfOrderSummary = (wrappedLabelSet) => {
   return _(wrappedLabelSet.getLabels())
     .filter(label => wrappedLabelSet.isActive(label))
     .sortBy('labelAngle')
-    .filter((label,index) => {
+    .filter((label, index) => {
       const largerLabel = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
       const smallerLabel = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
       if (smallerLabel && smallerLabel.labelAngle < label.labelAngle) { return true }
       if (largerLabel && largerLabel.labelAngle > label.labelAngle) { return true }
       return false
     })
-    .map(({shortText, labelAngle}) => `${shortText}(${labelAngle.toFixed(2)})`)
+    .map(({ shortText, labelAngle }) => `${shortText}(${labelAngle.toFixed(2)})`)
     .value()
 }
 

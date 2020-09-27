@@ -84,9 +84,9 @@ const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle, la
     y: weightedAverage({ from: midPointBetweenSegmentAndLabelCoord.y, to: labelControlCoord.y, proportion: curviness }),
   }
 
-  return  {
+  return {
     segmentControlCoord: newSegmentControlCoord,
-    labelControlCoord: newLabelControlCoord
+    labelControlCoord: newLabelControlCoord,
   }
 }
 

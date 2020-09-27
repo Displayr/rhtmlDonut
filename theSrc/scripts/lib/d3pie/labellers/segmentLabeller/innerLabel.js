@@ -157,7 +157,6 @@ class InnerLabel {
   get minX () { return this.topLeftCoord.x }
   get maxX () { return this.topRightCoord.x }
 
-
   // accessors for invariants
 
   get color () { return this._invariant.color }

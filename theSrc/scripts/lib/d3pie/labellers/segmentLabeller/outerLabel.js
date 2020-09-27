@@ -454,7 +454,6 @@ class OuterLabel {
       `y: ${this.minY.toFixed(2)}-${this.maxY.toFixed(2)}`,
     ].join(' ')
   }
-
 }
 
 module.exports = OuterLabel

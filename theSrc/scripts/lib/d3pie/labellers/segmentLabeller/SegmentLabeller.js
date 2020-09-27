@@ -17,7 +17,6 @@ import {
   shrinkFontSizesUntilLabelsFitCanvasVertically,
 } from './mutations'
 
-
 // define the rest of the variants that get set later - do this in the config data class
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',

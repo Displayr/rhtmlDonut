@@ -1,8 +1,6 @@
 const _ = require('lodash')
 const logger = require('./logger')
 
-const levels = logger.levels
-
 describe('logger', () => {
   it('export at least one logType', () => {
     expect(Object.keys(logger.logTypes).length > 0).toEqual(true)
