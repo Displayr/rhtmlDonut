@@ -123,4 +123,3 @@ The label layout algorithm goes through 4 phases and relies on several config se
 
 * Visual showing the different lines referenced in doc
 * Visual depiction of max line angle threshold
-    

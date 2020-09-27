@@ -461,7 +461,7 @@ Donut <- function(
         labelsSize = labels.font.size,
         labelsColor = labels.font.color,
         labelsMinFontSize = labels.min.font.size,
-        labelsInner = labels.inner,
+        useInnerLabels = labels.inner,
         labelsInnerPadding = labels.padding.inner,
         labelsOuterPadding = labels.padding.outer,
         labelsMaxWidth = labels.max.width,
