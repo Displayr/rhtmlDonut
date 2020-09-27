@@ -6,8 +6,7 @@ import placeLabelAlongLabelRadiusWithLiftOffAngle from './utils/placeLabelAlongL
 import adjustLabelToNewY from './utils/adjustLabelToNewY'
 import computeCoordOnEllipse from './utils/computeCoordOnEllipse'
 import draw from './draw'
-
-import * as rootLog from 'loglevel'
+import { labelLogger } from '../../../logger'
 import {
   initialNaivePlacement,
   performCollisionResolution,
@@ -18,7 +17,6 @@ import {
   shrinkFontSizesUntilLabelsFitCanvasVertically,
 } from './mutations'
 
-const labelLogger = rootLog.getLogger('label')
 
 // define the rest of the variants that get set later - do this in the config data class
 const VARIABLE_CONFIG = [

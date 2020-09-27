@@ -4,9 +4,7 @@ import RBush from 'rbush'
 import math from '../math'
 
 import { rectIntersect, rectXaboveY, rectXbelowY } from '../../geometryUtils'
-import * as rootLog from 'loglevel'
-
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../logger'
 
 // TODO this is from palmtrees labelUtils module
 let idSeed = 0

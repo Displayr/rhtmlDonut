@@ -1,9 +1,8 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 import computeLabelStats from '../computeLabelStats'
 import { terminateLoop } from '../../../../loopControls'
 import { extractAndThrowIfNullFactory } from '../mutationHelpers'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../logger'
 
 // TODO this fn does not guarantee the least are removed.
 //  The loop deletes in set order - not ascending value order - and terminates mid loop once constraint is met ..

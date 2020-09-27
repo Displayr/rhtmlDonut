@@ -4,8 +4,7 @@ import tooltip from './tooltip'
 import d3 from 'd3'
 import _ from 'lodash'
 
-import * as rootLog from 'loglevel'
-const tooltipLogger = rootLog.getLogger('tooltip')
+import { tooltipLogger } from '../logger'
 
 let segments = {
 

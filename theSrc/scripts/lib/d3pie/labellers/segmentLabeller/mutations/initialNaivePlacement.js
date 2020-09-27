@@ -1,9 +1,8 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 import { extractAndThrowIfNullFactory } from '../mutationHelpers'
 import { between, inclusiveBetween } from './../../../math'
 import { findLabelsIntersecting } from '../../labelUtils'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../logger'
 
 const mutationName = 'initialNaivePlacement'
 const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {

@@ -1,12 +1,10 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { findLabelsExceedingMaxLabelLineAngle, findLabelsIntersecting, findLabelsOutOfBounds } from '../../../labelUtils'
 import UnexpectedCondition from '../../../../interrupts/unexpectedCondition'
 import computeLabelLineMaxAngleCoords from '../../utils/computeLabelLineMaxAngleCoords'
-
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../../logger'
 
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',

@@ -1,11 +1,9 @@
 import _ from 'lodash'
 import d3 from 'd3'
-import * as rootLog from 'loglevel'
 import computeLabelStats from '../computeLabelStats'
 import { terminateLoop } from '../../../../loopControls'
 import { extractAndThrowIfNullFactory } from '../mutationHelpers'
-
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../logger'
 
 const mutationName = 'shrinkFontSizesUntilLabelsFitCanvasVertically'
 const mutationFn = ({ outerLabelSet: labelSet, invariant, canvas }) => {

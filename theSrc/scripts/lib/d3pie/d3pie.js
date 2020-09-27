@@ -10,13 +10,11 @@ import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
 import SegmentLabeller from './labellers/segmentLabeller'
 import { name, version } from '../../../../package'
-
-import * as rootLog from 'loglevel'
-const layoutLogger = rootLog.getLogger('layout')
+import { rootLogger, layoutLogger } from '../logger'
 
 class d3pie {
   constructor (element, options) {
-    rootLog.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
+    rootLogger.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
 
     // element can be an ID or DOM element
     this.element = element
@@ -195,8 +193,7 @@ class d3pie {
     segments.addSegmentEventHandlers(this, labelsShownLookup)
 
     durations.totalDuration = Date.now() - startTime
-    // TODO root logger is not logging under test ...
-    console.log(JSON.stringify(durations))
+    rootLogger.info(JSON.stringify(durations))
   }
 
   computePieLayoutDimensions ({

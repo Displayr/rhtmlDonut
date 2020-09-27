@@ -1,10 +1,9 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../../logger'
 
 const CC = 'COUNTER_CLOCKWISE'
 const CW = 'CLOCKWISE'
@@ -19,7 +18,6 @@ const INVARIABLE_CONFIG = [
   'outerPadding',
 ]
 
-const debugLogs = () => (rootLog.getLevel() <= rootLog.levels.DEBUG)
 const boundedAngle = (angle) => (angle < 0) ? 360 - angle : angle % 360
 
 class DescendingOrderCollisionResolver {
@@ -162,7 +160,7 @@ class DescendingOrderCollisionResolver {
     while (keepSweeping()) {
       const { direction } = sweepState
 
-      if (debugLogs()) {
+      if (labelLogger.isDebugEnabled()) {
         const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
         if (outOfOrderLabels.length > 0) {
           labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount + 1} starting ${direction} out of order labels ${outOfOrderLabels.join(',')}`)
@@ -187,7 +185,7 @@ class DescendingOrderCollisionResolver {
         _(_.range(frontierIndex + 1, wrappedLabelSet.getLength())).each(index => {
           const label = wrappedLabelSet.getLabelByIndex(index)
 
-          if (debugLogs()) {
+          if (labelLogger.isDebugEnabled()) {
             labelLogger.debug([
               `${logPrefix} sweep${sweepState.sweepCount}`,
               `CW: frontier ${label.shortText}.`,
@@ -209,7 +207,7 @@ class DescendingOrderCollisionResolver {
             label.labelLineAngle <= labelMaxLineAngle &&
             !isBarrierAngleExceeded(label)
           ) {
-            if (debugLogs()) {
+            if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
               const collisions = wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label)
               if (collisions) {
@@ -224,7 +222,7 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle + angleIncrement))
           }
 
-          if (debugLogs()) {
+          if (labelLogger.isDebugEnabled()) {
             const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
             if (outOfOrderLabels.length > 0) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${direction}. Finished moving label ${label.shortText} pre reset. Out of order labels ${outOfOrderLabels.join(',')}`)
@@ -265,7 +263,7 @@ class DescendingOrderCollisionResolver {
         _(_.range(frontierIndex, -1, -1)).each(index => {
           const label = wrappedLabelSet.getLabelByIndex(index)
 
-          if (debugLogs()) {
+          if (labelLogger.isDebugEnabled()) {
             labelLogger.debug([
               `${logPrefix} sweep${sweepState.sweepCount}`,
               `CC: frontier ${label.shortText}.`,
@@ -286,7 +284,7 @@ class DescendingOrderCollisionResolver {
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
             label.labelLineAngle <= labelMaxLineAngle
           ) {
-            if (debugLogs()) {
+            if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
               const collisions = wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label)
               if (collisions) {
@@ -301,7 +299,7 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle - angleIncrement))
           }
 
-          if (debugLogs()) {
+          if (labelLogger.isDebugEnabled()) {
             const outOfOrderLabels = getOutOfOrderSummary(wrappedLabelSet)
             if (outOfOrderLabels.length > 0) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${direction}. Finished moving label ${label.shortText} pre reset. Out of order labels ${outOfOrderLabels.join(',')}`)

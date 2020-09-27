@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { between, rotate } from '../../../../math'
@@ -10,7 +9,7 @@ import AngleThresholdExceeded from '../../../../interrupts/angleThresholdExceede
 import LabelCollision from '../../../../interrupts/labelCollision'
 import InnerLabel from '../../innerLabel'
 import CannotMoveToInner from '../../../../interrupts/cannotMoveToInner'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../../logger'
 
 const VARIABLE_CONFIG = [
   'bottomIsLifted',

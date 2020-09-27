@@ -1,6 +1,5 @@
 import { toRadians } from '../../../math'
-import * as rootLog from 'loglevel'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../logger'
 
 module.exports = ({
   anchor, // top or bottom

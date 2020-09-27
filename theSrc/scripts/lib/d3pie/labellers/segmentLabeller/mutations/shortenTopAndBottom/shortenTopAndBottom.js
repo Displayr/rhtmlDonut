@@ -1,10 +1,9 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 import RBush from 'rbush'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import { computeIntersectionOfTwoLines, rotate } from '../../../../math'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../../logger'
 
 const VARIABLE_CONFIG = [
   'bottomIsLifted',

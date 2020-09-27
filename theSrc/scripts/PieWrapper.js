@@ -5,13 +5,13 @@ import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
-import * as rootLog from 'loglevel'
+import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
+
 import {
   isHexColor,
   isValidColorName,
   getHexColorFromString,
 } from './colorUtils'
-const layoutLogger = rootLog.getLogger('layout')
 
 class PieWrapper {
   static uniqueId () {
@@ -32,7 +32,7 @@ class PieWrapper {
 
   draw (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    layoutLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
+    rootLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
     $(element).find('*').remove()
 
     this.outerSvg = d3.select(element)
@@ -225,7 +225,7 @@ class PieWrapper {
 
   resize (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    layoutLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
+    rootLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
 
     if (width < 200 || height < 200) { return }
 
@@ -286,7 +286,8 @@ class PieWrapper {
     this._valuesCount = newConfig.values.length
     this._labels = newConfig.labels
 
-    this._initLogger(this._settings.logLevel)
+    initialiseLogger(this._settings.logLevel)
+    rootLogger.debug('config', newConfig)
 
     if (this._settings.groups) {
       this.groupData = this._processGroupConfig()
@@ -360,7 +361,7 @@ class PieWrapper {
     const valuesOrder = (isSortedDescending)
       ? 'descending'
       : ((isSortedAscending) ? 'ascending' : 'unordered')
-    layoutLogger.info(`setting valuesOrder to '${valuesOrder}'`)
+    rootLogger.debug(`setting valuesOrder to '${valuesOrder}'`)
     this._settings.valuesOrder = valuesOrder
   }
 
@@ -424,28 +425,6 @@ class PieWrapper {
       })
     }
     return groupData
-  }
-
-  _initLogger (loggerSettings = 'info') {
-    if (_.isNull(loggerSettings)) {
-      return
-    }
-    if (_.isString(loggerSettings)) {
-      rootLog.setLevel(loggerSettings)
-      _(PieWrapper.getLoggerNames()).each((loggerName) => { rootLog.getLogger(loggerName).setLevel(loggerSettings) })
-      return
-    }
-    _(loggerSettings).each((loggerLevel, loggerName) => {
-      if (loggerName === 'default') {
-        rootLog.setLevel(loggerLevel)
-      } else {
-        rootLog.getLogger(loggerName).setLevel(loggerLevel)
-      }
-    })
-  }
-
-  static getLoggerNames () {
-    return ['layout', 'tooltip', 'label']
   }
 }
 PieWrapper.initClass()

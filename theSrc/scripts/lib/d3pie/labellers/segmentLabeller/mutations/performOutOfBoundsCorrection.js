@@ -1,7 +1,6 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 import { extractAndThrowIfNullFactory } from '../mutationHelpers'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../logger'
 
 // TODO use extractAndThrowIfNull
 
