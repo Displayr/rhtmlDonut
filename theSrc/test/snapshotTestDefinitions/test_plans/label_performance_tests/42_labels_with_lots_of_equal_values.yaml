@@ -1,0 +1,10 @@
+version: 1
+type: multi_widget_single_page
+groupname: label_placement
+general_comments: '100 point dataset with a varied offset to vary which quadrant the labeller must perform on'
+rowSize: 4
+comments: []
+height: 576
+width: 512
+widgets:
+    - config: 'data.decreasing_value_sets.42_labels_with_lots_of_equal_values'
