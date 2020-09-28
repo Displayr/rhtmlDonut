@@ -171,7 +171,7 @@ class DescendingOrderCollisionResolver {
         startNewSweep()
         labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CW`)
         const collisions = wrappedLabelSet.findAllCollisions()
-        const largestCollidingLabel = _(collisions).sortBy('proportion').last()
+        const largestCollidingLabel = _(collisions).orderBy(['proportion', 'id'], ['desc', 'asc']).first()
         const frontierIndex = wrappedLabelSet.getIndexByLabel(largestCollidingLabel)
         sweepState.frontierLabel = largestCollidingLabel
 
@@ -235,7 +235,6 @@ class DescendingOrderCollisionResolver {
           if (label.labelLineAngle > labelMaxLineAngle) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
             wrappedLabelSet.resetLabel(label)
-            sweepState.direction = CC
             recordSweepLimit(index)
             recordHitMaxAngle(CW)
             return terminateLoop
@@ -244,7 +243,6 @@ class DescendingOrderCollisionResolver {
           if (isBarrierAngleExceeded(label)) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
             wrappedLabelSet.resetLabel(label)
-            sweepState.direction = CC
             recordSweepLimit(index)
             recordBarrierAngleExceeded()
             return terminateLoop
@@ -257,6 +255,8 @@ class DescendingOrderCollisionResolver {
         ) {
           sweepState.placedAllLabels = true
         }
+
+        sweepState.direction = CC
       } else { // Start CC Sweep
         labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} starting CC`)
         const frontierIndex = wrappedLabelSet.getIndexByLabel(sweepState.frontierLabel)
