@@ -28,7 +28,7 @@ const defaultSettings = {
       fontFamily: 'arial', // pieWrapper: settings.labelsFont, R: labels.font.family // TODO change to setting.fontFamily
       useInnerLabels: false, // pieWrapper: settings.useInnerLabels, R: labels.inner
       innerPadding: 1, // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
-      labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
+      labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.advanced.line.max.angle
       liftOffAngle: 30, // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
       linePadding: 2, // pieWrapper: settings.linePadding, R: labels.line.padding
       maxLabelOffset: 100, // TODO use these values and expose as configurable
