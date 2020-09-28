@@ -116,17 +116,17 @@ Donut <- function(
     labels.offset = 0.1,
     labels.advanced.offset.yaxis.max = NULL,
     labels.advanced.liftoff.angle = 30,
-    labels.advanced.line.max.angle = 60,
+    labels.advanced.line.max.angle = 80,
 
-    labels.outer.lines.straightMin = 0,
-    labels.outer.lines.straightMax = 5,
-    labels.outer.lines.basisInterpolatedMin = 5,
-    labels.outer.lines.basisInterpolatedMax = 60,
-    labels.outer.lines.bezierMin = 60,
-    # NB this means "use bezier for anything with a label line angle of over 60"
+    # NB this means "use bezier for anything with a label line angle of over 0"
+    labels.outer.lines.straightMin = 360,
+    labels.outer.lines.straightMax = 360,
+    labels.outer.lines.basisInterpolatedMin = 360,
+    labels.outer.lines.basisInterpolatedMax = 360,
+    labels.outer.lines.bezierMin = 0,
     labels.outer.lines.bezierMax = 360,
-    labels.outer.lines.bezierSegmentLean = 30,
-    labels.outer.lines.bezierLabelLean = 20,
+    labels.outer.lines.bezierSegmentLean = 0,
+    labels.outer.lines.bezierLabelLean = 0,
     labels.outer.lines.bezierSegmentPullInProportionMin = 0.25,
     labels.outer.lines.bezierSegmentPullInProportionMax = 0.75,
 
