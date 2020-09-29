@@ -363,6 +363,17 @@ class PieWrapper {
       : ((isSortedAscending) ? 'ascending' : 'unordered')
     rootLogger.debug(`setting valuesOrder to '${valuesOrder}'`)
     this._settings.valuesOrder = valuesOrder
+
+    // NB: Temp restriction until ellipse is used globally
+    if (valuesOrder === 'unordered') {
+      const currentLabelMaxLineAngle = this._settings.labelMaxLineAngle
+      if (
+        _.isNull(currentLabelMaxLineAngle) ||
+        _.isUndefined(currentLabelMaxLineAngle) ||
+        parseFloat(currentLabelMaxLineAngle) > 75
+      ) { this._settings.labelMaxLineAngle = 75 }
+      rootLogger.info('temp restricting currentLabelMaxLineAngle to 75 in unordered data set')
+    }
   }
 
   _computeColors () {
