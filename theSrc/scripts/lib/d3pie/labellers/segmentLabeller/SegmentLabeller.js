@@ -93,7 +93,7 @@ class SegmentLabeller {
     }
     this.phaseHistory.push({
       name: 'buildLabels',
-      totalDuration: Date.now() - start
+      totalDuration: Date.now() - start,
     })
   }
 
@@ -305,7 +305,7 @@ class SegmentLabeller {
     }
     this.phaseHistory.push({
       name: 'preprocessLabelSet',
-      totalDuration: Date.now() - start
+      totalDuration: Date.now() - start,
     })
   }
 

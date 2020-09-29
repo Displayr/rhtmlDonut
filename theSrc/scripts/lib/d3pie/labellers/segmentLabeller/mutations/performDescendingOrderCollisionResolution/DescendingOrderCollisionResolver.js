@@ -288,7 +288,6 @@ class DescendingOrderCollisionResolver {
             label.labelLineAngle > labelMaxLineAngle &&
             label.labelAngle < label.segmentAngleMidpoint
 
-
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
             !labelLineAngleExceededTooFarCounterClockWise(label)
