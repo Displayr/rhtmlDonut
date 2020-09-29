@@ -70,6 +70,8 @@ class SegmentLabeller {
       canvas: this.extendCanvasInterface(canvas),
     }
 
+    this.phaseHistory = []
+
     /* NB this is odd. Rationale
         * The label sets are constantly cloned.
         * The canvas object is updated in the parent
@@ -78,6 +80,7 @@ class SegmentLabeller {
      */
     const canvasInterface = () => this.interface.canvas
 
+    const start = Date.now()
     this.labelSets = {
       primary: {
         outer: this.buildLabels({
@@ -88,8 +91,10 @@ class SegmentLabeller {
         inner: [],
       },
     }
-
-    this.mutationHistory = []
+    this.phaseHistory.push({
+      name: 'buildLabels',
+      totalDuration: Date.now() - start
+    })
   }
 
   buildLabels ({ dataPoints, minProportion, canvasInterface }) {
@@ -139,13 +144,12 @@ class SegmentLabeller {
       canvas: this.interface.canvas,
     })
     stats.name = mutationName
-    stats.start = start
     stats.totalDuration = Date.now() - start
     stats.returnedInnerLabelSet = !_.isNull(newInnerLabelSet)
     stats.returnedInnerLabelSetSize = _.isNull(newInnerLabelSet) ? null : newInnerLabelSet.length
     stats.returnedOuterLabelSet = !_.isNull(newOuterLabelSet)
     stats.returnedOuterLabelSetSize = _.isNull(newOuterLabelSet) ? null : newOuterLabelSet.length
-    this.mutationHistory.push(stats)
+    this.phaseHistory.push(stats)
 
     labelLogger.info(`Mutation ${mutationName} completed`)
     if (newOuterLabelSet) {
@@ -179,8 +183,8 @@ class SegmentLabeller {
       this.doMutation(shortenTopAndBottom)
     }
 
-    labelLogger.info('Done labelling. MutationHistory:')
-    labelLogger.info(JSON.stringify(this.mutationHistory, {}, 2))
+    labelLogger.info('Done labelling. Summary:')
+    labelLogger.info(JSON.stringify(this.phaseHistory, {}, 2))
   }
 
   extendCanvasInterface (canvas) {
@@ -288,6 +292,7 @@ class SegmentLabeller {
   preprocessLabelSet () {
     const canvasHeight = this.interface.canvas.height
 
+    const start = Date.now()
     let labelStats = this.getLabelStats()
     if (labelStats.totalDesiredHeight > canvasHeight) {
       this.doMutation(shrinkFontSizesUntilLabelsFitCanvasVertically)
@@ -298,8 +303,10 @@ class SegmentLabeller {
       labelLogger.info('all font shrinking options exhausted, must now start removing labels by increasing minProportion')
       this.doMutation(removeLabelsUntilLabelsFitCanvasVertically)
     }
-
-    labelLogger.info('Done Preprocessing Labelset')
+    this.phaseHistory.push({
+      name: 'preprocessLabelSet',
+      totalDuration: Date.now() - start
+    })
   }
 
   processConfig (config) {
