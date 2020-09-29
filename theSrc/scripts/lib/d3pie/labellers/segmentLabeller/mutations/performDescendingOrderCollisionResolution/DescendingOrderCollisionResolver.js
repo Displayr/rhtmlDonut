@@ -202,9 +202,13 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
           }
 
+          const labelLineAngleExceededTooFarClockWise = (label) =>
+            label.labelLineAngle > labelMaxLineAngle &&
+            label.labelAngle > label.segmentAngleMidpoint
+
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            label.labelLineAngle <= labelMaxLineAngle &&
+            !labelLineAngleExceededTooFarClockWise(label) &&
             !isBarrierAngleExceeded(label)
           ) {
             if (labelLogger.isDebugEnabled()) {
@@ -232,7 +236,7 @@ class DescendingOrderCollisionResolver {
           sweepState.frontierLabel = label
           wrappedLabelSet.activateLabel(label)
 
-          if (label.labelLineAngle > labelMaxLineAngle) {
+          if (labelLineAngleExceededTooFarClockWise(label)) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Max angle exceed. Terminate CW`)
             wrappedLabelSet.resetLabel(label)
             recordSweepLimit(index)
@@ -280,9 +284,14 @@ class DescendingOrderCollisionResolver {
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
           }
 
+          const labelLineAngleExceededTooFarCounterClockWise = (label) =>
+            label.labelLineAngle > labelMaxLineAngle &&
+            label.labelAngle < label.segmentAngleMidpoint
+
+
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            label.labelLineAngle <= labelMaxLineAngle
+            !labelLineAngleExceededTooFarCounterClockWise(label)
           ) {
             if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
@@ -306,7 +315,7 @@ class DescendingOrderCollisionResolver {
             }
           }
 
-          if (label.labelLineAngle > labelMaxLineAngle) {
+          if (labelLineAngleExceededTooFarCounterClockWise(label)) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
             wrappedLabelSet.resetLabel(label)
             recordHitMaxAngle(CC)
