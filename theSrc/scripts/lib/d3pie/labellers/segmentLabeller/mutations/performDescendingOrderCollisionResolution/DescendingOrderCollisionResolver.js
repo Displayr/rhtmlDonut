@@ -4,7 +4,6 @@ import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
 import { labelLogger } from '../../../../../logger'
-import { inclusiveBetween } from '../../../../math'
 
 const CC = 'COUNTER_CLOCKWISE'
 const CW = 'CLOCKWISE'
@@ -120,7 +119,10 @@ class DescendingOrderCollisionResolver {
     const startNewSweep = () => sweepState.sweepCount++
     const recordSweepLimit = (index) => sweepState.frontierPerSweep.push(index)
     const recordHitMaxAngle = (type) => { sweepState.hasHitMaxAngle[type] = true }
-    const recordBarrierAngleExceeded = () => { sweepState.barrierAngleExceeded = true }
+    const recordBarrierAngleExceeded = () => {
+      sweepState.barrierAngleExceeded = true
+      labelLogger.debug('barrierAngleExceeded=true')
+    }
 
     const lastTwoFrontiersAreSame = () => {
       const numSweepRecords = sweepState.frontierPerSweep.length
@@ -128,6 +130,7 @@ class DescendingOrderCollisionResolver {
       return sweepState.frontierPerSweep[numSweepRecords - 1] === sweepState.frontierPerSweep[numSweepRecords - 2]
     }
 
+    // TODO: with introduction of bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel the notion of isBarrierAngleExceeded may be impossible and unecessary ?
     // the "barrier angle" is where the largest label meets the smallest label (around 0 degrees)
     const isBarrierAngleExceeded = (label) => {
       const barrierAngleIsInBottomLeftQuadrant = (sweepState.barrierAngle >= 270)
@@ -208,13 +211,14 @@ class DescendingOrderCollisionResolver {
             // TODO: this should be a util fn called "is a clockwise of b" .. ?
             (
               (label.labelAngle > label.segmentAngleMidpoint) ||
-              (label.inBottomLeftQuadrant && inclusiveBetween(0, label.labelAngle, 90))
+              (label.inBottomLeftQuadrant && label.labelAngle <= 90)
             )
 
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
             !labelLineAngleExceededTooFarClockWise(label) &&
-            !isBarrierAngleExceeded(label)
+            !isBarrierAngleExceeded(label) &&
+            !wrappedLabelSet.bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel(label)
           ) {
             if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: moving ${label.shortText}`)
@@ -224,7 +228,7 @@ class DescendingOrderCollisionResolver {
                 collisions.map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
               }
               if (!this.canvas.labelIsInBounds(label)) {
-                labelLogger.debug(`out of bounds`)
+                labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
             const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle + angleIncrement))
@@ -251,6 +255,15 @@ class DescendingOrderCollisionResolver {
 
           if (isBarrierAngleExceeded(label)) {
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
+            wrappedLabelSet.resetLabel(label)
+            recordSweepLimit(index)
+            recordBarrierAngleExceeded()
+            return terminateLoop
+          }
+
+          // TODO make it more explicit that this is a final termination, the while loop will fail because keepSweeping will return false
+          if (wrappedLabelSet.bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel(label)) {
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Triggered bottomRightQuadrantLabelOverlappingTopLeftQuadrantLabel`)
             wrappedLabelSet.resetLabel(label)
             recordSweepLimit(index)
             recordBarrierAngleExceeded()
@@ -291,8 +304,12 @@ class DescendingOrderCollisionResolver {
 
           const labelLineAngleExceededTooFarCounterClockWise = (label) =>
             label.labelLineAngle > labelMaxLineAngle &&
-            // TODO: not sure why but I cannot make this "symmetric" to labelLineAngleExceededTooFarClockWise
-            label.labelAngle < label.segmentAngleMidpoint
+            // TODO: this should be a util fn called "is a counter clockwise of b" .. ?
+            (
+              (label.labelAngle < label.segmentAngleMidpoint)
+              // TODO: not sure why but I cannot make this "symmetric" with labelLineAngleExceededTooFarClockWise
+              // || (label.inTopLeftQuadrant && label.labelAngle > 270)
+            )
 
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
@@ -306,7 +323,7 @@ class DescendingOrderCollisionResolver {
                 collisions.map(x => labelLogger.debug(`  ${x.labelPositionSummary}`))
               }
               if (!this.canvas.labelIsInBounds(label)) {
-                labelLogger.debug(`out of bounds`)
+                labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
             const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle - angleIncrement))
@@ -399,6 +416,13 @@ class LabelSet {
           .filter(intersectingLabel => this.isActive(intersectingLabel))
         return collisions.length
       })
+  }
+
+  bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel (label) {
+    if (!label.inBottomLeftQuadrant) { return false }
+    const collisions = this.findAllActiveCollisionsWithGreaterLabels(label)
+      .filter(label => label.inTopLeftQuadrant)
+    return (collisions.length > 0)
   }
 
   findAllActiveCollisionsWithGreaterLabels (label) {
