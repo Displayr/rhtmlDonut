@@ -4,6 +4,7 @@ import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
 import { labelLogger } from '../../../../../logger'
+import { inclusiveBetween } from '../../../../math'
 
 const CC = 'COUNTER_CLOCKWISE'
 const CW = 'CLOCKWISE'
@@ -204,7 +205,11 @@ class DescendingOrderCollisionResolver {
 
           const labelLineAngleExceededTooFarClockWise = (label) =>
             label.labelLineAngle > labelMaxLineAngle &&
-            label.labelAngle > label.segmentAngleMidpoint
+            // TODO: this should be a util fn called "is a clockwise of b" .. ?
+            (
+              (label.labelAngle > label.segmentAngleMidpoint) ||
+              (label.inBottomLeftQuadrant && inclusiveBetween(0, label.labelAngle, 90))
+            )
 
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
@@ -286,6 +291,7 @@ class DescendingOrderCollisionResolver {
 
           const labelLineAngleExceededTooFarCounterClockWise = (label) =>
             label.labelLineAngle > labelMaxLineAngle &&
+            // TODO: not sure why but I cannot make this "symmetric" to labelLineAngleExceededTooFarClockWise
             label.labelAngle < label.segmentAngleMidpoint
 
           while (
