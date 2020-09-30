@@ -108,21 +108,17 @@ class DescendingOrderCollisionResolver {
       direction: CW,
       sweepCount: 0,
       placedAllLabels: false,
-      barrierAngle: wrappedLabelSet.getLabelByIndex(0).labelAngle,
       frontierPerSweep: [],
       hasHitMaxAngle: {
         [CW]: false,
         [CC]: false,
       },
-      barrierAngleExceeded: false,
+      labelWrapAround: false,
     }
     const startNewSweep = () => sweepState.sweepCount++
     const recordSweepLimit = (index) => sweepState.frontierPerSweep.push(index)
     const recordHitMaxAngle = (type) => { sweepState.hasHitMaxAngle[type] = true }
-    const recordBarrierAngleExceeded = () => {
-      sweepState.barrierAngleExceeded = true
-      labelLogger.debug('barrierAngleExceeded=true')
-    }
+    const recordLabelWrapAround = () => { sweepState.labelWrapAround = true }
 
     const lastTwoFrontiersAreSame = () => {
       const numSweepRecords = sweepState.frontierPerSweep.length
@@ -130,27 +126,13 @@ class DescendingOrderCollisionResolver {
       return sweepState.frontierPerSweep[numSweepRecords - 1] === sweepState.frontierPerSweep[numSweepRecords - 2]
     }
 
-    // TODO: with introduction of bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel the notion of isBarrierAngleExceeded may be impossible and unecessary ?
-    // the "barrier angle" is where the largest label meets the smallest label (around 0 degrees)
-    const isBarrierAngleExceeded = (label) => {
-      const barrierAngleIsInBottomLeftQuadrant = (sweepState.barrierAngle >= 270)
-      const newLabelAngleInTopLeftQuadrant = (label.labelAngle < 90)
-      return (
-        label.inBottomLeftQuadrant && // NB this is actually "the segment is in bottom left quadrant"
-        (
-          (barrierAngleIsInBottomLeftQuadrant && label.labelAngle >= sweepState.barrierAngle) ||
-          (!barrierAngleIsInBottomLeftQuadrant && newLabelAngleInTopLeftQuadrant && label.labelAngle >= sweepState.barrierAngle)
-        )
-      )
-    }
-
     const keepSweeping = () => {
-      const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, barrierAngleExceeded } = sweepState
+      const { placedAllLabels, direction, sweepCount, hasHitMaxAngle, labelWrapAround } = sweepState
       if (placedAllLabels) { return false }
       const lastPhaseCompleted = (direction === CW) ? CC : CW
       if (lastPhaseCompleted === CC) { return true } // always finish with a CW sweep
 
-      if (barrierAngleExceeded) { return false }
+      if (labelWrapAround) { return false }
       if (sweepCount > maxSweeps) { return false }
       if (!hasHitMaxAngle[CW] || !hasHitMaxAngle[CC]) { return true }
       if (lastTwoFrontiersAreSame()) { return false }
@@ -217,7 +199,6 @@ class DescendingOrderCollisionResolver {
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithGreaterLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
             !labelLineAngleExceededTooFarClockWise(label) &&
-            !isBarrierAngleExceeded(label) &&
             !wrappedLabelSet.bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel(label)
           ) {
             if (labelLogger.isDebugEnabled()) {
@@ -253,26 +234,17 @@ class DescendingOrderCollisionResolver {
             return terminateLoop
           }
 
-          if (isBarrierAngleExceeded(label)) {
-            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Barrier angle exceeded. Terminate CW`)
-            wrappedLabelSet.resetLabel(label)
-            recordSweepLimit(index)
-            recordBarrierAngleExceeded()
-            return terminateLoop
-          }
-
-          // TODO make it more explicit that this is a final termination, the while loop will fail because keepSweeping will return false
           if (wrappedLabelSet.bottomLeftQuadrantLabelOverlappingTopLeftQuadrantLabel(label)) {
-            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Triggered bottomRightQuadrantLabelOverlappingTopLeftQuadrantLabel`)
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CW: frontier ${label.shortText}. Full label wrap around. Terminate CW`)
             wrappedLabelSet.resetLabel(label)
             recordSweepLimit(index)
-            recordBarrierAngleExceeded()
+            recordLabelWrapAround()
             return terminateLoop
           }
         })
 
         if (
-          (!sweepState.hasHitMaxAngle[CW] && !sweepState.barrierAngleExceeded) ||
+          (!sweepState.hasHitMaxAngle[CW] && !sweepState.labelWrapAround) ||
           collisions.length === 0
         ) {
           sweepState.placedAllLabels = true
@@ -344,7 +316,6 @@ class DescendingOrderCollisionResolver {
           }
 
           if (index === 0) {
-            sweepState.barrierAngle = label.labelAngle
             labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: complete. Largest label at labelLineAngle ${label.labelLineAngle.toFixed()} and label angle ${label.labelAngle.toFixed()}`)
           }
         })
