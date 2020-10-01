@@ -31,8 +31,8 @@ module.exports = ({
 
     let placementLineCoord1 = {}
     placementLineCoord1.y = (between(0, angle, 180))
-      ? pieCenter.y - (outerRadius + maxVerticalOffset) + ((hasTopLabel) ? (maxFontSize + minGap) : 0)
-      : pieCenter.y + (outerRadius + maxVerticalOffset) - ((hasBottomLabel) ? (maxFontSize + minGap) : 0)
+      ? pieCenter.y - (outerRadius + maxVerticalOffset)
+      : pieCenter.y + (outerRadius + maxVerticalOffset)
     placementLineCoord1.x = (between(0, angle, 90) || between(270, angle, 360))
       ? pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian
       : pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian

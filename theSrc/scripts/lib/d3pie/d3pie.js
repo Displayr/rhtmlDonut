@@ -143,7 +143,7 @@ class d3pie {
       canvasWidth: ${this.options.size.canvasWidth}
       canvasHeight: ${this.options.size.canvasHeight}
       constrainedDimension: ${pieDimensions.constrained}
-      radius: ${this.innerRadius} -> ${this.outerRadius}
+      radius: Inner ${this.innerRadius} Outer ${this.outerRadius}
       labelOffset: ${this.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}
