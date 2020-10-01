@@ -225,8 +225,8 @@ class CollisionResolver {
     const { bottomIsLifted, hasTopLabel, hasBottomLabel, maxFontSize, topIsLifted } = this.variant
     const { outerPadding } = this.invariant
 
-    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
-    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
+    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset
+    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset
 
     const getLabelAbove = (label) => {
       const indexOf = outerLabelSetSortedTopToBottom.indexOf(label)
@@ -441,8 +441,8 @@ class CollisionResolver {
       return null
     }
 
-    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
-    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset - ((hasBottomLabel) ? maxFontSize : 0)
+    const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset
+    const lowerBoundary = pieCenter.y + outerRadius + maxVerticalOffset
 
     if (stages.downSweep) {
       labelLogger.debug(`${lp} start. Size ${outerLabelSet.length}`)
