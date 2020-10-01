@@ -222,7 +222,7 @@ class CollisionResolver {
     outerLabelSetSortedTopToBottom,
   }) {
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { bottomIsLifted, hasTopLabel, hasBottomLabel, maxFontSize, topIsLifted } = this.variant
+    const { bottomIsLifted, topIsLifted } = this.variant
     const { outerPadding } = this.invariant
 
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset
@@ -422,7 +422,7 @@ class CollisionResolver {
     */
 
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, maxFontSize, labelMaxLineAngle } = this.variant
+    const { topIsLifted, bottomIsLifted, labelMaxLineAngle } = this.variant
     const { outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
