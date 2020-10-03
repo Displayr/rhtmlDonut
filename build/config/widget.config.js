@@ -15,6 +15,10 @@ const config = {
     ],
   },
   snapshotTesting: {
+    puppeteer: {
+      // headless: false, // if set to false, show the browser while testing
+      // slowMo: 500, // delay each step in the browser interaction by X milliseconds
+    },
     snapshotDelay: 500,
     // consoleLogHandler: (msg, testName) => console.log(msg._text), // this will get all the output
     consoleLogHandler, // this will only output the stats lines
