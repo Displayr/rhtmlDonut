@@ -140,8 +140,7 @@ class PieWrapper {
       if (_.isUndefined(thing)) { return thing }
       return (thing) ? trueVal : falseVal
     }
-
-    debugger
+    
     this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
       size: {
         canvasWidth: absencePreservingParseFloat(width),
