@@ -33,7 +33,7 @@ function stringAnonymiser (inputString) {
     '/',
     '(',
     ')',
-    '+'
+    '+',
   ]
 
   const isNumeric = (char) => char.match(/[0-9]/)

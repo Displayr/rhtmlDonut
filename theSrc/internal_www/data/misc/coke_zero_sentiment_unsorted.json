@@ -890,7 +890,6 @@
     "labelsFont": "Arial",
     "labelsSize": 10,
     "labelsColor": "#2C2C2C",
-    "labelsInner": false,
     "labelsBold": false,
     "labelsMinFontSize": 10,
     "groups": null,
@@ -921,7 +920,7 @@
     "orderControl": false,
     "gradient": false,
     "innerRadius": "0",
-    "minAngle": 0.003,
+    "minProportion": 0.003,
     "borderColor": "#FFFFFF"
   }
 }

@@ -18,7 +18,7 @@ function compareTwoTestRuns ({ baseline, candidate }) {
 
   const independentStats = {
     baseline: computeIndependent(baseline.tests),
-    candidate: computeIndependent(candidate.tests)
+    candidate: computeIndependent(candidate.tests),
   }
 
   printIndependentStats(independentStats)
@@ -37,7 +37,7 @@ function computeIndependent (testStatArray) {
     min_duration: _(testStatArray).map('totalDuration').min().toFixed(0),
     max_duration: _(testStatArray).map('totalDuration').max().toFixed(0),
     average_duration: _(testStatArray).meanBy('totalDuration').toFixed(0),
-    median_duration: median(_(testStatArray).map('totalDuration').value()).toFixed(0)
+    median_duration: median(_(testStatArray).map('totalDuration').value()).toFixed(0),
   }
   return stats
 }

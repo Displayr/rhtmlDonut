@@ -1,4 +1,5 @@
 {
+  "name": "rhtmlDonut",
   "private": true,
   "version": "2.1.1",
   "engines": {
@@ -7,8 +8,8 @@
   "scripts": {
     "prepush": "node ./bin/prepush",
     "test": "npm run localTest",
-    "localTest": "gulp testVisual --env=local --branch=`git rev-parse --abbrev-ref HEAD`",
-    "travisTest": "gulp testVisual --env=travis --branch=`git rev-parse --abbrev-ref HEAD`",
+    "localTest": "gulp testSpecs && gulp testVisual --env=local --branch=`git rev-parse --abbrev-ref HEAD`",
+    "travisTest": "gulp testSpecs && gulp testVisual --env=travis --branch=$BRANCH",
     "gatherDiffs": "rm -rf .tmp/diffs; mkdir -p .tmp/diffs/; BRANCH=`git rev-parse --abbrev-ref HEAD` && for I in `find theSrc/test/snapshots/local/$BRANCH -type d -name __diff_output__`; do cp $I/* .tmp/diffs/ 2> /dev/null; done; true",
     "macOpenDiffs": "open .tmp/diffs",
     "seeDiffs": "npm run gatherDiffs; npm run macOpenDiffs",

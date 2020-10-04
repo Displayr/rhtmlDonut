@@ -53,7 +53,6 @@
     "labelsFont": "arial",
     "labelsSize": 10,
     "labelsColor": "#333333",
-    "labelsInner": false,
     "labelsBold": false,
     "labelsMinFontSize": 8,
     "groups": [
@@ -100,7 +99,7 @@
     "orderControl": false,
     "gradient": false,
     "innerRadius": "0.8",
-    "minAngle": 0.003,
+    "minProportion": 0.003,
     "borderColor": "white"
   }
 }

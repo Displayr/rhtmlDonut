@@ -6,7 +6,7 @@ const {
   configureImageSnapshotMatcher,
   puppeteerSettings,
   testSnapshots,
-  jestTimeout
+  jestTimeout,
 } = renderExamplePageTestHelper
 
 jest.setTimeout(jestTimeout)
@@ -24,15 +24,15 @@ describe('multiple render tests', () => {
   })
 
   test('rerender works', async function () {
-    const originalConfig = 'data.test_plan.abc_rbg'
-    const newConfig = 'data.test_plan.abc_rbg_vertical_flip'
+    const originalConfig = 'data.test_plan.abc_rbg|config.animationDisabled'
+    const newConfig = 'data.test_plan.abc_rbg_vertical_flip|config.animationDisabled'
 
     const { page } = await loadWidget({
       browser,
       configName: originalConfig,
       width: 1000,
       height: 600,
-      rerenderControls: true
+      rerenderControls: true,
     })
 
     await testSnapshots({ page, snapshotName: 'initial' })
