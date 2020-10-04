@@ -15,7 +15,7 @@ configureImageSnapshotMatcher({
   pixelMatchConfig: {
     failureThreshold: 8000,
     failureThresholdType: 'pixel', // pixel or percent
-  }
+  },
 })
 
 jest.setTimeout(jestTimeout)
