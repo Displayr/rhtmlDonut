@@ -4,8 +4,7 @@ import tooltip from './tooltip'
 import d3 from 'd3'
 import _ from 'lodash'
 
-import * as rootLog from 'loglevel'
-const tooltipLogger = rootLog.getLogger('tooltip')
+import { tooltipLogger } from '../logger'
 
 let segments = {
 
@@ -220,7 +219,7 @@ let segments = {
     const p = (labelDatum) => `${labelDatum.id}(${labelDatum.label.substr(0, 6)})`
 
     lb.on('mouseover', function (d) {
-      tooltipLogger.info(`mouseover label ${p(d)}`)
+      tooltipLogger.debug(`mouseover label ${p(d)}`)
 
       const id = d.id
       const currentEl = d3.select(this)

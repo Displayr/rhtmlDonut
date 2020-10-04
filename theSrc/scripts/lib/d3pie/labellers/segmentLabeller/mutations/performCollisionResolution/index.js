@@ -1,8 +1,7 @@
 import CollisionResolver from './CollisionResolver'
 
 import { findLabelsIntersecting } from '../../../labelUtils'
-import * as rootLog from 'loglevel'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../../../../logger'
 
 const mutationName = 'performCollisionResolution'
 const mutationFn = ({ innerLabelSet, outerLabelSet, variant, invariant, canvas }) => {

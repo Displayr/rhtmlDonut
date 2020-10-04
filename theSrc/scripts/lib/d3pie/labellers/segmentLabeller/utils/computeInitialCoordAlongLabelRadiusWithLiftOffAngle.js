@@ -1,9 +1,5 @@
-import { between, computeIntersection, rotate } from '../../../math'
-import * as rootLog from 'loglevel'
-const labelLogger = rootLog.getLogger('label')
-
-// TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
+import { between, computeIntersectionOfTwoLines, rotate } from '../../../math'
+import { labelLogger } from '../../../../logger'
 
 module.exports = ({
   angle,
@@ -18,6 +14,7 @@ module.exports = ({
   hasTopLabel = false,
   hasBottomLabel = false,
   minGap = 1,
+  spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
   let fitLineCoord = null
   let isLifted = false
@@ -53,7 +50,7 @@ module.exports = ({
 
     const placementLine = [placementLineCoord1, placementLineCoord2]
 
-    const intersection = computeIntersection(radialLine, placementLine)
+    const intersection = computeIntersectionOfTwoLines(radialLine, placementLine)
 
     if (intersection) {
       fitLineCoord = intersection

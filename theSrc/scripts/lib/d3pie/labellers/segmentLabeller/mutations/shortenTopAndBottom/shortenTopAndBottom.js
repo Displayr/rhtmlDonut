@@ -1,26 +1,23 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 import RBush from 'rbush'
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
-import { computeIntersection, rotate } from '../../../../math'
-const labelLogger = rootLog.getLogger('label')
-
-// TODO temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
+import { computeIntersectionOfTwoLines, rotate } from '../../../../math'
+import { labelLogger } from '../../../../../logger'
 
 const VARIABLE_CONFIG = [
-  'actualMaxFontSize',
   'bottomIsLifted',
   'hasBottomLabel',
   'hasTopLabel',
-  'topIsLifted',
   'labelMaxLineAngle',
+  'maxFontSize',
+  'topIsLifted',
 ]
 
 const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
 ]
 
 class ShortenTopAndBottom {
@@ -62,8 +59,8 @@ class ShortenTopAndBottom {
 
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
-      const { hasTopLabel, actualMaxFontSize: maxFontSize } = this.variant
-      const { liftOffAngle, outerPadding } = this.invariant
+      const { hasTopLabel, maxFontSize } = this.variant
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
       const outerRadiusYCoord = pieCenter.y - outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord - labelOffset
       const labelMaxLineAngle = this.variant.labelMaxLineAngle
@@ -188,7 +185,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: left side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -258,7 +255,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten top: right side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -300,14 +297,14 @@ class ShortenTopAndBottom {
       const nearestNeighbors = []
       if (topLabelIndex > 0) { nearestNeighbors.push(this.inputLabelSet[topLabelIndex - 1]) }
       if (topLabelIndex < this.inputLabelSet.length - 1) { nearestNeighbors.push(this.inputLabelSet[topLabelIndex + 1]) }
-      const topYOfNearestLabel = _(nearestNeighbors).map('topLeftCoord.y').min()
+      const topYOfNearestLabel = _(nearestNeighbors).map('minY').min()
 
       const newBottomYCoord = _.min([
         topYOfNearestLabel - parseFloat(this.invariant.outerPadding),
         this.canvas.pieCenter.y - this.canvas.outerRadius - this.canvas.labelOffset,
       ])
 
-      if (newBottomYCoord > topLabel.bottomLeftCoord.y) {
+      if (newBottomYCoord > topLabel.maxY) {
         topLabel.placeLabelViaConnectorCoord({ x: topLabel.lineConnectorCoord.x, y: newBottomYCoord })
       }
     }
@@ -320,8 +317,8 @@ class ShortenTopAndBottom {
 
     try {
       const { pieCenter, outerRadius, labelOffset } = this.canvas
-      const { hasBottomLabel, actualMaxFontSize: maxFontSize } = this.variant
-      const { liftOffAngle, outerPadding } = this.invariant
+      const { hasBottomLabel, maxFontSize } = this.variant
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
       const outerRadiusYCoord = pieCenter.y + outerRadius
       const baseLabelOffsetYCoord = outerRadiusYCoord + labelOffset
       const labelMaxLineAngle = this.variant.labelMaxLineAngle
@@ -443,7 +440,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(leftPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(leftPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: left side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -513,7 +510,7 @@ class ShortenTopAndBottom {
               { x: 0, y: newLineConnectorY },
               { x: parseFloat(this.canvas.width), y: newLineConnectorY },
             ]
-            const intersection = computeIntersection(rightPlacementTriangleLine, newLineConnectorLatitude)
+            const intersection = computeIntersectionOfTwoLines(rightPlacementTriangleLine, newLineConnectorLatitude)
             if (intersection) {
               labelLogger.debug(`shorten bottom: right side: placing ${label.shortText} lineConnector at x:${intersection.x}, y: ${newLineConnectorY}`)
               label.placeLabelViaConnectorCoord({
@@ -555,14 +552,14 @@ class ShortenTopAndBottom {
       const nearestNeighbors = []
       if (bottomLabelIndex > 0) { nearestNeighbors.push(this.inputLabelSet[bottomLabelIndex - 1]) }
       if (bottomLabelIndex < this.inputLabelSet.length - 1) { nearestNeighbors.push(this.inputLabelSet[bottomLabelIndex + 1]) }
-      const bottomYOfNearestLabel = _(nearestNeighbors).map('bottomLeftCoord.y').max()
+      const bottomYOfNearestLabel = _(nearestNeighbors).map('maxY').max()
 
       const newTopYCoord = _.max([
         bottomYOfNearestLabel + parseFloat(this.invariant.outerPadding),
         this.canvas.pieCenter.y + this.canvas.outerRadius + this.canvas.labelOffset,
       ])
 
-      if (newTopYCoord < bottomLabel.topLeftCoord.y) {
+      if (newTopYCoord < bottomLabel.minY) {
         bottomLabel.placeLabelViaConnectorCoord({ x: bottomLabel.lineConnectorCoord.x, y: newTopYCoord })
       }
     }
@@ -653,11 +650,10 @@ class ShortenTopAndBottom {
         maxX: label.maxX,
       }
 
-      this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+      this.canvas.placeLabelAlongLabelRadius({
         label,
         hasTopLabel: this.variant.hasTopLabel,
         hasBottomLabel: this.variant.hasBottomLabel,
-        labelLiftOffAngle: 0, // TODO : doing this is confusing. Make two fns !!
       })
 
       const newPosition = {

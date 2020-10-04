@@ -4,19 +4,20 @@ import computeLabelStats from './computeLabelStats'
 import wrapAndFormatLabelUsingSvgApproximation from './utils/wrapAndFormatLabelUsingSvgApproximation'
 import placeLabelAlongLabelRadiusWithLiftOffAngle from './utils/placeLabelAlongLabelRadiusWithLiftOffAngle'
 import adjustLabelToNewY from './utils/adjustLabelToNewY'
-
-import * as rootLog from 'loglevel'
+import computeCoordOnEllipse from './utils/computeCoordOnEllipse'
+import draw from './draw'
+import { labelLogger } from '../../../logger'
 import {
   initialNaivePlacement,
   performCollisionResolution,
+  performDescendingOrderCollisionResolution,
   performOutOfBoundsCorrection,
   removeLabelsUntilLabelsFitCanvasVertically,
   shortenTopAndBottom,
   shrinkFontSizesUntilLabelsFitCanvasVertically,
 } from './mutations'
 
-const labelLogger = rootLog.getLogger('label')
-
+// define the rest of the variants that get set later - do this in the config data class
 const VARIABLE_CONFIG = [
   'labelMaxLineAngle',
   'minProportion',
@@ -32,21 +33,23 @@ const INVARIABLE_CONFIG = [
   'innerPadding',
   'liftOffAngle',
   'linePadding',
-  'maxFontSize',
   'maxLabelOffset',
   'maxLines',
   'maxVerticalOffset',
   'maxWidthProportion',
-  'minFontSize',
   'minLabelOffset',
   'outerPadding',
+  'preferredMaxFontSize',
+  'preferredMinFontSize',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
   'useInnerLabels',
 ]
 
 class SegmentLabeller {
-  constructor ({ parentContainer, dataPoints, sortOrder, config, canvas }) {
-    this.parentContainer = parentContainer
+  constructor ({ dataPoints, sortOrder, config, linesConfig, animationConfig, canvas }) {
     this.canvas = canvas
+    this.linesConfig = linesConfig
+    this.animationConfig = animationConfig
 
     const { variant, invariant } = this.processConfig(config)
     this._variant = variant
@@ -56,6 +59,8 @@ class SegmentLabeller {
     this._variant.hasTopLabel = false
     this._variant.bottomIsLifted = false
     this._variant.topIsLifted = false
+    this._variant.maxFontSize = this._invariant.preferredMaxFontSize
+    this._variant.minFontSize = this._invariant.preferredMinFontSize
 
     this._invariant.maxLabelWidth = this.canvas.width * this._invariant.maxWidthProportion
     this._invariant.originalDataPoints = dataPoints
@@ -65,14 +70,17 @@ class SegmentLabeller {
       canvas: this.extendCanvasInterface(canvas),
     }
 
+    this.phaseHistory = []
+
     /* NB this is odd. Rationale
         * The label sets are constantly cloned.
         * The canvas object is updated in the parent
-        * If a label clone is done, then an update to canvas is made, the label will have a copy of the old canvas
+        * If a label clone is done, and later an update to canvas is made, the cloned label will have a copy of the old canvas
           that does not include the updates. By passing a fn, the updated canvas can always be retrieved
      */
     const canvasInterface = () => this.interface.canvas
 
+    const start = Date.now()
     this.labelSets = {
       primary: {
         outer: this.buildLabels({
@@ -83,8 +91,10 @@ class SegmentLabeller {
         inner: [],
       },
     }
-
-    this.mutationHistory = []
+    this.phaseHistory.push({
+      name: 'buildLabels',
+      totalDuration: Date.now() - start,
+    })
   }
 
   buildLabels ({ dataPoints, minProportion, canvasInterface }) {
@@ -105,8 +115,8 @@ class SegmentLabeller {
           prefix: this._invariant.prefix,
           suffix: this._invariant.suffix,
           fontFamily: this._invariant.fontFamily,
-          fontSize: this._invariant.maxFontSize,
-          fractionalValue: dataPoint.value / totalValue,
+          fontSize: this._invariant.preferredMaxFontSize,
+          proportion: dataPoint.value / totalValue,
           group: dataPoint.group,
           id: dataPoint.id,
           innerPadding: this._invariant.innerPadding,
@@ -116,16 +126,16 @@ class SegmentLabeller {
         })
       })
       // NB filter here after the creation map as we are tracking cumulative value above so must process ALL
-      .filter(({ fractionalValue }) => { return fractionalValue >= minProportion })
+      .filter(({ proportion }) => { return proportion >= minProportion })
   }
 
   doMutation ({ mutationName, mutationFn }) {
     const start = Date.now()
     const {
-      newInnerLabelSet,
-      newOuterLabelSet,
-      newVariants,
-      stats,
+      newInnerLabelSet = null,
+      newOuterLabelSet = null,
+      newVariants = {},
+      stats = {},
     } = mutationFn({
       outerLabelSet: _.cloneDeep(this.labelSets.primary.outer),
       innerLabelSet: _.cloneDeep(this.labelSets.primary.inner),
@@ -134,13 +144,12 @@ class SegmentLabeller {
       canvas: this.interface.canvas,
     })
     stats.name = mutationName
-    stats.start = start
     stats.totalDuration = Date.now() - start
     stats.returnedInnerLabelSet = !_.isNull(newInnerLabelSet)
     stats.returnedInnerLabelSetSize = _.isNull(newInnerLabelSet) ? null : newInnerLabelSet.length
     stats.returnedOuterLabelSet = !_.isNull(newOuterLabelSet)
     stats.returnedOuterLabelSetSize = _.isNull(newOuterLabelSet) ? null : newOuterLabelSet.length
-    this.mutationHistory.push(stats)
+    this.phaseHistory.push(stats)
 
     labelLogger.info(`Mutation ${mutationName} completed`)
     if (newOuterLabelSet) {
@@ -163,48 +172,74 @@ class SegmentLabeller {
   }
 
   doLabelling () {
-    this.doMutation(initialNaivePlacement)
-    this.doMutation(performOutOfBoundsCorrection) // TODO add if stages.outOfBoundsCorrection
-    this.doMutation(performCollisionResolution)
-    this.doMutation(shortenTopAndBottom)
+    // TODO: future work. Add inner labels to performDescendingOrderCollisionResolution mutation
+    // until then, for compatibility with existing plots, if user requests inner labels then use old algo (i.e., performCollisionResolution)
+    if (this._invariant.sortOrder === 'descending' && !this._invariant.useInnerLabels) {
+      this.doMutation(performDescendingOrderCollisionResolution)
+    } else {
+      this.doMutation(initialNaivePlacement)
+      this.doMutation(performOutOfBoundsCorrection)
+      this.doMutation(performCollisionResolution)
+      this.doMutation(shortenTopAndBottom)
+    }
 
-    console.log('Done labelling. MutationHistory:')
-    console.log(JSON.stringify(this.mutationHistory, {}, 2))
+    labelLogger.info('Done labelling. Summary:')
+    labelLogger.info(JSON.stringify(this.phaseHistory, {}, 2))
   }
 
   extendCanvasInterface (canvas) {
     canvas.getLabelSize = ({ labelText, fontSize, fontFamily }) => {
       return wrapAndFormatLabelUsingSvgApproximation({
         parentContainer: this.canvas.svg,
-        labelText: labelText,
-        fontSize: fontSize,
-        fontFamily: fontFamily,
+        labelText,
+        fontSize,
+        fontFamily,
         maxLabelWidth: this._invariant.maxLabelWidth,
         innerPadding: this._invariant.innerPadding,
         maxLabelLines: this._invariant.maxLines,
       })
     }
-    canvas.placeLabelAlongLabelRadiusWithLiftOffAngle = ({ label, hasTopLabel, hasBottomLabel, labelLiftOffAngle }) => {
+
+    canvas.placeLabelAlongLabelRadiusWithLift = ({ label, hasTopLabel, hasBottomLabel }) => {
       return placeLabelAlongLabelRadiusWithLiftOffAngle({
         labelDatum: label,
         labelOffset: this.interface.canvas.labelOffset,
-        labelLiftOffAngle, // NB although this is an invariant, callees sometimes set it to 0 to achieve placement along radius
+        labelLiftOffAngle: this._invariant.liftOffAngle,
         outerRadius: this.interface.canvas.outerRadius,
         pieCenter: this.interface.canvas.pieCenter,
         canvasHeight: this.interface.canvas.height,
-        maxFontSize: this._variant.actualMaxFontSize,
+        maxFontSize: this._variant.maxFontSize,
         maxVerticalOffset: this.interface.canvas.maxVerticalOffset,
         hasTopLabel,
         hasBottomLabel,
         minGap: this._invariant.outerPadding,
+        spacingBetweenUpperTrianglesAndCenterMeridian: this._invariant.spacingBetweenUpperTrianglesAndCenterMeridian,
       })
     }
 
-    canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted }) => {
-      let { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
-      let { liftOffAngle, outerPadding } = this._invariant
-      let { hasTopLabel, hasBottomLabel, actualMaxFontSize: maxFontSize } = this._variant
+    canvas.placeLabelAlongLabelRadius = ({ label, hasTopLabel, hasBottomLabel }) => {
+      return placeLabelAlongLabelRadiusWithLiftOffAngle({
+        labelDatum: label,
+        labelOffset: this.interface.canvas.labelOffset,
+        labelLiftOffAngle: 0,
+        outerRadius: this.interface.canvas.outerRadius,
+        pieCenter: this.interface.canvas.pieCenter,
+        canvasHeight: this.interface.canvas.height,
+        maxFontSize: this._variant.maxFontSize,
+        maxVerticalOffset: this.interface.canvas.maxVerticalOffset,
+        hasTopLabel,
+        hasBottomLabel,
+        minGap: this._invariant.outerPadding,
+        spacingBetweenUpperTrianglesAndCenterMeridian: this._invariant.spacingBetweenUpperTrianglesAndCenterMeridian,
+      })
+    }
 
+    canvas.adjustLabelToNewY = ({ anchor, newY, label, topIsLifted, bottomIsLifted, hemisphere }) => {
+      const { pieCenter, outerRadius, labelOffset, maxVerticalOffset } = this.interface.canvas
+      const { liftOffAngle, outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this._invariant
+      const { hasTopLabel, hasBottomLabel, maxFontSize } = this._variant
+
+      // TODO this was ported correctly but it looks like the X's should by Y's ?
       let apexLabelCorrection = 0
       if ((label.topLeftCoord.x < pieCenter.x && hasTopLabel) ||
         (label.topLeftCoord.x > pieCenter.x && hasBottomLabel)) {
@@ -221,8 +256,27 @@ class SegmentLabeller {
         pieCenter: pieCenter,
         topIsLifted,
         bottomIsLifted,
+        spacingBetweenUpperTrianglesAndCenterMeridian,
+        hemisphere,
       })
     }
+
+    canvas.computeCoordOnEllipse = ({ angle, radialWidth, radialHeight }) => {
+      const { pieCenter, outerRadius, labelOffset } = this.interface.canvas
+      return computeCoordOnEllipse({
+        angle,
+        radialWidth: radialWidth || outerRadius + labelOffset, // default to the labelPlacementCircle
+        radialHeight: radialHeight || outerRadius + labelOffset, // default to the labelPlacementCircle
+        pieCenter,
+      })
+    }
+
+    canvas.labelIsInBounds = (label) => {
+      const { minX, maxX, minY, maxY } = label
+      const { height, width } = this.interface.canvas
+      return (minX >= 0) && (maxX <= width) && (minY >= 0) && (maxY <= height)
+    }
+
     return canvas
   }
 
@@ -236,8 +290,9 @@ class SegmentLabeller {
   }
 
   preprocessLabelSet () {
-    const canvasHeight = this._invariant.canvasHeight
+    const canvasHeight = this.interface.canvas.height
 
+    const start = Date.now()
     let labelStats = this.getLabelStats()
     if (labelStats.totalDesiredHeight > canvasHeight) {
       this.doMutation(shrinkFontSizesUntilLabelsFitCanvasVertically)
@@ -245,22 +300,72 @@ class SegmentLabeller {
 
     labelStats = this.getLabelStats()
     if (labelStats.totalDesiredHeight > canvasHeight) {
-      labelLogger.info(`all font shrinking options exhausted, must now start removing labels by increasing minProportion`)
+      labelLogger.info('all font shrinking options exhausted, must now start removing labels by increasing minProportion')
       this.doMutation(removeLabelsUntilLabelsFitCanvasVertically)
     }
-
-    // TODO this is a bit out of place. Perhaps delete the min/max or store as temp vars,
-    //  then throw them away and keep this and call it maxFontSize
-    this._variant.actualMaxFontSize = _(this.labelSets.primary.outer).map('fontSize').max()
-
-    console.log('Done Preprocessing Labelset. MutationHistory:')
-    console.log(JSON.stringify(this.mutationHistory, {}, 2))
+    this.phaseHistory.push({
+      name: 'preprocessLabelSet',
+      totalDuration: Date.now() - start,
+    })
   }
 
   processConfig (config) {
     const variant = _.pick(config, VARIABLE_CONFIG)
     const invariant = _.pick(config, INVARIABLE_CONFIG)
     return { variant, invariant }
+  }
+
+  clearPreviousFromCanvas () {
+    const { svg, cssPrefix } = this.interface.canvas
+    svg.selectAll(`.${cssPrefix}labels-outer`).remove()
+    svg.selectAll(`.${cssPrefix}labels-inner`).remove()
+    svg.selectAll(`.${cssPrefix}labels-extra`).remove() // TODO dont need
+    svg.selectAll(`.${cssPrefix}labels-group`).remove() // TODO shouldn't be done here
+    svg.selectAll(`.${cssPrefix}lineGroups-outer`).remove()
+    svg.selectAll(`.${cssPrefix}lineGroups-inner`).remove()
+    svg.selectAll(`.${cssPrefix}tooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
+    svg.selectAll(`.${cssPrefix}gtooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
+  }
+
+  draw () {
+    const { canvas } = this.interface
+    const { color, innerPadding } = this._invariant
+    const { labelMaxLineAngle } = this._variant
+    const { inner, outer } = this.labelSets.primary
+
+    draw.drawLabelSet({
+      canvas,
+      labels: outer,
+      labelColor: color,
+      innerPadding: innerPadding,
+      labelType: 'outer',
+    })
+
+    draw.drawLabelSet({
+      canvas,
+      labels: inner,
+      labelColor: color,
+      innerPadding: innerPadding,
+      labelType: 'inner',
+    })
+
+    if (this.linesConfig.enabled) {
+      draw.drawOuterLabelLines({
+        canvas,
+        labels: outer,
+        labelMaxLineAngle,
+        config: this.linesConfig.outer,
+      })
+      draw.drawInnerLabelLines({
+        canvas,
+        labels: inner,
+      })
+    }
+
+    draw.fadeInLabelsAndLines({
+      canvas,
+      animationConfig: this.animationConfig,
+    })
   }
 }
 

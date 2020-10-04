@@ -2,8 +2,7 @@ import d3 from 'd3'
 import segments from '../segments'
 import math from '../math'
 import { ptInArc } from './labelUtils'
-import * as rootLog from 'loglevel'
-const labelLogger = rootLog.getLogger('label')
+import { labelLogger } from '../../logger'
 
 let labels = {
 

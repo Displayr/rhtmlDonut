@@ -9,25 +9,12 @@ import validate from './validate'
 import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
 import SegmentLabeller from './labellers/segmentLabeller'
-import tempSegmentLabellerDrawFunctions from './labellers/segmentLabeller/drawFunctions'
-
-import * as rootLog from 'loglevel'
-const layoutLogger = rootLog.getLogger('layout')
-
-/*!
- * This is not the standard d3pie. It was edited by Xiaoting Wang and then Kyle Zeeuwen
- * @author Ben Keen, Xiaoting Wang, Kyle Zeeuwen
- * @original_repo http://github.com/benkeen/d3pie
- * @repo http://github.com/Displayr/rhtmlDonut
- */
-
-// TODO pull from package.json
-const _scriptName = 'rhtmlDonut'
-const _version = '2.0.0'
+import { name, version } from '../../../../package'
+import { rootLogger, layoutLogger } from '../logger'
 
 class d3pie {
   constructor (element, options) {
-    rootLog.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
+    rootLogger.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
 
     // element can be an ID or DOM element
     this.element = element
@@ -52,8 +39,8 @@ class d3pie {
     }
 
     // add a data-role to the DOM node to let anyone know that it contains a d3pie instance, and the d3pie version
-    d3.select(this.element).attr(_scriptName, _version)
-    d3.select(this.element).attr(`${_scriptName}-status`, 'loading')
+    d3.select(this.element).attr(name, version)
+    d3.select(this.element).attr(`${name}-status`, 'loading')
 
     // things that are done once
     this.totalValue = math.getTotalValueOfDataSet(this.options.data.content)
@@ -63,12 +50,11 @@ class d3pie {
     this.svg = this.svgContainer.append('g').attr('class', 'mainPlot')
     this.floating = this.svgContainer.append('g').attr('class', 'floating')
 
-    this.outerLabelData = [] // TODO delete completely
-    this.innerLabelData = []
     this.groupLabelData = []
 
     this.interface = {
       canvas: {
+        cssPrefix: this.cssPrefix,
         width: this.options.size.canvasWidth,
         height: this.options.size.canvasHeight,
         svg: this.svg,
@@ -76,7 +62,7 @@ class d3pie {
     }
 
     this._init()
-    d3.select(this.element).attr(`${_scriptName}-status`, 'ready')
+    d3.select(this.element).attr(`${name}-status`, 'ready')
   }
 
   redrawWithoutLoading () {
@@ -100,8 +86,10 @@ class d3pie {
 
     if (this.options.labels.enabled) {
       this.segmentLabeller = new SegmentLabeller({
+        animationConfig: this.options.effects.load,
         dataPoints: this.options.data.content,
         sortOrder: this.options.data.sortOrder,
+        linesConfig: this.options.labels.lines, // TODO move this into this.options.labels.segment
         config: this.options.labels.segment,
         canvas: this.interface.canvas,
       })
@@ -116,12 +104,13 @@ class d3pie {
     }
 
     pieDimensions = this.computePieLayoutDimensions({
+      labelsEnabled: this.options.labels.enabled,
       canvasHeight: this.options.size.canvasHeight,
       canvasWidth: this.options.size.canvasWidth,
-      idealBottomWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
-      idealLeftWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-      idealRightWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-      idealTopWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
+      idealBottomWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
+      idealLeftWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealRightWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealTopWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
       innerRadiusProportion: this.options.size.pieInnerRadius,
       labelOffsetProportion: this.options.size.labelOffset,
       maxFontSize: labelStats.maxFontSize,
@@ -131,11 +120,12 @@ class d3pie {
     this.outerRadius = pieDimensions.outerRadius
     this.labelOffset = pieDimensions.labelOffset
 
-    const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
-    const unboundedMaxVerticalOffset = (_.isNull(this.options.labels.segment.maxVerticalOffset))
-      ? this.outerRadius
-      : this.options.labels.segment.maxVerticalOffset
-    this.maxVerticalOffset = Math.min(unboundedMaxVerticalOffset, largestAllowableMaxVerticalOffset)
+    this.maxVerticalOffset = _([
+      (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
+      this.options.labels.segment.maxVerticalOffset,
+    ])
+      .filter(x => !_.isNull(x))
+      .min()
 
     this.pieCenter = {
       x: this.options.size.canvasWidth / 2,
@@ -157,8 +147,8 @@ class d3pie {
       labelOffset: ${this.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}
-      idealTopWhiteSpaceSize: ${this.options.labels.segment.maxFontSize}
-      idealBottomWhiteSpaceSize: ${this.options.labels.segment.maxFontSize}
+      idealTopWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
+      idealBottomWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
     `)
 
     if (redraw) {
@@ -171,24 +161,12 @@ class d3pie {
     if (this.options.labels.enabled) {
       const startLabelling = Date.now()
 
-      tempSegmentLabellerDrawFunctions.clearPrevious(this.svg, this.cssPrefix)
+      this.segmentLabeller.clearPreviousFromCanvas()
 
       // TODO this is temp assignment to this.outerLabelData to make it all keep working ...
       this.segmentLabeller.doLabelling()
-      const { outer } = this.segmentLabeller.getLabels()
-      this.outerLabelData = outer
 
-      tempSegmentLabellerDrawFunctions.drawOuterLabels(this)
-
-      tempSegmentLabellerDrawFunctions.drawInnerLabels(this)
-
-      // only add them if they're actually enabled
-      if (this.options.labels.lines.enabled) {
-        tempSegmentLabellerDrawFunctions.drawOuterLabelLines(this)
-        tempSegmentLabellerDrawFunctions.drawInnerLabelLines(this)
-      }
-
-      tempSegmentLabellerDrawFunctions.fadeInLabelsAndLines(this)
+      this.segmentLabeller.draw()
 
       durations.outer_labelling = Date.now() - startLabelling
     }
@@ -207,18 +185,19 @@ class d3pie {
     }
 
     // TODO this is pretty inefficient. will do 2n^2 scans
-    const isLabelShown = (id) => (_.some(this.innerLabelData, { id }) || _.some(this.outerLabelData, { id }))
+    const { inner, outer } = this.segmentLabeller.getLabels()
+    const isLabelShown = (id) => (_.some(inner, { id }) || _.some(outer, { id }))
     const labelsShownLookup = _.transform(this.options.data.content, (result, dataPoint) => {
       result[dataPoint.id] = isLabelShown(dataPoint.id)
     }, {})
     segments.addSegmentEventHandlers(this, labelsShownLookup)
 
     durations.totalDuration = Date.now() - startTime
-    // TODO root logger is not logging under test ...
-    console.log(JSON.stringify(durations))
+    rootLogger.info(JSON.stringify(durations))
   }
 
   computePieLayoutDimensions ({
+    labelsEnabled,
     maxFontSize,
     canvasWidth,
     canvasHeight,
@@ -236,11 +215,11 @@ class d3pie {
 
     const halfMaxFontSizeMinusMagicHardCode = 8 // NB based on experimenting with label_variations_wrapping.yaml examples
     const labelOffset = Math.max(
-      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize ( minus some fudge)  to prevent labels from overlapping segments
+      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize (minus some fudge)  to prevent labels from overlapping segments
       Math.ceil(outerRadiusIncludingLabelOffset * (1 - (1 / (1 + labelOffsetProportion))))
     )
 
-    const outerRadius = outerRadiusIncludingLabelOffset - labelOffset
+    const outerRadius = outerRadiusIncludingLabelOffset - (labelsEnabled ? labelOffset : 0)
     const innerRadius = Math.floor(outerRadius * innerRadiusProportion)
     const constrained = (availableHeight > availableWidth) ? 'width' : 'height'
 

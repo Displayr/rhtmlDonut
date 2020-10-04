@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import * as rootLog from 'loglevel'
 
 import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { between, rotate } from '../../../../math'
@@ -10,26 +9,23 @@ import AngleThresholdExceeded from '../../../../interrupts/angleThresholdExceede
 import LabelCollision from '../../../../interrupts/labelCollision'
 import InnerLabel from '../../innerLabel'
 import CannotMoveToInner from '../../../../interrupts/cannotMoveToInner'
-const labelLogger = rootLog.getLogger('label')
-
-// TODO temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
+import { labelLogger } from '../../../../../logger'
 
 const VARIABLE_CONFIG = [
-  'actualMaxFontSize',
   'bottomIsLifted',
   'hasBottomLabel',
   'hasTopLabel',
   'labelMaxLineAngle',
+  'maxFontSize',
   'minProportion',
   'topIsLifted',
 ]
 
-// TODO sort out local invariant : canUseInnerLabelsInTheseQuadrants
 const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
   'sortOrder',
+  'spacingBetweenUpperTrianglesAndCenterMeridian',
   'useInnerLabels',
 ]
 
@@ -56,10 +52,11 @@ class CollisionResolver {
     VARIABLE_CONFIG.forEach(key => this.variant[key] = extractAndThrowIfNull(variant, key))
     INVARIABLE_CONFIG.forEach(key => this.invariant[key] = extractAndThrowIfNull(invariant, key))
     /* eslint-enable no-return-assign */
+  }
 
-    this.invariant.canUseInnerLabelsInTheseQuadrants = (this.invariant.useInnerLabels)
-      ? [1, 2, 3]
-      : []
+  canUseInnerLabel (label) {
+    return this.invariant.useInnerLabels &&
+      between(90, label.segmentAngleMidpoint, 360)
   }
 
   go () {
@@ -105,11 +102,10 @@ class CollisionResolver {
           _(this.inputLabelSet)
             .filter(({ segmentAngleMidpoint }) => between(90 - this.invariant.liftOffAngle, segmentAngleMidpoint, 90 + this.invariant.liftOffAngle))
             .each(label => {
-              this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+              this.canvas.placeLabelAlongLabelRadiusWithLift({
                 label,
                 hasTopLabel: this.variant.hasTopLabel,
                 hasBottomLabel: this.variant.hasBottomLabel,
-                labelLiftOffAngle: this.invariant.liftOffAngle,
               })
           })
         } else if (availableStrategies.liftBottom) {
@@ -119,15 +115,17 @@ class CollisionResolver {
           _(this.inputLabelSet)
             .filter(({ segmentAngleMidpoint }) => between(270 - this.invariant.liftOffAngle, segmentAngleMidpoint, 270 + this.invariant.liftOffAngle))
             .each(label => {
-                this.canvas.placeLabelAlongLabelRadiusWithLiftOffAngle({
+                this.canvas.placeLabelAlongLabelRadiusWithLift({
                   label,
                   hasTopLabel: this.variant.hasTopLabel,
                   hasBottomLabel: this.variant.hasBottomLabel,
-                  labelLiftOffAngle: this.invariant.liftOffAngle,
                 })
             })
+        // TODO need to update this.variant.minProportion.
+        //   * No imapct yet as nothing downstream uses it, but should be done
         } else if (availableStrategies.removeLabel) {
-          if (this.invariant.sortOrder === 'initial') {
+          // TODO soon we can assume this (as this  collision resolver will be renamed to "unordered"
+          if (this.invariant.sortOrder === 'unordered') {
             // sort by value, then as a tiebreak choose the label closest to the current offending label
             // removing a label closer to the offending label is more likely to solve the current labelling issue
             let idToRemove = _(this.inputLabelSet)
@@ -140,7 +138,7 @@ class CollisionResolver {
 
             this.inputLabelSet = _(this.inputLabelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentQuadrant}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentAngleMidpoint}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -148,7 +146,7 @@ class CollisionResolver {
             const idToRemove = this.removalOrder.shift()
             this.inputLabelSet = _(this.inputLabelSet)
               .filter(label => {
-                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentQuadrant}`) }
+                if (label.id === idToRemove) { labelLogger.debug(`removing ${label.shortText} ${label.segmentAngleMidpoint}`) }
                 return (label.id !== idToRemove)
               })
               .value()
@@ -186,7 +184,7 @@ class CollisionResolver {
 
     // TODO add stage check for pie.options.labels.stages.initialClusterSpacing
     // NB at some point we should do both innerLabelling and performInitialClusterSpacing. However,
-    // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred        the innerLabels to the spacing.
+    // at present they dont work well together as the initialSpacing makes inner labels unecessary, even though the user may have preferred the innerLabels to the spacing.
     if (!this.invariant.useInnerLabels) {
       this.performInitialClusterSpacing({
         outerLabelSetSortedTopToBottom: leftOuterLabelsSortedTopToBottom,
@@ -224,7 +222,7 @@ class CollisionResolver {
     outerLabelSetSortedTopToBottom,
   }) {
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { bottomIsLifted, hasTopLabel, hasBottomLabel, actualMaxFontSize: maxFontSize, topIsLifted } = this.variant
+    const { bottomIsLifted, hasTopLabel, hasBottomLabel, maxFontSize, topIsLifted } = this.variant
     const { outerPadding } = this.invariant
 
     const upperBoundary = pieCenter.y - outerRadius - maxVerticalOffset + ((hasTopLabel) ? maxFontSize : 0)
@@ -244,8 +242,8 @@ class CollisionResolver {
         : null
     }
 
-    const pushLabelsUp = (labelsToPushUp) => {
-      _(labelsToPushUp).each(labelToPushUp => {
+    const pushLabelsUp = (labelsToPushUpSortedBottomToTop) => {
+      _(labelsToPushUpSortedBottomToTop).each(labelToPushUp => {
         const labelBelow = getLabelBelow(labelToPushUp)
         if (labelBelow) {
           const newY = labelBelow.topLeftCoord.y - outerPadding
@@ -282,8 +280,8 @@ class CollisionResolver {
       })
     }
 
-    const pushLabelsDown = (labelsToPushDown) => {
-      _(labelsToPushDown).each(labelToPushDown => {
+    const pushLabelsDown = (labelsToPushDownSortedTopToBottom) => {
+      _(labelsToPushDownSortedTopToBottom).each(labelToPushDown => {
         const labelAbove = getLabelAbove(labelToPushDown)
 
         if (labelAbove) {
@@ -341,35 +339,59 @@ class CollisionResolver {
       collidingLabelSets.push(activeSet)
     }
 
+    labelLogger.debug(`initial cluster spacing found ${collidingLabelSets.length} clusters of colliding labels`)
+
     _(collidingLabelSets).each(collidingLabelSet => {
       let verticalSpaceAbove = 0
-      const nearestNonIntersectingLabelAbove = getLabelAbove(_.first(collidingLabelSet))
+      const highestCollidingLabel = _(collidingLabelSet)
+        .sortBy('minY')
+        .first()
+      const nearestNonIntersectingLabelAbove = getLabelAbove(highestCollidingLabel)
       if (nearestNonIntersectingLabelAbove) {
         verticalSpaceAbove = collidingLabelSet[0].topLeftCoord.y - nearestNonIntersectingLabelAbove.bottomLeftCoord.y
       }
 
       let verticalSpaceBelow = 0
-      const nearestNonIntersectingLabelBelow = getLabelBelow(_.last(collidingLabelSet))
+      const lowestCollidingLabel = _(collidingLabelSet)
+        .sortBy('maxY')
+        .last()
+      const nearestNonIntersectingLabelBelow = getLabelBelow(lowestCollidingLabel)
       if (nearestNonIntersectingLabelBelow) {
         verticalSpaceBelow = nearestNonIntersectingLabelBelow.topLeftCoord.y - collidingLabelSet[collidingLabelSet.length - 1].bottomLeftCoord.y
       }
 
-      labelLogger.debug(`collidingLabelSet: ${collidingLabelSet.map(label => label.label).join(', ')}`)
+      labelLogger.debug(`collidingLabelSet: ${collidingLabelSet.map(label => label.shortText).join(', ')}`)
       labelLogger.debug(`verticalSpaceAbove: ${verticalSpaceAbove} : verticalSpaceBelow: ${verticalSpaceBelow}`)
 
       let differenceInVerticalSpace = Math.abs(verticalSpaceBelow - verticalSpaceAbove)
       let sumOfVerticalSpace = verticalSpaceBelow + verticalSpaceAbove
       if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceAbove > verticalSpaceBelow) {
         labelLogger.debug(`pushing whole set up`)
-        pushLabelsUp(_.reverse(collidingLabelSet))
+        const labelsToPushUpSortedBottomToTop = _(collidingLabelSet)
+          .sortBy('maxY')
+          .reverse()
+          .value()
+        pushLabelsUp(labelsToPushUpSortedBottomToTop)
       } else if (sumOfVerticalSpace > 10 && differenceInVerticalSpace > 10 && verticalSpaceBelow > verticalSpaceAbove) {
         labelLogger.debug(`pushing whole set down`)
-        pushLabelsDown(collidingLabelSet)
+        const labelsToPushUpSortedTopToBottom = _(collidingLabelSet)
+          .sortBy('minY')
+          .value()
+        pushLabelsDown(labelsToPushUpSortedTopToBottom)
       } else if (sumOfVerticalSpace > 10) {
         labelLogger.debug(`pushing 1/2 up and 1/2 down`)
-        const [labelsToPushUp, labelsToPushDown] = _.chunk(collidingLabelSet, Math.ceil(collidingLabelSet.length / 2))
-        pushLabelsUp(_.reverse(labelsToPushUp))
-        pushLabelsDown(labelsToPushDown)
+        const labelsSortedTopToBottom = _(collidingLabelSet)
+          .sortBy('minY')
+          .value()
+
+        const [labelsToPushUpTopToBottom, labelsToPushDownTopToBottom] = _.chunk(labelsSortedTopToBottom, Math.ceil(collidingLabelSet.length / 2))
+
+        const labelsToPushUpBottomToTop = _(labelsToPushUpTopToBottom)
+          .sortBy('maxY')
+          .reverse()
+          .value()
+        pushLabelsUp(labelsToPushUpBottomToTop)
+        pushLabelsDown(labelsToPushDownTopToBottom)
       } else {
         labelLogger.debug(`no room to space cluster. Skipping`)
       }
@@ -400,8 +422,8 @@ class CollisionResolver {
     */
 
     const { pieCenter, outerRadius, maxVerticalOffset } = this.canvas
-    const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, actualMaxFontSize: maxFontSize, labelMaxLineAngle } = this.variant
-    const { canUseInnerLabelsInTheseQuadrants, outerPadding } = this.invariant
+    const { hasTopLabel, hasBottomLabel, topIsLifted, bottomIsLifted, maxFontSize, labelMaxLineAngle } = this.variant
+    const { outerPadding, spacingBetweenUpperTrianglesAndCenterMeridian } = this.invariant
 
     // NB fundamental for understanding : _.each iterations are cancelled if the fn returns false
     let downSweepHitBottom = false
@@ -456,9 +478,9 @@ class CollisionResolver {
               labelLogger.debug(`  ${lp} already hit bottom, placing ${gettingPushedLabel.shortText} at bottom`)
               // we need to place the remaining labels at the bottom so phase 2 will place them as we sweep "up" the hemisphere
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -468,7 +490,7 @@ class CollisionResolver {
               return terminateLoop
             }
 
-            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+            if (this.canUseInnerLabel(gettingPushedLabel) && !immediatePreviousNeighborIsInInside) {
               try {
                 this.moveToInnerLabel({
                   label: gettingPushedLabel,
@@ -491,9 +513,9 @@ class CollisionResolver {
               downSweepHitBottom = true
 
               if (gettingPushedLabel.inLeftHalf) {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               } else {
-                gettingPushedLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+                gettingPushedLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
               }
               return continueLoop
             }
@@ -530,9 +552,9 @@ class CollisionResolver {
         if (matchingOuterLabel) {
           matchingOuterLabel.labelShown = true
           if (matchingOuterLabel.inLeftHalf) {
-            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.placeLabelViaBottomPoint({ x: pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           } else {
-            matchingOuterLabel.setBottomMedialPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
+            matchingOuterLabel.placeLabelViaBottomPoint({ x: pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian, y: lowerBoundary })
           }
         } else {
           console.error(`should have found matching outer label for inner label ${innerLabel.shortText}`)
@@ -578,7 +600,7 @@ class CollisionResolver {
               return terminateLoop
             }
 
-            if (canUseInnerLabelsInTheseQuadrants.includes(gettingPushedLabel.segmentQuadrant) && !immediatePreviousNeighborIsInInside) {
+            if (this.canUseInnerLabel(gettingPushedLabel) && !immediatePreviousNeighborIsInInside) {
               try {
                 this.moveToInnerLabel({
                   label: gettingPushedLabel,
@@ -647,16 +669,16 @@ class CollisionResolver {
   }
 
   // Current Assumptions / Limitations:
-  //   * assuming that inner labels are added in order of fractionalValue descending,
+  //   * assuming that inner labels are added in order of proportion descending,
   //       therefore if I cant place the current label, abort, leaving the existing inner labels as is (note this assumption is not valid, but in practice code works fine)
   moveToInnerLabel ({
-    label,
+    label: outerLabel,
     innerLabelSet,
   }) {
     const { labelOffset, innerRadius, pieCenter } = this.canvas
     const innerLabelRadius = innerRadius - labelOffset
 
-    const newInnerLabel = InnerLabel.fromOuterLabel(label)
+    const newInnerLabel = InnerLabel.fromOuterLabel(outerLabel)
     newInnerLabel.innerLabelRadius = innerLabelRadius
     newInnerLabel.innerRadius = innerRadius
     newInnerLabel.pieCenter = pieCenter
@@ -665,7 +687,7 @@ class CollisionResolver {
       y: pieCenter.y,
     }
 
-    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, label.segmentAngleMidpoint)
+    const innerRadiusLabelCoord = rotate(coordAtZeroDegreesAlongInnerPieDistance, pieCenter, outerLabel.segmentAngleMidpoint)
     newInnerLabel.placeAlongFitLine(innerRadiusLabelCoord)
 
     if (!_.isEmpty(innerLabelSet)) {
@@ -694,12 +716,12 @@ class CollisionResolver {
 
           // place X along innerLabelRadius based on new y position
           // Given the yOffset and the labelRadius, use pythagorem to compute the xOffset that places label along labelRadius
-          const xOffset = Math.hypot(innerLabelRadius, pieCenter.y - innerRadiusLabelCoord.y)
+          const xOffset = Math.sqrt(Math.pow(innerLabelRadius, 2) - Math.pow(Math.abs(pieCenter.y - innerRadiusLabelCoord.y), 2))
           innerRadiusLabelCoord.x = (hemisphere === 'left')
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setTopMedialPoint(innerRadiusLabelCoord)
+          newInnerLabel.placeLabelViaTopPoint(innerRadiusLabelCoord)
         } else {
           labelLogger.debug(`inner collision between ${previousLabel.shortText} v ${newInnerLabel.shortText}(new). Moving new up`)
           innerRadiusLabelCoord.y = previousLabel.topLeftCoord.y - 2 // TODO now have a couple hard coded 2's about
@@ -711,7 +733,7 @@ class CollisionResolver {
             ? pieCenter.x - xOffset
             : pieCenter.x + xOffset
 
-          newInnerLabel.setBottomMedialPoint(innerRadiusLabelCoord)
+          newInnerLabel.placeLabelViaBottomPoint(innerRadiusLabelCoord)
         }
       }
     }
@@ -730,19 +752,21 @@ class CollisionResolver {
       bottomRightCoordIsInArc
     )
 
-    labelLogger.debug(`attempt to move ${newInnerLabel.shortText} to inner : ${labelIsContainedWithinArc ? 'succeed' : 'fail'}`)
+    const maxLabelLineAngleExceeded = newInnerLabel.angleBetweenLabelAndRadial > 45
+
+    labelLogger.debug(`attempt to move ${newInnerLabel.shortText} to inner : ${(labelIsContainedWithinArc && !maxLabelLineAngleExceeded) ? 'succeed' : 'fail'}`)
 
     if (!labelIsContainedWithinArc) {
-      throw new CannotMoveToInner(label, 'out of bounds after adjustment')
+      throw new CannotMoveToInner(outerLabel, 'out of bounds after adjustment')
     }
 
-    if (newInnerLabel.angleBetweenLabelAndRadial > 45) {
-      throw new CannotMoveToInner(label, `label line angle excceds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
+    if (maxLabelLineAngleExceeded) {
+      throw new CannotMoveToInner(outerLabel, `label line angle exceeds threshold (${newInnerLabel.angleBetweenLabelAndRadial} > ${45}`)
     }
 
-    labelLogger.info(`placed ${label.shortText} inside`)
+    labelLogger.info(`placed ${outerLabel.shortText} inside`)
     innerLabelSet.push(newInnerLabel)
-    label.labelShown = false
+    outerLabel.labelShown = false
   }
 }
 

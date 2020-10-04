@@ -5,13 +5,13 @@ import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
-import * as rootLog from 'loglevel'
+import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
+
 import {
   isHexColor,
   isValidColorName,
   getHexColorFromString,
 } from './colorUtils'
-const layoutLogger = rootLog.getLogger('layout')
 
 class PieWrapper {
   static uniqueId () {
@@ -32,7 +32,7 @@ class PieWrapper {
 
   draw (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    layoutLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
+    rootLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
     $(element).find('*').remove()
 
     this.outerSvg = d3.select(element)
@@ -157,17 +157,17 @@ class PieWrapper {
           displayDecimals: absencePreservingParseFloat(this._settings.valuesDec),
           displayPercentage: (this._settings.valuesDisplay === 'percentage'),
           fontFamily: this._settings.labelsFont,
-          useInnerLabels: this._settings.labelsInner,
+          useInnerLabels: this._settings.useInnerLabels,
           innerPadding: absencePreservingParseFloat(this._settings.labelsInnerPadding),
           labelMaxLineAngle: absencePreservingParseFloat(this._settings.labelMaxLineAngle),
           liftOffAngle: absencePreservingParseFloat(this._settings.labelLiftOffAngle),
           maxLines: absencePreservingParseFloat(this._settings.labelsMaxLines),
           maxVerticalOffset: absencePreservingParseFloat(this._settings.labelMaxVerticalOffset),
           maxWidthProportion: absencePreservingParseFloat(this._settings.labelsMaxWidth),
-          maxFontSize: absencePreservingParseFloat(this._settings.labelsSize),
-          minFontSize: absencePreservingParseFloat(this._settings.labelsMinFontSize),
           minProportion: absencePreservingParseFloat(this._settings.minProportion),
           outerPadding: absencePreservingParseFloat(this._settings.labelsOuterPadding),
+          preferredMaxFontSize: absencePreservingParseFloat(this._settings.labelsSize),
+          preferredMinFontSize: absencePreservingParseFloat(this._settings.labelsMinFontSize),
           prefix: this._settings.prefix,
           suffix: this._settings.suffix,
         },
@@ -225,7 +225,7 @@ class PieWrapper {
 
   resize (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    layoutLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
+    rootLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
 
     if (width < 200 || height < 200) { return }
 
@@ -286,7 +286,8 @@ class PieWrapper {
     this._valuesCount = newConfig.values.length
     this._labels = newConfig.labels
 
-    this._initLogger(this._settings.logLevel)
+    initialiseLogger(this._settings.logLevel)
+    rootLogger.debug('config', newConfig)
 
     if (this._settings.groups) {
       this.groupData = this._processGroupConfig()
@@ -349,33 +350,29 @@ class PieWrapper {
     }
 
     // detect order
+    // TODO use enums for ascending / descending / unordered
+    const firstValueEqualLastValue = _.first(this._values) === _.last(this._values)
     const isSortedAscending = _.every(this._values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
-    )
-    if (isSortedAscending) {
-      layoutLogger.info(`setting valuesOrder to 'ascending'`)
-      this._settings.valuesOrder = 'ascending'
-    }
+    ) && !firstValueEqualLastValue
     const isSortedDescending = _.every(this._values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
-    )
-    if (isSortedDescending) {
-      layoutLogger.info(`setting valuesOrder to 'descending'`)
-      this._settings.valuesOrder = 'descending'
-    }
+    ) && !firstValueEqualLastValue
+    const valuesOrder = (isSortedDescending)
+      ? 'descending'
+      : ((isSortedAscending) ? 'ascending' : 'unordered')
+    rootLogger.debug(`setting valuesOrder to '${valuesOrder}'`)
+    this._settings.valuesOrder = valuesOrder
 
-    // apply temp (hopefully) restriction to only allow bezier lines on ordered sets and to increase the max label line angle when using bezier curves
-    const useBezierOnTheseSortSettings = ['descending', 'ascending']
-    const canUseBezier = sortOrder => useBezierOnTheseSortSettings.indexOf(sortOrder) !== -1
-
-    if (canUseBezier(this._settings.valuesOrder)) {
-      this._settings.labelMaxLineAngle = 80
-    } else {
-      // effectively disable bezier lines
-      this._settings.labelsOuterLinesBasisInterpolatedMin = 5
-      this._settings.labelsOuterLinesBasisInterpolatedMax = 360
-      this._settings.labelsOuterLinesBezierMin = 360
-      this._settings.labelsOuterLinesBezierMax = 360
+    // NB: Temp restriction until ellipse is used globally
+    if (valuesOrder === 'unordered') {
+      const currentLabelMaxLineAngle = this._settings.labelMaxLineAngle
+      if (
+        _.isNull(currentLabelMaxLineAngle) ||
+        _.isUndefined(currentLabelMaxLineAngle) ||
+        parseFloat(currentLabelMaxLineAngle) > 75
+      ) { this._settings.labelMaxLineAngle = 75 }
+      rootLogger.info('temp restricting currentLabelMaxLineAngle to 75 in unordered data set')
     }
   }
 
@@ -439,28 +436,6 @@ class PieWrapper {
       })
     }
     return groupData
-  }
-
-  _initLogger (loggerSettings = 'info') {
-    if (_.isNull(loggerSettings)) {
-      return
-    }
-    if (_.isString(loggerSettings)) {
-      rootLog.setLevel(loggerSettings)
-      _(PieWrapper.getLoggerNames()).each((loggerName) => { rootLog.getLogger(loggerName).setLevel(loggerSettings) })
-      return
-    }
-    _(loggerSettings).each((loggerLevel, loggerName) => {
-      if (loggerName === 'default') {
-        rootLog.setLevel(loggerLevel)
-      } else {
-        rootLog.getLogger(loggerName).setLevel(loggerLevel)
-      }
-    })
-  }
-
-  static getLoggerNames () {
-    return ['layout', 'tooltip', 'label']
   }
 }
 PieWrapper.initClass()

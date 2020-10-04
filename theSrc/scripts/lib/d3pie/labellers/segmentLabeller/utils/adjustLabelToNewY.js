@@ -1,30 +1,31 @@
 import { toRadians } from '../../../math'
-
-// TODO bit of a temp hack
-const spacingBetweenUpperTrianglesAndCenterMeridian = 7
+import { labelLogger } from '../../../../logger'
 
 module.exports = ({
   anchor, // top or bottom
   newY,
-  labelDatum,
+  labelDatum: label,
   labelRadius,
   yRange,
   labelLiftOffAngle,
   pieCenter,
   topIsLifted,
   bottomIsLifted,
+  spacingBetweenUpperTrianglesAndCenterMeridian,
+  hemisphere: inputHemisphere,
 }) => {
+  const hemisphere = inputHemisphere || label.hemisphere
   let newTopYCoord = null
   let isLifted = false
   if (anchor === 'top') {
     newTopYCoord = newY
   } else if (anchor === 'bottom') {
-    newTopYCoord = newY - labelDatum.height
+    newTopYCoord = newY - label.height
   }
 
   // TODO move to label
-  let numTextRows = labelDatum.labelTextLines.length
-  let { innerPadding, lineHeight } = labelDatum
+  let numTextRows = label.labelTextLines.length
+  let { innerPadding, lineHeight } = label
   let newLineConnectorYCoord = (newTopYCoord < pieCenter.y)
     ? newTopYCoord + (numTextRows - 1) * (innerPadding + lineHeight) + 0.5 * lineHeight
     : newTopYCoord + 0.5 * lineHeight
@@ -32,11 +33,11 @@ module.exports = ({
   let yOffset = Math.abs(pieCenter.y - newLineConnectorYCoord)
 
   if (yOffset > yRange) {
-    console.warn(`yOffset(${yOffset}) cannot be greater than yRange(${yRange})`)
+    labelLogger.warn(`moving label ${label.shortText} : yOffset limited to ${yRange}`)
     yOffset = yRange
   }
 
-  const labelLiftOffAngleInRadians = ((labelDatum.inTopHalf && topIsLifted) || (labelDatum.inBottomHalf && bottomIsLifted))
+  const labelLiftOffAngleInRadians = ((label.inTopHalf && topIsLifted) || (label.inBottomHalf && bottomIsLifted))
     ? toRadians(labelLiftOffAngle)
     : 0
 
@@ -56,20 +57,20 @@ module.exports = ({
     const xLengthOfUpperTriangle = xPosWhereLabelRadiusAndUpperTriangleMeet
     const upperTriangleYAngleInRadians = Math.atan(xLengthOfUpperTriangle / yLengthOfUpperTriangle)
 
-    // step 2. Given the upperTriangleYAngle and the yOffset, determine the xOffset that places the label that places it along the upperTriange
+    // step 2. Given the upperTriangleYAngle and the yOffset, determine the xOffset that places the label that places it along the upperTriangle
     const yLengthOfLabelOnUpperTriangle = yRange - yOffset
     xOffset = yLengthOfLabelOnUpperTriangle * Math.tan(upperTriangleYAngleInRadians) + spacingBetweenUpperTrianglesAndCenterMeridian
   }
 
   const newLineConnectorCoord = {
-    x: (labelDatum.hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
+    x: (hemisphere === 'left') ? pieCenter.x - xOffset : pieCenter.x + xOffset,
     y: newY,
   }
 
-  labelDatum.isLifted = isLifted
+  label.isLifted = isLifted
   if (anchor === 'top') {
-    labelDatum.setTopMedialPoint(newLineConnectorCoord)
+    label.placeLabelViaTopPoint(newLineConnectorCoord)
   } else {
-    labelDatum.setBottomMedialPoint(newLineConnectorCoord)
+    label.placeLabelViaBottomPoint(newLineConnectorCoord)
   }
 }

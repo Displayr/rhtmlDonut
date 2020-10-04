@@ -6,7 +6,6 @@ const defaultSettings = {
     labelOffset: 0.1, // pieWrapper: settings.labelOffset, R: labels.offset
   },
   data: {
-    sortOrder: 'descending', // pieWrapper: settings.valuesOrder, R: values.order
     color: null, // pieWrapper: settings.valuesColor, values.color
     dataFormatter: null, // pieWrapper: settings.valuesDec, R: values.decimal.places
     display: null, // pieWrapper: settings.valuesDisplay, R: values.display.as
@@ -27,39 +26,40 @@ const defaultSettings = {
       displayDecimals: 1, // pieWrapper: settings.valuesDec, R: values.decimal.places
       displayPercentage: false, // pieWrapper: settings.valuesDisplay, R: values.display.as
       fontFamily: 'arial', // pieWrapper: settings.labelsFont, R: labels.font.family // TODO change to setting.fontFamily
-      useInnerLabels: false, // pieWrapper: settings.labelsInner, R: labels.inner
+      useInnerLabels: false, // pieWrapper: settings.useInnerLabels, R: labels.inner
       innerPadding: 1, // pieWrapper: settings.labelsInnerPadding, R: labels.inner.padding
-      labelMaxLineAngle: 60, // pieWrapper: settings.labelMaxLineAngle, R: labels.line.max.angle
+      labelMaxLineAngle: 80, // pieWrapper: settings.labelMaxLineAngle, R: labels.advanced.line.max.angle
       liftOffAngle: 30, // pieWrapper: settings.liftOffAngle, R: labels.advanced.liftoff.angle
       linePadding: 2, // pieWrapper: settings.linePadding, R: labels.line.padding
       maxLabelOffset: 100, // TODO use these values and expose as configurable
       maxLines: 6, // pieWrapper: settings.labelMaxLines, R: labels.max.lines. Truncate after X vertical lines of text
       maxVerticalOffset: null, // pieWrapper: settings.labelMaxVerticalOffset. R: labels.advanced.offset.yaxis.max. Max label offset at the 90
       maxWidthProportion: 0.3, // pieWrapper: settings.labelsMaxWidth. R: labels.max.width. wrap label text if label exceeds X% of canvasWidth // TODO change to settings.labelsMaxWidthProportion
-      minFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
-      maxFontSize: 10, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       minLabelOffset: 5, // TODO use these values and expose as configurable
       minProportion: 0.003, // pieWrapper: settings.minProportion, R: values.display.thres
       outerPadding: 1, // pieWrapper: settings.labelsOuterPadding, R: labels.outer.padding
+      preferredMinFontSize: 8, // pieWrapper: settings.labelsMinFontSize, R: labels.min.font.size
+      preferredMaxFontSize: 8, // pieWrapper: settings.labelsSize, R: labels.font.size // TODO change to labelsMaxFontSize
       prefix: null, // pieWrapper: settings.prefix, R: prefix
+      spacingBetweenUpperTrianglesAndCenterMeridian: 7, // hard code
       suffix: null, // pieWrapper: settings.suffix, R: suffix
     },
     lines: {
       enabled: true, // used but not currently configurable via R or JS
       outer: {
         straight: {
-          minAngle: 0,
-          maxAngle: 5,
+          minAngle: 360, // off
+          maxAngle: 360, // off
         },
         basisInterpolated: {
-          minAngle: 5,
-          maxAngle: 60,
+          minAngle: 360, // off
+          maxAngle: 360, // off
         },
         bezier: {
-          minAngle: 60,
-          maxAngle: 360, // NB this means "use bezier for anything with a label line angle of over 60"
-          segmentLeanAngle: 30,
-          labelLeanAngle: 20,
+          minAngle: 0,
+          maxAngle: 360,
+          segmentLeanAngle: 0,
+          labelLeanAngle: 0,
           segmentPullInProportionMin: 0.25,
           segmentPullInProportionMax: 0.75,
         },
@@ -121,7 +121,6 @@ const defaultSettings = {
     labelsEnabled: true, // pieWrapper: settings.groupLabelsEnabled, R: groups.labels.enabled
   },
   callbacks: { //
-    onload: null, // not used
     onMouseoverSegment: null, // not used
     onMouseoutSegment: null, // not used
     onClickSegment: null, // not used
