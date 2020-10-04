@@ -140,7 +140,7 @@ class PieWrapper {
       if (_.isUndefined(thing)) { return thing }
       return (thing) ? trueVal : falseVal
     }
-    
+
     this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
       size: {
         canvasWidth: absencePreservingParseFloat(width),
@@ -202,8 +202,8 @@ class PieWrapper {
       effects: {
         load: {
           effect: absencePreservingBooleanToStringConverter(this._settings.loadingAnimationEnabled, 'default', 'none'),
-          speed: absencePreservingParseFloat(this._settings.loadingAnimationSpeed)
-        }
+          speed: absencePreservingParseFloat(this._settings.loadingAnimationSpeed),
+        },
       },
       tooltips: {
         enabled: true,
