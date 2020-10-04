@@ -1,14 +1,14 @@
-import { computeIntersection, between, toRadians } from '../../math'
+import { computeIntersection, between, toRadians } from '../../../math'
 
 // draw a bezier curve from the segment to the label
 // * start with a rectangle with the segment and label at opposite points ("kitty corner") on the rectangle
 // * optionally lean the rectangle based on segmentControlLeanDegrees and labelControlLeanDegrees
-//   * this is dont to reduce overlap of neighboring bezier lines
+//   * this is done to reduce overlap of neighboring bezier lines
 // optionally "pull back the segment control point"
-//   * this is dont to reduce overlap of neighboring bezier lines
+//   * this is done to reduce overlap of neighboring bezier lines
 // now draw the bezier curve using the point above the segment point as the first control point, and the point below the label as the second control point
 
-// NB on the use '1000' in line generation. It is arbitrary, just pick a point far away so we get a long line to ensure intersections
+// NB on the use of '1000' in line generation functions: It is arbitrary, just pick a point far away so we get a long line to ensure intersections
 
 module.exports = ({ labelData, ...rest }) => {
   if (labelData.inTopLeftQuadrant) { return bezierCurveInTopLeft({ labelData, ...rest }) }
@@ -27,7 +27,7 @@ const bezierCurveInTopLeft = ({ labelData, canvasHeight, segmentLeanAngle, label
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-topleft'
+    pathType: 'bezier-topleft',
   }
 }
 
@@ -41,7 +41,7 @@ const bezierCurveInTopRight = ({ labelData, canvasHeight, segmentLeanAngle, labe
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-topright'
+    pathType: 'bezier-topright',
   }
 }
 
@@ -55,7 +55,7 @@ const bezierCurveInBottomRight = ({ labelData, canvasHeight, segmentLeanAngle, l
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-bottomright'
+    pathType: 'bezier-bottomright',
   }
 }
 
@@ -69,7 +69,7 @@ const bezierCurveInBottomLeft = ({ labelData, canvasHeight, segmentLeanAngle, la
 
   return {
     path: bezierPath(segmentCoord, segmentControlCoord, labelControlCoord, labelCoord),
-    pathType: 'bezier-bottomleft'
+    pathType: 'bezier-bottomleft',
   }
 }
 
@@ -90,7 +90,7 @@ const getTangentLine = ({ x, y, segmentAngle }) => {
   const { xProportion, yProportion } = getAngleProportions(angleFromYAxis)
   return [
     { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion },
   ]
 }
 
@@ -101,19 +101,19 @@ const getLine = ({ x, y, angle }) => {
   const { xProportion, yProportion } = getAngleProportions(angle)
   return [
     { x: x - 1000 * xProportion, y: y - 1000 * yProportion },
-    { x: x + 1000 * xProportion, y: y + 1000 * yProportion }
+    { x: x + 1000 * xProportion, y: y + 1000 * yProportion },
   ]
 }
 
 const getAngleProportions = (angleInDegrees) => ({
   xProportion: Math.cos(toRadians(angleInDegrees)),
-  yProportion: Math.sin(toRadians(angleInDegrees))
+  yProportion: Math.sin(toRadians(angleInDegrees)),
 })
 
 const getSegmentAndLabelCoords = ({ labelData }) => {
   return {
     segmentCoord: labelData.segmentMidpointCoord,
-    labelCoord: labelData.lineConnectorCoord
+    labelCoord: labelData.lineConnectorCoord,
   }
 }
 
@@ -122,26 +122,26 @@ const getControlCoordinates = ({ labelData, segmentLeanAngle, labelLeanAngle }) 
   const segmentCoord = labelData.segmentMidpointCoord
   const labelCoord = labelData.lineConnectorCoord
 
-  const labelGreaterThanSegment = (labelData.inTopLeftQuadrant && labelData.labelAngle > 270)
-    ? false
-    : labelData.labelAngle > labelData.segmentAngleMidpoint
-
-  const labelAngleAfterLean = segmentAngle + (labelLeanAngle * (labelGreaterThanSegment) ? 1 : -1)
-  const segmentAngleAfterLean = segmentAngle + (segmentLeanAngle * (labelGreaterThanSegment) ? 1 : -1)
-
   const tangentLine = getTangentLine({ ...segmentCoord, segmentAngle })
   const shiftedTangentLine = getTangentLine({ ...labelCoord, segmentAngle })
 
-  const radialLine = getLine({ ...segmentCoord, angle: segmentAngleAfterLean })
-  const shiftedRadialLine = getLine({ ...labelCoord, angle: labelAngleAfterLean })
+  const labelGreaterThanSegment = (labelData.inTopLeftQuadrant && labelData.labelAngle > 270)
+    ? false
+    : labelData.labelAngle > labelData.segmentAngleMidpoint
+  const leanDirection = (labelGreaterThanSegment) ? 1 : -1
 
-  const segmentControlCoord = computeIntersection(radialLine, shiftedTangentLine)
-  const labelControlCoord = computeIntersection(shiftedRadialLine, tangentLine)
+  const labelAngleAfterLean = segmentAngle + (labelLeanAngle * leanDirection)
+  const segmentAngleAfterLean = segmentAngle + (segmentLeanAngle * leanDirection)
+
+  const radialLineWithLean = getLine({ ...segmentCoord, angle: segmentAngleAfterLean })
+  const shiftedRadialLineWithLean = getLine({ ...labelCoord, angle: labelAngleAfterLean })
+
+  const segmentControlCoord = computeIntersection(radialLineWithLean, shiftedTangentLine)
+  const labelControlCoord = computeIntersection(shiftedRadialLineWithLean, tangentLine)
 
   return { segmentControlCoord, labelControlCoord }
 }
 
-// TODO combine top and bottom into single fn
 const getSegmentControlPointPullInPercentage = ({ labelData, canvasHeight, segmentPullInProportionMin, segmentPullInProportionMax }) => {
   const { y: sy } = labelData.segmentMidpointCoord
   const { y: ly } = labelData.lineConnectorCoord

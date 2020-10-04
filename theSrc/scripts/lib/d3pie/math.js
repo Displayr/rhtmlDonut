@@ -5,12 +5,12 @@ let math = {
   toRadians: degrees => degrees * (Math.PI / 180),
   toDegrees: radians => radians * (180 / Math.PI),
 
-  getTotalPieSize: function (data) {
-    let totalSize = 0
+  getTotalValueOfDataSet: function (data) {
+    let totalValue = 0
     for (let i = 0; i < data.length; i++) {
-      totalSize += data[i].value
+      totalValue += data[i].value
     }
-    return totalSize
+    return totalValue
   },
 
   // let pieCenter = math.getPieCenter();
@@ -84,10 +84,10 @@ let math = {
     const a1Greater = (a1 > a2)
     const options = [
       Math.abs(a1 - a2),
-      (a1Greater) ? ((360 - a1) + a2) : ((360 - a2) + a1)
+      (a1Greater) ? ((360 - a1) + a2) : ((360 - a2) + a1),
     ]
     return Math.min(...options)
-  }
+  },
 }
 
 module.exports = math

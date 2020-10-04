@@ -1,23 +1,23 @@
-import { lineLength } from '../../geometryUtils'
-import { labelIntersect } from './labelUtils'
+import { lineLength } from '../../../geometryUtils'
+import { labelIntersect } from '../labelUtils'
 
 const _ = require('lodash')
-const math = require('../math')
+const math = require('../../math')
 
 class InnerLabel {
   static fromOuterLabel (label) {
     return new InnerLabel({
-      variants: label._variants,
-      invariants: label._invariants
+      variants: label._variant,
+      invariants: label._invariant,
     })
   }
 
   constructor ({
     variants,
-    invariants
+    invariants,
   }) {
-    this._invariants = invariants
-    this._variants = variants
+    this._invariant = invariants
+    this._variant = variants
   }
 
   // NB TODO dont think this works
@@ -82,10 +82,10 @@ class InnerLabel {
 
   // https://owlcation.com/stem/Everything-About-Triangles-and-More-Isosceles-Equilateral-Scalene-Pythagoras-Sine-and-Cosine (Cosine Rule)
   _computeAngleBetweenLabelLineAndRadialLine () {
-    const { lineConnectorCoord, pieCenter, innerRadius, segmentAngleMidpoint } = this
+    const { lineConnectorCoord, pieCenter, innerRadius, angle } = this
 
     const pointAtZeroDegrees = { x: pieCenter.x - innerRadius, y: pieCenter.y }
-    const innerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, segmentAngleMidpoint)
+    const innerRadiusCoord = math.rotate(pointAtZeroDegrees, pieCenter, angle)
 
     // consider a triangle with three sides
     // a : line from pieCenter to innerRadiusCoord
@@ -128,76 +128,77 @@ class InnerLabel {
 
   // convenience methods
 
-  get hide () { return !this._variants.labelShown }
+  get hide () { return !this._variant.labelShown }
 
   get topRightCoord () {
     return {
       x: this.topLeftCoord.x + this.width,
-      y: this.topLeftCoord.y
+      y: this.topLeftCoord.y,
     }
   }
 
   get bottomLeftCoord () {
     return {
       x: this.topLeftCoord.x,
-      y: this.topLeftCoord.y + this.height
+      y: this.topLeftCoord.y + this.height,
     }
   }
 
   get bottomRightCoord () {
     return {
       x: this.topLeftCoord.x + this.width,
-      y: this.topLeftCoord.y + this.height
+      y: this.topLeftCoord.y + this.height,
     }
   }
 
   // accessors for invariants
 
-  get color () { return this._invariants.color }
-  get fontFamily () { return this._invariants.fontFamily }
-  get fractionalValue () { return this._invariants.fractionalValue }
-  get hemisphere () { return this._invariants.hemisphere }
-  get id () { return this._invariants.id }
-  get label () { return this._invariants.label }
-  get labelText () { return this._invariants.labelText }
-  get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
-  get segmentQuadrant () { return this._invariants.segmentQuadrant }
-  get value () { return this._invariants.value }
+  get color () { return this._invariant.color }
+  get fontFamily () { return this._invariant.fontFamily }
+  get fractionalValue () { return this._invariant.fractionalValue }
+  get hemisphere () { return this._invariant.hemisphere }
+  get id () { return this._invariant.id }
+  get label () { return this._invariant.label }
+  get labelText () { return this._invariant.labelText }
+  get shortText () { return this._invariant.label.substr(0, 8) }
+  get angle () { return this._invariant.segmentAngleMidpoint }
+  get segmentQuadrant () { return this._invariant.segmentQuadrant }
+  get value () { return this._invariant.value }
 
   // accessors and mutators for variants
 
-  get fontSize () { return this._variants.fontSize }
-  set fontSize (newValue) { this._variants.fontSize = newValue }
+  get fontSize () { return this._variant.fontSize }
+  set fontSize (newValue) { this._variant.fontSize = newValue }
 
-  get height () { return this._variants.height }
-  set height (newValue) { this._variants.height = newValue }
+  get height () { return this._variant.height }
+  set height (newValue) { this._variant.height = newValue }
 
-  get innerLabelRadius () { return this._variants.innerLabelRadius }
-  set innerLabelRadius (newValue) { this._variants.innerLabelRadius = newValue }
+  get innerLabelRadius () { return this._variant.innerLabelRadius }
+  set innerLabelRadius (newValue) { this._variant.innerLabelRadius = newValue }
 
-  get innerRadius () { return this._variants.innerRadius }
-  set innerRadius (newValue) { this._variants.innerRadius = newValue }
+  get innerRadius () { return this._variant.innerRadius }
+  set innerRadius (newValue) { this._variant.innerRadius = newValue }
 
-  get labelAngle () { return this._variants.labelAngle }
-  set labelAngle (newValue) { this._variants.labelAngle = newValue }
+  get labelAngle () { return this._variant.labelAngle }
+  set labelAngle (newValue) { this._variant.labelAngle = newValue }
 
-  get labelShown () { return this._variants.labelShown }
-  set labelShown (newValue) { this._variants.labelShown = newValue }
+  get labelShown () { return this._variant.labelShown }
+  set labelShown (newValue) { this._variant.labelShown = newValue }
 
-  get labelTextLines () { return this._variants.labelTextLines }
-  set labelTextLines (newValue) { this._variants.labelTextLines = newValue }
+  get labelTextLines () { return this._variant.labelTextLines }
+  set labelTextLines (newValue) { this._variant.labelTextLines = newValue }
 
-  get lineConnectorCoord () { return this._variants.lineConnectorCoord }
-  set lineConnectorCoord (newValue) { this._variants.lineConnectorCoord = newValue }
+  get lineConnectorCoord () { return this._variant.lineConnectorCoord }
+  set lineConnectorCoord (newValue) { this._variant.lineConnectorCoord = newValue }
 
-  get pieCenter () { return this._variants.pieCenter }
-  set pieCenter (newValue) { this._variants.pieCenter = newValue }
+  get pieCenter () { return this._variant.pieCenter }
+  set pieCenter (newValue) { this._variant.pieCenter = newValue }
 
-  get topLeftCoord () { return this._variants.topLeftCoord }
-  set topLeftCoord (newValue) { this._variants.topLeftCoord = newValue }
+  get topLeftCoord () { return this._variant.topLeftCoord }
+  set topLeftCoord (newValue) { this._variant.topLeftCoord = newValue }
 
-  get width () { return this._variants.width }
-  set width (newValue) { this._variants.width = newValue }
+  get width () { return this._variant.width }
+  set width (newValue) { this._variant.width = newValue }
 }
 
 module.exports = InnerLabel

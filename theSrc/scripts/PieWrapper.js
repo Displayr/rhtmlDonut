@@ -9,7 +9,7 @@ import * as rootLog from 'loglevel'
 import {
   isHexColor,
   isValidColorName,
-  getHexColorFromString
+  getHexColorFromString,
 } from './colorUtils'
 const layoutLogger = rootLog.getLogger('layout')
 
@@ -51,7 +51,7 @@ class PieWrapper {
         fontFamily: this._settings.titleFontFamily,
         topPadding: this._settings.titleTopPadding,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.title.setX(width / 2)
       this.title.setMaxWidth(width)
@@ -67,7 +67,7 @@ class PieWrapper {
         subtitleFontFamily: this._settings.subtitleFontFamily,
         yOffset: this.titleHeight,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.subtitle.setX(width / 2)
       this.subtitle.setMaxWidth(width)
@@ -84,7 +84,7 @@ class PieWrapper {
         containerHeight: height,
         topPadding: 10,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.footer.setX(width / 2)
       this.footer.setMaxWidth(width)
@@ -129,100 +129,97 @@ class PieWrapper {
     }
 
     // TODO remove all defaults here that are covered in defaultSettings. May require a "delete all null/undefined step in the middle"
+    const absencePreservingParseFloat = (thing) => {
+      if (_.isNull(thing)) { return thing }
+      if (_.isUndefined(thing)) { return thing }
+      return parseFloat(thing)
+    }
+
     this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
       size: {
-        canvasWidth: width,
-        canvasHeight: height,
-        pieInnerRadius: this._settings.innerRadius,
-        labelOffset: this._settings.labelOffset
+        canvasWidth: absencePreservingParseFloat(width),
+        canvasHeight: absencePreservingParseFloat(height),
+        pieInnerRadius: absencePreservingParseFloat(this._settings.innerRadius),
+        labelOffset: absencePreservingParseFloat(this._settings.labelOffset),
       },
       data: {
         sortOrder: this._settings.valuesOrder,
-        prefix: this._settings.prefix,
-        suffix: this._settings.suffix,
         color: this._settings.valuesColor,
         dataFormatter: dataFormatter,
         display: this._settings.valuesDisplay,
-        minAngle: this._settings.minAngle,
-        content: this.pieData
+        content: this.pieData,
       },
       labels: {
         enabled: this._settings.labelsEnabled,
-        strategies: {
-          unorderedTieBreak: this._settings.labelUnorderedRemovalTiebreak,
-          increaseMaxLineAngleInDenseOrderedSets: this._settings.labelStrategyIncreaseMaxLineAngleInDenseOrderedSets
-        },
         stages: this._settings.stages,
-        outer: {
-          innerLabels: this._settings.labelsInner,
-          displayPercentage: (this._settings.valuesDisplay === 'percentage'),
-          displayDecimals: this._settings.valuesDec,
-          innerPadding: this._settings.labelsInnerPadding,
-          outerPadding: this._settings.labelsOuterPadding,
-          liftOffAngle: this._settings.labelLiftOffAngle,
-          maxVerticalOffset: this._settings.labelMaxVerticalOffset,
-          labelMaxLineAngle: this._settings.labelMaxLineAngle,
-          maxWidth: this._settings.labelsMaxWidth,
-          maxLines: this._settings.labelsMaxLines
-        },
-        mainLabel: {
+        segment: {
           color: this._settings.labelsColor,
-          font: this._settings.labelsFont,
-          fontSize: this._settings.labelsSize,
-          minFontSize: this._settings.labelsMinFontSize
+          displayDecimals: absencePreservingParseFloat(this._settings.valuesDec),
+          displayPercentage: (this._settings.valuesDisplay === 'percentage'),
+          fontFamily: this._settings.labelsFont,
+          useInnerLabels: this._settings.labelsInner,
+          innerPadding: absencePreservingParseFloat(this._settings.labelsInnerPadding),
+          labelMaxLineAngle: absencePreservingParseFloat(this._settings.labelMaxLineAngle),
+          liftOffAngle: absencePreservingParseFloat(this._settings.labelLiftOffAngle),
+          maxLines: absencePreservingParseFloat(this._settings.labelsMaxLines),
+          maxVerticalOffset: absencePreservingParseFloat(this._settings.labelMaxVerticalOffset),
+          maxWidthProportion: absencePreservingParseFloat(this._settings.labelsMaxWidth),
+          maxFontSize: absencePreservingParseFloat(this._settings.labelsSize),
+          minFontSize: absencePreservingParseFloat(this._settings.labelsMinFontSize),
+          minProportion: absencePreservingParseFloat(this._settings.minProportion),
+          outerPadding: absencePreservingParseFloat(this._settings.labelsOuterPadding),
+          prefix: this._settings.prefix,
+          suffix: this._settings.suffix,
         },
         lines: {
           style: 'aligned',
           outer: {
             straight: {
-              minAngle: this._settings.labelsOuterLinesStraightMin,
-              maxAngle: this._settings.labelsOuterLinesStraightMax
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesStraightMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesStraightMax),
             },
             basisInterpolated: {
-              minAngle: this._settings.labelsOuterLinesBasisInterpolatedMin,
-              maxAngle: this._settings.labelsOuterLinesBasisInterpolatedMax
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBasisInterpolatedMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBasisInterpolatedMax),
             },
             bezier: {
-              minAngle: this._settings.labelsOuterLinesBezierMin,
-              maxAngle: this._settings.labelsOuterLinesBezierMax,
-              segmentLeanAngle: this._settings.labelsOuterLinesBezierSegmentLean,
-              labelLeanAngle: this._settings.labelsOuterLinesBezierLabelLean,
-              segmentPullInProportionMin: this._settings.labelsOuterLinesBezierSegmentPullInProportionMin,
-              segmentPullInProportionMax: this._settings.labelsOuterLinesBezierSegmentPullInProportionMax
-            }
-          }
-        }
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierMax),
+              segmentLeanAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentLean),
+              labelLeanAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierLabelLean),
+              segmentPullInProportionMin: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentPullInProportionMin),
+              segmentPullInProportionMax: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentPullInProportionMax),
+            },
+          },
+        },
       },
       tooltips: {
         enabled: true,
-        maxWidth: this._settings.tooltipMaxWidth,
-        maxHeight: this._settings.tooltipMaxHeight,
+        maxWidth: absencePreservingParseFloat(this._settings.tooltipMaxWidth),
+        maxHeight: absencePreservingParseFloat(this._settings.tooltipMaxHeight),
         styles: {
           backgroundColor: this._settings.tooltipBackgroundColor,
-          backgroundOpacity: this._settings.tooltipBackgroundOpacity,
+          backgroundOpacity: absencePreservingParseFloat(this._settings.tooltipBackgroundOpacity),
           font: this._settings.tooltipFontFamily,
           fontColor: this._settings.tooltipFontColor,
-          fontSize: this._settings.tooltipFontSize
-        }
+          fontSize: absencePreservingParseFloat(this._settings.tooltipFontSize),
+        },
       },
       misc: {
         colors: {
           segments: this._settings.valuesColor,
-          segmentStroke: this._settings.borderColor
+          segmentStroke: this._settings.borderColor,
         },
-        cssPrefix: this.uniqueCssPrefix
+        cssPrefix: this.uniqueCssPrefix,
       },
       groups: {
         content: this.groupData,
         font: this._settings.groupsFont,
-        fontSize: this._settings.groupsSize,
+        fontSize: absencePreservingParseFloat(this._settings.groupsSize),
         fontColor: this._settings.groupsFontColor,
-        minFontSize: this._settings.groupLabelsMinFontSize,
-        labelsEnabled: this._settings.groupLabelsEnabled
+        minFontSize: absencePreservingParseFloat(this._settings.groupLabelsMinFontSize),
+        labelsEnabled: this._settings.groupLabelsEnabled,
       },
-      debug: {
-        draw_placement_lines: this._settings.debug_draw_placement_lines
-      }
     })
   }
 
@@ -303,7 +300,7 @@ class PieWrapper {
 
     const colorArrays = [
       'groupsColor',
-      'valuesColor'
+      'valuesColor',
     ]
 
     _(colorArrays).each(colorArray => {
@@ -328,7 +325,7 @@ class PieWrapper {
       'subtitleFontColor',
       'titleFontColor',
       'tooltipBackgroundColor',
-      'tooltipFontColor'
+      'tooltipFontColor',
     ]
 
     _(colorFields).each(colorField => {
@@ -347,7 +344,7 @@ class PieWrapper {
         value: this._values[i],
         index: i,
         color: this._settings.valuesColor[i % this._settings.valuesColor.length],
-        group: (this._settings.groups) ? this._settings.groups[i] : null
+        group: (this._settings.groups) ? this._settings.groups[i] : null,
       })
     }
 
@@ -365,6 +362,20 @@ class PieWrapper {
     if (isSortedDescending) {
       layoutLogger.info(`setting valuesOrder to 'descending'`)
       this._settings.valuesOrder = 'descending'
+    }
+
+    // apply temp (hopefully) restriction to only allow bezier lines on ordered sets and to increase the max label line angle when using bezier curves
+    const useBezierOnTheseSortSettings = ['descending', 'ascending']
+    const canUseBezier = sortOrder => useBezierOnTheseSortSettings.indexOf(sortOrder) !== -1
+
+    if (canUseBezier(this._settings.valuesOrder)) {
+      this._settings.labelMaxLineAngle = 80
+    } else {
+      // effectively disable bezier lines
+      this._settings.labelsOuterLinesBasisInterpolatedMin = 5
+      this._settings.labelsOuterLinesBasisInterpolatedMax = 360
+      this._settings.labelsOuterLinesBezierMin = 360
+      this._settings.labelsOuterLinesBezierMax = 360
     }
   }
 
@@ -424,7 +435,7 @@ class PieWrapper {
         label: this._settings.groupsNames[i],
         value: this._settings.groupsSums[i],
         color: groupsColor[i % groupsColor.length],
-        count: this._settings.groupsCounts[i]
+        count: this._settings.groupsCounts[i],
       })
     }
     return groupData

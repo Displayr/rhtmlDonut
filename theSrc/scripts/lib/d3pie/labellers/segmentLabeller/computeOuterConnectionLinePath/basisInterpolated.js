@@ -22,7 +22,7 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
           : segmentCoord.x - totalXDelta,
         y: (labelData.inTopHalf)
           ? segmentCoord.y - totalXDelta
-          : segmentCoord.y + totalXDelta
+          : segmentCoord.y + totalXDelta,
       }
     } else {
       pathType = 'basis-towardsYAxis'
@@ -32,14 +32,14 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
           : segmentCoord.x - totalXDelta,
         y: (labelData.inTopHalf)
           ? segmentCoord.y - (totalYDelta - 10)
-          : segmentCoord.y + (totalYDelta - 10)
+          : segmentCoord.y + (totalYDelta - 10),
       }
     }
   } else {
     pathType = 'basis-awayfromYAxis'
     intermediateLineCoord = {
       x: segmentCoord.x + (labelCoord.x - segmentCoord.x) * 0.5,
-      y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5
+      y: segmentCoord.y + (labelCoord.y - segmentCoord.y) * 0.5,
     }
     switch (labelData.inTopHalf) {
       case true:
@@ -53,6 +53,6 @@ module.exports = ({ labelData, basisInterpolationFunction }) => {
 
   return {
     path: basisInterpolationFunction([segmentCoord, intermediateLineCoord, labelCoord]),
-    pathType
+    pathType,
   }
 }

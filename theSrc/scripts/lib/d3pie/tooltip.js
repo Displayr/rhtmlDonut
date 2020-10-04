@@ -7,15 +7,15 @@ let tt = {
   getTooltipText (pie, labelData) {
     let labelText
     if (pie.options.data.display === 'percentage') {
-      labelText = pie.options.data.dataFormatter(labelData.value / pie.totalSize * 100)
+      labelText = pie.options.data.dataFormatter(labelData.value / pie.totalValue * 100)
     } else {
       labelText = pie.options.data.dataFormatter(labelData.value)
     }
-    if (pie.options.data.prefix) {
-      labelText = pie.options.data.prefix + labelText
+    if (pie.options.labels.segment.prefix) {
+      labelText = pie.options.labels.segment.prefix + labelText
     }
-    if (pie.options.data.suffix) {
-      labelText = labelText + pie.options.data.suffix
+    if (pie.options.labels.segment.suffix) {
+      labelText = labelText + pie.options.labels.segment.suffix
     }
     return labelData.label + ': ' + labelText
   },
@@ -28,7 +28,7 @@ let tt = {
       font,
       fontColor,
       fontSize,
-      padding
+      padding,
     } = pie.options.tooltips.styles
     const getComputedBackgroundColor = (d) => (_.isNull(backgroundColor)) ? d.color : backgroundColor
 
@@ -53,7 +53,7 @@ let tt = {
         ry: borderRadius,
         x: -padding,
         y: -(fontSize + padding),
-        opacity: backgroundOpacity
+        opacity: backgroundOpacity,
       })
       .style('fill', getComputedBackgroundColor)
 
@@ -94,7 +94,7 @@ let tt = {
         height: function (d, i) {
           let dims = helpers.getDimensions(pie.cssPrefix + 'tooltip' + i)
           return dims.h + (2 * padding)
-        }
+        },
       })
 
     if (pie.options.groups.content) {
@@ -114,7 +114,7 @@ let tt = {
           ry: borderRadius,
           x: -padding,
           y: -(fontSize + padding),
-          opacity: backgroundOpacity
+          opacity: backgroundOpacity,
         })
         .style('fill', getComputedBackgroundColor)
 
@@ -155,7 +155,7 @@ let tt = {
           height: function (d, i) {
             let dims = helpers.getDimensions(pie.cssPrefix + 'gtooltip' + i)
             return dims.h + (2 * padding)
-          }
+          },
         })
     }
   },
@@ -196,7 +196,7 @@ let tt = {
         let y = pie.options.size.canvasHeight + 1000
         return 'translate(' + x + ',' + y + ')'
       })
-  }
+  },
 }
 
 // calculate color contrast

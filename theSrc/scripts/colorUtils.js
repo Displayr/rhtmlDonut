@@ -15,5 +15,5 @@ const getHexColorFromString = color => {
 module.exports = {
   isHexColor,
   isValidColorName,
-  getHexColorFromString
+  getHexColorFromString,
 }

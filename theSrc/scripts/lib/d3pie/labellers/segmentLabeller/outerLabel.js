@@ -1,48 +1,52 @@
-import { lineLength } from '../../geometryUtils'
-import { labelIntersect } from './labelUtils'
+import _ from 'lodash'
+import { lineLength } from '../../../geometryUtils'
+import { labelIntersect } from '../labelUtils'
+import math from '../../math'
 
-const _ = require('lodash')
-const quadrants = [4, 1, 2, 3]
-const math = require('../math')
+const quadrants = [4, 1, 2, 3] // TODO I never want to see a numeric quadrant again
 
 // looks like some things are added directly and not accounted for still (e.g. pieCenter dont have get / set ) - same with innerlabel
 
 class OuterLabel {
   constructor ({
-    segmentAngleMidpoint,
+    canvasInterface,
     color,
-    fontSize,
+    displayDecimals = 0,
+    displayPercentage = false,
     fontFamily,
+    fontSize,
+    fractionalValue,
     group,
     id,
     innerPadding,
     label,
-    totalValue,
-    value,
     linePadding = 2, // space between lineConnector and labelText
-    displayPercentage = false,
-    displayDecimals = 0,
-    displayPrefix = '',
-    displaySuffix = ''
+    prefix = '',
+    segmentAngleMidpoint,
+    suffix = '',
+    value,
   }) {
     const hemisphere = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270) ? 'left' : 'right'
     const inLeftHalf = (segmentAngleMidpoint < 90 || segmentAngleMidpoint >= 270)
     const inTopHalf = (segmentAngleMidpoint <= 180)
     const segmentQuadrantIndex = Math.floor(4 * segmentAngleMidpoint / 360)
     const segmentQuadrant = quadrants[segmentQuadrantIndex]
-    const fractionalValue = value / totalValue
 
     const formattedLabelValue = this.formatLabelText({
       displayPercentage,
       displayDecimals,
-      displayPrefix,
-      displaySuffix,
+      prefix,
+      suffix,
       fractionalValue,
-      value
+      value,
     })
     const labelText = `${label}: ${formattedLabelValue}`
 
-    this._invariants = {
+    this.interface = {
+      canvas: canvasInterface,
+    }
+
+    this._invariant = {
       inLeftHalf,
       inTopHalf,
       color,
@@ -57,10 +61,10 @@ class OuterLabel {
       linePadding,
       segmentAngleMidpoint,
       segmentQuadrant,
-      value
+      value,
     }
 
-    this._variants = {
+    this._variant = {
       angleBetweenLabelAndRadial: null,
       fontSize,
       height: null,
@@ -73,51 +77,22 @@ class OuterLabel {
       lineHeight: null,
       lineConnectorCoord: {},
       topLeftCoord: {},
-      width: null
+      width: null,
     }
 
     // strictly for debugging. Add label to root of class so we can inspect easier
     this._label = label
 
-    // NB TODO useful for testing and verifying access patterns while refactoring, but ultimately not usable. Delete after archiving for later use
-    // return new Proxy(this, {
-    //   get (target, propertyName) {
-    //     if (typeof propertyName === 'symbol') { return target[propertyName] }
-    //     if (propertyName === '_invariants') { return target._invariants }
-    //     if (propertyName === '_variants') { return target._variants }
-    //
-    //     if (propertyName === 'counts') { return target.counts }
-    //
-    //     if (!_.has(target.counts.get, propertyName)) { target.counts.get[propertyName] = 0 }
-    //     target.counts.get[propertyName]++
-    //
-    //     if (OuterLabel.isValidSetter(propertyName)) { return target._variants[propertyName] }
-    //     if (OuterLabel.isValidGetter(propertyName)) { return target._invariants[propertyName] }
-    //     if (OuterLabel.isValidMethod(propertyName)) { return target[propertyName] }
-    //     throw new Error(`Cannot get ${propertyName} from OuterLabel`)
-    //   },
-    //   set (target, propertyName, value) {
-    //     if (typeof propertyName === 'symbol') {
-    //       console.log('encountered set symbol. Bailing.')
-    //       throw new Error('cannot set symbol on label')
-    //     }
-    //
-    //     if (!_.has(target.counts.set, propertyName)) { target.counts.set[propertyName] = 0 }
-    //     target.counts.set[propertyName]++
-    //
-    //     if (OuterLabel.isValidSetter(propertyName)) {
-    //       target._variants[propertyName] = value
-    //       return true
-    //     }
-    //
-    //     throw new Error(`Cannot set ${propertyName} on OuterLabel`)
-    //   }
-    // })
+    this.computeDimensions()
+  }
+
+  computeDimensions () {
+    return Object.assign(this, this.interface.canvas().getLabelSize(this))
   }
 
   // these facts are not available at constructor time, so add them later via calling addLayoutFacts
   addLayoutFacts ({ segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset }) {
-    _.assign(this._invariants, { segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset })
+    _.assign(this._invariant, { segmentMidpointCoord, pieCenter, innerRadius, outerRadius, labelOffset })
   }
 
   // NB TODO dont think this works
@@ -128,20 +103,20 @@ class OuterLabel {
   formatLabelText ({
     displayPercentage,
     displayDecimals,
-    displayPrefix,
-    displaySuffix,
+    prefix,
+    suffix,
     fractionalValue,
-    value
+    value,
   }) {
     let val = (displayPercentage)
       ? (fractionalValue * 100).toFixed(displayDecimals)
       : (value).toFixed(displayDecimals)
 
-    if (displayPrefix) {
-      val = displayPrefix + val
+    if (prefix) {
+      val = prefix + val
     }
-    if (displaySuffix) {
-      val = val + displaySuffix
+    if (suffix) {
+      val = val + suffix
     }
     return val
   }
@@ -153,14 +128,14 @@ class OuterLabel {
     this.topLeftCoord.y -= verticalOffset
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   moveStraightDownBy (verticalOffset) {
     this.topLeftCoord.y += verticalOffset
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setTopMedialPoint (coord) {
@@ -170,7 +145,7 @@ class OuterLabel {
       : { x: coord.x + linePadding, y: coord.y }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   setBottomMedialPoint (coord) {
@@ -180,7 +155,7 @@ class OuterLabel {
       : { x: coord.x + linePadding, y: coord.y - height }
     this.lineConnectorCoord = this._computeLineConnectorCoord()
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   placeLabelViaConnectorCoord (lineConnectorCoord) {
@@ -198,21 +173,21 @@ class OuterLabel {
   _placeLabelViaConnectorCoordOnTopApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
-      y: lineConnectorCoord.y - this.height
+      y: lineConnectorCoord.y - this.height,
     }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   _placeLabelViaConnectorCoordOnBottomApexLabel (lineConnectorCoord) {
     this.topLeftCoord = {
       x: lineConnectorCoord.x - this.width / 2,
-      y: lineConnectorCoord.y
+      y: lineConnectorCoord.y,
     }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   _placeLabelViaConnectorCoordOnNormalLabel (lineConnectorCoord) {
@@ -230,7 +205,7 @@ class OuterLabel {
       : { x: lineConnectorCoord.x + linePadding, y: topLeftY }
     this.lineConnectorCoord = lineConnectorCoord
     this.labelAngle = math.getAngleOfCoord(this.pieCenter, this.lineConnectorCoord)
-    this._variants.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
+    this._variant.angleBetweenLabelAndRadial = this._computeAngleBetweenLabelLineAndRadialLine()
   }
 
   // End Label movement calls
@@ -307,26 +282,26 @@ class OuterLabel {
 
   // convenience methods
 
-  get hide () { return !this._variants.labelShown }
+  get hide () { return !this._variant.labelShown }
 
   get topRightCoord () {
     return {
       x: this.topLeftCoord.x + this.width,
-      y: this.topLeftCoord.y
+      y: this.topLeftCoord.y,
     }
   }
 
   get bottomLeftCoord () {
     return {
       x: this.topLeftCoord.x,
-      y: this.topLeftCoord.y + this.height
+      y: this.topLeftCoord.y + this.height,
     }
   }
 
   get bottomRightCoord () {
     return {
       x: this.topLeftCoord.x + this.width,
-      y: this.topLeftCoord.y + this.height
+      y: this.topLeftCoord.y + this.height,
     }
   }
 
@@ -343,17 +318,17 @@ class OuterLabel {
 
   // accessors for invariants
 
-  get color () { return this._invariants.color }
-  get fontFamily () { return this._invariants.fontFamily }
-  get fractionalValue () { return this._invariants.fractionalValue }
+  get color () { return this._invariant.color }
+  get fontFamily () { return this._invariant.fontFamily }
+  get fractionalValue () { return this._invariant.fractionalValue }
 
   // NB left includes, right excludes
   // NB top includes, bottom excludes
-  get hemisphere () { return this._invariants.hemisphere }
-  get inTopHalf () { return this._invariants.inTopHalf }
-  get inBottomHalf () { return !this._invariants.inTopHalf }
-  get inLeftHalf () { return this._invariants.inLeftHalf }
-  get inRightHalf () { return !this._invariants.inLeftHalf }
+  get hemisphere () { return this._invariant.hemisphere }
+  get inTopHalf () { return this._invariant.inTopHalf }
+  get inBottomHalf () { return !this._invariant.inTopHalf }
+  get inLeftHalf () { return this._invariant.inLeftHalf }
+  get inRightHalf () { return !this._invariant.inLeftHalf }
 
   get inTopLeftQuadrant () { return this.inTopHalf && this.inLeftHalf }
   get inTopRightQuadrant () { return this.inTopHalf && this.inRightHalf }
@@ -362,8 +337,8 @@ class OuterLabel {
 
   get linePointsToYOrigin () {
     return (this.inLeftHalf)
-      ? (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x > this.segmentMidpointCoord.x)
-      : (_.has(this._variants, 'lineConnectorCoord') && this.lineConnectorCoord.x < this.segmentMidpointCoord.x)
+      ? (_.has(this._variant, 'lineConnectorCoord') && this.lineConnectorCoord.x > this.segmentMidpointCoord.x)
+      : (_.has(this._variant, 'lineConnectorCoord') && this.lineConnectorCoord.x < this.segmentMidpointCoord.x)
   }
 
   get lineConnectorOffsetFromBottom () {
@@ -378,66 +353,77 @@ class OuterLabel {
       : this.height - 0.5 * this.lineHeight
   }
 
-  get id () { return this._invariants.id }
-  get innerPadding () { return this._invariants.innerPadding }
-  get label () { return this._invariants.label }
-  get labelText () { return this._invariants.labelText }
-  get linePadding () { return this._invariants.linePadding }
-  get segmentAngleMidpoint () { return this._invariants.segmentAngleMidpoint }
-  get segmentQuadrant () { return this._invariants.segmentQuadrant }
-  get value () { return this._invariants.value }
+  get id () { return this._invariant.id }
+  get innerPadding () { return this._invariant.innerPadding }
+  get label () { return this._invariant.label }
+  get labelText () { return this._invariant.labelText }
+  get shortText () { return this._invariant.label.substr(0, 8) }
+  get linePadding () { return this._invariant.linePadding }
+  get segmentAngleMidpoint () { return this._invariant.segmentAngleMidpoint }
+  get segmentQuadrant () { return this._invariant.segmentQuadrant }
+  get value () { return this._invariant.value }
 
-  get segmentMidpointCoord () { return this._invariants.segmentMidpointCoord }
-  get pieCenter () { return this._invariants.pieCenter }
-  get innerRadius () { return this._invariants.innerRadius }
-  get outerRadius () { return this._invariants.outerRadius }
-  get labelOffset () { return this._invariants.labelOffset }
+  get segmentMidpointCoord () {
+    if (!_.has(this._invariant, 'segmentMidpointCoord')) {
+      const pieCenter = this.interface.canvas().pieCenter
+      const coordAtZeroDegrees = { x: pieCenter.x - this.outerRadius, y: pieCenter.y }
+      this._invariant.segmentMidpointCoord = math.rotate(coordAtZeroDegrees, pieCenter, this.segmentAngleMidpoint)
+    }
+    return this._invariant.segmentMidpointCoord
+  }
+
+  get pieCenter () { return this.interface.canvas().pieCenter }
+  get outerRadius () { return this.interface.canvas().outerRadius }
+  get labelOffset () { return this.interface.canvas().labelOffset }
 
   // accessors and mutators for variants
 
-  get isLifted () { return this._variants.isLifted }
-  set isLifted (newValue) { this._variants.isLifted = newValue }
+  get isLifted () { return this._variant.isLifted }
+  set isLifted (newValue) { this._variant.isLifted = newValue }
 
-  get fontSize () { return this._variants.fontSize }
-  set fontSize (newValue) { this._variants.fontSize = newValue }
+  get fontSize () { return this._variant.fontSize }
+  set fontSize (newValue) {
+    this._variant.fontSize = newValue
+    this.computeDimensions()
+  }
 
-  get height () { return this._variants.height }
-  set height (newValue) { this._variants.height = newValue }
+  get height () { return this._variant.height }
+  set height (newValue) { this._variant.height = newValue }
 
-  get isTopApexLabel () { return this._variants.isTopApexLabel }
-  set isTopApexLabel (newValue) { this._variants.isTopApexLabel = newValue }
+  get isTopApexLabel () { return this._variant.isTopApexLabel }
+  set isTopApexLabel (newValue) { this._variant.isTopApexLabel = newValue }
 
-  get isBottomApexLabel () { return this._variants.isBottomApexLabel }
-  set isBottomApexLabel (newValue) { this._variants.isBottomApexLabel = newValue }
+  get isBottomApexLabel () { return this._variant.isBottomApexLabel }
+  set isBottomApexLabel (newValue) { this._variant.isBottomApexLabel = newValue }
 
-  get lineHeight () { return this._variants.lineHeight }
-  set lineHeight (newValue) { this._variants.lineHeight = newValue }
+  get lineHeight () { return this._variant.lineHeight }
+  set lineHeight (newValue) { this._variant.lineHeight = newValue }
 
-  get labelAngle () { return this._variants.labelAngle }
-  set labelAngle (newValue) { this._variants.labelAngle = newValue }
+  get labelAngle () { return this._variant.labelAngle }
+  set labelAngle (newValue) { this._variant.labelAngle = newValue }
 
-  get labelShown () { return this._variants.labelShown }
-  set labelShown (newValue) { this._variants.labelShown = newValue }
+  get labelShown () { return this._variant.labelShown }
+  set labelShown (newValue) { this._variant.labelShown = newValue }
 
-  get labelTextLines () { return this._variants.labelTextLines }
-  set labelTextLines (newValue) { this._variants.labelTextLines = newValue }
+  get labelTextLines () { return this._variant.labelTextLines }
+  set labelTextLines (newValue) { this._variant.labelTextLines = newValue }
 
-  get lineConnectorCoord () { return this._variants.lineConnectorCoord }
+  get lineConnectorCoord () { return this._variant.lineConnectorCoord }
   set lineConnectorCoord (newValue) {
     this.validateCoord(newValue)
-    this._variants.lineConnectorCoord = newValue
+    this._variant.lineConnectorCoord = newValue
   }
 
-  get topLeftCoord () { return this._variants.topLeftCoord }
+  get topLeftCoord () { return this._variant.topLeftCoord }
   set topLeftCoord (newValue) {
     this.validateCoord(newValue)
-    this._variants.topLeftCoord = newValue
+    this._variant.topLeftCoord = newValue
   }
 
-  get width () { return this._variants.width }
-  set width (newValue) { this._variants.width = newValue }
+  get width () { return this._variant.width }
+  set width (newValue) { this._variant.width = newValue }
 
-  get labelLineAngle () { return this._variants.angleBetweenLabelAndRadial }
+  get labelLineAngle () { return this._variant.angleBetweenLabelAndRadial }
 }
 
 module.exports = OuterLabel
