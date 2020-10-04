@@ -516,7 +516,7 @@ Donut <- function(
         suffix = suffix,
         gradient = gradient,
         innerRadius = inner.radius,
-        minAngle = values.display.thres,
+        minProportion = values.display.thres,
         borderColor = border.color,
         logLevel = log.level
     )

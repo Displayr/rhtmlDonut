@@ -120,12 +120,25 @@ class d3pie {
     this.outerRadius = pieDimensions.outerRadius
     this.labelOffset = pieDimensions.labelOffset
 
-    this.maxVerticalOffset = _([
-      (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
-      this.options.labels.segment.maxVerticalOffset,
-    ])
-      .filter(x => !_.isNull(x))
-      .min()
+    // TODO NB: I think the unordered and the descending order labeller make different assumptions about
+    // what the maxVerticalOffset represents. Address this when we move the unordered labeller to use elliptical label layout
+    // for now stick with the "old one mod" approach and keep the other two approaches around. Small changes to maxVerticalOffset calcs
+    // have large impacts on edge cases so Im keeping these variants around for now.
+
+    // Old one mod
+    this.maxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
+
+    // // Old one
+    // const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
+    // this.maxVerticalOffset = Math.min(this.outerRadius, largestAllowableMaxVerticalOffset)
+
+    // // new one
+    // this.maxVerticalOffset = _([
+    //   (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
+    //   this.options.labels.segment.maxVerticalOffset,
+    // ])
+    //   .filter(x => !_.isNull(x))
+    //   .min()
 
     this.pieCenter = {
       x: this.options.size.canvasWidth / 2,
@@ -143,7 +156,7 @@ class d3pie {
       canvasWidth: ${this.options.size.canvasWidth}
       canvasHeight: ${this.options.size.canvasHeight}
       constrainedDimension: ${pieDimensions.constrained}
-      radius: ${this.innerRadius} -> ${this.outerRadius}
+      radius: Inner ${this.innerRadius} Outer ${this.outerRadius}
       labelOffset: ${this.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}

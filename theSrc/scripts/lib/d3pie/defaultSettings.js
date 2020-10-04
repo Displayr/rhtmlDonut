@@ -66,10 +66,10 @@ const defaultSettings = {
       },
     },
   },
-  effects: { // used but not currently configurable
-    load: { // used but not currently configurable
-      effect: 'default', // used but not currently configurable
-      speed: 1000, // used but not currently configurable
+  effects: {
+    load: {
+      effect: 'default', // pieWrapper: settings.loadingAnimationEnabled. options ['none', 'default']. Not exposed to R
+      speed: 1000, // pieWrapper: settings.loadingAnimationSpeed. milliseconds value for animation duration. Not exposed to R
     },
     pullOutSegmentOnClick: { // not used
       effect: 'bounce', // not used
