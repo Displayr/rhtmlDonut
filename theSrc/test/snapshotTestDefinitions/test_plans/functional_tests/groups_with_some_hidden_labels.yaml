@@ -7,5 +7,4 @@ rowSize: 3
 data: data.test_plan.groups_with_some_hidden_labels
 comments: []
 config:
-  - '{ "settings" : { "title" : "default title settings" } }'
-  - config.animationDisabled
+  - '{ "settings" : { "title" : "default title settings" } }|config.animationDisabled'
