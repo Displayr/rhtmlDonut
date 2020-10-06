@@ -1,0 +1,15 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+general_comments:
+  - 'NB for these examples we set minProportion=0, labelMaxLineAngle=180 to emphasize variations in labelLiftOffAngle'
+width: 300
+height: 400
+rowSize: 4
+comments: []
+data: data.test_plan.lots_of_values_at_top_and_bottom
+config:
+  - 'config.label_6|{ "settings" : { "labelLiftOffAngle" : "10", "minProportion" : "0", "labelMaxLineAngle" : "180", "title" : "labelLiftOffAngle=10" } }'
+  - 'config.label_6|{ "settings" : { "labelLiftOffAngle" : "15", "minProportion" : "0", "labelMaxLineAngle" : "180", "title" : "labelLiftOffAngle=15" } }'
+  - 'config.label_6|{ "settings" : { "labelLiftOffAngle" : "30", "minProportion" : "0", "labelMaxLineAngle" : "180", "title" : "labelLiftOffAngle=30" } }'
+  - 'config.label_6|{ "settings" : { "labelLiftOffAngle" : "45", "minProportion" : "0", "labelMaxLineAngle" : "180", "title" : "labelLiftOffAngle=45" } }'

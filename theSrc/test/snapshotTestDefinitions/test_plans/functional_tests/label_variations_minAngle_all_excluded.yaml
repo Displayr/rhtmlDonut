@@ -1,0 +1,7 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+width: 500
+height: 500
+config:
+  - 'data.equal_value_sets.50_equal_values|{ "settings" : { "minProportion" : "0.03", "title" : "all labels should be excluded because minProportion > all segments" } }'

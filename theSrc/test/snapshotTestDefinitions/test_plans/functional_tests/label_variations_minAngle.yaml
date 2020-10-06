@@ -1,0 +1,16 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+general_comments: 'row 1 is ordered decreasing, row 2 is unordered'
+width: 250
+height: 250
+rowSize: 4
+config:
+  - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "title" : "default minProportion (0.003)" } }'
+  - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minProportion" : "0.01", "title" : "minProportion=0.01" } }'
+  - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minProportion" : "0.05", "title" : "minProportion=0.05" } }'
+  - 'data.decreasing_value_sets.20_decreasing_values|{ "settings" : { "minProportion" : "0.08", "title" : "minProportion=0.08" } }'
+  - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "title" : "default minProportion (0.003)" } }'
+  - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minProportion" : "0.01", "title" : "minProportion=0.01" } }'
+  - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minProportion" : "0.05", "title" : "minProportion=0.05" } }'
+  - 'data.unordered_value_sets.20_unordered_values|{ "settings" : { "minProportion" : "0.08", "title" : "minProportion=0.08" } }'

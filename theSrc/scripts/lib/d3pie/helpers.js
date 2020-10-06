@@ -1,5 +1,4 @@
 import d3 from 'd3'
-import math from './math'
 import * as rootLog from 'loglevel'
 const colorLogger = rootLog.getLogger('tooltip')
 
@@ -88,51 +87,6 @@ let helpers = {
     return adjustedColor
   },
 
-  applySmallSegmentGrouping: function (data, smallSegmentGrouping) {
-    let totalSize
-    if (smallSegmentGrouping.valueType === 'percentage') {
-      totalSize = math.getTotalPieSize(data) // TODO this is done in _init right after the fn call
-    }
-
-    // loop through each data item
-    let newData = []
-    let groupedData = []
-    let totalGroupedData = 0
-    for (let i = 0; i < data.length; i++) {
-      if (smallSegmentGrouping.valueType === 'percentage') {
-        let dataPercent = (data[i].value / totalSize) * 100
-        if (dataPercent <= smallSegmentGrouping.value) {
-          groupedData.push(data[i])
-          totalGroupedData += data[i].value
-          continue
-        }
-        data[i].isGrouped = false
-        newData.push(data[i])
-      } else {
-        if (data[i].value <= smallSegmentGrouping.value) {
-          groupedData.push(data[i])
-          totalGroupedData += data[i].value
-          continue
-        }
-        data[i].isGrouped = false
-        newData.push(data[i])
-      }
-    }
-
-    // we're done! See if there's any small segment groups to add
-    if (groupedData.length) {
-      newData.push({
-        color: smallSegmentGrouping.color,
-        label: smallSegmentGrouping.label,
-        value: totalGroupedData,
-        isGrouped: true,
-        groupedData: groupedData
-      })
-    }
-
-    return newData
-  },
-
   // for debugging
   showLine: function (svg, coords, color = 'black', note = '') {
     const path = 'M' + coords.map(({ x, y }) => `${x} ${y}`).join(' L')
@@ -154,17 +108,6 @@ let helpers = {
       .style('fill', color)
       .attr('note', note)
   },
-
-  // TODO use _.isFunction
-  isFunction: function (functionToCheck) {
-    let getType = {}
-    return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]'
-  },
-
-  // TODO use _.isArray
-  isArray: function (o) {
-    return Object.prototype.toString.call(o) === '[object Array]'
-  }
 }
 
 module.exports = helpers

@@ -1,10 +1,8 @@
 const gulp = require('gulp')
 const rhtmlBuildUtils = require('rhtmlBuildUtils')
 
-gulp.task('testSpecs', gulp.series(function (done) {
-  console.log('skipping test')
-  done()
-}))
-
-const dontRegisterTheseTasks = ['testSpecs']
+const dontRegisterTheseTasks = []
 rhtmlBuildUtils.registerGulpTasks({ gulp, exclusions: dontRegisterTheseTasks })
+
+gulp.task('compileTestFixtures', require('./build/tasks/compileTestFixtures')(gulp))
+gulp.task('copyTestDependencies', require('./build/tasks/copyTestDependencies')(gulp))

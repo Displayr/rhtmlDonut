@@ -4,8 +4,7 @@ import tooltip from './tooltip'
 import d3 from 'd3'
 import _ from 'lodash'
 
-import * as rootLog from 'loglevel'
-const tooltipLogger = rootLog.getLogger('tooltip')
+import { tooltipLogger } from '../logger'
 
 let segments = {
 
@@ -27,7 +26,7 @@ let segments = {
       .outerRadius(pie.outerRadius)
       .startAngle(0)
       .endAngle(function (d) {
-        return (d.value / pie.totalSize) * 2 * Math.PI
+        return (d.value / pie.totalValue) * 2 * Math.PI
       })
 
     let arcs = pieChartElement.selectAll('.' + pie.cssPrefix + 'arc')
@@ -38,7 +37,7 @@ let segments = {
       .attr('transform', function (d, i) {
         let angle = 0
         if (i > 0) {
-          angle = segments.getSegmentAngle(i - 1, pie.options.data.content, pie.totalSize)
+          angle = segments.getSegmentAngle(i - 1, pie.options.data.content, pie.totalValue)
         }
         return 'rotate(' + (angle - 90) + ')'
       })
@@ -92,7 +91,7 @@ let segments = {
         .outerRadius(pie.innerRadius)
         .startAngle(0)
         .endAngle(function (d) {
-          return (d.value / pie.totalSize) * 2 * Math.PI
+          return (d.value / pie.totalValue) * 2 * Math.PI
         })
 
       let groupArcs = pieChartElement.selectAll('.' + pie.cssPrefix + 'garc')
@@ -103,7 +102,7 @@ let segments = {
         .attr('transform', function (d, i) {
           let angle = 0
           if (i > 0) {
-            angle = segments.getSegmentAngle(i - 1, pie.options.groups.content, pie.totalSize)
+            angle = segments.getSegmentAngle(i - 1, pie.options.groups.content, pie.totalValue)
           }
           return 'rotate(' + (angle - 90) + ')'
         })
@@ -158,7 +157,7 @@ let segments = {
       .outerRadius(pie.outerRadius)
       .startAngle(0)
       .endAngle(function (d) {
-        return (d.value / pie.totalSize) * 2 * Math.PI
+        return (d.value / pie.totalValue) * 2 * Math.PI
       })
 
     pie.svg.selectAll('.' + pie.cssPrefix + 'arcEl')
@@ -170,7 +169,7 @@ let segments = {
       .attr('transform', function (d, i) {
         let angle = 0
         if (i > 0) {
-          angle = segments.getSegmentAngle(i - 1, pie.options.data.content, pie.totalSize)
+          angle = segments.getSegmentAngle(i - 1, pie.options.data.content, pie.totalValue)
         }
         return 'rotate(' + (angle - 90) + ')'
       })
@@ -181,7 +180,7 @@ let segments = {
         .outerRadius(pie.innerRadius)
         .startAngle(0)
         .endAngle(function (d) {
-          return (d.value / pie.totalSize) * 2 * Math.PI
+          return (d.value / pie.totalValue) * 2 * Math.PI
         })
 
       pie.svg.selectAll('.' + pie.cssPrefix + 'garcEl')
@@ -193,29 +192,14 @@ let segments = {
         .attr('transform', function (d, i) {
           let angle = 0
           if (i > 0) {
-            angle = segments.getSegmentAngle(i - 1, pie.options.groups.content, pie.totalSize)
+            angle = segments.getSegmentAngle(i - 1, pie.options.groups.content, pie.totalValue)
           }
           return 'rotate(' + (angle - 90) + ')'
         })
     }
   },
 
-  addGradients: function (pie) {
-    let grads = pie.svg.append('defs')
-      .selectAll('radialGradient')
-      .data(pie.options.data.content)
-      .enter().append('radialGradient')
-      .attr('gradientUnits', 'userSpaceOnUse')
-      .attr('cx', 0)
-      .attr('cy', 0)
-      .attr('r', '120%')
-      .attr('id', function (d, i) { return pie.cssPrefix + 'grad' + i })
-
-    grads.append('stop').attr('offset', '0%').style('stop-color', function (d, i) { return pie.options.data.content[i].color })
-    grads.append('stop').attr('offset', pie.options.misc.gradient.percentage + '%').style('stop-color', pie.options.misc.gradient.color)
-  },
-
-  addSegmentEventHandlers: function (pie) {
+  addSegmentEventHandlers: function (pie, labelsShownLookup) {
     let arc = d3.selectAll('.' + pie.cssPrefix + 'arc')
     let garc = d3.selectAll('.' + pie.cssPrefix + 'garc')
     let lb = d3.selectAll('.' + pie.cssPrefix + 'labelGroup-outer')
@@ -235,7 +219,7 @@ let segments = {
     const p = (labelDatum) => `${labelDatum.id}(${labelDatum.label.substr(0, 6)})`
 
     lb.on('mouseover', function (d) {
-      tooltipLogger.info(`mouseover label ${p(d)}`)
+      tooltipLogger.debug(`mouseover label ${p(d)}`)
 
       const id = d.id
       const currentEl = d3.select(this)
@@ -255,7 +239,7 @@ let segments = {
       }
 
       if (pie.options.effects.highlightLabelOnMouseover) {
-        let lbColor = helpers.increaseBrightness(pie.options.labels.mainLabel.color, pie.options.effects.highlightTextLuminosity)
+        let lbColor = helpers.increaseBrightness(pie.options.labels.segment.color, pie.options.effects.highlightTextLuminosity)
         label.style('fill', lbColor)
       }
 
@@ -289,7 +273,7 @@ let segments = {
       }
 
       if (pie.options.effects.highlightLabelOnMouseover) {
-        label.style('fill', pie.options.labels.mainLabel.color)
+        label.style('fill', pie.options.labels.segment.color)
       }
 
       let isExpanded = segment.attr('class') === pie.cssPrefix + 'expanded'
@@ -316,16 +300,11 @@ let segments = {
         segment.style('fill', helpers.increaseBrightness(segColor, pie.options.effects.highlightLuminosity))
       }
       if (pie.options.effects.highlightLabelOnMouseover) {
-        let lbColor = helpers.increaseBrightness(pie.options.labels.mainLabel.color, pie.options.effects.highlightTextLuminosity)
+        let lbColor = helpers.increaseBrightness(pie.options.labels.segment.color, pie.options.effects.highlightTextLuminosity)
         label.style('fill', lbColor)
       }
       if (pie.options.tooltips.enabled) {
-        // TODO should be in outerLabeller once it is a class
-        const isLabelShown = (innerLabelData, outerlabelData, id) => {
-          return _.some(innerLabelData, { id }) || _.some(outerlabelData, { id })
-        }
-
-        if (!isLabelShown(pie.innerLabelData, pie.outerLabelData, d.id)) {
+        if (!labelsShownLookup[d.id]) {
           index = segment.attr('data-index')
           tooltip.showTooltip(pie, '#' + pie.cssPrefix + 'tooltip' + index)
         }
@@ -361,7 +340,7 @@ let segments = {
         segment.style('fill', color)
       }
       if (pie.options.effects.highlightLabelOnMouseover) {
-        label.style('fill', pie.options.labels.mainLabel.color)
+        label.style('fill', pie.options.labels.segment.color)
       }
 
       if (pie.options.tooltips.enabled) {
@@ -452,7 +431,7 @@ let segments = {
 
   // helper function used to call the click, mouseover, mouseout segment callback functions
   onSegmentEvent: function (pie, func, segment, isExpanded) {
-    if (!helpers.isFunction(func)) {
+    if (!_.isFunction(func)) {
       return
     }
     let index = parseInt(segment.attr('data-index'), 10)
@@ -460,7 +439,7 @@ let segments = {
       segment: segment.node(),
       index: index,
       expanded: isExpanded,
-      data: pie.options.data.content[index]
+      data: pie.options.data.content[index],
     })
   },
 
@@ -468,7 +447,7 @@ let segments = {
     let bbox = el.getBBox()
     return {
       x: bbox.x + bbox.width / 2,
-      y: bbox.y + bbox.height / 2
+      y: bbox.y + bbox.height / 2,
     }
   },
 
@@ -477,13 +456,13 @@ let segments = {
    * @param index
    * @param opts optional object for fine-tuning exactly what you want.
    */
-  getSegmentAngle: function (index, data, totalSize, opts) {
+  getSegmentAngle: function (index, data, totalValue, opts) {
     let options = _.merge({
       // if true, this returns the full angle from the origin. Otherwise it returns the single segment angle
       compounded: true,
 
       // optionally returns the midpoint of the angle instead of the full angle
-      midpoint: false
+      midpoint: false,
     }, opts)
 
     let currValue = data[index].value
@@ -502,26 +481,16 @@ let segments = {
     }
 
     // now convert the full value to an angle
-    let angle = (fullValue / totalSize) * 360
+    let angle = (fullValue / totalValue) * 360
 
     // lastly, if we want the midpoint, factor that sucker in
     if (options.midpoint) {
-      let currAngle = (currValue / totalSize) * 360
+      let currAngle = (currValue / totalValue) * 360
       angle -= (currAngle / 2)
     }
 
     return angle
   },
-
-  getPercentage: function (pie, index, decimalPlaces) {
-    let relativeAmount = pie.options.data.content[index].value / pie.totalSize
-    if (decimalPlaces <= 0) {
-      return Math.round(relativeAmount * 100)
-    } else {
-      return (relativeAmount * 100).toFixed(decimalPlaces)
-    }
-  }
-
 }
 
 module.exports = segments

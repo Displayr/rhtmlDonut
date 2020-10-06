@@ -4,33 +4,75 @@
 \alias{Donut}
 \title{Create a Donut plot}
 \usage{
-Donut(values, labels, values.color = NULL, values.order = "descending",
-  values.font.family = "arial", values.font.size = 10,
-  values.decimal.places = 1, values.display.as = "percentage",
-  values.display.thres = 0.003, labels.enabled = TRUE,
-  labels.font.family = "arial", labels.font.color = "#333333",
-  labels.font.size = 10, labels.min.font.size = 8,
-  labels.padding.inner = 1, labels.padding.outer = 1,
-  labels.max.width = 0.3, labels.max.lines = 6, labels.offset = 0.1,
+Donut(
+  values,
+  labels,
+  values.color = NULL,
+  values.order = "descending",
+  values.font.family = "arial",
+  values.font.size = 10,
+  values.decimal.places = 1,
+  values.display.as = "percentage",
+  values.display.thres = 0.003,
+  labels.enabled = TRUE,
+  labels.font.family = "arial",
+  labels.font.color = "#333333",
+  labels.font.size = 10,
+  labels.min.font.size = 8,
+  labels.padding.inner = 1,
+  labels.padding.outer = 1,
+  labels.max.width = 0.3,
+  labels.max.lines = 6,
+  labels.offset = 0.1,
   labels.advanced.offset.yaxis.max = NULL,
   labels.advanced.liftoff.angle = 30,
-  labels.advanced.line.max.angle = 60,
-  labels.advanced.removal.tiebreak = "last", tooltips.max.width = 0.3,
-  tooltips.max.height = 0.3, tooltips.font.family = "Arial",
-  tooltips.font.size = 10, tooltips.font.color = NULL,
-  tooltips.bg.color = NULL, tooltips.bg.opacity = 0.8, groups = NULL,
-  groups.color = NULL, groups.order = "initial",
-  groups.font.family = "arial", groups.font.color = "#333333",
-  groups.font.size = 10, groups.min.font.size = 8,
-  groups.labels.enabled = TRUE, labels.inner = FALSE, footer = "",
-  footer.font.family = "Arial", footer.font.size = 8,
+  labels.advanced.line.max.angle = 80,
+  labels.outer.lines.straightMin = 360,
+  labels.outer.lines.straightMax = 360,
+  labels.outer.lines.basisInterpolatedMin = 360,
+  labels.outer.lines.basisInterpolatedMax = 360,
+  labels.outer.lines.bezierMin = 0,
+  labels.outer.lines.bezierMax = 360,
+  labels.outer.lines.bezierSegmentLean = 0,
+  labels.outer.lines.bezierLabelLean = 0,
+  labels.outer.lines.bezierSegmentPullInProportionMin = 0.25,
+  labels.outer.lines.bezierSegmentPullInProportionMax = 0.75,
+  tooltips.max.width = 0.3,
+  tooltips.max.height = 0.3,
+  tooltips.font.family = "Arial",
+  tooltips.font.size = 10,
+  tooltips.font.color = NULL,
+  tooltips.bg.color = NULL,
+  tooltips.bg.opacity = 0.8,
+  groups = NULL,
+  groups.color = NULL,
+  groups.order = "initial",
+  groups.font.family = "arial",
+  groups.font.color = "#333333",
+  groups.font.size = 10,
+  groups.min.font.size = 8,
+  groups.labels.enabled = TRUE,
+  labels.inner = FALSE,
+  footer = "",
+  footer.font.family = "Arial",
+  footer.font.size = 8,
   footer.font.color = rgb(44, 44, 44, maxColorValue = 255),
-  title = NULL, title.font.family = "arial", title.font.size = 16,
-  title.font.color = "#333333", title.top.padding = 0, subtitle = "",
-  subtitle.font.family = "Arial", subtitle.font.size = 12,
+  title = NULL,
+  title.font.family = "arial",
+  title.font.size = 16,
+  title.font.color = "#333333",
+  title.top.padding = 0,
+  subtitle = "",
+  subtitle.font.family = "Arial",
+  subtitle.font.size = 12,
   subtitle.font.color = rgb(44, 44, 44, maxColorValue = 255),
-  prefix = NULL, suffix = NULL, border.color = "#ffffff",
-  gradient = FALSE, inner.radius = 0.8, log.level = "info")
+  prefix = NULL,
+  suffix = NULL,
+  border.color = "#ffffff",
+  gradient = FALSE,
+  inner.radius = 0.8,
+  log.level = "info"
+)
 }
 \arguments{
 \item{values}{vector of real numbers}
@@ -73,7 +115,25 @@ Donut(values, labels, values.color = NULL, values.order = "descending",
 
 \item{labels.advanced.line.max.angle}{(optional) Labels are hidden if the angle between the labelLine and the radial line through the segment midpoint is greater than labels.advanced.line.max.angle. The default is 60.}
 
-\item{labels.advanced.removal.tiebreak}{(optional) Control behavior in unordered sets, when removing labels during placement, and the two smallest labels have equal value. If set to "last" (default) the last one in data set will be removed. If set to "best" the algorithm will remove the one most likely to improve label placement.}
+\item{labels.outer.lines.straightMin}{TODO document}
+
+\item{labels.outer.lines.straightMax}{TODO document}
+
+\item{labels.outer.lines.basisInterpolatedMin}{TODO document}
+
+\item{labels.outer.lines.basisInterpolatedMax}{TODO document}
+
+\item{labels.outer.lines.bezierMin}{TODO document}
+
+\item{labels.outer.lines.bezierMax}{TODO document}
+
+\item{labels.outer.lines.bezierSegmentLean}{TODO document}
+
+\item{labels.outer.lines.bezierLabelLean}{TODO document}
+
+\item{labels.outer.lines.bezierSegmentPullInProportionMin}{TODO document}
+
+\item{labels.outer.lines.bezierSegmentPullInProportionMax}{TODO document}
 
 \item{tooltips.max.width}{(optional) the maximum tooltip width as a proportion of total width. The default is 0.3.}
 

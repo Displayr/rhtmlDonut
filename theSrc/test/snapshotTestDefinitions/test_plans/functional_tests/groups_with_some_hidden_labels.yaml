@@ -1,0 +1,10 @@
+version: 1
+type: single_page_one_example_per_config
+use_config_as_title: true
+width: 650
+height: 650
+rowSize: 3
+data: data.test_plan.groups_with_some_hidden_labels
+comments: []
+config:
+  - '{ "settings" : { "title" : "default title settings" } }|config.animationDisabled'

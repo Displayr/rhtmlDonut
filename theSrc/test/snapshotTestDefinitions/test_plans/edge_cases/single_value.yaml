@@ -1,0 +1,9 @@
+version: 1
+groupname: edge_cases
+type: single_page_one_example_per_data
+use_config_as_title: true
+width: 500
+height: 500
+data:
+  - data.test_plan.one_val
+  - data.test_plan.one_val_group

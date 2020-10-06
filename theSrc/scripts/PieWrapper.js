@@ -5,13 +5,13 @@ import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
-import * as rootLog from 'loglevel'
+import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
+
 import {
   isHexColor,
   isValidColorName,
-  getHexColorFromString
+  getHexColorFromString,
 } from './colorUtils'
-const layoutLogger = rootLog.getLogger('layout')
 
 class PieWrapper {
   static uniqueId () {
@@ -32,7 +32,7 @@ class PieWrapper {
 
   draw (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    console.log(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
+    rootLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
     $(element).find('*').remove()
 
     this.outerSvg = d3.select(element)
@@ -51,7 +51,7 @@ class PieWrapper {
         fontFamily: this._settings.titleFontFamily,
         topPadding: this._settings.titleTopPadding,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.title.setX(width / 2)
       this.title.setMaxWidth(width)
@@ -67,7 +67,7 @@ class PieWrapper {
         subtitleFontFamily: this._settings.subtitleFontFamily,
         yOffset: this.titleHeight,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.subtitle.setX(width / 2)
       this.subtitle.setMaxWidth(width)
@@ -84,7 +84,7 @@ class PieWrapper {
         containerHeight: height,
         topPadding: 10,
         bottomPadding: 10,
-        innerPadding: 2
+        innerPadding: 2,
       })
       this.footer.setX(width / 2)
       this.footer.setMaxWidth(width)
@@ -129,87 +129,115 @@ class PieWrapper {
     }
 
     // TODO remove all defaults here that are covered in defaultSettings. May require a "delete all null/undefined step in the middle"
+    const absencePreservingParseFloat = (thing) => {
+      if (_.isNull(thing)) { return thing }
+      if (_.isUndefined(thing)) { return thing }
+      return parseFloat(thing)
+    }
+
+    const absencePreservingBooleanToStringConverter = (thing, trueVal, falseVal) => {
+      if (_.isNull(thing)) { return thing }
+      if (_.isUndefined(thing)) { return thing }
+      return (thing) ? trueVal : falseVal
+    }
+
     this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
       size: {
-        canvasWidth: width,
-        canvasHeight: height,
-        pieInnerRadius: this._settings.innerRadius,
-        labelOffset: this._settings.labelOffset
+        canvasWidth: absencePreservingParseFloat(width),
+        canvasHeight: absencePreservingParseFloat(height),
+        pieInnerRadius: absencePreservingParseFloat(this._settings.innerRadius),
+        labelOffset: absencePreservingParseFloat(this._settings.labelOffset),
       },
       data: {
         sortOrder: this._settings.valuesOrder,
-        prefix: this._settings.prefix,
-        suffix: this._settings.suffix,
         color: this._settings.valuesColor,
         dataFormatter: dataFormatter,
         display: this._settings.valuesDisplay,
-        minAngle: this._settings.minAngle,
-        content: this.pieData
+        content: this.pieData,
       },
       labels: {
         enabled: this._settings.labelsEnabled,
-        strategies: {
-          unorderedTieBreak: this._settings.labelUnorderedRemovalTiebreak
-        },
         stages: this._settings.stages,
-        outer: {
-          innerLabels: this._settings.labelsInner,
-          displayPercentage: (this._settings.valuesDisplay === 'percentage'),
-          displayDecimals: this._settings.valuesDec,
-          innerPadding: this._settings.labelsInnerPadding,
-          outerPadding: this._settings.labelsOuterPadding,
-          liftOffAngle: this._settings.labelLiftOffAngle,
-          maxVerticalOffset: this._settings.labelMaxVerticalOffset,
-          labelMaxLineAngle: this._settings.labelMaxLineAngle,
-          maxWidth: this._settings.labelsMaxWidth,
-          maxLines: this._settings.labelsMaxLines
-        },
-        mainLabel: {
+        segment: {
           color: this._settings.labelsColor,
-          font: this._settings.labelsFont,
-          fontSize: this._settings.labelsSize,
-          minFontSize: this._settings.labelsMinFontSize
+          displayDecimals: absencePreservingParseFloat(this._settings.valuesDec),
+          displayPercentage: (this._settings.valuesDisplay === 'percentage'),
+          fontFamily: this._settings.labelsFont,
+          useInnerLabels: this._settings.useInnerLabels,
+          innerPadding: absencePreservingParseFloat(this._settings.labelsInnerPadding),
+          labelMaxLineAngle: absencePreservingParseFloat(this._settings.labelMaxLineAngle),
+          liftOffAngle: absencePreservingParseFloat(this._settings.labelLiftOffAngle),
+          maxLines: absencePreservingParseFloat(this._settings.labelsMaxLines),
+          maxVerticalOffset: absencePreservingParseFloat(this._settings.labelMaxVerticalOffset),
+          maxWidthProportion: absencePreservingParseFloat(this._settings.labelsMaxWidth),
+          minProportion: absencePreservingParseFloat(this._settings.minProportion),
+          outerPadding: absencePreservingParseFloat(this._settings.labelsOuterPadding),
+          preferredMaxFontSize: absencePreservingParseFloat(this._settings.labelsSize),
+          preferredMinFontSize: absencePreservingParseFloat(this._settings.labelsMinFontSize),
+          prefix: this._settings.prefix,
+          suffix: this._settings.suffix,
         },
         lines: {
-          style: 'aligned'
-        }
+          style: 'aligned',
+          outer: {
+            straight: {
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesStraightMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesStraightMax),
+            },
+            basisInterpolated: {
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBasisInterpolatedMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBasisInterpolatedMax),
+            },
+            bezier: {
+              minAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierMin),
+              maxAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierMax),
+              segmentLeanAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentLean),
+              labelLeanAngle: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierLabelLean),
+              segmentPullInProportionMin: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentPullInProportionMin),
+              segmentPullInProportionMax: absencePreservingParseFloat(this._settings.labelsOuterLinesBezierSegmentPullInProportionMax),
+            },
+          },
+        },
+      },
+      effects: {
+        load: {
+          effect: absencePreservingBooleanToStringConverter(this._settings.loadingAnimationEnabled, 'default', 'none'),
+          speed: absencePreservingParseFloat(this._settings.loadingAnimationSpeed),
+        },
       },
       tooltips: {
         enabled: true,
-        maxWidth: this._settings.tooltipMaxWidth,
-        maxHeight: this._settings.tooltipMaxHeight,
+        maxWidth: absencePreservingParseFloat(this._settings.tooltipMaxWidth),
+        maxHeight: absencePreservingParseFloat(this._settings.tooltipMaxHeight),
         styles: {
           backgroundColor: this._settings.tooltipBackgroundColor,
-          backgroundOpacity: this._settings.tooltipBackgroundOpacity,
+          backgroundOpacity: absencePreservingParseFloat(this._settings.tooltipBackgroundOpacity),
           font: this._settings.tooltipFontFamily,
           fontColor: this._settings.tooltipFontColor,
-          fontSize: this._settings.tooltipFontSize
-        }
+          fontSize: absencePreservingParseFloat(this._settings.tooltipFontSize),
+        },
       },
       misc: {
         colors: {
           segments: this._settings.valuesColor,
-          segmentStroke: this._settings.borderColor
+          segmentStroke: this._settings.borderColor,
         },
-        cssPrefix: this.uniqueCssPrefix
+        cssPrefix: this.uniqueCssPrefix,
       },
       groups: {
         content: this.groupData,
         font: this._settings.groupsFont,
-        fontSize: this._settings.groupsSize,
+        fontSize: absencePreservingParseFloat(this._settings.groupsSize),
         fontColor: this._settings.groupsFontColor,
-        minFontSize: this._settings.groupLabelsMinFontSize,
-        labelsEnabled: this._settings.groupLabelsEnabled
+        minFontSize: absencePreservingParseFloat(this._settings.groupLabelsMinFontSize),
+        labelsEnabled: this._settings.groupLabelsEnabled,
       },
-      debug: {
-        draw_placement_lines: this._settings.debug_draw_placement_lines
-      }
     })
   }
 
   resize (element) {
     const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    console.log(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
+    rootLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
 
     if (width < 200 || height < 200) { return }
 
@@ -270,7 +298,8 @@ class PieWrapper {
     this._valuesCount = newConfig.values.length
     this._labels = newConfig.labels
 
-    this._initLogger(this._settings.logLevel)
+    initialiseLogger(this._settings.logLevel)
+    rootLogger.debug('config', newConfig)
 
     if (this._settings.groups) {
       this.groupData = this._processGroupConfig()
@@ -284,7 +313,7 @@ class PieWrapper {
 
     const colorArrays = [
       'groupsColor',
-      'valuesColor'
+      'valuesColor',
     ]
 
     _(colorArrays).each(colorArray => {
@@ -309,7 +338,7 @@ class PieWrapper {
       'subtitleFontColor',
       'titleFontColor',
       'tooltipBackgroundColor',
-      'tooltipFontColor'
+      'tooltipFontColor',
     ]
 
     _(colorFields).each(colorField => {
@@ -328,8 +357,34 @@ class PieWrapper {
         value: this._values[i],
         index: i,
         color: this._settings.valuesColor[i % this._settings.valuesColor.length],
-        group: (this._settings.groups) ? this._settings.groups[i] : null
+        group: (this._settings.groups) ? this._settings.groups[i] : null,
       })
+    }
+
+    // detect order
+    // TODO use enums for ascending / descending / unordered
+    const firstValueEqualLastValue = _.first(this._values) === _.last(this._values)
+    const isSortedAscending = _.every(this._values, (value, index, array) =>
+      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
+    ) && !firstValueEqualLastValue
+    const isSortedDescending = _.every(this._values, (value, index, array) =>
+      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
+    ) && !firstValueEqualLastValue
+    const valuesOrder = (isSortedDescending)
+      ? 'descending'
+      : ((isSortedAscending) ? 'ascending' : 'unordered')
+    rootLogger.debug(`setting valuesOrder to '${valuesOrder}'`)
+    this._settings.valuesOrder = valuesOrder
+
+    // NB: Temp restriction until ellipse is used globally
+    if (valuesOrder === 'unordered') {
+      const currentLabelMaxLineAngle = this._settings.labelMaxLineAngle
+      if (
+        _.isNull(currentLabelMaxLineAngle) ||
+        _.isUndefined(currentLabelMaxLineAngle) ||
+        parseFloat(currentLabelMaxLineAngle) > 75
+      ) { this._settings.labelMaxLineAngle = 75 }
+      rootLogger.info('temp restricting currentLabelMaxLineAngle to 75 in unordered data set')
     }
   }
 
@@ -389,32 +444,10 @@ class PieWrapper {
         label: this._settings.groupsNames[i],
         value: this._settings.groupsSums[i],
         color: groupsColor[i % groupsColor.length],
-        count: this._settings.groupsCounts[i]
+        count: this._settings.groupsCounts[i],
       })
     }
     return groupData
-  }
-
-  _initLogger (loggerSettings = 'info') {
-    if (_.isNull(loggerSettings)) {
-      return
-    }
-    if (_.isString(loggerSettings)) {
-      rootLog.setLevel(loggerSettings)
-      _(PieWrapper.getLoggerNames()).each((loggerName) => { rootLog.getLogger(loggerName).setLevel(loggerSettings) })
-      return
-    }
-    _(loggerSettings).each((loggerLevel, loggerName) => {
-      if (loggerName === 'default') {
-        rootLog.setLevel(loggerLevel)
-      } else {
-        rootLog.getLogger(loggerName).setLevel(loggerLevel)
-      }
-    })
-  }
-
-  static getLoggerNames () {
-    return ['layout', 'tooltip', 'label']
   }
 }
 PieWrapper.initClass()

@@ -1,0 +1,31 @@
+version: 1
+type: multi_widget_single_page
+use_config_as_title: true
+rowSize: 3
+comments: []
+widgets:
+  - width: 600
+    height: 600
+    config:
+      - '{ "settings" : { "title" : "outer: disabled, group: disabled" } }'
+      - data.test_plan.simple_groups
+      - config.label_disabled
+      - config.group_label_disabled
+  - width: 600
+    height: 600
+    config:
+      - '{ "settings" : { "title" : "outer: disabled, group: enabled" } }'
+      - data.test_plan.simple_groups
+      - config.label_disabled
+  - width: 600
+    height: 600
+    config:
+      - '{ "settings" : { "title" : "outer: enabled, group: disabled" } }'
+      - data.test_plan.simple_groups
+      - config.group_label_disabled
+  - width: 600
+    height: 600
+    config:
+      - '{ "settings" : { "title" : "outer: disabled, no groups" } }'
+      - data.test_plan.abc_rbg
+      - config.label_disabled

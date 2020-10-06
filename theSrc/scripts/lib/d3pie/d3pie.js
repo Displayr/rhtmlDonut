@@ -8,25 +8,13 @@ import tooltip from './tooltip'
 import validate from './validate'
 import defaultSettings from './defaultSettings'
 import groupLabeller from './labellers/groupLabeller'
-import outerLabeller from './labellers/outerLabeller'
-
-import * as rootLog from 'loglevel'
-const layoutLogger = rootLog.getLogger('layout')
-
-/*!
- * This is not the standard d3pie. It was edited by Xiaoting Wang and then Kyle Zeeuwen
- * @author Ben Keen, Xiaoting Wang, Kyle Zeeuwen
- * @original_repo http://github.com/benkeen/d3pie
- * @repo http://github.com/Displayr/rhtmlDonut
- */
-
-// TODO pull from package.json
-const _scriptName = 'rhtmlDonut'
-const _version = '2.0.0'
+import SegmentLabeller from './labellers/segmentLabeller'
+import { name, version } from '../../../../package'
+import { rootLogger, layoutLogger } from '../logger'
 
 class d3pie {
   constructor (element, options) {
-    rootLog.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
+    rootLogger.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
 
     // element can be an ID or DOM element
     this.element = element
@@ -51,26 +39,30 @@ class d3pie {
     }
 
     // add a data-role to the DOM node to let anyone know that it contains a d3pie instance, and the d3pie version
-    d3.select(this.element).attr(_scriptName, _version)
-    d3.select(this.element).attr(`${_scriptName}-status`, 'loading')
+    d3.select(this.element).attr(name, version)
+    d3.select(this.element).attr(`${name}-status`, 'loading')
 
     // things that are done once
-    if (this.options.data.smallSegmentGrouping.enabled) {
-      this.options.data.content = helpers.applySmallSegmentGrouping(this.options.data.content, this.options.data.smallSegmentGrouping)
-    }
-    this.totalSize = math.getTotalPieSize(this.options.data.content)
+    this.totalValue = math.getTotalValueOfDataSet(this.options.data.content)
 
     // prep-work
     this.svgContainer = helpers.addSVGSpace(this)
     this.svg = this.svgContainer.append('g').attr('class', 'mainPlot')
     this.floating = this.svgContainer.append('g').attr('class', 'floating')
 
-    this.outerLabelData = []
-    this.innerLabelData = []
     this.groupLabelData = []
 
+    this.interface = {
+      canvas: {
+        cssPrefix: this.cssPrefix,
+        width: this.options.size.canvasWidth,
+        height: this.options.size.canvasHeight,
+        svg: this.svg,
+      },
+    }
+
     this._init()
-    d3.select(this.element).attr(`${_scriptName}-status`, 'ready')
+    d3.select(this.element).attr(`${name}-status`, 'ready')
   }
 
   redrawWithoutLoading () {
@@ -78,119 +70,100 @@ class d3pie {
     this._init({ redraw: true })
   }
 
-  // TODO combine _init and _initNoLoading
   _init ({ redraw = false } = {}) {
     _(this.options.data.content).each((datum, i) => {
       if (!_.has(datum, 'id')) { datum.id = i }
     })
 
+    let startTime = Date.now()
+    let durations = {}
+
     let pieDimensions = {}
+
     let labelStats = { maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0 }
+    let extraVerticalSpace = 0
+    let labelLinePadding = 0
 
     if (this.options.labels.enabled) {
-      const initialLabelSet = outerLabeller.buildLabelSet({
-        totalSize: this.totalSize,
-        minAngle: this.options.data.minAngle,
-        labelData: this.options.data.content,
-        fontSize: this.options.labels.mainLabel.fontSize,
-        fontFamily: this.options.labels.mainLabel.font,
-        displayPercentage: this.options.labels.outer.displayPercentage,
-        displayDecimals: parseFloat(this.options.labels.outer.displayDecimals),
-        displayPrefix: this.options.data.prefix,
-        displaySuffix: this.options.data.suffix,
-        innerPadding: parseFloat(this.options.labels.outer.innerPadding)
+      this.segmentLabeller = new SegmentLabeller({
+        animationConfig: this.options.effects.load,
+        dataPoints: this.options.data.content,
+        sortOrder: this.options.data.sortOrder,
+        linesConfig: this.options.labels.lines, // TODO move this into this.options.labels.segment
+        config: this.options.labels.segment,
+        canvas: this.interface.canvas,
       })
 
-      this.outerLabelData = outerLabeller.preprocessLabelSet({
-        parentContainer: this.svg,
-        labelSet: initialLabelSet,
-        minAngle: this.options.data.minAngle,
-        canvasHeight: this.options.size.canvasHeight,
-        minFontSize: this.options.labels.mainLabel.minFontSize,
-        maxFontSize: this.options.labels.mainLabel.fontSize,
-        innerPadding: parseFloat(this.options.labels.outer.innerPadding),
-        outerPadding: parseFloat(this.options.labels.outer.outerPadding),
-        maxLabelWidth: parseFloat(this.options.labels.outer.maxWidth) * this.options.size.canvasWidth,
-        maxLabelLines: parseFloat(this.options.labels.outer.maxLines)
-      })
+      this.segmentLabeller.preprocessLabelSet()
+      labelStats = this.segmentLabeller.getLabelStats()
 
-      labelStats = outerLabeller.computeLabelStats(this.outerLabelData)
-
-      const extraVerticalSpace = (_.get(labelStats.densities, 'top') > 8)
+      labelLinePadding = 2 // TODO pull from config
+      extraVerticalSpace = (_.get(labelStats.densities, 'top') > 8)
         ? 2 * labelStats.maxLabelHeight
         : 0
-
-      const labelLinePadding = 2 // TODO pull from config
-      pieDimensions = this.computePieLayoutDimensions({
-        maxFontSize: labelStats.maxFontSize,
-        canvasWidth: this.options.size.canvasWidth,
-        canvasHeight: this.options.size.canvasHeight,
-        labelOffsetProportion: parseFloat(this.options.size.labelOffset),
-        innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
-        idealLeftWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-        idealRightWhiteSpaceSize: (labelStats.maxLabelWidth || 0) + labelLinePadding,
-        idealTopWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace,
-        idealBottomWhiteSpaceSize: (labelStats.maxLabelHeight || 0) + extraVerticalSpace
-      })
-    } else {
-      pieDimensions = this.computePieLayoutDimensions({
-        maxFontSize: 0,
-        canvasWidth: this.options.size.canvasWidth,
-        canvasHeight: this.options.size.canvasHeight,
-        labelOffsetProportion: 0,
-        innerRadiusProportion: parseFloat(this.options.size.pieInnerRadius),
-        idealLeftWhiteSpaceSize: 0,
-        idealRightWhiteSpaceSize: 0,
-        idealTopWhiteSpaceSize: 0,
-        idealBottomWhiteSpaceSize: 0
-      })
     }
+
+    pieDimensions = this.computePieLayoutDimensions({
+      labelsEnabled: this.options.labels.enabled,
+      canvasHeight: this.options.size.canvasHeight,
+      canvasWidth: this.options.size.canvasWidth,
+      idealBottomWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
+      idealLeftWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealRightWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
+      idealTopWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
+      innerRadiusProportion: this.options.size.pieInnerRadius,
+      labelOffsetProportion: this.options.size.labelOffset,
+      maxFontSize: labelStats.maxFontSize,
+    })
 
     this.innerRadius = pieDimensions.innerRadius
     this.outerRadius = pieDimensions.outerRadius
     this.labelOffset = pieDimensions.labelOffset
 
-    const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
-    const unboundedMaxVerticalOffset = (_.isNull(this.options.labels.outer.maxVerticalOffset))
-      ? this.outerRadius
-      : this.options.labels.outer.maxVerticalOffset
-    this.maxVerticalOffset = Math.min(unboundedMaxVerticalOffset, largestAllowableMaxVerticalOffset)
+    // TODO NB: I think the unordered and the descending order labeller make different assumptions about
+    // what the maxVerticalOffset represents. Address this when we move the unordered labeller to use elliptical label layout
+    // for now stick with the "old one mod" approach and keep the other two approaches around. Small changes to maxVerticalOffset calcs
+    // have large impacts on edge cases so Im keeping these variants around for now.
+
+    // Old one mod
+    this.maxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
+
+    // // Old one
+    // const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
+    // this.maxVerticalOffset = Math.min(this.outerRadius, largestAllowableMaxVerticalOffset)
+
+    // // new one
+    // this.maxVerticalOffset = _([
+    //   (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
+    //   this.options.labels.segment.maxVerticalOffset,
+    // ])
+    //   .filter(x => !_.isNull(x))
+    //   .min()
 
     this.pieCenter = {
       x: this.options.size.canvasWidth / 2,
-      y: this.options.size.canvasHeight / 2
+      y: this.options.size.canvasHeight / 2,
     }
 
-    _(this.outerLabelData).each(label => {
-      const coordAtZeroDegrees = { x: this.pieCenter.x - this.outerRadius, y: this.pieCenter.y }
-      const segmentMidpointCoord = math.rotate(coordAtZeroDegrees, this.pieCenter, label.segmentAngleMidpoint)
-
-      label.addLayoutFacts({
-        segmentMidpointCoord,
-        pieCenter: this.pieCenter,
-        innerRadius: this.innerRadius,
-        outerRadius: this.outerRadius,
-        labelOffset: this.labelOffset
-      })
-    })
+    // TODO remove these 5 from this and access exclusive through canvas
+    this.interface.canvas.pieCenter = this.pieCenter
+    this.interface.canvas.innerRadius = this.innerRadius
+    this.interface.canvas.outerRadius = this.outerRadius
+    this.interface.canvas.labelOffset = this.labelOffset
+    this.interface.canvas.maxVerticalOffset = this.maxVerticalOffset
 
     layoutLogger.info(`pie layout determined:
       canvasWidth: ${this.options.size.canvasWidth}
       canvasHeight: ${this.options.size.canvasHeight}
       constrainedDimension: ${pieDimensions.constrained}
-      radius: ${this.innerRadius} -> ${this.outerRadius}
+      radius: Inner ${this.innerRadius} Outer ${this.outerRadius}
       labelOffset: ${this.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}
-      idealTopWhiteSpaceSize: ${this.options.labels.mainLabel.fontSize}
-      idealBottomWhiteSpaceSize: ${this.options.labels.mainLabel.fontSize}
+      idealTopWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
+      idealBottomWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
     `)
 
-    // TODO this is hard coded to false in R wrapper. Can delete
-    // now create the pie chart segments, and gradients if the user desired
-    if (this.options.misc.gradient.enabled) {
-      segments.addGradients(this)
-    }
     if (redraw) {
       this.options.effects.load.effect = 'none'
       segments.reshapeSegment(this)
@@ -198,32 +171,46 @@ class d3pie {
       segments.create(this) // also creates this.arc
     }
 
-    // NB drawShape is a debug only feature that will be deleted / supported some other way in the future
-    // TODO is this duplication of this.options.debug.draw_placement_lines ?
-    if (this.options.labels.outer.debugDrawFitLines) {
-      outerLabeller.debugDrawFitLines(this)
-    } else if (this.options.labels.enabled) {
-      outerLabeller.doLabelling(this)
+    if (this.options.labels.enabled) {
+      const startLabelling = Date.now()
+
+      this.segmentLabeller.clearPreviousFromCanvas()
+
+      // TODO this is temp assignment to this.outerLabelData to make it all keep working ...
+      this.segmentLabeller.doLabelling()
+
+      this.segmentLabeller.draw()
+
+      durations.outer_labelling = Date.now() - startLabelling
     }
 
     if (this.options.groups.content && this.options.groups.labelsEnabled) {
+      const startLabelling = Date.now()
       groupLabeller.doLabelling(this)
+      durations.group_labelling = Date.now() - startLabelling
     }
 
     // add and position the tooltips
     if (this.options.tooltips.enabled) {
+      const startTooltips = Date.now()
       tooltip.addTooltips(this)
+      durations.tooltips = Date.now() - startTooltips
     }
 
-    // position the title and subtitle
-    segments.addSegmentEventHandlers(this)
+    // TODO this is pretty inefficient. will do 2n^2 scans
+    const { inner, outer } = this.segmentLabeller.getLabels()
+    const isLabelShown = (id) => (_.some(inner, { id }) || _.some(outer, { id }))
+    const labelsShownLookup = _.transform(this.options.data.content, (result, dataPoint) => {
+      result[dataPoint.id] = isLabelShown(dataPoint.id)
+    }, {})
+    segments.addSegmentEventHandlers(this, labelsShownLookup)
 
-    if (this.options.debug.draw_placement_lines) {
-      outerLabeller.drawPlacementLines(this)
-    }
+    durations.totalDuration = Date.now() - startTime
+    rootLogger.info(JSON.stringify(durations))
   }
 
   computePieLayoutDimensions ({
+    labelsEnabled,
     maxFontSize,
     canvasWidth,
     canvasHeight,
@@ -232,7 +219,7 @@ class d3pie {
     idealTopWhiteSpaceSize,
     idealBottomWhiteSpaceSize,
     labelOffsetProportion,
-    innerRadiusProportion
+    innerRadiusProportion,
   }) {
     const availableWidth = canvasWidth - Math.max(idealLeftWhiteSpaceSize, idealRightWhiteSpaceSize) * 2
     const availableHeight = canvasHeight - Math.max(idealTopWhiteSpaceSize, idealBottomWhiteSpaceSize) * 2
@@ -241,11 +228,11 @@ class d3pie {
 
     const halfMaxFontSizeMinusMagicHardCode = 8 // NB based on experimenting with label_variations_wrapping.yaml examples
     const labelOffset = Math.max(
-      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize ( minus some fudge)  to prevent labels from overlapping segments
+      (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize (minus some fudge)  to prevent labels from overlapping segments
       Math.ceil(outerRadiusIncludingLabelOffset * (1 - (1 / (1 + labelOffsetProportion))))
     )
 
-    const outerRadius = outerRadiusIncludingLabelOffset - labelOffset
+    const outerRadius = outerRadiusIncludingLabelOffset - (labelsEnabled ? labelOffset : 0)
     const innerRadius = Math.floor(outerRadius * innerRadiusProportion)
     const constrained = (availableHeight > availableWidth) ? 'width' : 'height'
 

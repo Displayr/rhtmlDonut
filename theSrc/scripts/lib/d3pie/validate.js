@@ -1,4 +1,4 @@
-import helpers from './helpers'
+import _ from 'lodash'
 
 /* global HTMLElement */
 /* global SVGElement */
@@ -24,7 +24,7 @@ const validate = {
     }
 
     // confirm some data has been supplied
-    if (!helpers.isArray(options.data.content)) {
+    if (!_.isArray(options.data.content)) {
       console.error('d3pie error: invalid config structure: missing data.content property.')
       return false
     }
@@ -49,7 +49,7 @@ const validate = {
     pie.options.data.content = data
 
     return true
-  }
+  },
 }
 
 module.exports = validate

@@ -1,0 +1,373 @@
+[08:21:40] Using gulpfile ~/projects/numbers/donut/gulpfile.js
+[08:21:40] Starting 'testVisual_s'...
+[08:21:40] Starting 'copySnapshotJestRunnerToProject'...
+[08:21:40] Finished 'copySnapshotJestRunnerToProject' after 44 ms
+[08:21:40] Starting 'takeSnapshotsForEachTestDefinition'...
+snapshot dynamic config: {
+  "puppeteer": {}
+}
+running /Users/kyle/projects/numbers/donut/node_modules/.bin/jest --roots="/Users/kyle/projects/numbers/donut/.tmp" --roots="/Users/kyle/projects/numbers/donut/theSrc/test/bin" --testMatch='**/*.jest.test.js' --ci=0  -t=sample_
+PASS .tmp/takeSnapshots.jest.test.js (60.09 s)
+  ● Console
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":64,"computeLabelStats":2,"outer_labelling":37,"group_labelling":0,"tooltips":40,"totalDuration":150,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_1"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_1
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":74,"computeLabelStats":0,"outer_labelling":28,"group_labelling":5,"tooltips":46,"totalDuration":165,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_10"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_10
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":13,"computeLabelStats":0,"outer_labelling":20,"group_labelling":1,"tooltips":8,"totalDuration":48,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_11"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_11
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":19,"computeLabelStats":0,"outer_labelling":18,"group_labelling":1,"tooltips":14,"totalDuration":57,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_12"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_12
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":22,"computeLabelStats":0,"outer_labelling":14,"group_labelling":1,"tooltips":13,"totalDuration":57,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_13"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_13
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":21,"computeLabelStats":0,"outer_labelling":18,"group_labelling":1,"tooltips":13,"totalDuration":60,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_14"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_14
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":59,"computeLabelStats":1,"outer_labelling":28,"group_labelling":4,"tooltips":64,"totalDuration":163,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_15"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_15
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":16,"computeLabelStats":1,"outer_labelling":16,"group_labelling":0,"tooltips":14,"totalDuration":52,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_16"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_16
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":36,"computeLabelStats":1,"outer_labelling":17,"group_labelling":1,"tooltips":29,"totalDuration":90,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_17"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_17
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":23,"computeLabelStats":1,"outer_labelling":15,"group_labelling":0,"tooltips":18,"totalDuration":64,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_18"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_18
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":29,"computeLabelStats":0,"outer_labelling":15,"group_labelling":0,"tooltips":23,"totalDuration":74,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_19"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_19
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":3,"preproccessLabelSet":28,"computeLabelStats":1,"outer_labelling":21,"group_labelling":0,"tooltips":23,"totalDuration":81,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_2"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_2
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":47,"computeLabelStats":0,"outer_labelling":26,"group_labelling":1,"tooltips":33,"totalDuration":112,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_20"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_20
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":43,"computeLabelStats":0,"outer_labelling":19,"group_labelling":0,"tooltips":29,"totalDuration":97,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_21"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_21
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":54,"computeLabelStats":1,"outer_labelling":35,"group_labelling":6,"tooltips":60,"totalDuration":163,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_22"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_22
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":12,"computeLabelStats":0,"outer_labelling":17,"group_labelling":0,"tooltips":8,"totalDuration":42,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_23"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_23
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":45,"computeLabelStats":0,"outer_labelling":15,"group_labelling":5,"tooltips":38,"totalDuration":109,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_3"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_3
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":58,"computeLabelStats":1,"outer_labelling":44,"group_labelling":6,"tooltips":86,"totalDuration":204,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_4"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_4
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":11,"computeLabelStats":0,"outer_labelling":13,"group_labelling":1,"tooltips":11,"totalDuration":41,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_5"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_5
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":69,"computeLabelStats":0,"outer_labelling":37,"group_labelling":8,"tooltips":58,"totalDuration":181,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_6"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_6
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":46,"computeLabelStats":0,"outer_labelling":33,"group_labelling":1,"tooltips":34,"totalDuration":121,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_7"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_7
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":0,"preproccessLabelSet":48,"computeLabelStats":0,"outer_labelling":18,"group_labelling":1,"tooltips":36,"totalDuration":109,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_8"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_8
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+    console.log
+      snapshotDirectory /Users/kyle/projects/numbers/donut/theSrc/test/snapshots/local/master/testPlans/representative_examples_anonymised
+
+      at baseConfigureImageSnapshotMatcher (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:21:11)
+
+    console.log
+      {"buildLabelSet":1,"preproccessLabelSet":72,"computeLabelStats":1,"outer_labelling":44,"group_labelling":0,"tooltips":50,"totalDuration":175,"scenario":"representative_examples_anonymised-representative_examples_anonymised data.anonymised.sample_9"}
+
+      at Object.consoleLogHandler (build/config/widget.config.js:29:19)
+
+    console.log
+      taking 1 snapshot(s) for representative_examples_anonymised data.anonymised.sample_9
+
+      at testSnapshots (node_modules/rhtmlBuildUtils/src/lib/renderExamplePageTest.helper.js:107:11)
+          at runMicrotasks (<anonymous>)
+
+
+Test Suites: 3 skipped, 1 passed, 1 of 4 total
+Tests:       105 skipped, 23 passed, 128 total
+Snapshots:   23 passed, 23 total
+Time:        66.75 s
+Ran all test suites with tests matching "sample_".
+[08:22:48] Finished 'takeSnapshotsForEachTestDefinition' after 1.12 min
+[08:22:48] Finished 'testVisual_s' after 1.12 min

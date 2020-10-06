@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+  <link href='https://fonts.googleapis.com/css?family=Arvo:400,700italic,700,400italic' rel='stylesheet' type='text/css'>
+  <link href='/styles/internal_www.css' rel='stylesheet' type='text/css'>
+</head>
+<body>
+
+<section>
+  <h2>Bezier Curve Example</h2>
+</section>
+<section>
+  <div>
+    <svg class="canvas" width="1000" height="1000">
+        <g transform="translate(50,50)">
+          <circle r="5" cx="0" cy="0"/>
+          <text x="0" y="0">Origin</text>
+          <circle r="5" cx="100" cy="200"/>
+          <text x="100" y="200">Terminus</text>
+
+          <circle r="2" cx="100" cy="0"fill="red" opacity="0.5"/>
+          <text x="100" y="0">Control 1</text>
+          <circle r="2" cx="0" cy="200"fill="red" opacity="0.5"/>
+          <text x="0" y="200">Control 2</text>
+
+          <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+          <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+          <!-- bezier curve with C1, C2 set to sides of the rectangle -->
+          <path d="M 0 0 C 100 0 0 200 100 200" fill="none" stroke="red" stroke-width="1" />
+        </g>
+
+      <g transform="translate(50,300)">
+        <circle r="5" cx="0" cy="0"/>
+        <text x="0" y="0">Origin</text>
+        <circle r="5" cx="100" cy="200"/>
+        <text x="100" y="200">Terminus</text>
+
+        <circle r="2" cx="75" cy="0"fill="red" opacity="0.5"/>
+        <text x="75" y="0">Control 1 (25% less X)</text>
+        <circle r="2" cx="0" cy="200"fill="red" opacity="0.5"/>
+        <text x="0" y="200">Control 2</text>
+
+        <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+        <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+        <!-- bezier curve with C1, C2 set to sides of the rectangle, but C1 pulled in by 25% -->
+        <path d="M 0 0 C 75 0 0 200 100 200" fill="none" stroke="red" stroke-width="1" />
+      </g>
+
+      <g transform="translate(50,550)">
+        <circle r="5" cx="0" cy="0"/>
+        <text x="0" y="0">Origin</text>
+        <circle r="5" cx="100" cy="200"/>
+        <text x="100" y="200">Terminus</text>
+
+        <circle r="2" cx="50" cy="0"fill="red" opacity="0.5"/>
+        <text x="50" y="0">Control 1 (50% less X)</text>
+        <circle r="2" cx="0" cy="200"fill="red" opacity="0.5"/>
+        <text x="0" y="200">Control 2</text>
+
+        <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+        <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+        <!-- bezier curve with C1, C2 set to sides of the rectangle, but C1 pulled in by 25% -->
+        <path d="M 0 0 C 50 0 0 200 100 200" fill="none" stroke="red" stroke-width="1" />
+      </g>
+
+      <g transform="translate(350,50)">
+        <circle r="5" cx="0" cy="0"/>
+        <text x="0" y="0">Origin</text>
+        <circle r="5" cx="100" cy="200"/>
+        <text x="100" y="200">Terminus</text>
+
+        <circle r="2" cx="50" cy="100"fill="red" opacity="0.5"/>
+        <text x="50" y="100">Control 1</text>
+        <circle r="2" cx="50" cy="100"fill="red" opacity="0.5"/>
+        <text x="50" y="100">Control 2</text>
+
+        <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+        <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+        <!-- bezier curve with C1, C2 set to sides of the rectangle -->
+        <path d="M 0 0 C 50 100 50 100 100 200" fill="none" stroke="red" stroke-width="1" />
+      </g>
+
+      <g transform="translate(350,300)">
+        <circle r="5" cx="0" cy="0"/>
+        <text x="0" y="0">Origin</text>
+        <circle r="5" cx="100" cy="200"/>
+        <text x="100" y="200">Terminus</text>
+
+        <circle r="2" cx="60" cy="90"fill="red" opacity="0.5"/>
+        <text x="60" y="90">Control 1</text>
+        <circle r="2" cx="40" cy="110"fill="red" opacity="0.5"/>
+        <text x="40" y="110">Control 2</text>
+
+        <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+        <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+        <!-- bezier curve with C1, C2 set to sides of the rectangle -->
+        <path d="M 0 0 C 60 90 40 110 100 200" fill="none" stroke="red" stroke-width="1" />
+      </g>
+
+      <g transform="translate(350,550)">
+        <circle r="5" cx="0" cy="0"/>
+        <text x="0" y="0">Origin</text>
+        <circle r="5" cx="100" cy="200"/>
+        <text x="100" y="200">Terminus</text>
+
+        <circle r="2" cx="50" cy="100"fill="red" opacity="0.5"/>
+        <text x="50" y="100">Control 1</text>
+        <circle r="2" cx="40" cy="110"fill="red" opacity="0.5"/>
+        <text x="40" y="110">Control 2</text>
+
+        <!-- bezier curve with C1 = origin, C2 = terminus. Equivalent to a straight line -->
+        <path d="M 0 0 C 0 0 100 200 100 200" fill="none" stroke="black" stroke-width="1" />
+
+        <!-- bezier curve with C1, C2 set to sides of the rectangle -->
+        <path d="M 0 0 C 50 100 40 110 100 200" fill="none" stroke="red" stroke-width="1" />
+      </g>
+
+      </svg>
+    </svg>
+  </div>
+</section>
+
+</body>
+</html>

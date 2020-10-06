@@ -1,0 +1,9 @@
+version: 1
+type: single_widget_single_page
+general_comments:
+  - "the labeler is doing well now. This was a particularly difficult real world example (labels obfuscated) so i kept it around"
+groupname: issues
+comments: []
+width: 545
+height: 460
+data: data.bad_labelling

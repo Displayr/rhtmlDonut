@@ -916,7 +916,6 @@
     "labelsMinFontSize": 8,
     "labelsSize": 8,
     "labelsColor": "#333333",
-    "labelsInner": false,
     "labelsBold": false,
     "groups": null,
     "groupsFont": "arial",

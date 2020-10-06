@@ -1,0 +1,8 @@
+version: 1
+groupname: representative_examples_misc_600x600
+data_directory: data/misc
+width: 600
+height: 600
+type: for_each_data_in_directory
+use_config_as_title: true
+comments: []

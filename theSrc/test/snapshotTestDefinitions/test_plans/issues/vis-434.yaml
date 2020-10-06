@@ -1,0 +1,7 @@
+version: 1
+type: single_widget_single_page
+groupname: issues
+comments: []
+width: 894
+height: 610
+data: data.issues.vis-434
