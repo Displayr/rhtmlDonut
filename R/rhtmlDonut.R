@@ -208,6 +208,9 @@ Donut <- function(
         values.color = as.array(values.color)
         checkColor(values.color)
     }
+    if (length(values) > 5000)
+        stop("A donut/pie chart could not be created with more than 5000 values. ",
+             "Ensure that the input data is correct and correctly aggregated.")
     if (!is.null(groups))
         groups = as.array(groups)
     if (!is.null(groups.color)) {
