@@ -98,10 +98,10 @@ class PieWrapper {
       this.subtitleHeight -
       this.footerHeight
 
-    layoutLogger.info(`canvas height: ${height}`)
-    layoutLogger.info(`this.titleHeight: ${this.titleHeight}`)
-    layoutLogger.info(`this.subtitleHeight: ${this.subtitleHeight}`)
-    layoutLogger.info(`this.footerHeight: ${this.footerHeight}`)
+    layoutLogger.info(`total height: ${height}`)
+    layoutLogger.info(`titleHeight: ${this.titleHeight}`)
+    layoutLogger.info(`subtitleHeight: ${this.subtitleHeight}`)
+    layoutLogger.info(`footerHeight: ${this.footerHeight}`)
     layoutLogger.info(`setting donutPlot width: ${width}`)
     layoutLogger.info(`setting donutPlot height: ${donutPlotHeight}`)
 
@@ -285,11 +285,7 @@ class PieWrapper {
       .attr('width', width)
       .attr('height', donutPlotHeight)
 
-    // NB violating encapsulation by directly modifying internals
-    this.pie.options.size.canvasWidth = width
-    this.pie.options.size.canvasHeight = donutPlotHeight
-
-    this.pie.redrawWithoutLoading()
+    this.pie.redrawWithoutLoading({ height: donutPlotHeight, width })
   }
 
   setConfig (newConfig) {
@@ -353,6 +349,7 @@ class PieWrapper {
     this.pieData = []
     for (let i = 0; i < this._valuesCount; i++) {
       this.pieData.push({
+        id: i,
         label: this._labels[i],
         value: this._values[i],
         index: i,
@@ -441,6 +438,7 @@ class PieWrapper {
 
     for (let i = 0; i < this._settings.groupsSums.length; i++) {
       groupData.push({
+        id: i,
         label: this._settings.groupsNames[i],
         value: this._settings.groupsSums[i],
         color: groupsColor[i % groupsColor.length],

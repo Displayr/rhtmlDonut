@@ -8,7 +8,7 @@ const defaultSettings = {
   data: {
     color: null, // pieWrapper: settings.valuesColor, values.color
     dataFormatter: null, // pieWrapper: settings.valuesDec, R: values.decimal.places
-    display: null, // pieWrapper: settings.valuesDisplay, R: values.display.as
+    display: null, // pieWrapper: settings.valuesDisplay, R: values.display.as. options: [null, 'percentage']
     content: [], // pieWrapper: pieData
   },
   labels: {
@@ -76,8 +76,6 @@ const defaultSettings = {
       speed: 300, // not used
       size: 10, // not used
     },
-    highlightSegmentOnMouseover: true, // not used
-    highlightLabelOnMouseover: true, // not used
     highlightLuminosity: 40, // not used
     highlightTextLuminosity: 40, // not used
   },
@@ -105,10 +103,6 @@ const defaultSettings = {
       background: null, // pieWrapper: HARD CODE
       segmentStroke: '#ffffff', // pieWrapper: settings.borderColor, R: border.color
     },
-    gradient: { //
-      percentage: 95, // pieWrapper: HARD CODE
-      color: '#000000', // pieWrapper: HARD CODE
-    },
     cssPrefix: null, // pieWrapper dynamically sets this to a uniqueId
   },
   groups: { //
@@ -119,11 +113,6 @@ const defaultSettings = {
     minFontSize: null, // pieWrapper: settings.groupLabelsMinFontSize, R: groups.min.font.size
     fontWeight: 'normal', // pieWrapper: settings.groupsBold, R: groups.font.bold
     labelsEnabled: true, // pieWrapper: settings.groupLabelsEnabled, R: groups.labels.enabled
-  },
-  callbacks: { //
-    onMouseoverSegment: null, // not used
-    onMouseoutSegment: null, // not used
-    onClickSegment: null, // not used
   },
 }
 

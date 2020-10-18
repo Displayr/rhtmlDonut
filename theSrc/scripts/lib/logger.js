@@ -3,7 +3,7 @@ const rootLog = require('loglevel')
 
 const logTypes = {
   LAYOUT: 'LAYOUT',
-  TOOLTIP: 'TOOLTIP',
+  INTERACTION: 'INTERACTION',
   LABEL: 'LABEL',
   ROOT: 'ROOT',
 }

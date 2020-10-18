@@ -13,11 +13,6 @@ let math = {
     return totalValue
   },
 
-  // let pieCenter = math.getPieCenter();
-  getPieTranslateCenter: function (pieCenter) {
-    return 'translate(' + pieCenter.x + ',' + pieCenter.y + ')'
-  },
-
   /**
    * Rotates a point (x, y) around an axis (xm, ym) by degrees (a).
    * @param x

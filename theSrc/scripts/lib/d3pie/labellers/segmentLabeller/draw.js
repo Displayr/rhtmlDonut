@@ -25,6 +25,14 @@ const drawLabelSet = ({
     .attr('class', `${cssPrefix}labelGroup-${labelType}`)
     .attr('transform', function ({ topLeftCoord }) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
     .style('opacity', 1)
+    // TODO repeated code for segments, groupsegments, labels, grouplabels
+    .style('cursor', 'pointer')
+    .style('-webkit-touch-callout', 'none')
+    .style('-webkit-user-select', 'none')
+    .style('-khtml-user-select', 'none')
+    .style('-moz-user-select', 'none')
+    .style('-ms-user-select', 'none')
+    .style('user-select', 'none')
 
   labelGroup.append('text')
     .attr('id', function (d) { return `${cssPrefix}segmentMainLabel${d.id}-${labelType}` })

@@ -3,11 +3,12 @@ import d3 from 'd3'
 
 import helpers from './helpers'
 import math from './math'
-import segments from './segments'
-import tooltip from './tooltip'
+import Tooltip from './tooltip'
 import validate from './validate'
 import defaultSettings from './defaultSettings'
-import groupLabeller from './labellers/groupLabeller'
+import InteractionController from './interactionController'
+import GroupLabeller from './labellers/groupLabeller'
+import Segments from './segments'
 import SegmentLabeller from './labellers/segmentLabeller'
 import { name, version } from '../../../../package'
 import { rootLogger, layoutLogger } from '../logger'
@@ -59,27 +60,23 @@ class d3pie {
         height: this.options.size.canvasHeight,
         svg: this.svg,
       },
+      interactionController: new InteractionController(),
     }
 
     this._init()
     d3.select(this.element).attr(`${name}-status`, 'ready')
   }
 
-  redrawWithoutLoading () {
-    // NB switch to { redraw: false } then resize by +25x+25 a few times for a sweet visual bug !
+  redrawWithoutLoading ({ width, height }) {
+    this.interface.canvas.width = width
+    this.interface.canvas.height = height
     this._init({ redraw: true })
   }
 
   _init ({ redraw = false } = {}) {
-    _(this.options.data.content).each((datum, i) => {
-      if (!_.has(datum, 'id')) { datum.id = i }
-    })
-
-    let startTime = Date.now()
-    let durations = {}
+    const { canvas, interactionController } = this.interface
 
     let pieDimensions = {}
-
     let labelStats = { maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0 }
     let extraVerticalSpace = 0
     let labelLinePadding = 0
@@ -91,8 +88,12 @@ class d3pie {
         sortOrder: this.options.data.sortOrder,
         linesConfig: this.options.labels.lines, // TODO move this into this.options.labels.segment
         config: this.options.labels.segment,
-        canvas: this.interface.canvas,
+        canvas: canvas,
+        interactionController,
+        highlightTextLuminosity: this.options.effects.highlightTextLuminosity,
       })
+
+      interactionController.addSegmentLabelController(this.segmentLabeller)
 
       this.segmentLabeller.preprocessLabelSet()
       labelStats = this.segmentLabeller.getLabelStats()
@@ -105,8 +106,8 @@ class d3pie {
 
     pieDimensions = this.computePieLayoutDimensions({
       labelsEnabled: this.options.labels.enabled,
-      canvasHeight: this.options.size.canvasHeight,
-      canvasWidth: this.options.size.canvasWidth,
+      canvasHeight: canvas.height,
+      canvasWidth: canvas.width,
       idealBottomWhiteSpaceSize: labelStats.maxLabelHeight + extraVerticalSpace,
       idealLeftWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
       idealRightWhiteSpaceSize: labelStats.maxLabelWidth + labelLinePadding,
@@ -116,97 +117,82 @@ class d3pie {
       maxFontSize: labelStats.maxFontSize,
     })
 
-    this.innerRadius = pieDimensions.innerRadius
-    this.outerRadius = pieDimensions.outerRadius
-    this.labelOffset = pieDimensions.labelOffset
+    canvas.pieCenter = { x: canvas.width / 2, y: canvas.height / 2 }
+    canvas.innerRadius = pieDimensions.innerRadius
+    canvas.outerRadius = pieDimensions.outerRadius
+    canvas.labelOffset = pieDimensions.labelOffset
 
     // TODO NB: I think the unordered and the descending order labeller make different assumptions about
     // what the maxVerticalOffset represents. Address this when we move the unordered labeller to use elliptical label layout
     // for now stick with the "old one mod" approach and keep the other two approaches around. Small changes to maxVerticalOffset calcs
     // have large impacts on edge cases so Im keeping these variants around for now.
 
-    // Old one mod
-    this.maxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
-
-    // // Old one
-    // const largestAllowableMaxVerticalOffset = (this.options.size.canvasHeight / 2) - this.outerRadius
-    // this.maxVerticalOffset = Math.min(this.outerRadius, largestAllowableMaxVerticalOffset)
-
-    // // new one
-    // this.maxVerticalOffset = _([
-    //   (this.options.size.canvasHeight / 2) - this.outerRadius - labelStats.maxFontSize,
-    //   this.options.labels.segment.maxVerticalOffset,
-    // ])
-    //   .filter(x => !_.isNull(x))
-    //   .min()
-
-    this.pieCenter = {
-      x: this.options.size.canvasWidth / 2,
-      y: this.options.size.canvasHeight / 2,
-    }
-
-    // TODO remove these 5 from this and access exclusive through canvas
-    this.interface.canvas.pieCenter = this.pieCenter
-    this.interface.canvas.innerRadius = this.innerRadius
-    this.interface.canvas.outerRadius = this.outerRadius
-    this.interface.canvas.labelOffset = this.labelOffset
-    this.interface.canvas.maxVerticalOffset = this.maxVerticalOffset
+    canvas.maxVerticalOffset = (canvas.height / 2) - canvas.outerRadius
 
     layoutLogger.info(`pie layout determined:
-      canvasWidth: ${this.options.size.canvasWidth}
-      canvasHeight: ${this.options.size.canvasHeight}
+      canvasWidth: ${canvas.width}
+      canvasHeight: ${canvas.height}
       constrainedDimension: ${pieDimensions.constrained}
-      radius: Inner ${this.innerRadius} Outer ${this.outerRadius}
-      labelOffset: ${this.labelOffset}
+      radius: Inner ${canvas.innerRadius} Outer ${canvas.outerRadius}
+      labelOffset: ${canvas.labelOffset}
       maxLabelWidth: ${labelStats.maxLabelWidth || 0}
       maxLabelHeight: ${labelStats.maxLabelHeight || 0}
       idealTopWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
       idealBottomWhiteSpaceSize: ${this.options.labels.segment.preferredMaxFontSize}
     `)
 
-    if (redraw) {
-      this.options.effects.load.effect = 'none'
-      segments.reshapeSegment(this)
-    } else {
-      segments.create(this) // also creates this.arc
-    }
+    this.segments = new Segments({
+      animationConfig: this.options.effects.load,
+      canvas,
+      interactionController,
+      dataPoints: this.options.data.content,
+      groupData: this.options.groups.content,
+      segmentStroke: this.options.misc.colors.segmentStroke,
+      highlightLuminosity: this.options.effects.highlightLuminosity,
+      textColor: this.options.labels.segment.color,
+      tooltipsEnabled: this.options.tooltips.enabled,
+    })
+    interactionController.addSegmentController(this.segments)
+    this.segments.clearPreviousFromCanvas()
+    this.segments.draw({ animate: !redraw })
 
     if (this.options.labels.enabled) {
-      const startLabelling = Date.now()
-
       this.segmentLabeller.clearPreviousFromCanvas()
-
-      // TODO this is temp assignment to this.outerLabelData to make it all keep working ...
-      this.segmentLabeller.doLabelling()
-
       this.segmentLabeller.draw()
-
-      durations.outer_labelling = Date.now() - startLabelling
     }
 
     if (this.options.groups.content && this.options.groups.labelsEnabled) {
-      const startLabelling = Date.now()
-      groupLabeller.doLabelling(this)
-      durations.group_labelling = Date.now() - startLabelling
+      this.groupLabeller = new GroupLabeller({
+        canvas,
+        interactionController,
+        dataPoints: this.options.data.content,
+        config: this.options.groups,
+        dataFormatter: this.options.data.dataFormatter,
+        displayPercentage: (this.options.data.display === 'percentage'),
+        labelPrefix: this.options.labels.segment.prefix,
+        labelSuffix: this.options.labels.segment.suffix,
+        groupArcCalculator: this.segments.getArcCalculators().groupArc,
+      })
+      this.groupLabeller.clearPreviousFromCanvas()
+      this.groupLabeller.draw()
+      interactionController.addGroupLabelController(this.groupLabeller)
     }
 
-    // add and position the tooltips
     if (this.options.tooltips.enabled) {
-      const startTooltips = Date.now()
-      tooltip.addTooltips(this)
-      durations.tooltips = Date.now() - startTooltips
+      this.tooltips = new Tooltip({
+        canvas,
+        dataPoints: this.options.data.content,
+        groupData: this.options.groups.content,
+        dataFormatter: this.options.data.dataFormatter,
+        displayPercentage: (this.options.data.display === 'percentage'),
+        labelPrefix: this.options.labels.segment.prefix,
+        labelSuffix: this.options.labels.segment.suffix,
+        config: this.options.tooltips,
+      })
+      this.tooltips.clearPreviousFromCanvas()
+      this.tooltips.draw()
+      interactionController.addTooltipController(this.tooltips)
     }
-
-    // TODO this is pretty inefficient. will do 2n^2 scans
-    const { inner, outer } = this.segmentLabeller.getLabels()
-    const isLabelShown = (id) => (_.some(inner, { id }) || _.some(outer, { id }))
-    const labelsShownLookup = _.transform(this.options.data.content, (result, dataPoint) => {
-      result[dataPoint.id] = isLabelShown(dataPoint.id)
-    }, {})
-    segments.addSegmentEventHandlers(this, labelsShownLookup)
-
-    durations.totalDuration = Date.now() - startTime
-    rootLogger.info(JSON.stringify(durations))
   }
 
   computePieLayoutDimensions ({
