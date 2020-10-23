@@ -3,7 +3,7 @@
 .travis.yml
 ^.*\.Rproj$
 ^\.Rproj\.user$
-babel.config.js
+browser
 docs
 gulpfile.js
 node_modules

@@ -1,124 +1,166 @@
 import d3 from 'd3'
-import segments from '../segments'
 import math from '../math'
 import { ptInArc } from './labelUtils'
 import { labelLogger } from '../../logger'
+import getSegmentAngle from '../segmentsGetSegmentAngleHelper'
+import _ from 'lodash'
 
-let labels = {
+// TODO convert this._settings.valuesDisplay === 'percentage' and pie.options.data.display to something less dumb
+// TODO this is due for a rewrite. Amazed it works. Probably does not with large group names
+class GroupLabeller {
+  constructor ({
+    canvas,
+    interactionController,
+    config,
+    dataPoints,
+    dataFormatter,
+    displayPercentage,
+    labelPrefix,
+    labelSuffix,
+    groupArcCalculator,
+  }) {
+    this.canvas = canvas
+    this.interactionController = interactionController
+    this.groupArcCalculator = groupArcCalculator
+    this.groupData = []
 
-  doLabelling: function (pie) {
-    labels.add(pie)
-    labels.positionGroupLabels(pie)
-  },
+    this.config = {
+      labelPrefix,
+      labelSuffix,
+      dataFormatter,
+      displayPercentage,
+      ...config,
+    }
 
-  add: function (pie) {
-    pie.groupLabelData = []
+    this.totalValue = _(dataPoints).map('value').sum()
+  }
 
-    let groupLabelGroup = pie.svg.append('g')
-      .attr('class', pie.cssPrefix + 'labels-group')
-      .selectAll('.' + pie.cssPrefix + 'labelGroup-group')
-      .data(pie.options.groups.content)
+  clearPreviousFromCanvas () {
+    const { svg, cssPrefix } = this.canvas
+    svg.selectAll(`.${cssPrefix}labels-group`).remove()
+    svg.selectAll(`.${cssPrefix}labelGroup-group`).remove()
+  }
+
+  draw () {
+    const { cssPrefix, svg } = this.canvas
+    this.groupData = []
+
+    let groupLabelGroup = svg.append('g')
+      .attr('class', `${cssPrefix}labels-group`)
+      .selectAll(`.${cssPrefix}labelGroup-group`)
+      .data(this.config.content)
       .enter()
       .append('g')
-      .attr('id', function (d, i) { return pie.cssPrefix + 'labelGroup' + i + '-group' })
-      .attr('data-index', function (d, i) { return i })
-      .attr('class', pie.cssPrefix + 'labelGroup-group')
+      .attr('id', (d, i) => `${cssPrefix}labelGroup${i}-group`)
+      .attr('class', `${cssPrefix}labelGroup-group`)
+      .attr('data-index', (d, i) => i)
       .style('opacity', 1)
       .append('text')
+      .attr('class', cssPrefix + 'segmentMainLabel-group')
+      .attr('id', (d, i) => `${cssPrefix}segmentMainLabel${i}-group`)
       .attr('x', 0)
       .attr('y', 0)
       .attr('text-anchor', 'middle')
-      .style('font-size', pie.options.groups.minFontSize + 'px')
-      .style('font-family', pie.options.groups.font)
-      .style('fill', pie.options.groups.fontColor)
-      .style('font-weight', pie.options.groups.fontWeight)
-      .attr('id', function (d, i) { return pie.cssPrefix + 'segmentMainLabel' + i + '-group' })
-      .attr('class', pie.cssPrefix + 'segmentMainLabel-group')
+      .style('font-size', this.config.minFontSize + 'px')
+      .style('font-family', this.config.font)
+      .style('fill', this.config.fontColor)
+      .style('font-weight', this.config.fontWeight)
       .attr('dy', '.35em')
+      // TODO repeated code for segments, groupsegments, labels, grouplabels
+      .style('cursor', 'pointer')
+      .style('-webkit-touch-callout', 'none')
+      .style('-webkit-user-select', 'none')
+      .style('-khtml-user-select', 'none')
+      .style('-moz-user-select', 'none')
+      .style('-ms-user-select', 'none')
+      .style('user-select', 'none')
 
     groupLabelGroup.append('tspan')
       .attr('x', 0)
       .attr('y', 0)
       .attr('dy', 0)
-      .text(function (d) {
-        return d.label + ':  '
-      })
+      .text(d => `${d.label}:  `)
 
     groupLabelGroup.append('tspan')
       .attr('dy', 0)
-      .text(function (d, i) {
+      .text((d, i) => {
         let val
-        if (pie.options.data.display === 'percentage') {
-          val = pie.options.data.dataFormatter(d.value / pie.totalValue * 100)
+        if (this.config.displayPercentage) {
+          val = this.config.dataFormatter(d.value / this.totalValue * 100)
         } else {
-          val = pie.options.data.dataFormatter(d.value)
+          val = this.config.dataFormatter(d.value)
         }
-        if (pie.options.labels.segment.prefix) {
-          val = pie.options.labels.segment.prefix + val
+        if (this.config.labelPrefix) {
+          val = this.config.labelPrefix + val
         }
-        if (pie.options.labels.segment.suffix) {
-          val = val + pie.options.labels.segment.suffix
+        if (this.config.labelSuffix) {
+          val = val + this.config.labelSuffix
         }
         return val
       })
-  },
 
-  positionGroupLabels: function (pie) {
-    let checkBounds = function (bb, labelData) {
-      const { stAngle, edAngle, label: labelText, x: labelX, y: labelY } = labelData
-      let center = {
-        x: labelX - pie.pieCenter.x,
-        y: labelY - pie.pieCenter.y,
-      }
+    this.positionGroupLabels()
+  }
 
-      let r1 = 0
-      let r2 = pie.innerRadius
+  checkBounds (i) {
+    const { cssPrefix, innerRadius, pieCenter, svg } = this.canvas
+    const el = svg.select(`#${cssPrefix}labelGroup${i}-group`)
+    let bb = el.node().getBBox()
 
-      const topLeftPoint = { x: center.x + bb.x, y: center.y + bb.y }
-      const topLeftPointIsInsideArc = ptInArc(topLeftPoint, r1, r2, stAngle, edAngle)
-      const topRightPointIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y }, r1, r2, stAngle, edAngle)
-      const bottomLeftIsInsideArc = ptInArc({ x: topLeftPoint.x, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
-      const bottomRightIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
-
-      labelLogger.debug(`checkBounds on group label ${labelText}`)
-      labelLogger.debug(`  topLeftPointIsInsideArc: ${topLeftPointIsInsideArc}`)
-      labelLogger.debug(`  topRightPointIsInsideArc: ${topRightPointIsInsideArc}`)
-      labelLogger.debug(`  bottomLeftIsInsideArc: ${bottomLeftIsInsideArc}`)
-      labelLogger.debug(`  bottomRightIsInsideArc: ${bottomRightIsInsideArc}`)
-
-      const labelIsContainedWithinArc = (
-        topLeftPointIsInsideArc &&
-        topRightPointIsInsideArc &&
-        bottomLeftIsInsideArc &&
-        bottomRightIsInsideArc
-      )
-      labelData.hide = !labelIsContainedWithinArc
+    const labelData = this.groupData[i]
+    const { stAngle, edAngle, label: labelText, x: labelX, y: labelY } = labelData
+    let center = {
+      x: labelX - pieCenter.x,
+      y: labelY - pieCenter.y,
     }
 
-    pie.svg.selectAll('.' + pie.cssPrefix + 'labelGroup-group')
-      .each(function (d, i) {
-        return labels.getGroupLabelPositions(pie, i)
-      })
+    let r1 = 0
+    let r2 = innerRadius
+
+    const topLeftPoint = { x: center.x + bb.x, y: center.y + bb.y }
+    const topLeftPointIsInsideArc = ptInArc(topLeftPoint, r1, r2, stAngle, edAngle)
+    const topRightPointIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y }, r1, r2, stAngle, edAngle)
+    const bottomLeftIsInsideArc = ptInArc({ x: topLeftPoint.x, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
+    const bottomRightIsInsideArc = ptInArc({ x: topLeftPoint.x + bb.width, y: topLeftPoint.y + bb.height }, r1, r2, stAngle, edAngle)
+
+    labelLogger.debug(`checkBounds on group label ${labelText}`)
+    labelLogger.debug(`  topLeftPointIsInsideArc: ${topLeftPointIsInsideArc}`)
+    labelLogger.debug(`  topRightPointIsInsideArc: ${topRightPointIsInsideArc}`)
+    labelLogger.debug(`  bottomLeftIsInsideArc: ${bottomLeftIsInsideArc}`)
+    labelLogger.debug(`  bottomRightIsInsideArc: ${bottomRightIsInsideArc}`)
+
+    const labelIsContainedWithinArc = (
+      topLeftPointIsInsideArc &&
+      topRightPointIsInsideArc &&
+      bottomLeftIsInsideArc &&
+      bottomRightIsInsideArc
+    )
+    labelData.hide = !labelIsContainedWithinArc
+  }
+
+  positionGroupLabels () {
+    const { cssPrefix, svg } = this.canvas
+
+    svg.selectAll(`.${cssPrefix}labelGroup-group`)
+      .each((d, i) => this.getGroupLabelPosition(i))
 
     let stAngle = 0
-    let groupSize = pie.options.groups.fontSize
-    d3.selectAll('.' + pie.cssPrefix + 'labelGroup-group')
-      .attr('transform', function (d, i) {
-        let x, y
-        x = pie.groupLabelData[i].x
-        y = pie.groupLabelData[i].y
-        return 'translate(' + x + ',' + y + ')'
+    let groupSize = this.config.fontSize
+    d3.selectAll(`.${cssPrefix}labelGroup-group`)
+      .attr('transform', (d, i) => {
+        let x = this.groupData[i].x
+        let y = this.groupData[i].y
+        return `translate(${x},${y})`
       })
-      .each(function (d, i) {
-        let bb = this.getBBox()
+      .each((d, i) => {
+        this.groupData[i].stAngle = stAngle
+        this.groupData[i].edAngle = stAngle + math.toDegrees(this.groupArcCalculator.endAngle()(d))
+        this.groupData[i].wrapped = false
 
-        pie.groupLabelData[i].stAngle = stAngle
-        pie.groupLabelData[i].edAngle = stAngle + math.toDegrees(pie.groupArc.endAngle()(d))
-        pie.groupLabelData[i].wrapped = false
-        checkBounds(bb, pie.groupLabelData[i])
+        this.checkBounds(i)
 
-        if (pie.groupLabelData[i].hide) {
-          let thisText = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + i + '-group')
+        if (this.groupData[i].hide) {
+          let thisText = d3.select(`#${cssPrefix}segmentMainLabel${i}-group`)
 
           thisText.selectAll('tspan')
             .attr('x', 0)
@@ -132,34 +174,28 @@ let labels = {
               }
             })
 
-          pie.groupLabelData[i].wrapped = true
-
-          bb = this.getBBox()
-          checkBounds(bb, pie.groupLabelData[i])
+          this.groupData[i].wrapped = true
+          this.checkBounds(i)
         }
 
-        stAngle = pie.groupLabelData[i].edAngle
+        stAngle = this.groupData[i].edAngle
       })
-      .style('display', function (d, i) {
-        return pie.groupLabelData[i].hide ? 'none' : 'inline'
-      })
-      .each(function (d, i) {
-        let thisText = d3.select('#' + pie.cssPrefix + 'segmentMainLabel' + i + '-group')
+      .style('display', (d, i) => this.groupData[i].hide ? 'none' : 'inline')
+      .each((d, i) => {
+        let thisText = d3.select(`#${cssPrefix}segmentMainLabel${i}-group`)
         let currSize = parseFloat(thisText.style('font-size'))
 
-        while (currSize < groupSize && !pie.groupLabelData[i].hide) {
+        while (currSize < groupSize && !this.groupData[i].hide) {
           currSize += 1
           thisText.style('font-size', currSize + 'px')
-          let bb = this.getBBox()
-          checkBounds(bb, pie.groupLabelData[i])
+          this.checkBounds(i)
 
-          if (pie.groupLabelData[i].hide) {
+          if (this.groupData[i].hide) {
             // if already wrapped, undo text size increase
-            if (pie.groupLabelData[i].wrapped) {
+            if (this.groupData[i].wrapped) {
               currSize -= 1
               thisText.style('font-size', currSize + 'px')
-              bb = this.getBBox()
-              checkBounds(bb, pie.groupLabelData[i])
+              this.checkBounds(i)
               break
             } else {
               // try wrapping
@@ -175,47 +211,60 @@ let labels = {
                   }
                 })
 
-              bb = this.getBBox()
-              checkBounds(bb, pie.groupLabelData[i])
+              this.checkBounds(i)
 
-              if (pie.groupLabelData[i].hide) {
+              if (this.groupData[i].hide) {
                 currSize -= 1
                 thisText.style('font-size', currSize + 'px')
                 thisText.selectAll('tspan')[0][1].removeAttribute('x')
                 thisText.selectAll('tspan')[0][1].removeAttribute('dy')
-                bb = this.getBBox()
-                checkBounds(bb, pie.groupLabelData[i])
+                this.checkBounds(i)
               }
               break
             }
           }
         }
       })
-      .style('display', function (d, i) {
-        return pie.groupLabelData[i].hide ? 'none' : 'inline'
-      })
-  },
+      .style('display', (d, i) => this.groupData[i].hide ? 'none' : 'inline')
+  }
 
-  getGroupLabelPositions: function (pie, i) {
-    let labelGroupNode = d3.select('#' + pie.cssPrefix + 'labelGroup' + i + '-group').node()
+  getGroupLabelPosition (i) {
+    const { cssPrefix, innerRadius, pieCenter } = this.canvas
+    let labelGroupNode = d3.select(`#${cssPrefix}labelGroup${i}-group`).node()
     if (!labelGroupNode) {
       return
     }
     let labelGroupDims = labelGroupNode.getBBox()
+    let angle = getSegmentAngle(i, this.config.content, this.totalValue, { midpoint: true })
 
-    let angle = segments.getSegmentAngle(i, pie.options.groups.content, pie.totalValue, { midpoint: true })
+    let pointAt90Degrees = { x: pieCenter.x, y: pieCenter.y - innerRadius * 0.6 }
+    let newCoords = math.rotate(pointAt90Degrees, pieCenter, angle - 90)
 
-    let pointAt90Degrees = { x: pie.pieCenter.x, y: pie.pieCenter.y - pie.innerRadius * 0.6 }
-    let newCoords = math.rotate(pointAt90Degrees, pie.pieCenter, angle - 90)
-
-    pie.groupLabelData[i] = {
+    this.groupData[i] = {
       i: i,
       x: newCoords.x,
       y: newCoords.y,
       w: labelGroupDims.width,
       h: labelGroupDims.height,
     }
-  },
+  }
+
+  addEventHandlers () {
+    const cssPrefix = this.canvas.cssPrefix
+    let allGroupLabels = d3.selectAll(`.${cssPrefix}labelGroup-group`)
+
+    allGroupLabels.on('mouseover', (groupLabelData, i) => {
+      this.interactionController.hoverOnGroupSegmentLabel(groupLabelData.id)
+    })
+
+    allGroupLabels.on('mouseout', (groupLabelData, i) => {
+      this.interactionController.hoverOffGroupSegmentLabel(groupLabelData.id)
+    })
+  }
+
+  isLabelShown (id) {
+    return !this.groupData[id].hide
+  }
 }
 
-module.exports = labels
+module.exports = GroupLabeller

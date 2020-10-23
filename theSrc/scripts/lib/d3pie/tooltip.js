@@ -3,24 +3,63 @@ import d3 from 'd3'
 import { splitIntoLines } from './labellers/labelUtils'
 import _ from 'lodash'
 
-let tt = {
-  getTooltipText (pie, labelData) {
-    let labelText
-    if (pie.options.data.display === 'percentage') {
-      labelText = pie.options.data.dataFormatter(labelData.value / pie.totalValue * 100)
-    } else {
-      labelText = pie.options.data.dataFormatter(labelData.value)
-    }
-    if (pie.options.labels.segment.prefix) {
-      labelText = pie.options.labels.segment.prefix + labelText
-    }
-    if (pie.options.labels.segment.suffix) {
-      labelText = labelText + pie.options.labels.segment.suffix
-    }
-    return labelData.label + ': ' + labelText
-  },
+class Tooltips {
+  constructor ({
+    canvas,
+    dataPoints,
+    groupData,
+    displayPercentage,
+    labelPrefix,
+    labelSuffix,
+    dataFormatter,
+    config,
+  }) {
+    this.canvas = canvas
+    this.dataPoints = dataPoints
+    this.groupData = groupData
 
-  addTooltips: function (pie) {
+    this.config = {
+      labelPrefix,
+      labelSuffix,
+      dataFormatter,
+      displayPercentage,
+      ...config,
+    }
+
+    this.totalValue = _(dataPoints).map('value').sum()
+
+    this.dataPoints.forEach(labelData => {
+      labelData.tooltipText = this.getTooltipText(labelData)
+    })
+    this.groupData.forEach(labelData => {
+      labelData.tooltipText = this.getTooltipText(labelData)
+    })
+  }
+
+  getTooltipText (labelData) {
+    let labelText
+    if (this.config.displayPercentage) {
+      labelText = this.config.dataFormatter(labelData.value / this.totalValue * 100)
+    } else {
+      labelText = this.config.dataFormatter(labelData.value)
+    }
+    if (this.config.labelPrefix) {
+      labelText = this.config.labelPrefix + labelText
+    }
+    if (this.config.labelSuffix) {
+      labelText = labelText + this.config.labelSuffix
+    }
+    return `${labelData.label}: ${labelText}`
+  }
+
+  clearPreviousFromCanvas () {
+    const { svg, cssPrefix } = this.canvas
+    svg.selectAll(`.${cssPrefix}tooltips`).remove()
+    svg.selectAll(`.${cssPrefix}gtooltips`).remove()
+  }
+
+  draw () {
+    const { cssPrefix, svg } = this.canvas
     const {
       backgroundColor,
       backgroundOpacity,
@@ -29,23 +68,24 @@ let tt = {
       fontColor,
       fontSize,
       padding,
-    } = pie.options.tooltips.styles
+    } = this.config.styles
     const getComputedBackgroundColor = (d) => (_.isNull(backgroundColor)) ? d.color : backgroundColor
 
-    const maxWidth = parseFloat(pie.options.size.canvasWidth) * parseFloat(pie.options.tooltips.maxWidth)
-    const maxHeight = parseFloat(pie.options.size.canvasHeight) * parseFloat(pie.options.tooltips.maxHeight)
+    const maxWidth = parseFloat(this.canvas.width) * parseFloat(this.config.maxWidth)
+    const maxHeight = parseFloat(this.canvas.height) * parseFloat(this.config.maxHeight)
     const maxLines = Math.ceil(maxHeight / parseFloat(fontSize))
 
     // group the label groups (label, percentage, value) into a single element for simpler positioning
-    let tooltips = d3.select(pie.element).append('g')
-      .attr('class', pie.cssPrefix + 'tooltips')
+    let tooltips = svg
+      .append('g')
+      .attr('class', `${cssPrefix}tooltips`)
 
-    tooltips.selectAll('.' + pie.cssPrefix + 'tooltip')
-      .data(pie.options.data.content)
+    tooltips.selectAll(`.${cssPrefix}tooltip`)
+      .data(this.dataPoints)
       .enter()
       .append('g')
-      .attr('class', pie.cssPrefix + 'tooltip')
-      .attr('id', function (d, i) { return pie.cssPrefix + 'tooltip' + i })
+      .attr('class', `${cssPrefix}tooltip`)
+      .attr('id', (d, i) => `${cssPrefix}tooltip${i}`)
       .style('opacity', 0)
       .append('rect')
       .attr({
@@ -57,24 +97,18 @@ let tt = {
       })
       .style('fill', getComputedBackgroundColor)
 
-    tooltips.selectAll('.' + pie.cssPrefix + 'tooltip')
-      .data(pie.options.data.content)
+    tooltips.selectAll(`.${cssPrefix}tooltip`)
+      .data(this.dataPoints)
       .append('text')
-      .attr('fill', function (d) {
-        if (_.isNull(fontColor)) {
-          const computedBackgroundColor = getComputedBackgroundColor(d)
-          return getTextColorGivenBackground(computedBackgroundColor, backgroundOpacity)
-        }
-        return fontColor
-      })
+      .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity)
+      )
       .style('font-size', fontSize)
       .style('font-family', font)
       .style('dominant-baseline', 'text-after-edge')
       .style('text-align', 'start')
       .each(function (d) {
         let textElement = d3.select(this)
-        const tooltipText = tt.getTooltipText(pie, d)
-        const lines = splitIntoLines(tooltipText, maxWidth, fontSize, font, maxLines)
+        const lines = splitIntoLines(d.tooltipText, maxWidth, fontSize, font, maxLines)
 
         textElement.text(null)
         _(lines).forEach((lineContent, lineIndex) => {
@@ -85,28 +119,28 @@ let tt = {
         })
       })
 
-    tooltips.selectAll('.' + pie.cssPrefix + 'tooltip rect')
+    tooltips.selectAll(`.${cssPrefix}tooltip rect`)
       .attr({
         width: function (d, i) {
-          let dims = helpers.getDimensions(pie.cssPrefix + 'tooltip' + i)
+          let dims = helpers.getDimensions(`${cssPrefix}tooltip${i}`)
           return dims.w + (2 * padding)
         },
         height: function (d, i) {
-          let dims = helpers.getDimensions(pie.cssPrefix + 'tooltip' + i)
+          let dims = helpers.getDimensions(`${cssPrefix}tooltip${i}`)
           return dims.h + (2 * padding)
         },
       })
 
-    if (pie.options.groups.content) {
-      let groupTips = d3.select(pie.element).append('g')
-        .attr('class', pie.cssPrefix + 'gtooltips')
+    if (this.groupData) {
+      let groupTips = svg.append('g')
+        .attr('class', `${cssPrefix}gtooltips`)
 
-      groupTips.selectAll('.' + pie.cssPrefix + 'gtooltip')
-        .data(pie.options.groups.content)
+      groupTips.selectAll(`.${cssPrefix}gtooltip`)
+        .data(this.groupData)
         .enter()
         .append('g')
-        .attr('class', pie.cssPrefix + 'gtooltip')
-        .attr('id', function (d, i) { return pie.cssPrefix + 'gtooltip' + i })
+        .attr('class', `${cssPrefix}gtooltip`)
+        .attr('id', (d, i) => `${cssPrefix}gtooltip${d.id}`)
         .style('opacity', 0)
         .append('rect')
         .attr({
@@ -118,24 +152,18 @@ let tt = {
         })
         .style('fill', getComputedBackgroundColor)
 
-      groupTips.selectAll('.' + pie.cssPrefix + 'gtooltip')
-        .data(pie.options.groups.content)
+      groupTips.selectAll(`.${cssPrefix}gtooltip`)
+        .data(this.groupData)
         .append('text')
-        .attr('fill', function (d) {
-          if (_.isNull(fontColor)) {
-            const computedBackgroundColor = getComputedBackgroundColor(d)
-            return getTextColorGivenBackground(computedBackgroundColor, backgroundOpacity)
-          }
-          return fontColor
-        })
+        .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity)
+        )
         .style('font-size', fontSize)
         .style('font-family', font)
         .style('dominant-baseline', 'text-after-edge')
         .style('text-align', 'start')
         .each(function (d) {
           let textElement = d3.select(this)
-          const tooltipText = tt.getTooltipText(pie, d)
-          const lines = splitIntoLines(tooltipText, maxWidth, fontSize, font, maxLines)
+          const lines = splitIntoLines(d.tooltipText, maxWidth, fontSize, font, maxLines)
 
           textElement.text(null)
           _(lines).forEach((lineContent, lineIndex) => {
@@ -146,58 +174,68 @@ let tt = {
           })
         })
 
-      groupTips.selectAll('.' + pie.cssPrefix + 'gtooltip rect')
+      groupTips.selectAll(`.${cssPrefix}gtooltip rect`)
         .attr({
           width: function (d, i) {
-            let dims = helpers.getDimensions(pie.cssPrefix + 'gtooltip' + i)
+            let dims = helpers.getDimensions(`${cssPrefix}gtooltip${i}`)
             return dims.w + (2 * padding)
           },
           height: function (d, i) {
-            let dims = helpers.getDimensions(pie.cssPrefix + 'gtooltip' + i)
+            let dims = helpers.getDimensions(`${cssPrefix}gtooltip${i}`)
             return dims.h + (2 * padding)
           },
         })
     }
-  },
+  }
 
-  showTooltip: function (pie, selector) {
-    d3.select(selector)
-      .style('opacity', function () { return 1 })
+  showTooltip (id) {
+    this._showTooltip(`#${this.canvas.cssPrefix}tooltip${id}`)
+  }
 
-    tt.moveTooltip(pie, selector)
-  },
+  showGroupTooltip (id) {
+    this._showTooltip(`#${this.canvas.cssPrefix}gtooltip${id}`)
+  }
 
-  moveTooltip: function (pie, selector) {
+  _showTooltip (selector) {
+    this.canvas.svg.select(selector).style('opacity', 1)
+    this.moveTooltip(selector)
+  }
+
+  hideTooltip (id) {
+    const selector = `#${this.canvas.cssPrefix}tooltip${id}`
+    this._hideTooltip(selector)
+  }
+
+  hideGroupTooltip (id) {
+    const selector = `#${this.canvas.cssPrefix}gtooltip${id}`
+    this._hideTooltip(selector)
+  }
+
+  _hideTooltip (selector) {
+    this.canvas.svg.select(selector).style('opacity', 0)
+    // move the tooltip offscreen. This ensures that when the user next mouseovers the segment the hidden element won't interfere
+    this.canvas.svg.select(selector).attr('transform', 'translate(-1000,-1000)')
+  }
+
+  moveTooltip (selector) {
+    const { padding } = this.config.styles
     const dims = helpers.getDimensions(selector) // TODO should only need to do this once
-    d3.select(selector)
-      .attr('transform', function (d) {
+    this.canvas.svg.select(selector)
+      .attr('transform', function () {
         let mouseCoords = d3.mouse(this.parentNode)
         let mousePadding = 15 // we dont want the cursor overlapping the text
 
-        let x = mouseCoords[0] + pie.options.tooltips.styles.padding + mousePadding
+        let x = mouseCoords[0] + padding + mousePadding
         let y = (dims.h < 20)
           ? mouseCoords[1] + 20
-          : mouseCoords[1] - 2 * pie.options.tooltips.styles.padding
+          : mouseCoords[1] - 2 * padding
 
-        return 'translate(' + x + ',' + y + ')'
+        return `translate(${x},${y})`
       })
-  },
-
-  hideTooltip: function (pie, selector) {
-    d3.select(selector)
-      .style('opacity', function () { return 0 })
-
-    // move the tooltip offscreen. This ensures that when the user next mouseovers the segment the hidden
-    // element won't interfere
-    d3.select(selector)
-      .attr('transform', function (d, i) {
-        // klutzy, but it accounts for tooltip padding which could push it onscreen
-        let x = pie.options.size.canvasWidth + 1000
-        let y = pie.options.size.canvasHeight + 1000
-        return 'translate(' + x + ',' + y + ')'
-      })
-  },
+  }
 }
+
+module.exports = Tooltips
 
 // calculate color contrast
 // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
@@ -221,5 +259,3 @@ function getTextColorGivenBackground (backgroundColor, backgroundOpacity) {
     return (o > 125) ? 'black' : 'white'
   }
 }
-
-module.exports = tt

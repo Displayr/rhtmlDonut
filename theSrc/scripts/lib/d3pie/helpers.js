@@ -1,6 +1,4 @@
 import d3 from 'd3'
-import * as rootLog from 'loglevel'
-const colorLogger = rootLog.getLogger('tooltip')
 
 let helpers = {
 
@@ -83,7 +81,6 @@ let helpers = {
       ((0 | (1 << 8) + g + (256 - g) * percent / 100).toString(16)).substr(1) +
       ((0 | (1 << 8) + b + (256 - b) * percent / 100).toString(16)).substr(1)
 
-    colorLogger.debug(`adjust brightness: input: ${hex}, output: ${adjustedColor}, percent: ${percent}`)
     return adjustedColor
   },
 

@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import helpers from './../../helpers'
 import OuterLabel from './outerLabel'
 import computeLabelStats from './computeLabelStats'
 import wrapAndFormatLabelUsingSvgApproximation from './utils/wrapAndFormatLabelUsingSvgApproximation'
@@ -16,6 +17,7 @@ import {
   shortenTopAndBottom,
   shrinkFontSizesUntilLabelsFitCanvasVertically,
 } from './mutations'
+import d3 from 'd3'
 
 // define the rest of the variants that get set later - do this in the config data class
 const VARIABLE_CONFIG = [
@@ -46,8 +48,9 @@ const INVARIABLE_CONFIG = [
 ]
 
 class SegmentLabeller {
-  constructor ({ dataPoints, sortOrder, config, linesConfig, animationConfig, canvas }) {
+  constructor ({ dataPoints, sortOrder, config, linesConfig, animationConfig, canvas, interactionController, highlightTextLuminosity }) {
     this.canvas = canvas
+    this.interactionController = interactionController
     this.linesConfig = linesConfig
     this.animationConfig = animationConfig
 
@@ -65,6 +68,7 @@ class SegmentLabeller {
     this._invariant.maxLabelWidth = this.canvas.width * this._invariant.maxWidthProportion
     this._invariant.originalDataPoints = dataPoints
     this._invariant.sortOrder = sortOrder
+    this._invariant.highlightTextLuminosity = highlightTextLuminosity
 
     this.interface = {
       canvas: this.extendCanvasInterface(canvas),
@@ -171,7 +175,7 @@ class SegmentLabeller {
     }
   }
 
-  doLabelling () {
+  draw () {
     // TODO: future work. Add inner labels to performDescendingOrderCollisionResolution mutation
     // until then, for compatibility with existing plots, if user requests inner labels then use old algo (i.e., performCollisionResolution)
     if (this._invariant.sortOrder === 'descending' && !this._invariant.useInnerLabels) {
@@ -182,6 +186,7 @@ class SegmentLabeller {
       this.doMutation(performCollisionResolution)
       this.doMutation(shortenTopAndBottom)
     }
+    this._draw()
 
     labelLogger.info('Done labelling. Summary:')
     labelLogger.info(JSON.stringify(this.phaseHistory, {}, 2))
@@ -319,15 +324,11 @@ class SegmentLabeller {
     const { svg, cssPrefix } = this.interface.canvas
     svg.selectAll(`.${cssPrefix}labels-outer`).remove()
     svg.selectAll(`.${cssPrefix}labels-inner`).remove()
-    svg.selectAll(`.${cssPrefix}labels-extra`).remove() // TODO dont need
-    svg.selectAll(`.${cssPrefix}labels-group`).remove() // TODO shouldn't be done here
     svg.selectAll(`.${cssPrefix}lineGroups-outer`).remove()
     svg.selectAll(`.${cssPrefix}lineGroups-inner`).remove()
-    svg.selectAll(`.${cssPrefix}tooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
-    svg.selectAll(`.${cssPrefix}gtooltips`).remove() // TODO shouldn't be done here. Also wont work any more (not in svg)
   }
 
-  draw () {
+  _draw () {
     const { canvas } = this.interface
     const { color, innerPadding } = this._invariant
     const { labelMaxLineAngle } = this._variant
@@ -366,6 +367,37 @@ class SegmentLabeller {
       canvas,
       animationConfig: this.animationConfig,
     })
+
+    this.addEventHandlers()
+  }
+
+  addEventHandlers () {
+    const cssPrefix = this.canvas.cssPrefix
+    let allSegmentLabels = d3.selectAll('.' + cssPrefix + 'labelGroup-outer')
+
+    allSegmentLabels.on('mouseover', (labelData) => {
+      this.interactionController.hoverOnSegmentLabel(labelData.id)
+    })
+
+    allSegmentLabels.on('mouseout', (labelData) => {
+      this.interactionController.hoverOffSegmentLabel(labelData.id)
+    })
+  }
+
+  highlightLabel (id) {
+    const { cssPrefix, svg } = this.interface.canvas
+    const label = svg.select(`#${cssPrefix}segmentMainLabel${id}-outer`)
+    label.style('fill', helpers.increaseBrightness(this._invariant.color, this._invariant.highlightTextLuminosity))
+  }
+
+  unhighlightLabel (id) {
+    const { cssPrefix, svg } = this.interface.canvas
+    const label = svg.select(`#${cssPrefix}segmentMainLabel${id}-outer`)
+    label.style('fill', this._invariant.color)
+  }
+
+  isLabelShown (id) {
+    return _.some(this.labelSets.primary.outer, { id }) || _.some(this.labelSets.primary.inner, { id })
   }
 }
 
