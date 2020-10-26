@@ -6,6 +6,8 @@
 #' @param values.display.thres (optional) threshold of the minimum value in percentage that will have a label attached. Range is [0,1] and he default is 0.003.
 #' @param values.order (optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".
 #' @param values.decimal.places (optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).
+#' @param values.font.family Font family of values.
+#' @param values.font.size Font size of values.
 #' @param labels.enabled (optional) enable / disable outer labels. The default is TRUE.
 #' @param labels.font.family (optional) font family for \code{labels}. The default is "Arial"
 #' @param labels.font.size (optional) desired font size in pixels for \code{labels}. The default is 10.
@@ -65,12 +67,13 @@
 #' @param labels.outer.lines.bezierLabelLean TODO document
 #' @param labels.outer.lines.bezierSegmentPullInProportionMin TODO document
 #' @param labels.outer.lines.bezierSegmentPullInProportionMax TODO document
+#' @importFrom grDevices rgb
 
 #' @examples
 #' # load example data
 #' data("browser", package = "rhtmlDonut")
 #' # select a smaller subset
-#' out = sort(values, decreasing = T, index.return = T)
+#' out = sort(values, decreasing = TRUE, index.return = TRUE)
 #' values1 = out[[1]][1:30]
 #' labels1 = labels[out[[2]]][1:30]
 #' groups1 = groups[out[[2]]][1:30]
@@ -82,8 +85,8 @@
 #' rhtmlDonut::Donut(values = values1,
 #'                  labels = labels1,
 #'                  values.order = "descending",
-#'                  gradient = T,
-#'                  border.color = "none",
+#'                  gradient = TRUE,
+#'                  border.color = "#FF0000",
 #'                  prefix = "", suffix = "%")
 #' # a donut plot with groups
 #' rhtmlDonut::Donut(values = values1,

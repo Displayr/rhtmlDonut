@@ -83,6 +83,10 @@ Donut(
 
 \item{values.order}{(optional) ordering of \code{values} = c("descending", "initial", "alphabetical"). The default is "descending".}
 
+\item{values.font.family}{Font family of values.}
+
+\item{values.font.size}{Font size of values.}
+
 \item{values.decimal.places}{(optional) non-negative integer. Number of decimal places for \code{values} and group values (if \code{groups} exists).}
 
 \item{values.display.as}{(optional) choice of c("percentage", "original"). If "percentage" then values are converted to percentages. If "original" display the original data. The default is "percentage".}
@@ -215,7 +219,7 @@ Create a Donut plot
 # load example data
 data("browser", package = "rhtmlDonut")
 # select a smaller subset
-out = sort(values, decreasing = T, index.return = T)
+out = sort(values, decreasing = TRUE, index.return = TRUE)
 values1 = out[[1]][1:30]
 labels1 = labels[out[[2]]][1:30]
 groups1 = groups[out[[2]]][1:30]
@@ -227,8 +231,8 @@ rhtmlDonut::Donut(values = values1,
 rhtmlDonut::Donut(values = values1,
                  labels = labels1,
                  values.order = "descending",
-                 gradient = T,
-                 border.color = "none",
+                 gradient = TRUE,
+                 border.color = "#FF0000",
                  prefix = "", suffix = "\%")
 # a donut plot with groups
 rhtmlDonut::Donut(values = values1,

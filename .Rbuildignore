@@ -3,7 +3,6 @@
 .travis.yml
 ^.*\.Rproj$
 ^\.Rproj\.user$
-browser
 docs
 gulpfile.js
 node_modules
