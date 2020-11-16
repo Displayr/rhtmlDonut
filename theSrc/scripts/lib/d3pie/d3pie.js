@@ -4,7 +4,6 @@ import d3 from 'd3'
 import helpers from './helpers'
 import math from './math'
 import Tooltip from './tooltip'
-import validate from './validate'
 import defaultSettings from './defaultSettings'
 import InteractionController from './interactionController'
 import GroupLabeller from './labellers/groupLabeller'
@@ -12,6 +11,9 @@ import Segments from './segments'
 import SegmentLabeller from './labellers/segmentLabeller'
 import { name, version } from '../../../../package'
 import { rootLogger, layoutLogger } from '../logger'
+
+/* global HTMLElement */
+/* global SVGElement */
 
 class d3pie {
   constructor (element, options) {
@@ -35,7 +37,7 @@ class d3pie {
     }
 
     // now run some validation on the user-defined info
-    if (!validate.initialCheck(this)) {
+    if (!this.validate()) {
       return
     }
 
@@ -65,6 +67,36 @@ class d3pie {
 
     this._init()
     d3.select(this.element).attr(`${name}-status`, 'ready')
+  }
+
+  validate () {
+    // confirm element is either a DOM element or a valid string for a DOM element
+    if (!(this.element instanceof HTMLElement || this.element instanceof SVGElement)) {
+      console.error('d3pie error: the first d3pie() param must be a valid DOM element (not jQuery) or a ID string.')
+      return false
+    }
+
+    // confirm the CSS prefix is valid. It has to be at least one character long and contain only alphanumeric or _- characters
+    if (!(/[a-zA-Z][a-zA-Z0-9_-]*$/.test(this.cssPrefix))) {
+      console.error(`d3pie error: invalid options.misc.cssPrefix: '${this.cssPrefix}'`)
+      return false
+    }
+
+    // confirm some data has been supplied
+    if (!_.isArray(this.options.data.content)) {
+      console.error('d3pie error: invalid config structure: missing data.content property.')
+      return false
+    }
+    if (this.options.data.content.length === 0) {
+      console.error('d3pie error: no data with positive values supplied.')
+      return false
+    }
+
+    // clear out any invalid data.
+    // Each data row needs a valid positive number and a label.
+    // NB This is now done in pieWrapper and not duplicated here.
+
+    return true
   }
 
   redrawWithoutLoading ({ width, height }) {

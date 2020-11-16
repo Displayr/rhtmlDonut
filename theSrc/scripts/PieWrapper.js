@@ -290,9 +290,6 @@ class PieWrapper {
 
   setConfig (newConfig) {
     this._settings = newConfig.settings
-    this._values = newConfig.values
-    this._valuesCount = newConfig.values.length
-    this._labels = newConfig.labels
 
     initialiseLogger(this._settings.logLevel)
     rootLogger.debug('config', newConfig)
@@ -304,7 +301,7 @@ class PieWrapper {
     }
 
     if (!this._settings.valuesColor) {
-      this._settings.valuesColor = this._computeColors()
+      this._settings.valuesColor = this._computeColors(newConfig.values.length)
     }
 
     const colorArrays = [
@@ -346,25 +343,30 @@ class PieWrapper {
       }
     })
 
-    this.pieData = []
-    for (let i = 0; i < this._valuesCount; i++) {
-      this.pieData.push({
-        id: i,
-        label: this._labels[i],
-        value: this._values[i],
-        index: i,
+    this.pieData = newConfig.values
+      .map((value, i) => ({
+        value: newConfig.values[i],
+        label: newConfig.labels[i],
         color: this._settings.valuesColor[i % this._settings.valuesColor.length],
         group: (this._settings.groups) ? this._settings.groups[i] : null,
+      }))
+      .filter(({ value, label }) => {
+        if (typeof value !== 'number' || isNaN(value) || value <= 0) {
+          console.log(`value '${value}' for label '${label}' not valid. Must be positive number. Discarding`)
+          return false
+        }
+        return true
       })
-    }
+      .map((dataPoint, i) => Object.assign(dataPoint, { id: i, index: i }))
 
     // detect order
     // TODO use enums for ascending / descending / unordered
-    const firstValueEqualLastValue = _.first(this._values) === _.last(this._values)
-    const isSortedAscending = _.every(this._values, (value, index, array) =>
+    const values = this.pieData.map(({ value }) => value)
+    const firstValueEqualLastValue = _.first(values) === _.last(values)
+    const isSortedAscending = _.every(values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
     ) && !firstValueEqualLastValue
-    const isSortedDescending = _.every(this._values, (value, index, array) =>
+    const isSortedDescending = _.every(values, (value, index, array) =>
       index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
     ) && !firstValueEqualLastValue
     const valuesOrder = (isSortedDescending)
@@ -385,11 +387,11 @@ class PieWrapper {
     }
   }
 
-  _computeColors () {
+  _computeColors (valuesCount) {
     if (this._settings.groups) {
       return this._computeColorsUsingGroups()
     } else if (this._settings.gradient) {
-      return this._computeColorsUsingGradient()
+      return this._computeColorsUsingGradient(valuesCount)
     } else {
       return d3.scale.category20().range()
     }
@@ -418,12 +420,12 @@ class PieWrapper {
     })
   }
 
-  _computeColorsUsingGradient () {
+  _computeColorsUsingGradient (valuesCount) {
     let colGrad = new Rainbow()
     colGrad.setSpectrum('darkblue', 'yellow')
-    colGrad.setNumberRange(0, this._valuesCount - 1)
+    colGrad.setNumberRange(0, valuesCount - 1)
 
-    return _.range(this._valuesCount).map(i => '#' + colGrad.colourAt(i))
+    return _.range(valuesCount).map(i => '#' + colGrad.colourAt(i))
   }
 
   _processGroupConfig () {
