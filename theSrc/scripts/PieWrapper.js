@@ -6,6 +6,7 @@ import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
 import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
+import { name, version } from '../../package.json'
 
 import {
   isHexColor,
@@ -22,27 +23,26 @@ class PieWrapper {
     this._donutInstanceCounter = 0
   }
 
-  constructor () {
+  constructor (element) {
+    this.outerContainer = element
     this.uniqueId = PieWrapper.uniqueId()
     this.uniqueCssPrefix = `donut-${this.uniqueId}`
     this.titleHeight = 0
     this.subtitleHeight = 0
     this.footerHeight = 0
+    this.initialDrawComplete = false // if the canvas is too small on first call to draw, we skip the draw, if a resize to a better size is performed, the class needs to know that the initial draw has not yet been completed
   }
 
-  draw (element) {
-    const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    rootLogger.info(`rhtmlDonut.renderValue() called. Width: ${width}, height: ${height}`)
-    $(element).find('*').remove()
+  reset () {
+    this.initialDrawComplete = false
+    $(this.outerContainer).find('*').remove()
+  }
 
-    this.outerSvg = d3.select(element)
+  initialiseComponents () {
+    this.outerSvg = d3.select(this.outerContainer)
       .append('svg')
       .attr('class', 'svgContent')
-      .attr('width', width)
-      .attr('height', height)
 
-    // TODO make title/subtitle/footer handle being instantiated with no text : return zero, play nice. Push all these if concerns into module
-    // TODO also currently need to specify all the things
     if (this._settings.title) {
       this.title = new Title({
         text: this._settings.title,
@@ -53,10 +53,6 @@ class PieWrapper {
         bottomPadding: 10,
         innerPadding: 2,
       })
-      this.title.setX(width / 2)
-      this.title.setMaxWidth(width)
-      this.title.drawWith(this.uniqueCssPrefix, this.outerSvg)
-      this.titleHeight = this.title.getHeight()
     }
 
     if (this._settings.subtitle) {
@@ -65,14 +61,9 @@ class PieWrapper {
         subtitleFontColor: this._settings.subtitleFontColor,
         subtitleFontSize: this._settings.subtitleFontSize,
         subtitleFontFamily: this._settings.subtitleFontFamily,
-        yOffset: this.titleHeight,
         bottomPadding: 10,
         innerPadding: 2,
       })
-      this.subtitle.setX(width / 2)
-      this.subtitle.setMaxWidth(width)
-      this.subtitle.drawWith(this.uniqueCssPrefix, this.outerSvg)
-      this.subtitleHeight = this.subtitle.getHeight()
     }
 
     if (this._settings.footer) {
@@ -81,77 +72,25 @@ class PieWrapper {
         footerFontColor: this._settings.footerFontColor,
         footerFontSize: this._settings.footerFontSize,
         footerFontFamily: this._settings.footerFontFamily,
-        containerHeight: height,
         topPadding: 10,
         bottomPadding: 10,
         innerPadding: 2,
       })
-      this.footer.setX(width / 2)
-      this.footer.setMaxWidth(width)
-      this.footer.setContainerHeight(height)
-      this.footer.drawWith(this.uniqueCssPrefix, this.outerSvg)
-      this.footerHeight = this.footer.getHeight()
     }
 
-    const donutPlotHeight = height -
-      this.titleHeight -
-      this.subtitleHeight -
-      this.footerHeight
-
-    layoutLogger.info(`total height: ${height}`)
-    layoutLogger.info(`titleHeight: ${this.titleHeight}`)
-    layoutLogger.info(`subtitleHeight: ${this.subtitleHeight}`)
-    layoutLogger.info(`footerHeight: ${this.footerHeight}`)
-    layoutLogger.info(`setting donutPlot width: ${width}`)
-    layoutLogger.info(`setting donutPlot height: ${donutPlotHeight}`)
-
-    const pieGroupYOffset = this.titleHeight + this.subtitleHeight
-    const pieGroup = this.outerSvg.append('g')
+    this.pieGroup = this.outerSvg.append('g')
       .attr('class', 'pieGroup')
-      .attr('transform', `translate(0,${pieGroupYOffset})`)
 
-    // NB pie rect is for debug purposes only
-    // TODO add a show/hide attribute controlled by the debug settings
-    pieGroup.append('rect')
-      .attr('class', 'pieRect')
-      .attr('width', width)
-      .attr('height', donutPlotHeight)
-
-    this._drawPie({ element: pieGroup, height: donutPlotHeight, width })
-  }
-
-  _drawPie ({ element, width, height }) {
-    let dataFormatter = null
-    if (this._settings.valuesDec >= 0) {
-      dataFormatter = d3.format(',.' + this._settings.valuesDec + 'f')
-    } else {
-      dataFormatter = d3.format(',.1f')
-    }
-
-    // TODO remove all defaults here that are covered in defaultSettings. May require a "delete all null/undefined step in the middle"
-    const absencePreservingParseFloat = (thing) => {
-      if (_.isNull(thing)) { return thing }
-      if (_.isUndefined(thing)) { return thing }
-      return parseFloat(thing)
-    }
-
-    const absencePreservingBooleanToStringConverter = (thing, trueVal, falseVal) => {
-      if (_.isNull(thing)) { return thing }
-      if (_.isUndefined(thing)) { return thing }
-      return (thing) ? trueVal : falseVal
-    }
-
-    this.pie = new d3pie(element.node(), { // eslint-disable-line new-cap
+    this.pie = new d3pie(this.pieGroup.node(), { // eslint-disable-line new-cap
       size: {
-        canvasWidth: absencePreservingParseFloat(width),
-        canvasHeight: absencePreservingParseFloat(height),
-        pieInnerRadius: absencePreservingParseFloat(this._settings.innerRadius),
+        labelThreshold: absencePreservingParseFloat(this._settings.canvasSizeDrawLabelThreshold),
         labelOffset: absencePreservingParseFloat(this._settings.labelOffset),
+        pieInnerRadius: absencePreservingParseFloat(this._settings.innerRadius),
       },
       data: {
         sortOrder: this._settings.valuesOrder,
         color: this._settings.valuesColor,
-        dataFormatter: dataFormatter,
+        dataFormatter: d3.format(`,.${Math.max(0, _.get(this._settings, 'valuesDec', 1))}f`), // TODO clean this up, push to child concern
         display: this._settings.valuesDisplay,
         content: this.pieData,
       },
@@ -235,24 +174,50 @@ class PieWrapper {
     })
   }
 
-  resize (element) {
-    const { width, height } = getContainerDimensions(_.has(element, 'length') ? element[0] : element)
-    rootLogger.info(`rhtmlDonut.resize(width=${width}, height=${height}) called`)
+  draw () {
+    const wrappedElement = d3.select(this.outerContainer)
 
-    if (width < 200 || height < 200) { return }
+    wrappedElement
+      .attr(name, version)
+      .attr(`${name}-status`, 'loading')
 
-    d3.select(element).select('svg')
+    this._draw()
+
+    wrappedElement
+      .attr(`${name}-status`, 'ready')
+  }
+
+  _draw () {
+    const { width, height } = getContainerDimensions(this.outerContainer)
+    rootLogger.info(`draw called. Width: ${width}, height: ${height}`)
+
+    // NB cannot rely on theSrc/scripts/lib/d3pie/defaultSettings.js as those defaults are applied later
+    const drawThreshold = this._settings.canvasSizeDrawThreshold || 50
+    if (width < drawThreshold || height < drawThreshold) {
+      rootLogger.info(`${width}x${height} is below minimum size of ${drawThreshold}. Cancel render and leave canvas blank`)
+      $(this.outerContainer).find('*').remove()
+      this.initialDrawComplete = false
+      return
+    }
+
+    if (!this.initialDrawComplete) {
+      this.initialiseComponents()
+    }
+
+    this.outerSvg
       .attr('width', width)
       .attr('height', height)
 
-    if (this.title) {
+    // TODO make title/subtitle/footer handle being instantiated with no text : return zero, play nice. Push all these if concerns into module
+    // TODO also currently need to specify all the things
+    if (this._settings.title) {
       this.title.setX(width / 2)
       this.title.setMaxWidth(width)
       this.title.drawWith(this.uniqueCssPrefix, this.outerSvg)
       this.titleHeight = this.title.getHeight()
     }
 
-    if (this.subtitle) {
+    if (this._settings.subtitle) {
       this.subtitle.setX(width / 2)
       this.subtitle.setY(this.titleHeight)
       this.subtitle.setMaxWidth(width)
@@ -260,7 +225,7 @@ class PieWrapper {
       this.subtitleHeight = this.subtitle.getHeight()
     }
 
-    if (this.footer) {
+    if (this._settings.footer) {
       this.footer.setX(width / 2)
       this.footer.setMaxWidth(width)
       this.footer.setContainerHeight(height)
@@ -273,19 +238,33 @@ class PieWrapper {
       this.subtitleHeight -
       this.footerHeight
 
+    layoutLogger.info(`total height: ${height}`)
+    layoutLogger.info(`titleHeight: ${this.titleHeight}`)
+    layoutLogger.info(`subtitleHeight: ${this.subtitleHeight}`)
+    layoutLogger.info(`footerHeight: ${this.footerHeight}`)
     layoutLogger.info(`setting donutPlot width: ${width}`)
     layoutLogger.info(`setting donutPlot height: ${donutPlotHeight}`)
-    layoutLogger.info(`canvas height: ${height}`)
 
     const pieGroupYOffset = this.titleHeight + this.subtitleHeight
-    this.outerSvg.select('.pieGroup')
+    this.pieGroup
       .attr('transform', `translate(0,${pieGroupYOffset})`)
 
-    this.outerSvg.select('.pieRect')
-      .attr('width', width)
-      .attr('height', donutPlotHeight)
+    this.pie.setDimensions({ width: width, height: donutPlotHeight })
 
-    this.pie.redrawWithoutLoading({ height: donutPlotHeight, width })
+    if (donutPlotHeight > 0) {
+      if (!this.initialDrawComplete) {
+        this.pie.draw()
+        this.initialDrawComplete = true
+      } else {
+        this.pie.redraw()
+      }
+
+      // NB pie rect is for debug purposes only
+      // this.pieGroup.append('rect')
+      //   .attr('class', 'pieRect')
+      //   .attr('width', width)
+      //   .attr('height', donutPlotHeight)
+    }
   }
 
   setConfig (newConfig) {
@@ -352,7 +331,7 @@ class PieWrapper {
       }))
       .filter(({ value, label }) => {
         if (typeof value !== 'number' || isNaN(value) || value <= 0) {
-          console.log(`value '${value}' for label '${label}' not valid. Must be positive number. Discarding`)
+          rootLogger.info(`value '${value}' for label '${label}' not valid. Must be positive number. Discarding`)
           return false
         }
         return true
@@ -453,13 +432,29 @@ class PieWrapper {
 PieWrapper.initClass()
 
 // TODO to utils
-function getContainerDimensions (rootElement) {
+function getContainerDimensions (rootElementOrArray) {
+  const rootElement = _.has(rootElementOrArray, 'length') ? rootElementOrArray[0] : rootElementOrArray
   try {
     return rootElement.getBoundingClientRect()
   } catch (err) {
     err.message = `fail in getContainerDimensions: ${err.message}`
     throw err
   }
+}
+
+// TODO remove all defaults here that are covered in defaultSettings. May require a "delete all null/undefined step in the middle"
+// TODO to utils
+const absencePreservingParseFloat = (thing) => {
+  if (_.isNull(thing)) { return thing }
+  if (_.isUndefined(thing)) { return thing }
+  return parseFloat(thing)
+}
+
+// TODO to utils
+const absencePreservingBooleanToStringConverter = (thing, trueVal, falseVal) => {
+  if (_.isNull(thing)) { return thing }
+  if (_.isUndefined(thing)) { return thing }
+  return (thing) ? trueVal : falseVal
 }
 
 module.exports = PieWrapper

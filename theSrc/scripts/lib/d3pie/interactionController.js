@@ -55,7 +55,7 @@ class InteractionController {
   hoverOnGroupSegment (id) {
     interactionLogger.debug(`hoverOnGroupSegment(${id})`)
     this.highlightGroupSegment(id)
-    if (this.hasTooltips && !this.groupLabelController.isLabelShown(id)) {
+    if (this.hasTooltips && (!this.hasGroupLabels || !this.groupLabelController.isLabelShown(id))) {
       this.tooltipController.showGroupTooltip(id)
     }
   }

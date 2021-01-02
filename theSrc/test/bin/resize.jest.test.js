@@ -31,16 +31,16 @@ describe('resize', () => {
       height: 200,
     })
 
-    await testSnapshots({ page, snapshotName: '1A_basic_initial' })
+    await testSnapshots({ page, testName: '1A_basic_initial' })
 
     const sizesToSnapshot = [
       { width: 275, height: 200 },
-      { width: 275, height: 200 },
       { width: 250, height: 200 },
-      { width: 225, height: 200 },
       { width: 225, height: 200 },
       { width: 400, height: 300 },
       { width: 500, height: 400 },
+      { width: 125, height: 125 },
+      { width: 75, height: 75 },
     ]
 
     for (const size of sizesToSnapshot) {
@@ -51,7 +51,7 @@ describe('resize', () => {
 
       await page.waitFor(1000)
 
-      await testSnapshots({ page, snapshotName: `1B_basic_after_resize_${width}x${height}` })
+      await testSnapshots({ page, testName: `1B_basic_after_resize_${width}x${height}` })
     }
     await page.close()
   })
@@ -64,7 +64,7 @@ describe('resize', () => {
       height: 600,
     })
 
-    await testSnapshots({ page, snapshotName: '2A_with_title_initial' })
+    await testSnapshots({ page, testName: '2A_with_title_initial' })
 
     const sizesToSnapshot = [
       { width: 400, height: 600 },
@@ -79,7 +79,7 @@ describe('resize', () => {
 
       await page.waitFor(1000)
 
-      await testSnapshots({ page, snapshotName: `2B_with_title_after_resize_${width}x${height}` })
+      await testSnapshots({ page, testName: `2B_with_title_after_resize_${width}x${height}` })
     }
     await page.close()
   })

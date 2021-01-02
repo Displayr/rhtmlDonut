@@ -3,16 +3,29 @@ type: multi_widget_single_page
 use_config_as_title: true
 rowSize: 4
 comments: []
+height: 500
+width: 500
 widgets:
-  - height: 500
-    width: 500
-    config:
+    - config:
       - data.test_plan.abc_rbg_10x
       - '{ "settings" : { "valuesDec": "0", "valuesDisplay": "percentage", "suffix": "%" } }'
       - '{ "settings" : { "subtitle": "valuesDisplay=percentage and suffix=%" } }'
-  - height: 500
-    width: 500
-    config:
+    - config:
       - data.test_plan.abc_rbg
-      - '{ "settings" : { "valuesDec": "3" } }'
-      - '{ "settings" : { "title": "valuesDec=3" } }'
+      - '{ "settings" : { "title": "no valuesDec" } }'
+    - config:
+      - data.test_plan.abc_rbg
+      - '{ "settings" : { "valuesDec": "0" } }'
+      - '{ "settings" : { "title": "valuesDec=0" } }'
+    - config:
+      - data.test_plan.abc_rbg
+      - '{ "settings" : { "valuesDec": "1" } }'
+      - '{ "settings" : { "title": "valuesDec=1" } }'
+    - config:
+      - data.test_plan.abc_rbg
+      - '{ "settings" : { "valuesDec": "2" } }'
+      - '{ "settings" : { "title": "valuesDec=2" } }'
+    - config:
+      - data.test_plan.abc_rbg
+      - '{ "settings" : { "valuesDec": "4" } }'
+      - '{ "settings" : { "title": "valuesDec=4" } }'

@@ -41,7 +41,7 @@
 #' @param title.font.family (optional) specifies the font family of the title. The default is "arial".
 #' @param title.font.size (optional) specifies the font size of the title in pixels. The default is 16.
 #' @param title.font.color (optional) a hex value to specify the color of the title. The default is "#333333".
-#' @param title.top.padding (optional) integer to set padding for the title. Defults to 0.
+#' @param title.top.padding (optional) integer to set padding for the title. Defaults to 0.
 #' @param subtitle is the subtitle text given to the plot
 #' @param subtitle.font.family is the font of the subtitle text
 #' @param subtitle.font.color is the font color of the subtitle text
@@ -56,6 +56,8 @@
 #' @param gradient (optional) if \code{groups} is not provided, set this parameter to \code{TRUE} will generate gradient colors for \code{values} if \code{values.color} is not provided.
 #' @param inner.radius (optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.
 #' @param log.level (optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].
+#' @param canvas.size.min (optional). Specifies minimum canvas size to draw a donut. Both height and width must meet or exceed min. Defaults to 50.
+#' @param canvas.size.labels.min (optional). Specifies minimum canvas size to draw labels on donut. Both height and width must meet or exceed min. Defaults to 100.
 
 #' @param labels.outer.lines.straightMin TODO document
 #' @param labels.outer.lines.straightMax TODO document
@@ -167,7 +169,9 @@ Donut <- function(
     border.color = "#ffffff",
     gradient = FALSE, # not used by pieChart.R
     inner.radius = 0.8,
-    log.level = "info") {
+    log.level = "info",
+    canvas.size.min = 50,
+    canvas.size.labels.min = 100) {
 
     # What does the logic between here and rhtmlDonut do ?
     #  * validate and enforce format of values and labels
@@ -524,7 +528,9 @@ Donut <- function(
         innerRadius = inner.radius,
         minProportion = values.display.thres,
         borderColor = border.color,
-        logLevel = log.level
+        logLevel = log.level,
+        canvasSizeDrawThreshold = canvas.size.min,
+        canvasSizeDrawLabelThreshold = canvas.size.labels.min
     )
 
     # pass the data and settings using 'x'
