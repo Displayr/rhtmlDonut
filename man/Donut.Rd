@@ -71,7 +71,9 @@ Donut(
   border.color = "#ffffff",
   gradient = FALSE,
   inner.radius = 0.8,
-  log.level = "info"
+  log.level = "info",
+  canvas.size.min = 50,
+  canvas.size.labels.min = 100
 )
 }
 \arguments{
@@ -187,7 +189,7 @@ Donut(
 
 \item{title.font.color}{(optional) a hex value to specify the color of the title. The default is "#333333".}
 
-\item{title.top.padding}{(optional) integer to set padding for the title. Defults to 0.}
+\item{title.top.padding}{(optional) integer to set padding for the title. Defaults to 0.}
 
 \item{subtitle}{is the subtitle text given to the plot}
 
@@ -208,6 +210,10 @@ Donut(
 \item{inner.radius}{(optional) specifies the pie inner radius as a proportion of the outer radius. Range is [0,1). Default is 0.8.}
 
 \item{log.level}{(optional) specifies logging verbosity. Default is "info". Options as ["debug", "info", "warn", "error"].}
+
+\item{canvas.size.min}{(optional). Specifies minimum canvas size to draw a donut. Both height and width must meet or exceed min. Defaults to 50.}
+
+\item{canvas.size.labels.min}{(optional). Specifies minimum canvas size to draw labels on donut. Both height and width must meet or exceed min. Defaults to 100.}
 }
 \value{
 a donut plot
