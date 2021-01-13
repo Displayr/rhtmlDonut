@@ -3,6 +3,7 @@ const defaultSettings = {
     canvasHeight: 500,
     canvasWidth: 500,
     pieInnerRadius: 0.8, // pieWrapper: settings.innerRadius, R: inner.radius
+    labelThreshold: 100, // pieWrapper: settings.canvasSizeDrawLabelThreshold, R: canvas.size.labels.min
     labelOffset: 0.1, // pieWrapper: settings.labelOffset, R: labels.offset
   },
   data: {

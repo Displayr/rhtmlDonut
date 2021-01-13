@@ -6,7 +6,7 @@ const config = {
   widgetFactory: 'theSrc/scripts/rhtmlDonut.factory.js',
   widgetName: 'rhtmlDonut',
   internalWebSettings: {
-    isReadySelector: 'g[rhtmlDonut-status=ready]',
+    isReadySelector: 'div[rhtmlDonut-status=ready]',
     singleWidgetSnapshotSelector: 'svg.svgContent',
     includeDimensionsOnWidgetDiv: true,
     default_border: true,

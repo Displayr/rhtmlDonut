@@ -1,6 +1,4 @@
 import _ from 'lodash'
-import d3 from 'd3'
-
 import helpers from './helpers'
 import math from './math'
 import Tooltip from './tooltip'
@@ -9,7 +7,6 @@ import InteractionController from './interactionController'
 import GroupLabeller from './labellers/groupLabeller'
 import Segments from './segments'
 import SegmentLabeller from './labellers/segmentLabeller'
-import { name, version } from '../../../../package'
 import { rootLogger, layoutLogger } from '../logger'
 
 /* global HTMLElement */
@@ -41,10 +38,6 @@ class d3pie {
       return
     }
 
-    // add a data-role to the DOM node to let anyone know that it contains a d3pie instance, and the d3pie version
-    d3.select(this.element).attr(name, version)
-    d3.select(this.element).attr(`${name}-status`, 'loading')
-
     // things that are done once
     this.totalValue = math.getTotalValueOfDataSet(this.options.data.content)
 
@@ -58,15 +51,11 @@ class d3pie {
     this.interface = {
       canvas: {
         cssPrefix: this.cssPrefix,
-        width: this.options.size.canvasWidth,
-        height: this.options.size.canvasHeight,
+        width: null, // NB set via setDimensions()
+        height: null, // NB set via setDimensions()
         svg: this.svg,
       },
-      interactionController: new InteractionController(),
     }
-
-    this._init()
-    d3.select(this.element).attr(`${name}-status`, 'ready')
   }
 
   validate () {
@@ -99,13 +88,18 @@ class d3pie {
     return true
   }
 
-  redrawWithoutLoading ({ width, height }) {
+  setDimensions ({ width, height }) {
     this.interface.canvas.width = width
     this.interface.canvas.height = height
-    this._init({ redraw: true })
   }
 
-  _init ({ redraw = false } = {}) {
+  redraw () {
+    this.draw({ redraw: true })
+  }
+
+  draw ({ redraw = false } = {}) {
+    // NB new interaction controller each draw
+    this.interface.interactionController = new InteractionController()
     const { canvas, interactionController } = this.interface
 
     let pieDimensions = {}
@@ -113,7 +107,9 @@ class d3pie {
     let extraVerticalSpace = 0
     let labelLinePadding = 0
 
-    if (this.options.labels.enabled) {
+    const tooSmallForLabels = canvas.width < this.options.size.labelThreshold || canvas.height < this.options.size.labelThreshold
+
+    if (this.options.labels.enabled && !tooSmallForLabels) {
       this.segmentLabeller = new SegmentLabeller({
         animationConfig: this.options.effects.load,
         dataPoints: this.options.data.content,
@@ -188,12 +184,13 @@ class d3pie {
     this.segments.clearPreviousFromCanvas()
     this.segments.draw({ animate: !redraw })
 
-    if (this.options.labels.enabled) {
-      this.segmentLabeller.clearPreviousFromCanvas()
+    if (this.segmentLabeller) { this.segmentLabeller.clearPreviousFromCanvas() }
+    if (this.options.labels.enabled && !tooSmallForLabels) {
       this.segmentLabeller.draw()
     }
 
-    if (this.options.groups.content && this.options.groups.labelsEnabled) {
+    if (this.groupLabeller) { this.groupLabeller.clearPreviousFromCanvas() }
+    if (this.options.groups.content && this.options.groups.labelsEnabled && !tooSmallForLabels) {
       this.groupLabeller = new GroupLabeller({
         canvas,
         interactionController,
@@ -205,7 +202,6 @@ class d3pie {
         labelSuffix: this.options.labels.segment.suffix,
         groupArcCalculator: this.segments.getArcCalculators().groupArc,
       })
-      this.groupLabeller.clearPreviousFromCanvas()
       this.groupLabeller.draw()
       interactionController.addGroupLabelController(this.groupLabeller)
     }

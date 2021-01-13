@@ -19,7 +19,6 @@
     ],
     "valuesDisplay": "percentage",
     "valuesOrder": "descending",
-    "valuesDec": 1,
     "labelsFont": "arial",
     "labelsSize": 10,
     "labelsColor": "#333333",
