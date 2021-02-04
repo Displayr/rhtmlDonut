@@ -199,7 +199,7 @@ Donut <- function(
         stop("A donut/pie chart could not be created as the values to show ",
              "are all missing.")
 
-    if (all(is.na(values)))
+    if (all(values == 0))
         stop("A donut/pie chart could not be created as the values to show ",
              "are all zero.")
 
