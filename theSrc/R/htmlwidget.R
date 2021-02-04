@@ -196,8 +196,12 @@ Donut <- function(
     }
 
     if (all(is.na(values)))
-        stop("A donut/pie chart could not be created as there is no data to ",
-             "show.")
+        stop("A donut/pie chart could not be created as the values to show ",
+             "are all missing.")
+
+    if (all(is.na(values)))
+        stop("A donut/pie chart could not be created as the values to show ",
+             "are all zero.")
 
     if (!is.vector(labels)) {
         if (is.matrix(labels) || is.data.frame(labels))
