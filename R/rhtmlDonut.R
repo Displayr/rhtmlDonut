@@ -195,6 +195,10 @@ Donut <- function(
             stop("Data type of values is not recognized")
     }
 
+    if (all(is.na(values)))
+        stop("A donut/pie chart could not be created as there is no data to ",
+             "show.")
+
     if (!is.vector(labels)) {
         if (is.matrix(labels) || is.data.frame(labels))
             stop("labels must be a vector-like object")
