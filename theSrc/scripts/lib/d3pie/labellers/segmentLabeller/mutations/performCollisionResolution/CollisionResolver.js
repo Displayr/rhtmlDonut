@@ -74,7 +74,7 @@ class CollisionResolver {
           stats: this.stats,
         }
       } else {
-        labelLogger.error(`collision resolution failed: it tried to removed all labels!`)
+        labelLogger.warn(`collision resolution failed: it tried to removed all labels!`)
         return {
           inner: null,
           outer: null,
