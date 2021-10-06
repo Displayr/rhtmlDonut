@@ -179,12 +179,12 @@ class PieWrapper {
 
     wrappedElement
       .attr(name, version)
-      .attr(`${name}-status`, 'loading')
+      .attr(`rhtmlwidget-status`, 'loading')
 
     this._draw()
 
     wrappedElement
-      .attr(`${name}-status`, 'ready')
+      .attr(`rhtmlwidget-status`, 'ready')
   }
 
   _draw () {
