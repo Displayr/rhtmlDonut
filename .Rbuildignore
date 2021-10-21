@@ -3,9 +3,13 @@
 .travis.yml
 ^.*\.Rproj$
 ^\.Rproj\.user$
-docs
 gulpfile.js
-node_modules
 package-lock.json
 package.json
-theSrc
+^theSrc$
+^node_modules$
+^bin$
+^browser$
+^build$
+^package\.json$
+^docs$

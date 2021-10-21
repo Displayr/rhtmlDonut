@@ -1,5 +1,5 @@
 version: 1
-groupname: representative_examples_misc_1000x1000
+groupname: examples_misc_1000x1000
 data_directory: data/misc
 width: 1000
 height: 1000
