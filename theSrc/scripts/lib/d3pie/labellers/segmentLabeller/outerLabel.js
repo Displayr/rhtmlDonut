@@ -427,7 +427,7 @@ class OuterLabel {
   get lineConnectorCoord () { return this._variant.lineConnectorCoord }
   set lineConnectorCoord (newValue) {
     this.validateCoord(newValue)
-    
+
     if (!_.isEmpty(this._variant.lineConnectorCoord)) {
       const newPositionHistoryLength = this.positionHistory.unshift(this._variant.lineConnectorCoord)
       if (newPositionHistoryLength > this.positionHistoryStackSize) {
