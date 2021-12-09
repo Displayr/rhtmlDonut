@@ -64,6 +64,12 @@
       "#FF00FF66"
     ],
     "groupLabelsMinFontSize": 10,
+    "title": "title",
+    "titleFontColor": "#00000066",
+    "subtitle": "subtitle",
+    "subtitleFontColor": "#00000066",
+    "footer": "footer",
+    "footerFontColor": "#00000066",
     "prefix": "",
     "suffix": "%",
     "orderControl": false,
