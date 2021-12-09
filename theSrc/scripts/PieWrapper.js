@@ -296,10 +296,10 @@ class PieWrapper {
         if (isValidColorName(color)) { return getHexColorFromString(color) }
         return color
       })
-      // let nonHexColors = this._settings[colorArray].filter(color => !isHexColor(color))
-      // if (nonHexColors.length > 0) {
-      //   throw new Error(`. Invalid value in setting ${colorArray}: [${nonHexColors.join(', ').slice(0, 10)}]: must be Hex (#rrggbb) format or valid HTML color`)
-      // }
+      let nonHexColors = this._settings[colorArray].filter(color => !isHexColor(color))
+      if (nonHexColors.length > 0) {
+        throw new Error(`. Invalid value in setting ${colorArray}: [${nonHexColors.join(', ').slice(0, 10)}]: must be Hex (#rrggbb) format or valid HTML color`)
+      }
     })
 
     const colorFields = [
@@ -318,7 +318,7 @@ class PieWrapper {
       if (_.isNull(color) || _.isUndefined(color) || color === 'none') { return }
       if (isHexColor(color)) { return }
       if (isValidColorName(color)) { this._settings[colorField] = getHexColorFromString(color) } else {
-        // throw new Error(`. Invalid value in setting ${colorField}: '${color}': must be Hex (#rrggbb) format or valid HTML color`)
+        throw new Error(`. Invalid value in setting ${colorField}: '${color}': must be Hex (#rrggbb) format or valid HTML color`)
       }
     })
 
@@ -412,10 +412,10 @@ class PieWrapper {
 
     const groupsColor = this._settings.groupsColor || d3.scale.category20().range()
 
-    // const nonHexColors = groupsColor.filter((color) => !color.match(/^#[a-fA-F0-9]{6}$/))
-    // if (nonHexColors.length > 0) {
-    //   throw new Error(`Invalid group color(s) '${nonHexColors.join(', ')}': must be Hex (#rrggbb) format`)
-    // }
+    const nonHexColors = groupsColor.filter((color) => !color.match(/^#[a-fA-F0-9]{6}$/) && !color.match(/^#[a-fA-F0-9]{8}$/))
+    if (nonHexColors.length > 0) {
+      throw new Error(`Invalid group color(s) '${nonHexColors.join(', ')}': must be Hex (#rrggbb) format`)
+    }
 
     for (let i = 0; i < this._settings.groupsSums.length; i++) {
       groupData.push({
