@@ -564,7 +564,8 @@ Donut <- function(
 checkColor <- function(colors, input.name = NULL)
 {
     is.invalid <- !(gsub(" ", "", tolower(colors)) %in% .html.colors) &
-                  !grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", colors)
+                  !grepl("^#(?:[0-9a-fA-F]{3}){1,2}$", colors) &
+                  !grepl("^#[0-9a-fA-F]{8}$", colors)
 
     if (any(is.invalid))
     {

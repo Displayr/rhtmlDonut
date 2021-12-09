@@ -1,0 +1,81 @@
+{
+  "values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "labels": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+  ],
+  "settings": {
+    "valuesFont": "Arial",
+    "valuesSize": 10,
+    "valuesColor": [
+      "#FF000066",
+      "#00FF0066",
+      "#0000FF66"
+    ],
+    "valuesDisplay": "original",
+    "valuesOrder": "initial",
+    "valuesDec": 0,
+    "labelsFont": "Arial",
+    "labelsSize": 10,
+    "labelsColor": "#2C2C2C",
+    "labelsBold": false,
+    "labelsMinFontSize": 10,
+    "groups": [
+      "x",
+      "x",
+      "y",
+      "y",
+      "z",
+      "z"
+    ],
+    "groupsNames": [
+      "x",
+      "y",
+      "z"
+    ],
+    "groupsSums": [
+      3,
+      7,
+      11
+    ],
+    "groupsCounts": [
+      2,
+      2,
+      2
+    ],
+    "groupsFont": "Arial",
+    "groupsFontColor": "#2C2C2C",
+    "groupsSize": 10,
+    "groupsBold": false,
+    "groupsColor": [
+      "#FFFF0066",
+      "#00FFFF66",
+      "#FF00FF66"
+    ],
+    "groupLabelsMinFontSize": 10,
+    "title": "title",
+    "titleFontColor": "#00000066",
+    "subtitle": "subtitle",
+    "subtitleFontColor": "#00000066",
+    "footer": "footer",
+    "footerFontColor": "#00000066",
+    "prefix": "",
+    "suffix": "%",
+    "orderControl": false,
+    "gradient": false,
+    "innerRadius": "0.8",
+    "minProportion": 0.003,
+    "borderColor": "#FFFFFF"
+  }
+}

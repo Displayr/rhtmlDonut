@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import colorName from 'color-name'
 
-const isHexColor = color => /^#[a-fA-F0-9]{6}$/.test(color)
+const isHexColor = color => /^#[a-fA-F0-9]{6}$/.test(color) || /^#[a-fA-F0-9]{8}$/.test(color)
 const isValidColorName = color => _.has(colorName, _.result(color, 'toLowerCase', null))
 const convertIntToTwoDigitHex = n => n > 15 ? n.toString(16) : '0' + n.toString(16)
 const getHexColorFromString = color => {
