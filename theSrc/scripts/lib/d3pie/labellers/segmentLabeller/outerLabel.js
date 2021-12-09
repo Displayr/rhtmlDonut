@@ -217,7 +217,7 @@ class OuterLabel {
    */
   reset () {
     if (this.positionHistory.length === 0) {
-      throw new Error('cannot reset label that has not been moved')
+      return
     }
     const previousPosition = this.positionHistory.shift()
     this.placeLabelViaConnectorCoord(previousPosition)
@@ -428,11 +428,12 @@ class OuterLabel {
   set lineConnectorCoord (newValue) {
     this.validateCoord(newValue)
 
-    const newPositionHistoryLength = this.positionHistory.unshift(this._variant.lineConnectorCoord)
-    if (newPositionHistoryLength > this.positionHistoryStackSize) {
-      this.positionHistory = this.positionHistory.slice(0, this.positionHistoryStackSize)
+    if (!_.isEmpty(this._variant.lineConnectorCoord)) {
+      const newPositionHistoryLength = this.positionHistory.unshift(this._variant.lineConnectorCoord)
+      if (newPositionHistoryLength > this.positionHistoryStackSize) {
+        this.positionHistory = this.positionHistory.slice(0, this.positionHistoryStackSize)
+      }
     }
-
     this._variant.lineConnectorCoord = newValue
   }
 
