@@ -1,0 +1,12 @@
+dependencies:
+ - name: Maps
+   version: 1.0.0
+   src: htmlwidgets
+   script:
+     - rhtmlDonut.js.map
+
+ - name: style
+   version: 1.0.0
+   src: htmlwidgets/lib/style
+   stylesheet:
+     - main.css
