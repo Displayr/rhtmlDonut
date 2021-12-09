@@ -1,7 +1,7 @@
 Package: rhtmlDonut
 Type: Package
 Title: R htmlwidget package for creating a detailed donut plot
-Version: 1.0.7
+Version: 1.0.8
 Author: Displayr <opensource@displayr.com>
 Maintainer: Displayr <opensource@displayr.com>
 Description: R htmlwidget package for creating a detailed donut plot.

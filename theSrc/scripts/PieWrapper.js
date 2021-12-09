@@ -412,7 +412,7 @@ class PieWrapper {
 
     const groupsColor = this._settings.groupsColor || d3.scale.category20().range()
 
-    const nonHexColors = groupsColor.filter((color) => !color.match(/^#[a-fA-F0-9]{6}$/))
+    const nonHexColors = groupsColor.filter((color) => !color.match(/^#[a-fA-F0-9]{6}$/) && !color.match(/^#[a-fA-F0-9]{8}$/))
     if (nonHexColors.length > 0) {
       throw new Error(`Invalid group color(s) '${nonHexColors.join(', ')}': must be Hex (#rrggbb) format`)
     }
