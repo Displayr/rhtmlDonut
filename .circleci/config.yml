@@ -30,6 +30,7 @@ jobs:
             nvm install $node_version
             nvm use $node_version
             npm install
+            npm install github:Displayr/rhtmlBuildUtils#7.2.6
       # install zip - for easier download of snapshots
       - run:
           name: Install 7zip
