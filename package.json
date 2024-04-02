@@ -8,6 +8,7 @@
   "scripts": {
     "prepush": "node ./bin/prepush",
     "preinstall": "([ \"$CI\" != true ] && npx npm-force-resolutions) || true",
+    "build": "gulp build",
     "test": "npm run localTest",
     "localTest": "gulp testSpecs && gulp testVisual --env=local --branch=`git rev-parse --abbrev-ref HEAD`",
     "travisTest": "gulp testSpecs && gulp testVisual --env=travis --branch=$BRANCH",
