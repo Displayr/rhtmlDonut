@@ -1,0 +1,18 @@
+name: Build rhtmlDonut
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    name: Build rhtmlDonut
+    permissions:
+      checks: write
+      contents: read
+    uses: Displayr/nixr-public/.github/workflows/build-flake-installable.yaml@master
+    with:
+      installable-path: pkgs.x86_64-linux.rPackages.rhtmlDonut
+      build-args: --override-input rhtmlDonut .
+      installable-name: rhtmlDonut
+    secrets: inherit
