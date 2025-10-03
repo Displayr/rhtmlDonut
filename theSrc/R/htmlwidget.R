@@ -184,15 +184,15 @@ Donut <- function(
     if (is.null(labels)) { StopForUserError("labels must not be empty") }
     if (is.character(inner.radius) && grepl("^\\d+(\\.\\d+)?%$", inner.radius))
         inner.radius <- as.numeric(sub("%", "", inner.radius)) / 100
-    if (inner.radius >= 1 || inner.radius < 0) { StopForUserError("inner.radius must be 0 or greater and less than 1") }
+    if (inner.radius >= 1 || inner.radius < 0) { stop("inner.radius must be 0 or greater and less than 1") }
 
     if (!is.vector(values)) {
         if (is.matrix(values) || is.data.frame(values))
-            StopForUserError("values must be a vector-like object")
+            stop("values must be a vector-like object")
         if (is.list(values))
             values <- unlist(values)
         else
-            StopForUserError("Data type of values is not recognized")
+            stop("Data type of values is not recognized")
     }
 
     if (all(is.na(values)))
@@ -205,21 +205,21 @@ Donut <- function(
 
     if (!is.vector(labels)) {
         if (is.matrix(labels) || is.data.frame(labels))
-            StopForUserError("labels must be a vector-like object")
+            stop("labels must be a vector-like object")
         if (is.list(labels))
             labels <- unlist(labels)
         else if (is.factor(labels))
             labels <- as.character(labels)
         else
-            StopForUserError("Data type of labels is not recognized")
+            stop("Data type of labels is not recognized")
     }
 
     if (length(labels) != length(values))
-        StopForUserError("length of labels and values must be equal")
+        stop("length of labels and values must be equal")
 
     if (!is.null(values.color)) {
         if (length(values.color) != length(values))
-            StopForUserError("length of values.color and values must be equal")
+            stop("length of values.color and values must be equal")
         values.color = as.array(values.color)
         checkColor(values.color)
     }
@@ -575,7 +575,7 @@ checkColor <- function(colors, input.name = NULL)
         if (!is.null(input.name))
             msg.prefix <- paste0(msg.prefix, " for the ", input.name)
 
-        StopForUserError(msg.prefix, ngettext(n.invalid, " is", " are"),
+        stop(msg.prefix, ngettext(n.invalid, " is", " are"),
              " invalid: ",
              paste0(colors[is.invalid], collapse = ", "),
              ". Colors need to be a valid HTML color ",
