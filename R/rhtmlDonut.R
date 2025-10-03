@@ -97,8 +97,8 @@
 #'                  prefix = "", suffix = "%")
 
 #' @return a donut plot
+#' @importFrom flipU StopForUserError
 #' @export
-#'
 Donut <- function(
     values,
     labels,
@@ -180,51 +180,51 @@ Donut <- function(
     #  * compute group counts
     #  * reorder values and groups depending on order "descending" v "alphabetical" v "initial"
 
-    if (is.null(values)) { stop("values must not be empty") }
-    if (is.null(labels)) { stop("labels must not be empty") }
+    if (is.null(values)) { StopForUserError("values must not be empty") }
+    if (is.null(labels)) { StopForUserError("labels must not be empty") }
     if (is.character(inner.radius) && grepl("^\\d+(\\.\\d+)?%$", inner.radius))
         inner.radius <- as.numeric(sub("%", "", inner.radius)) / 100
-    if (inner.radius >= 1 || inner.radius < 0) { stop("inner.radius must be 0 or greater and less than 1") }
+    if (inner.radius >= 1 || inner.radius < 0) { StopForUserError("inner.radius must be 0 or greater and less than 1") }
 
     if (!is.vector(values)) {
         if (is.matrix(values) || is.data.frame(values))
-            stop("values must be a vector-like object")
+            StopForUserError("values must be a vector-like object")
         if (is.list(values))
             values <- unlist(values)
         else
-            stop("Data type of values is not recognized")
+            StopForUserError("Data type of values is not recognized")
     }
 
     if (all(is.na(values)))
-        stop("A donut/pie chart could not be created as the input values ",
+        StopForUserError("A donut/pie chart could not be created as the input values ",
              "are all missing.")
 
     if (all(values == 0))
-        stop("A donut/pie chart could not be created as the input values ",
+        StopForUserError("A donut/pie chart could not be created as the input values ",
              "are all zero.")
 
     if (!is.vector(labels)) {
         if (is.matrix(labels) || is.data.frame(labels))
-            stop("labels must be a vector-like object")
+            StopForUserError("labels must be a vector-like object")
         if (is.list(labels))
             labels <- unlist(labels)
         else if (is.factor(labels))
             labels <- as.character(labels)
         else
-            stop("Data type of labels is not recognized")
+            StopForUserError("Data type of labels is not recognized")
     }
 
     if (length(labels) != length(values))
-        stop("length of labels and values must be equal")
+        StopForUserError("length of labels and values must be equal")
 
     if (!is.null(values.color)) {
         if (length(values.color) != length(values))
-            stop("length of values.color and values must be equal")
+            StopForUserError("length of values.color and values must be equal")
         values.color = as.array(values.color)
         checkColor(values.color)
     }
     if (length(values) > 5000)
-        stop("A donut/pie chart could not be created with more than 5000 values. ",
+        StopForUserError("A donut/pie chart could not be created with more than 5000 values. ",
              "Ensure that the input data is correct and correctly aggregated.")
     if (!is.null(groups))
         groups = as.array(groups)
@@ -575,7 +575,7 @@ checkColor <- function(colors, input.name = NULL)
         if (!is.null(input.name))
             msg.prefix <- paste0(msg.prefix, " for the ", input.name)
 
-        stop(msg.prefix, ngettext(n.invalid, " is", " are"),
+        StopForUserError(msg.prefix, ngettext(n.invalid, " is", " are"),
              " invalid: ",
              paste0(colors[is.invalid], collapse = ", "),
              ". Colors need to be a valid HTML color ",
