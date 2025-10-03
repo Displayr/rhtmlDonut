@@ -97,8 +97,8 @@
 #'                  prefix = "", suffix = "%")
 
 #' @return a donut plot
+#' @importFrom flipU StopForUserError
 #' @export
-#'
 Donut <- function(
     values,
     labels,
@@ -180,8 +180,8 @@ Donut <- function(
     #  * compute group counts
     #  * reorder values and groups depending on order "descending" v "alphabetical" v "initial"
 
-    if (is.null(values)) { stop("values must not be empty") }
-    if (is.null(labels)) { stop("labels must not be empty") }
+    if (is.null(values)) { StopForUserError("values must not be empty") }
+    if (is.null(labels)) { StopForUserError("labels must not be empty") }
     if (is.character(inner.radius) && grepl("^\\d+(\\.\\d+)?%$", inner.radius))
         inner.radius <- as.numeric(sub("%", "", inner.radius)) / 100
     if (inner.radius >= 1 || inner.radius < 0) { stop("inner.radius must be 0 or greater and less than 1") }
@@ -196,11 +196,11 @@ Donut <- function(
     }
 
     if (all(is.na(values)))
-        stop("A donut/pie chart could not be created as the input values ",
+        StopForUserError("A donut/pie chart could not be created as the input values ",
              "are all missing.")
 
     if (all(values == 0))
-        stop("A donut/pie chart could not be created as the input values ",
+        StopForUserError("A donut/pie chart could not be created as the input values ",
              "are all zero.")
 
     if (!is.vector(labels)) {
@@ -224,7 +224,7 @@ Donut <- function(
         checkColor(values.color)
     }
     if (length(values) > 5000)
-        stop("A donut/pie chart could not be created with more than 5000 values. ",
+        StopForUserError("A donut/pie chart could not be created with more than 5000 values. ",
              "Ensure that the input data is correct and correctly aggregated.")
     if (!is.null(groups))
         groups = as.array(groups)
