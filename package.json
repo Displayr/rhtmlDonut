@@ -32,7 +32,7 @@
     "lodash": "^4.17.21",
     "loglevel": "^1.6.1",
     "rbush": "^3.0.1",
-    "rhtmlParts": "Displayr/rhtmlParts#3.0.0"
+    "rhtmlParts": "Displayr/rhtmlParts#3.0.1"
   },
   "resolutions": {
     "glob-parent": "5.1.2",
