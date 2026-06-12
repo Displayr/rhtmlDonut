@@ -1,5 +1,4 @@
 import _ from 'lodash'
-import $ from 'jquery'
 import RBush from 'rbush'
 import math from '../math'
 
@@ -13,11 +12,15 @@ function _getUniqueId () {
 }
 
 function getLabelDimensionsUsingDivApproximation (inputString, fontSize = 12, fontFamily = 'sans-serif') {
-  const uniqueId = _getUniqueId()
-  const divWrapper = $(`<div id="${uniqueId}" style="display:inline-block; font-size: ${fontSize}px; font-family: ${fontFamily}">${inputString}</div>`)
-  $(document.body).append(divWrapper)
-  const { width, height } = document.getElementById(uniqueId).getBoundingClientRect()
-  divWrapper.remove()
+  const testElement = document.createElement('div')
+  testElement.id = _getUniqueId()
+  testElement.style.display = 'inline-block'
+  testElement.style.fontSize = `${fontSize}px`
+  testElement.style.fontFamily = fontFamily
+  testElement.textContent = inputString
+  document.body.appendChild(testElement)
+  const { width, height } = testElement.getBoundingClientRect()
+  testElement.remove()
   return { width, height }
 }
 
