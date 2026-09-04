@@ -7,7 +7,14 @@ const config = {
   widgetName: 'rhtmlDonut',
   internalWebSettings: {
     isReadySelector: 'div[rhtmlwidget-status=ready]',
-    singleWidgetSnapshotSelector: 'svg.svgContent',
+    // A union, because the error path renders no svg at all: DisplayError is handed the widget
+    // container, empties it -- taking svg.svgContent with it -- and appends .rhtml-error-container.
+    // So error_handling/color_array_length.yaml, whose entire point is "a colour array length
+    // mismatch causes a VISIBLE error", matched nothing. Under 7.1.1 that reported green having
+    // compared no images at all; 9.0.0 fails an empty match instead, which is what surfaced it.
+    // Adding the error container makes that plan snapshot what it always claimed to. Normal pages are
+    // unaffected -- .rhtml-error-container only exists when a widget has thrown.
+    singleWidgetSnapshotSelector: 'svg.svgContent, .rhtml-error-container',
     includeDimensionsOnWidgetDiv: true,
     default_border: true,
     css: [
