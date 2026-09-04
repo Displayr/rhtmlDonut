@@ -93,6 +93,26 @@ gh run download <run-id> -n regenerated-baselines -D theSrc/test/snapshots/ci
 gh run download <run-id> -n snapshot-diffs -D .tmp/diffs
 ```
 
+### Known flake: three tooltip snapshots
+
+`c1a_segment_tooltip_wrapping_default_settings`, `c1c_segment_tooltip_styling` and
+`d1_segment_autocolor` fail intermittently on CI, a different subset each run. Two runs of the
+identical commit failed on `{c1a, c1c, d1}` and `{c1c, d1}` respectively. The diff is 2-4% of pixels
+and the visible symptom is the tooltip's background rect missing behind text that is otherwise
+correct and correctly positioned.
+
+It is not a regression from the 9.0.0 migration and it does not reproduce locally (three consecutive
+comparison runs on Windows were clean), so it needs instrumenting on a runner rather than on a dev
+machine. The tooltip rect gets its width and height from `helpers.getDimensions()`, which is
+`getBBox()` on the tooltip group with a silent `{w: 0, h: 0}` fallback, called during `draw()` — so a
+group that measures as empty at draw time yields exactly this. That is the suspected mechanism, not a
+confirmed one.
+
+The thresholds are deliberately NOT loosened to paper over it: 2-4% is far more than antialiasing, and
+a threshold wide enough to swallow it would stop these three tests detecting anything real. So a red
+`Visual regression tests` job naming only these three is the known flake; check the failing names
+against this list before assuming a regression.
+
 CI deliberately does not commit the baselines for you. A push made with the default `GITHUB_TOKEN`
 does not trigger any workflow, and `workflow_dispatch` check runs are excluded from a pull request's
 status rollup — so a bot-authored head commit would leave the PR reporting no checks. Pushing the
