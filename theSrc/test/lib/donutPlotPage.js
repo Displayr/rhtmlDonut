@@ -1,4 +1,3 @@
-
 class DonutPlotPage {
   constructor (page) {
     this.page = page

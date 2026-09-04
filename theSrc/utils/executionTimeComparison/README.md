@@ -2,11 +2,11 @@
 
 Record snapshot logs from Branch A
 
-    gulp testVisual_s -t some_test_subset 2>&1 | tee -a theSrc/utils/executionTimeComparison/logs/some_test_subset_A.log
+    npx rhtml testVisual_s -t some_test_subset 2>&1 | tee -a theSrc/utils/executionTimeComparison/logs/some_test_subset_A.log
     
 Record snapshot logs from Branch B    
 
-    gulp testVisual_s -t some_test_subset 2>&1 | tee -a theSrc/utils/executionTimeComparison/logs/some_test_subset_B.log
+    npx rhtml testVisual_s -t some_test_subset 2>&1 | tee -a theSrc/utils/executionTimeComparison/logs/some_test_subset_B.log
     
 Process log files
 

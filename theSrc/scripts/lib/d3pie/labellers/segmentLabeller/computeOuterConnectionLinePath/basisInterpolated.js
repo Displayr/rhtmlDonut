@@ -1,8 +1,8 @@
 module.exports = ({ labelData, basisInterpolationFunction }) => {
   let segmentCoord = labelData.segmentMidpointCoord
-  let intermediateLineCoord = { type: 'mid' } // TODO do I need type 'mid' ?
+  let intermediateLineCoord
   let labelCoord = labelData.lineConnectorCoord
-  let pathType = null
+  let pathType
 
   if (labelData.linePointsToYOrigin) {
     const totalXDelta = Math.abs(segmentCoord.x - labelCoord.x)

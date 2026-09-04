@@ -81,7 +81,7 @@ class PieWrapper {
     this.pieGroup = this.outerSvg.append('g')
       .attr('class', 'pieGroup')
 
-    this.pie = new d3pie(this.pieGroup.node(), { // eslint-disable-line new-cap
+    this.pie = new d3pie(this.pieGroup.node(), {
       size: {
         labelThreshold: absencePreservingParseFloat(this._settings.canvasSizeDrawLabelThreshold),
         labelOffset: absencePreservingParseFloat(this._settings.labelOffset),
@@ -343,10 +343,10 @@ class PieWrapper {
     const values = this.pieData.map(({ value }) => value)
     const firstValueEqualLastValue = _.first(values) === _.last(values)
     const isSortedAscending = _.every(values, (value, index, array) =>
-      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
+      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value),
     ) && !firstValueEqualLastValue
     const isSortedDescending = _.every(values, (value, index, array) =>
-      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
+      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value),
     ) && !firstValueEqualLastValue
     const valuesOrder = (isSortedDescending)
       ? 'descending'
