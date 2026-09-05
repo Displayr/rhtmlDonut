@@ -129,12 +129,30 @@ still becomes ready immediately.
 For a group segment that is exactly where its own group label sits: at 190x190,
 `elementFromPoint` on the centre of `donut-0gsegment0` returned the `tspan` reading `0 - 5:`, whose
 `pointer-events` was `auto`, so the text swallowed the event and the segment never highlighted. The
-nearest point that did hit the segment was 7px away, which is well inside the margin that changing
-font metrics move a label by — which is why `b1_hover_over_group_segment_0_no_tooltip` highlighted in
-the December 2021 baseline and stopped highlighting later, on the same code.
+nearest point that did hit the segment was 7px away.
 
 This was never only a test problem: a user hovering the middle of a segment, over its own label, got
 no highlight either.
+
+`b1_hover_over_group_segment_0_no_tooltip` did highlight in the December 2021 baseline, and it is
+worth being precise about why that is not evidence of a regression, because the obvious explanations
+are all wrong:
+
+* **No handler broke.** `groupLabeller.addEventHandlers` was introduced in October 2020, a year
+  before those baselines, and has never been called from anywhere — so `hoverOnGroupSegmentLabel` has
+  always been dead code and the group label has never had behaviour of its own.
+* **The label did not move.** Its glyph ink at the hover point is pixel-identical in the two
+  baselines: same bounding box, same `.##..` pattern on the same row, dark centre pixel in both.
+* **The test did not change.** `hoverOverGroupSegment` and the b-series test are byte-identical to
+  their 2021 form, same selector and same 190x190 config.
+
+What is left is how puppeteer and Chrome resolve a mouse event at that pixel — the 2021 pair
+delivered it to the `path` underneath, the current pair delivers it to the `text` on top. Which of
+the two changed cannot be settled without running the 2021 browser, and does not affect the fix.
+
+The point is that the old behaviour was luck. The test has always aimed at a pixel covered by the
+label, and simply happened to get the segment. `pointer-events: none` makes that deterministic
+instead of dependent on a browser's hit-testing of one pixel.
 
 Inner labels and group labels are now `pointer-events: none`, so the hover reaches the segment
 underneath. Neither had any behaviour to lose — `SegmentLabeller.addEventHandlers` binds
