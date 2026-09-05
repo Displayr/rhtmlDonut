@@ -93,25 +93,52 @@ gh run download <run-id> -n regenerated-baselines -D theSrc/test/snapshots/ci
 gh run download <run-id> -n snapshot-diffs -D .tmp/diffs
 ```
 
-### Known flake: three tooltip snapshots
+### The load animation and `rhtmlwidget-status=ready`
 
-`c1a_segment_tooltip_wrapping_default_settings`, `c1c_segment_tooltip_styling` and
-`d1_segment_autocolor` fail intermittently on CI, a different subset each run. Two runs of the
-identical commit failed on `{c1a, c1c, d1}` and `{c1c, d1}` respectively. The diff is 2-4% of pixels
-and the visible symptom is the tooltip's background rect missing behind text that is otherwise
-correct and correctly positioned.
+Worth knowing before you read a diff in the interaction tests, because it produced two different
+symptoms that looked unrelated.
 
-It is not a regression from the 9.0.0 migration and it does not reproduce locally (three consecutive
-comparison runs on Windows were clean), so it needs instrumenting on a runner rather than on a dev
-machine. The tooltip rect gets its width and height from `helpers.getDimensions()`, which is
-`getBBox()` on the tooltip group with a silent `{w: 0, h: 0}` fallback, called during `draw()` — so a
-group that measures as empty at draw time yields exactly this. That is the suspected mechanism, not a
-confirmed one.
+`PieWrapper.draw()` used to set `rhtmlwidget-status=ready` synchronously, immediately after `_draw()`
+had *scheduled* the load transition. The segments grow from zero over `effects.load.speed` (1000ms by
+default) and the labels then fade in over a further 400ms, so ready was announced about 1.4 seconds
+before the widget stopped moving. Measured per animation frame: ready at t+1089ms, geometry still
+changing until t+2101ms.
 
-The thresholds are deliberately NOT loosened to paper over it: 2-4% is far more than antialiasing, and
-a threshold wide enough to swallow it would stop these three tests detecting anything real. So a red
-`Visual regression tests` job naming only these three is the known flake; check the failing names
-against this list before assuming a regression.
+Everything that waits on that attribute was therefore looking at a donut mid-animation — the visual
+suite's `waitForWidgetToLoad`, and any consumer that screenshots on ready, which includes Displayr's
+export path. Two consequences showed up in the baselines:
+
+* **Snapshots caught the segments part-grown.** Measuring the 49.3% group wedge in
+  `a1_hover_over_segment_10`, which should subtend 177.5 degrees: 176.1 with the animation settled,
+  but 171.3 in the CI baseline and 166.0 in the December 2021 travis one. Both CI runs screenshotted
+  early, just by different amounts.
+* **The first hover of each test could miss.** `hover()` picks its target from geometry that is still
+  growing, and the browser does not re-fire mouseover for a stationary cursor when elements move
+  underneath it. Every snapshot that was unstable — `a1`, `b1`, `c1a`, `c1b`, `c1c`, `d1` — is the
+  first hover after a page load; every second-or-later hover was stable.
+
+`draw()` now defers the ready attribute until the whole load animation has finished, and
+`theSrc/test/bin/readyAfterAnimation.jest.test.js` asserts that nothing is still moving when ready is
+announced. `totalLoadAnimationDuration()` in the segment labeller's `draw.js` is the single definition
+of how long that takes; a redraw does not animate and clears the previous elements first, so resize
+still becomes ready immediately.
+
+### Known issue: b1 hovers the label, not the segment
+
+`b1_hover_over_group_segment_0_no_tooltip` is NOT fixed by the above, and its baseline shows the
+segment unhighlighted where the 2021 one shows it highlighted.
+
+`page.hover()` aims at the centre of the element's box. For `donut-0gsegment0` at 190x190 that point
+is covered by its own group label — `elementFromPoint` there returns the `tspan` reading `0 - 5:`,
+whose `pointer-events` is `auto`, so the text swallows the event and the segment never sees it. The
+nearest point that does hit the segment is 7px away, which is well inside the margin that changing
+font metrics move a label by, so the 2021 run landing on bare segment and the current one landing on
+a glyph is the expected outcome of the same test on two different font stacks.
+
+That is arguably a widget bug rather than a test one: a user hovering the middle of a segment, over
+its own label, gets no highlight either. Giving the segment labels `pointer-events: none` would fix
+both, but it changes widget behaviour and rebaselines snapshots, so it is deliberately left alone
+here.
 
 CI deliberately does not commit the baselines for you. A push made with the default `GITHUB_TOKEN`
 does not trigger any workflow, and `workflow_dispatch` check runs are excluded from a pull request's

@@ -56,6 +56,14 @@ const drawLabelSet = ({
     })
 }
 
+// The labels fade in only once the segments have finished growing, so the load animation as a whole
+// runs for animationConfig.speed + LABEL_FADE_IN_MS. PieWrapper needs that total to know when the
+// widget has actually stopped moving, which is why this is a shared constant rather than a literal.
+const LABEL_FADE_IN_MS = 400
+
+const totalLoadAnimationDuration = ({ effect, speed }) =>
+  (effect === 'default') ? speed + LABEL_FADE_IN_MS : 0
+
 const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   const { effect, speed } = animationConfig
   const { svg, cssPrefix } = canvas
@@ -64,7 +72,7 @@ const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   let loadSpeed = (effect === 'default') ? speed : 1
 
   setTimeout(function () {
-    let labelFadeInTime = (effect === 'default') ? 400 : 1 // 400 is hardcoded for the present
+    let labelFadeInTime = (effect === 'default') ? LABEL_FADE_IN_MS : 1
 
     svg.selectAll('.' + cssPrefix + 'labelGroup-outer')
       .transition()
@@ -167,4 +175,5 @@ module.exports = {
   drawOuterLabelLines,
   drawInnerLabelLines,
   fadeInLabelsAndLines,
+  totalLoadAnimationDuration,
 }

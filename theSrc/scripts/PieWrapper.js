@@ -5,6 +5,7 @@ import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
+import { totalLoadAnimationDuration } from './lib/d3pie/labellers/segmentLabeller/draw'
 import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
 import { name, version } from '../../package.json'
 
@@ -181,12 +182,27 @@ class PieWrapper {
       .attr(name, version)
       .attr(`rhtmlwidget-status`, 'loading')
 
-    this._draw()
+    const loadAnimationMs = this._draw()
 
-    wrappedElement
-      .attr(`rhtmlwidget-status`, 'ready')
+    // NB ready must not be announced while the widget is still moving. This used to be set here
+    // synchronously, immediately after _draw() had SCHEDULED the load transition -- so it claimed ready
+    // about 1.4 seconds early (segments grow over effects.load.speed, then labels fade in over another
+    // 400ms). Everything that waits on this attribute was therefore looking at a donut mid-animation:
+    // the visual suite's waitForWidgetToLoad, and any consumer that screenshots on ready.
+    //
+    // A redraw does not animate and clears the previous elements first (Segments.clearPreviousFromCanvas),
+    // which kills any transition still running on them, so resize still becomes ready immediately.
+    clearTimeout(this._readyTimer)
+    if (loadAnimationMs > 0) {
+      this._readyTimer = setTimeout(() => {
+        wrappedElement.attr(`rhtmlwidget-status`, 'ready')
+      }, loadAnimationMs)
+    } else {
+      wrappedElement.attr(`rhtmlwidget-status`, 'ready')
+    }
   }
 
+  // Returns the duration in ms of the load animation it started, or 0 if nothing is animating.
   _draw () {
     const { width, height } = getContainerDimensions(this.outerContainer)
     rootLogger.info(`draw called. Width: ${width}, height: ${height}`)
@@ -197,7 +213,7 @@ class PieWrapper {
       rootLogger.info(`${width}x${height} is below minimum size of ${drawThreshold}. Cancel render and leave canvas blank`)
       $(this.outerContainer).find('*').remove()
       this.initialDrawComplete = false
-      return
+      return 0
     }
 
     if (!this.initialDrawComplete) {
@@ -255,6 +271,11 @@ class PieWrapper {
       if (!this.initialDrawComplete) {
         this.pie.draw()
         this.initialDrawComplete = true
+
+        // NB read the duration off the d3pie instance, not this._settings: the settings here are
+        // absence-preserving, so speed is undefined unless the user set it, and it is d3pie that
+        // merges defaultSettings over the top.
+        return totalLoadAnimationDuration(this.pie.options.effects.load)
       } else {
         this.pie.redraw()
       }
@@ -265,6 +286,8 @@ class PieWrapper {
       //   .attr('width', width)
       //   .attr('height', donutPlotHeight)
     }
+
+    return 0
   }
 
   setConfig (newConfig) {
