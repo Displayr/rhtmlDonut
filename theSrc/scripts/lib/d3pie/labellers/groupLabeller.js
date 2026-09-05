@@ -55,6 +55,10 @@ class GroupLabeller {
       .attr('class', `${cssPrefix}labelGroup-group`)
       .attr('data-index', (d, i) => i)
       .style('opacity', 1)
+      // NB a group label sits in the middle of its own group segment, which is exactly where
+      // page.hover() and a real user aim. addEventHandlers() below is never called from anywhere, so
+      // these labels had no behaviour of their own and only swallowed the segment's mouseover.
+      .style('pointer-events', 'none')
       .append('text')
       .attr('class', cssPrefix + 'segmentMainLabel-group')
       .attr('id', (d, i) => `${cssPrefix}segmentMainLabel${i}-group`)

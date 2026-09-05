@@ -25,6 +25,12 @@ const drawLabelSet = ({
     .attr('class', `${cssPrefix}labelGroup-${labelType}`)
     .attr('transform', function ({ topLeftCoord }) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
     .style('opacity', 1)
+    // NB inner labels are drawn over their own segment, and nothing listens to them --
+    // addEventHandlers only binds labelGroup-outer -- so leaving them hit-testable meant a hover
+    // landing on the label text was swallowed instead of highlighting the segment underneath.
+    // Outer labels keep pointer-events, because they have handlers of their own and have no segment
+    // beneath them to fall through to.
+    .style('pointer-events', (labelType === 'outer') ? null : 'none')
     // TODO repeated code for segments, groupsegments, labels, grouplabels
     .style('cursor', 'pointer')
     .style('-webkit-touch-callout', 'none')

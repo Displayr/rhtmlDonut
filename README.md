@@ -123,22 +123,29 @@ announced. `totalLoadAnimationDuration()` in the segment labeller's `draw.js` is
 of how long that takes; a redraw does not animate and clears the previous elements first, so resize
 still becomes ready immediately.
 
-### Known issue: b1 hovers the label, not the segment
+### Labels over segments do not swallow the hover
 
-`b1_hover_over_group_segment_0_no_tooltip` is NOT fixed by the above, and its baseline shows the
-segment unhighlighted where the 2021 one shows it highlighted.
+`page.hover()` aims at the centre of an element's box, and so does a real user aiming at a segment.
+For a group segment that is exactly where its own group label sits: at 190x190,
+`elementFromPoint` on the centre of `donut-0gsegment0` returned the `tspan` reading `0 - 5:`, whose
+`pointer-events` was `auto`, so the text swallowed the event and the segment never highlighted. The
+nearest point that did hit the segment was 7px away, which is well inside the margin that changing
+font metrics move a label by — which is why `b1_hover_over_group_segment_0_no_tooltip` highlighted in
+the December 2021 baseline and stopped highlighting later, on the same code.
 
-`page.hover()` aims at the centre of the element's box. For `donut-0gsegment0` at 190x190 that point
-is covered by its own group label — `elementFromPoint` there returns the `tspan` reading `0 - 5:`,
-whose `pointer-events` is `auto`, so the text swallows the event and the segment never sees it. The
-nearest point that does hit the segment is 7px away, which is well inside the margin that changing
-font metrics move a label by, so the 2021 run landing on bare segment and the current one landing on
-a glyph is the expected outcome of the same test on two different font stacks.
+This was never only a test problem: a user hovering the middle of a segment, over its own label, got
+no highlight either.
 
-That is arguably a widget bug rather than a test one: a user hovering the middle of a segment, over
-its own label, gets no highlight either. Giving the segment labels `pointer-events: none` would fix
-both, but it changes widget behaviour and rebaselines snapshots, so it is deliberately left alone
-here.
+Inner labels and group labels are now `pointer-events: none`, so the hover reaches the segment
+underneath. Neither had any behaviour to lose — `SegmentLabeller.addEventHandlers` binds
+`labelGroup-outer` only, and `groupLabeller.addEventHandlers` is defined but never called from
+anywhere, so `hoverOnGroupSegmentLabel` was dead code.
+
+**Outer labels deliberately keep `pointer-events`.** They have working handlers of their own
+(`hoverOnSegmentLabel` highlights both the segment and the label, which is what
+`a6_hover_over_label_12` covers) and they sit outside the donut, so there is no segment beneath them
+to fall through to. Making them transparent to the mouse would lose the interaction rather than pass
+it down.
 
 CI deliberately does not commit the baselines for you. A push made with the default `GITHUB_TOKEN`
 does not trigger any workflow, and `workflow_dispatch` check runs are excluded from a pull request's
