@@ -112,6 +112,10 @@ let math = {
     return angle
   },
 
+  // Brings an angle in degrees back into [0, 360), in either direction. NB the modulo is applied
+  // twice because javascript's % keeps the sign of the dividend, so -0.5 % 360 is -0.5, not 359.5.
+  normaliseAngle: (angleInDegrees) => ((angleInDegrees % 360) + 360) % 360,
+
   inclusiveBetween: (a, b, c) => (a <= b && b <= c),
   exclusiveBetween: (a, b, c) => (a < b && b < c),
   between: (a, b, c) => (a <= b && b < c),
