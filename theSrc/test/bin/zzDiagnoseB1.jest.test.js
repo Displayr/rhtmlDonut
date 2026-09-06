@@ -59,10 +59,39 @@ describe('diagnoseB1', () => {
     console.log('B1DIAG boxes containing the point (' + before.coveringCount + '):')
     before.covering.forEach(c => console.log('B1DIAG   ' + c))
 
+    const fill = () => page.evaluate(() => document.getElementById('donut-0gsegment0').style.fill || '(none)')
+    const mouse = () => page.evaluate(() => window.__lastMouse || '(no mousemove seen)')
+    await page.evaluate(() => {
+      window.__mouseEvents = []
+      const seg = document.getElementById('donut-0gsegment0')
+      for (const type of ['mouseover', 'mouseout', 'mousemove']) {
+        seg.addEventListener(type, (e) => {
+          window.__mouseEvents.push(type + '@' + Math.round(e.clientX) + ',' + Math.round(e.clientY))
+          window.__lastMouse = Math.round(e.clientX) + ',' + Math.round(e.clientY)
+        })
+      }
+    })
+
+    // Replicate exactly what testSnapshots does, reading the fill at each step.
     await page.hover('#donut-0gsegment0')
-    await new Promise(resolve => setTimeout(resolve, 400))
-    const fill = await page.evaluate(() => document.getElementById('donut-0gsegment0').style.fill || '(none)')
-    console.log('B1DIAG fill after hover: ' + fill + '  (rgb(121, 173, 210) means highlighted)')
+    console.log('B1DIAG 1. immediately after hover()      : ' + await fill())
+
+    await new Promise(resolve => setTimeout(resolve, 500)) // snapshotDelay
+    console.log('B1DIAG 2. after snapshotDelay 500ms      : ' + await fill())
+
+    const widgets = await page.$$('svg.svgContent, .rhtml-error-container')
+    console.log('B1DIAG 3. widgets matched                : ' + widgets.length)
+    console.log('B1DIAG 4. after page.$$                  : ' + await fill())
+
+    for (const w of widgets) {
+      await w.screenshot({ encoding: 'base64' })
+    }
+    console.log('B1DIAG 5. AFTER element screenshot       : ' + await fill())
+    console.log('B1DIAG    last mouse position seen by seg: ' + await mouse())
+    console.log('B1DIAG    events on segment              : ' +
+      JSON.stringify(await page.evaluate(() => window.__mouseEvents)))
+    console.log('B1DIAG    scrollY / body size            : ' +
+      JSON.stringify(await page.evaluate(() => [window.scrollY, document.body.scrollWidth, document.body.scrollHeight, window.innerWidth, window.innerHeight])))
 
     await page.close()
     expect(true).toBe(true)
