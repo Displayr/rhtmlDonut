@@ -4,6 +4,7 @@ import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
 import { labelLogger } from '../../../../../logger'
+import { normaliseAngle } from '../../../../math'
 
 const CC = 'COUNTER_CLOCKWISE'
 const CW = 'CLOCKWISE'
@@ -17,8 +18,6 @@ const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
 ]
-
-const boundedAngle = (angle) => (angle < 0) ? 360 - angle : angle % 360
 
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
@@ -182,8 +181,8 @@ class DescendingOrderCollisionResolver {
           const nearestLargerNeighbor = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
           if (nearestLargerNeighbor && nearestLargerNeighbor.labelAngle > label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: detected ${label.shortText} got left behind. Pushing Pushing ${CW}`)
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
           }
 
           const labelLineAngleExceededTooFarClockWise = (label) =>
@@ -210,8 +209,8 @@ class DescendingOrderCollisionResolver {
                 labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle + angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle + angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(label.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(label.labelAngle + angleIncrement))
           }
 
           if (labelLogger.isDebugEnabled()) {
@@ -268,8 +267,8 @@ class DescendingOrderCollisionResolver {
           const nearestSmallerNeighbor = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
           if (nearestSmallerNeighbor && nearestSmallerNeighbor.labelAngle < label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${CC}: detected ${label.shortText} got left behind. Pushing ${CC}`)
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
           }
 
           const labelLineAngleExceededTooFarCounterClockWise = (label) =>
@@ -296,8 +295,8 @@ class DescendingOrderCollisionResolver {
                 labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle - angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle - angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(label.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(label.labelAngle - angleIncrement))
           }
 
           if (labelLogger.isDebugEnabled()) {

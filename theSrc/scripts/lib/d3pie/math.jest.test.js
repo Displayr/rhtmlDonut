@@ -1,5 +1,45 @@
 const math = require('./math')
 
+describe('math.normaliseAngle', () => {
+  it('leaves angles already in [0, 360) untouched', () => {
+    expect(math.normaliseAngle(0)).toEqual(0)
+    expect(math.normaliseAngle(0.5)).toEqual(0.5)
+    expect(math.normaliseAngle(180)).toEqual(180)
+    expect(math.normaliseAngle(359.5)).toEqual(359.5)
+  })
+
+  it('wraps angles at or above 360 back into range', () => {
+    expect(math.normaliseAngle(360)).toEqual(0)
+    expect(math.normaliseAngle(360.5)).toEqual(0.5)
+    expect(math.normaliseAngle(720)).toEqual(0)
+  })
+
+  // NB the reason this fn exists. The previous implementation returned `360 - angle` for negatives,
+  // which sends -0.5 to 360.5 (i.e. further counter clockwise past the seam rather than just below
+  // it). See RS-23152.
+  it('wraps negative angles back into range', () => {
+    expect(math.normaliseAngle(-0.5)).toEqual(359.5)
+    expect(math.normaliseAngle(-1)).toEqual(359)
+    expect(math.normaliseAngle(-90)).toEqual(270)
+    expect(math.normaliseAngle(-360)).toEqual(0)
+    expect(math.normaliseAngle(-360.5)).toEqual(359.5)
+  })
+
+  // RS-23152: stepping counter clockwise by a fixed increment must always make progress. The old
+  // implementation formed a closed cycle across the seam (0 -> 360.5 -> 0 -> ...), so the collision
+  // resolver's `while` loop could never terminate.
+  it('stepping counter clockwise across the seam always makes progress', () => {
+    const increment = 0.5
+    let angle = 2
+    const visited = new Set()
+    for (let step = 0; step < 720; step++) {
+      angle = math.normaliseAngle(angle - increment)
+      expect(visited.has(angle)).toBe(false)
+      visited.add(angle)
+    }
+  })
+})
+
 describe('math.angleAbsoluteDifference', () => {
   it('simple', () => {
     expect(math.angleAbsoluteDifference(1, 2)).toEqual(1)
