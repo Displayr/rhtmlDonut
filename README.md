@@ -165,6 +165,27 @@ anywhere, so `hoverOnGroupSegmentLabel` was dead code.
 to fall through to. Making them transparent to the mouse would lose the interaction rather than pass
 it down.
 
+### `-u` does not refresh a snapshot that passes
+
+Worth knowing when a baseline looks stale after a regeneration run.
+`jest-image-snapshot` only rewrites a snapshot that FAILED
+(`shouldUpdate = updateSnapshot && (!pass || (pass && updatePassedSnapshot))`, and
+`updatePassedSnapshot` is not set here). So a change smaller than the failure threshold is invisible
+twice over: it does not fail the run, and `rhtml testVisual -u` leaves the old image in place.
+
+That bit once already. `tooltip_interaction` sets `failureThreshold: 8000` pixels, and making the
+group labels `pointer-events: none` changed `b1_hover_over_group_segment_0_no_tooltip` by 978 pixels
+— a real behavioural change, from the segment not highlighting to highlighting — which passed, was
+never rewritten, and so left a committed baseline depicting the old broken behaviour. The fix was
+working on the runner the whole time; only the baseline was stale.
+
+To force one: delete the baseline file and regenerate, since a missing baseline counts as added and
+is always written.
+
+The 8000 pixel threshold is generous enough to hide changes of that size in general. It was set when
+these tests were genuinely flaky; now that the load-animation race is fixed and the diffs are
+repeatable run to run, it is probably worth tightening, but that is its own change.
+
 CI deliberately does not commit the baselines for you. A push made with the default `GITHUB_TOKEN`
 does not trigger any workflow, and `workflow_dispatch` check runs are excluded from a pull request's
 status rollup — so a bot-authored head commit would leave the PR reporting no checks. Pushing the
