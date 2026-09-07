@@ -100,9 +100,18 @@ symptoms that looked unrelated.
 
 `PieWrapper.draw()` used to set `rhtmlwidget-status=ready` synchronously, immediately after `_draw()`
 had *scheduled* the load transition. The segments grow from zero over `effects.load.speed` (1000ms by
-default) and the labels then fade in over a further 400ms, so ready was announced about 1.4 seconds
-before the widget stopped moving. Measured per animation frame: ready at t+1089ms, geometry still
-changing until t+2101ms.
+default), so ready was announced about a second before the widget stopped moving. Measured per
+animation frame: ready at t+1089ms, geometry still changing until t+2101ms.
+
+`totalLoadAnimationDuration()` returns `speed`, deliberately **not** `speed + LABEL_FADE_IN_MS`.
+`fadeInLabelsAndLines` looks like it adds 400ms but is a no-op: its first transition takes
+`.labelGroup-outer` to `opacity: 1` when `drawLabelSet` has already set those same groups to
+`opacity: 1`, and its second selection, `g.<prefix>lineGroups`, matches nothing because the elements
+are classed `<prefix>lineGroups-outer` / `-inner` and a class selector matches whole tokens rather
+than prefixes. Waiting for it would delay every initial render — and Displayr's export — by 400ms for
+a fade that never happens, and would leave `readyAfterAnimation.jest.test.js` enough slack to pass
+even if ready were announced early. Either fix those two selectors or leave the fade alone; do not
+put the constant back into the duration without doing one of them.
 
 Everything that waits on that attribute was therefore looking at a donut mid-animation — the visual
 suite's `waitForWidgetToLoad`, and any consumer that screenshots on ready, which includes Displayr's
@@ -119,7 +128,15 @@ export path. Two consequences showed up in the baselines:
 
 `draw()` now defers the ready attribute until the whole load animation has finished, and
 `theSrc/test/bin/readyAfterAnimation.jest.test.js` asserts that nothing is still moving when ready is
-announced. `totalLoadAnimationDuration()` in the segment labeller's `draw.js` is the single definition
+announced.
+
+Deferring it introduces a failure mode that did not exist while ready was synchronous, so the timer is
+cancelled in `reset()` as well as in `draw()`. `renderValue` runs `reset()` -> `setConfig()` ->
+`draw()` inside a `try`, and `setConfig` throws on invalid input, so `draw()` — which cancels the
+timer — is never reached; a timer from the previous successful render would otherwise fire and stamp
+ready on a container now showing only `.rhtml-error-container`. `draw()` also cancels before `_draw()`
+rather than after, because `resize()` reaches `draw()` with no `reset()` in front of it and `_draw()`
+can throw there too. Both are covered by the second test in that file. `totalLoadAnimationDuration()` in the segment labeller's `draw.js` is the single definition
 of how long that takes; a redraw does not animate and clears the previous elements first, so resize
 still becomes ready immediately.
 

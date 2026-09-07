@@ -62,13 +62,27 @@ const drawLabelSet = ({
     })
 }
 
-// The labels fade in only once the segments have finished growing, so the load animation as a whole
-// runs for animationConfig.speed + LABEL_FADE_IN_MS. PieWrapper needs that total to know when the
-// widget has actually stopped moving, which is why this is a shared constant rather than a literal.
 const LABEL_FADE_IN_MS = 400
 
+// How long the widget is still moving after draw() schedules the load animation. PieWrapper uses this
+// to decide when rhtmlwidget-status=ready may be announced.
+//
+// NB this is `speed`, NOT `speed + LABEL_FADE_IN_MS`, because fadeInLabelsAndLines below is a no-op
+// and nothing is animating during that extra 400ms:
+//
+//   * its first transition takes .labelGroup-outer to opacity 1, but drawLabelSet already sets those
+//     same groups to opacity 1, so it tweens 1 to 1;
+//   * its second selection, `g.<prefix>lineGroups`, matches nothing -- the elements are classed
+//     <prefix>lineGroups-outer and <prefix>lineGroups-inner, and a class selector matches whole
+//     tokens rather than prefixes -- and those groups are created at opacity 1 regardless.
+//
+// So the widget stops moving when the segments finish growing, at `speed`. Including the fade would
+// delay ready, and therefore Displayr's export and the visual suite's snapshotDelay, by 400ms per
+// initial render for a fade that never happens. It would also leave readyAfterAnimation.jest.test.js
+// 400ms of slack, so it would pass even if ready were announced early -- it would not pin the
+// boundary it exists to pin.
 const totalLoadAnimationDuration = ({ effect, speed }) =>
-  (effect === 'default') ? speed + LABEL_FADE_IN_MS : 0
+  (effect === 'default') ? speed : 0
 
 const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   const { effect, speed } = animationConfig

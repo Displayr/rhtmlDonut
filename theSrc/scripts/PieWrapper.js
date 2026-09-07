@@ -35,8 +35,20 @@ class PieWrapper {
   }
 
   reset () {
+    // NB cancel here as well as in draw(). renderValue runs reset() -> setConfig() -> draw() inside a
+    // try, and setConfig throws on invalid input (a colour array length mismatch, say). draw() is then
+    // never reached, so without this a ready timer scheduled by the PREVIOUS successful render would
+    // still fire and stamp rhtmlwidget-status=ready on a container now holding only the error message.
+    // Anything polling that attribute -- Displayr's export among them -- would read a failed render as
+    // a finished one. That failure mode did not exist while ready was set synchronously.
+    this._cancelPendingReady()
     this.initialDrawComplete = false
     $(this.outerContainer).find('*').remove()
+  }
+
+  _cancelPendingReady () {
+    clearTimeout(this._readyTimer)
+    this._readyTimer = null
   }
 
   initialiseComponents () {
@@ -182,6 +194,9 @@ class PieWrapper {
       .attr(name, version)
       .attr(`rhtmlwidget-status`, 'loading')
 
+    // Before _draw(), which can itself throw -- resize() calls draw() with no reset() in front of it.
+    this._cancelPendingReady()
+
     const loadAnimationMs = this._draw()
 
     // NB ready must not be announced while the widget is still moving. This used to be set here
@@ -192,7 +207,6 @@ class PieWrapper {
     //
     // A redraw does not animate and clears the previous elements first (Segments.clearPreviousFromCanvas),
     // which kills any transition still running on them, so resize still becomes ready immediately.
-    clearTimeout(this._readyTimer)
     if (loadAnimationMs > 0) {
       this._readyTimer = setTimeout(() => {
         wrappedElement.attr(`rhtmlwidget-status`, 'ready')
