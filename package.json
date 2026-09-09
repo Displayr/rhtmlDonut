@@ -25,6 +25,9 @@
     "deleteDiffs": "find theSrc/test/snapshots -iname '__diff_output__' | xargs rm -rf"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "babel-jest": "^29.7.0",
     "inquirer": "^8.2.6",
     "jest": "^29.7.0",
     "rhtmlBuildUtils": "github:Displayr/rhtmlBuildUtils#9.0.0",

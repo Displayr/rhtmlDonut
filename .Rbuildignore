@@ -1,4 +1,5 @@
 eslint.config.js
+babel.config.js
 .github
 .*\.Rproj$
 ^\.Rproj\.user$
