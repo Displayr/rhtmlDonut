@@ -100,6 +100,9 @@ class DescendingOrderCollisionResolver {
 
     const maxSweeps = 18
     const angleIncrement = 0.5
+    // One full revolution. A label that has been walked this far counter clockwise is back at the
+    // angle it started from, which is known to be colliding, so there is no valid slot to find.
+    const maxMovesPerLabel = Math.ceil(360 / angleIncrement)
 
     const sweepState = {
       direction: CW,
@@ -280,9 +283,11 @@ class DescendingOrderCollisionResolver {
               // || (label.inTopLeftQuadrant && label.labelAngle > 270)
             )
 
+          let movesRemaining = maxMovesPerLabel
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            !labelLineAngleExceededTooFarCounterClockWise(label)
+            !labelLineAngleExceededTooFarCounterClockWise(label) &&
+            movesRemaining > 0
           ) {
             if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
@@ -297,6 +302,7 @@ class DescendingOrderCollisionResolver {
             }
             const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(label.labelAngle - angleIncrement))
             wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(label.labelAngle - angleIncrement))
+            movesRemaining--
           }
 
           if (labelLogger.isDebugEnabled()) {
@@ -306,8 +312,10 @@ class DescendingOrderCollisionResolver {
             }
           }
 
-          if (labelLineAngleExceededTooFarCounterClockWise(label)) {
-            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
+          const exhaustedRevolution = movesRemaining === 0
+          if (labelLineAngleExceededTooFarCounterClockWise(label) || exhaustedRevolution) {
+            const reason = exhaustedRevolution ? 'Walked a full revolution without finding a slot' : 'Max angle exceed'
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. ${reason}. Reset Label and continue CC`)
             wrappedLabelSet.resetLabel(label)
             recordHitMaxAngle(CC)
           }

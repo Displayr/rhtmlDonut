@@ -6,6 +6,11 @@ const computeCoordOnEllipse = require('../../utils/computeCoordOnEllipse')
 // builds in extendCanvasInterface, so we can drive it headlessly by supplying that interface
 // directly. getLabelSize is the only part that really needs a DOM (it measures text in an SVG), so
 // here it is approximated with a fixed per character width.
+//
+// maxLabelWidth defaults to Infinity, which means "never wrap" - the simple single line
+// approximation. Passing a finite value models what the real labeller does with labels.max.width:
+// wrap the text and cap it at labels.max.lines. Label height grows with the line count, which is
+// what makes wide labels crowd the label ellipse.
 const buildStubCanvas = ({
   width = 600,
   height = 600,
@@ -13,6 +18,8 @@ const buildStubCanvas = ({
   labelOffset = 15,
   maxVerticalOffset = 60,
   charWidth = 0.5,
+  maxLabelWidth = Infinity,
+  maxLines = 6,
 } = {}) => {
   const pieCenter = { x: width / 2, y: height / 2 }
   return {
@@ -24,11 +31,13 @@ const buildStubCanvas = ({
     pieCenter,
     getLabelSize: ({ labelText, fontSize }) => {
       const lineHeight = fontSize * 1.2
+      const naturalWidth = labelText.length * fontSize * charWidth
+      const lineCount = Math.min(maxLines, Math.max(1, Math.ceil(naturalWidth / maxLabelWidth)))
       return {
         lineHeight,
-        height: lineHeight,
-        width: labelText.length * fontSize * charWidth,
-        labelTextLines: [labelText],
+        height: lineCount * lineHeight,
+        width: Math.min(naturalWidth, maxLabelWidth),
+        labelTextLines: Array(lineCount).fill(labelText),
       }
     },
     computeCoordOnEllipse: ({ angle, radialWidth, radialHeight }) => computeCoordOnEllipse({
@@ -44,7 +53,7 @@ const buildStubCanvas = ({
 
 // Mirrors SegmentLabeller.buildLabels: segments are laid out in input order, and the resolver
 // relies on that order being descending by value (id 0 is the largest label).
-const buildLabelSet = ({ values, canvas, fontSize = 10 }) => {
+const buildLabelSet = ({ values, canvas, fontSize = 10, labelText = (index) => `Category ${index}` }) => {
   const canvasInterface = () => canvas
   const totalValue = values.reduce((total, value) => total + value, 0)
   let cumulativeValue = 0
@@ -65,7 +74,7 @@ const buildLabelSet = ({ values, canvas, fontSize = 10 }) => {
       group: null,
       id: index,
       innerPadding: 1,
-      label: `Category ${index}`,
+      label: labelText(index),
       segmentAngleMidpoint: angleStart + angleExtent / 2,
       value,
     })
@@ -94,9 +103,9 @@ const withLabelMovementBudget = (budget, fn) => {
   }
 }
 
-const resolve = ({ values, canvasOptions, fontSize, budget = 100000 }) => {
+const resolve = ({ values, canvasOptions, fontSize, labelText, budget = 100000 }) => {
   const canvas = buildStubCanvas(canvasOptions)
-  const labelSet = buildLabelSet({ values, canvas, fontSize })
+  const labelSet = buildLabelSet({ values, canvas, fontSize, labelText })
 
   return withLabelMovementBudget(budget, () => new DescendingOrderCollisionResolver({
     labelSet,
@@ -125,19 +134,50 @@ describe('DescendingOrderCollisionResolver', () => {
     expect(result.outer.length).toBeGreaterThan(0)
   })
 
-  // The same freeze, reached with an uneven distribution rather than a uniform one.
-  it.each([40, 50, 60, 70, 80, 90, 100])('terminates for %i equally sized segments', (segmentCount) => {
+  it.each([40, 50, 70, 80, 90, 100])('terminates for %i equally sized segments', (segmentCount) => {
     const { result } = resolve({ values: Array(segmentCount).fill(10) })
 
     expect(result.outer.length).toBeGreaterThan(0)
   })
 
+  // The same freeze, reached with an uneven distribution rather than a uniform one.
   it('terminates for a long tail of small segments', () => {
     const values = [100, 80, 60, 40].concat(Array(80).fill(1))
 
     const { result } = resolve({ values })
 
     expect(result.outer.length).toBeGreaterThan(0)
+  })
+
+  // RS-23152 follow on. Fixing the seam wrap stopped the counter clockwise sweep cycling on the
+  // spot, but it did not bound the sweep. labelLineAngleExceededTooFarCounterClockWise only fires
+  // while labelAngle < segmentAngleMidpoint, so once a label has wrapped past 0 that guard is
+  // inert for the rest of the revolution and every revolution after it. Termination then depended
+  // entirely on a collision free, in bounds slot existing somewhere on the lap, and when none does
+  // the label walks laps forever.
+  //
+  // These are the geometries computePieLayoutDimensions derives for a donut of the given canvas
+  // size at the stated labels.max.width, with every other setting left at its shipped default
+  // (labels.max.lines 6, descending sort order, outer labels). Each case walks laps without the
+  // revolution cap. Note the third is at the default labels.max.width of 0.3.
+  describe('bounds the counter clockwise sweep to one revolution per label', () => {
+    const longCategoryName = (index) => `Product Category Number ${index} Long Name`
+
+    it.each([
+      ['600x600 at labels.max.width 0.4', { outerRadius: 52, labelOffset: 6, maxVerticalOffset: 248, maxLabelWidth: 240 }, 40],
+      ['600x600 at labels.max.width 0.35', { outerRadius: 79, labelOffset: 9, maxVerticalOffset: 221, maxLabelWidth: 210 }, 70],
+      ['600x600 at the default labels.max.width of 0.3', { outerRadius: 107, labelOffset: 11, maxVerticalOffset: 193, maxLabelWidth: 180 }, 40],
+      ['800x400 at labels.max.width 0.4', { width: 800, height: 400, outerRadius: 70, labelOffset: 8, maxVerticalOffset: 130, maxLabelWidth: 320 }, 70],
+    ])('terminates for %s', (_name, canvasOptions, segmentCount) => {
+      const { result } = resolve({
+        values: Array(segmentCount).fill(10),
+        canvasOptions,
+        labelText: longCategoryName,
+        budget: 200000,
+      })
+
+      expect(result.outer.length).toBeGreaterThan(0)
+    })
   })
 
   // Defence in depth: even if some future change reintroduces a placement that fails to make
@@ -147,11 +187,13 @@ describe('DescendingOrderCollisionResolver', () => {
     const labelSet = buildLabelSet({ values: Array(60).fill(10), canvas })
     const movesPerLabel = {}
 
-    // 720 steps of 0.5 degrees is one full revolution. go() retries the layout once per extraHeight
-    // variation and each attempt runs several sweeps, so allow a generous multiple of that while
-    // still catching a label that is stuck going round and round. The budget is enforced as it goes
-    // rather than asserted afterwards, so a regression fails the run instead of hanging it.
-    const perLabelBudget = 720 * 20
+    // 720 steps of 0.5 degrees is one full revolution. The count is deliberately cumulative across
+    // the whole run - go() retries the layout once per extraHeight variation and each attempt runs
+    // several sweeps - which makes this stricter than a per attempt bound rather than looser. This
+    // layout settles in 107 moves for its busiest label, so the margin is wide, and reintroducing
+    // the seam cycle blows the budget on the first attempt. Enforced as it goes rather than
+    // asserted afterwards, so a regression fails the run instead of hanging it.
+    const perLabelBudget = 720
     const place = OuterLabel.prototype.placeLabelViaConnectorCoordOnEllipse
     OuterLabel.prototype.placeLabelViaConnectorCoordOnEllipse = function (...args) {
       movesPerLabel[this.id] = (movesPerLabel[this.id] || 0) + 1
@@ -172,6 +214,8 @@ describe('DescendingOrderCollisionResolver', () => {
       OuterLabel.prototype.placeLabelViaConnectorCoordOnEllipse = place
     }
 
-    expect(Object.keys(movesPerLabel).length).toBeGreaterThan(0)
+    // every label was placed at least once, and none of them exceeded the budget above
+    expect(Object.keys(movesPerLabel)).toHaveLength(60)
+    expect(Math.max(...Object.values(movesPerLabel))).toBeLessThanOrEqual(perLabelBudget)
   })
 })
