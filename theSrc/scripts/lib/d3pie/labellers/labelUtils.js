@@ -61,7 +61,7 @@ function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'san
 
   let currentLine = []
   let lines = []
-  let token = null
+  let token
   while (token = tokens.shift()) { // eslint-disable-line no-cond-assign
     currentLine.push(token)
 
@@ -70,7 +70,6 @@ function splitIntoLines (inputString, maxWidth, fontSize = 12, fontFamily = 'san
       if (maxLines && lines.length === maxLines - 1) {
         currentLine.pop()
         currentLine.push('...')
-        tokens = []
         lines.push(`${currentLine.join(' ')}`)
         currentLine = []
         break

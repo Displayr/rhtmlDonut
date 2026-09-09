@@ -25,7 +25,7 @@ module.exports = ({
       x: segmentCoord.x,
       y: Math.min( // NB do not allow really big labels to push pack inside outerRadius mark
         pieCenter.y - outerRadius - maxVerticalOffset,
-        pieCenter.y - outerRadius - labelOffset
+        pieCenter.y - outerRadius - labelOffset,
       ),
     }
     label.placeLabelViaConnectorCoord(fitLineCoord)
@@ -37,7 +37,7 @@ module.exports = ({
       x: segmentCoord.x,
       y: Math.max( // NB do not allow really big labels to push pack inside outerRadius mark
         pieCenter.y + outerRadius + maxVerticalOffset,
-        pieCenter.y + outerRadius + labelOffset
+        pieCenter.y + outerRadius + labelOffset,
       ),
     }
     label.placeLabelViaConnectorCoord(fitLineCoord)

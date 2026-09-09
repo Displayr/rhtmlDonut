@@ -43,7 +43,7 @@ module.exports = ({
 
   const yPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.cos(labelLiftOffAngleInRadians)
   const xPosWhereLabelRadiusAndUpperTriangleMeet = labelRadius * Math.sin(labelLiftOffAngleInRadians)
-  let xOffset = 0
+  let xOffset
 
   if (yOffset <= yPosWhereLabelRadiusAndUpperTriangleMeet) {
     // place X along labelRadius

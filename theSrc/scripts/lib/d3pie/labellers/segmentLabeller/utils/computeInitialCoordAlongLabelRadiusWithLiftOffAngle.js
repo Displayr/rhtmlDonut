@@ -16,7 +16,7 @@ module.exports = ({
   minGap = 1,
   spacingBetweenUpperTrianglesAndCenterMeridian,
 }) => {
-  let fitLineCoord = null
+  let fitLineCoord
   let isLifted = false
 
   const highYOffSetAngle = (angle) => (
@@ -37,7 +37,7 @@ module.exports = ({
       ? pieCenter.x - spacingBetweenUpperTrianglesAndCenterMeridian
       : pieCenter.x + spacingBetweenUpperTrianglesAndCenterMeridian
 
-    let placementLineCoord2 = null
+    let placementLineCoord2
     if (between(0, angle, 90)) {
       placementLineCoord2 = rotate(pointAtZeroDegreesAlongLabelOffset, pieCenter, 90 - labelLiftOffAngle)
     } else if (between(90, angle, 180)) {

@@ -1,10 +1,7 @@
-.eslintignore
-.eslintrc
-.travis.yml
+eslint.config.js
 .github
 .*\.Rproj$
 ^\.Rproj\.user$
-gulpfile.js
 package-lock.json
 package.json
 ^theSrc$

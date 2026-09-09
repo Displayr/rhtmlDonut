@@ -129,7 +129,7 @@ function ColourGradient () {
       return string.substring(string.length - 6, string.length)
     } else {
       let name = string.toLowerCase()
-      if (colourNames.hasOwnProperty(name)) {
+      if (Object.prototype.hasOwnProperty.call(colourNames, name)) {
         return colourNames[name]
       }
       throw new Error(string + ' is not a valid colour.')

@@ -100,8 +100,7 @@ class Tooltips {
     tooltips.selectAll(`.${cssPrefix}tooltip`)
       .data(this.dataPoints)
       .append('text')
-      .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity)
-      )
+      .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity))
       .style('font-size', fontSize + 'px')
       .style('font-family', font)
       .style('dominant-baseline', 'text-after-edge')
@@ -155,8 +154,7 @@ class Tooltips {
       groupTips.selectAll(`.${cssPrefix}gtooltip`)
         .data(this.groupData)
         .append('text')
-        .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity)
-        )
+        .attr('fill', d => (fontColor) || getTextColorGivenBackground(getComputedBackgroundColor(d), backgroundOpacity))
         .style('font-size', fontSize + 'px')
         .style('font-family', font)
         .style('dominant-baseline', 'text-after-edge')
@@ -242,9 +240,9 @@ module.exports = Tooltips
 const rgbRegex = new RegExp(/#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/, 'i')
 function getTextColorGivenBackground (backgroundColor, backgroundOpacity) {
   const rgbMatch = backgroundColor.match(rgbRegex)
-  let red = null
-  let green = null
-  let blue = null
+  let red
+  let green
+  let blue
   let o = 255
   if (rgbMatch) {
     red = parseInt(rgbMatch[1], 16)

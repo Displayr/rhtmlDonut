@@ -1,4 +1,3 @@
-
 // https://stackoverflow.com/questions/306316/determine-if-two-rectangles-overlap-each-other
 function rectIntersect (r1, r2) {
   const r1x2 = r1.x + r1.width

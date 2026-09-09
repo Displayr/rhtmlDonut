@@ -9,9 +9,6 @@ import Segments from './segments'
 import SegmentLabeller from './labellers/segmentLabeller'
 import { rootLogger, layoutLogger } from '../logger'
 
-/* global HTMLElement */
-/* global SVGElement */
-
 class d3pie {
   constructor (element, options) {
     rootLogger.debug(`d3pieConfig: ${JSON.stringify(options, {}, 2)}`)
@@ -102,7 +99,6 @@ class d3pie {
     this.interface.interactionController = new InteractionController()
     const { canvas, interactionController } = this.interface
 
-    let pieDimensions = {}
     let labelStats = { maxLabelWidth: 0, maxLabelHeight: 0, maxFontSize: 0 }
     let extraVerticalSpace = 0
     let labelLinePadding = 0
@@ -132,7 +128,7 @@ class d3pie {
         : 0
     }
 
-    pieDimensions = this.computePieLayoutDimensions({
+    const pieDimensions = this.computePieLayoutDimensions({
       labelsEnabled: this.options.labels.enabled,
       canvasHeight: canvas.height,
       canvasWidth: canvas.width,
@@ -243,7 +239,7 @@ class d3pie {
     const halfMaxFontSizeMinusMagicHardCode = 8 // NB based on experimenting with label_variations_wrapping.yaml examples
     const labelOffset = Math.max(
       (maxFontSize / 2) - halfMaxFontSizeMinusMagicHardCode, // labelOffset must be at least 1/2 maxFontSize (minus some fudge)  to prevent labels from overlapping segments
-      Math.ceil(outerRadiusIncludingLabelOffset * (1 - (1 / (1 + labelOffsetProportion))))
+      Math.ceil(outerRadiusIncludingLabelOffset * (1 - (1 / (1 + labelOffsetProportion)))),
     )
 
     const outerRadius = outerRadiusIncludingLabelOffset - (labelsEnabled ? labelOffset : 0)

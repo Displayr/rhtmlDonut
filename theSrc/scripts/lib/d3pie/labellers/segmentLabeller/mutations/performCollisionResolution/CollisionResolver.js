@@ -48,10 +48,8 @@ class CollisionResolver {
     this.variant = {}
     this.invariant = {}
 
-    /* eslint-disable no-return-assign */
     VARIABLE_CONFIG.forEach(key => this.variant[key] = extractAndThrowIfNull(variant, key))
     INVARIABLE_CONFIG.forEach(key => this.invariant[key] = extractAndThrowIfNull(invariant, key))
-    /* eslint-enable no-return-assign */
   }
 
   canUseInnerLabel (label) {

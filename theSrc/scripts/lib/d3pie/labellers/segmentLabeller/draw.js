@@ -25,6 +25,12 @@ const drawLabelSet = ({
     .attr('class', `${cssPrefix}labelGroup-${labelType}`)
     .attr('transform', function ({ topLeftCoord }) { return `translate(${topLeftCoord.x},${topLeftCoord.y})` })
     .style('opacity', 1)
+    // NB inner labels are drawn over their own segment, and nothing listens to them --
+    // addEventHandlers only binds labelGroup-outer -- so leaving them hit-testable meant a hover
+    // landing on the label text was swallowed instead of highlighting the segment underneath.
+    // Outer labels keep pointer-events, because they have handlers of their own and have no segment
+    // beneath them to fall through to.
+    .style('pointer-events', (labelType === 'outer') ? null : 'none')
     // TODO repeated code for segments, groupsegments, labels, grouplabels
     .style('cursor', 'pointer')
     .style('-webkit-touch-callout', 'none')
@@ -56,6 +62,28 @@ const drawLabelSet = ({
     })
 }
 
+const LABEL_FADE_IN_MS = 400
+
+// How long the widget is still moving after draw() schedules the load animation. PieWrapper uses this
+// to decide when rhtmlwidget-status=ready may be announced.
+//
+// NB this is `speed`, NOT `speed + LABEL_FADE_IN_MS`, because fadeInLabelsAndLines below is a no-op
+// and nothing is animating during that extra 400ms:
+//
+//   * its first transition takes .labelGroup-outer to opacity 1, but drawLabelSet already sets those
+//     same groups to opacity 1, so it tweens 1 to 1;
+//   * its second selection, `g.<prefix>lineGroups`, matches nothing -- the elements are classed
+//     <prefix>lineGroups-outer and <prefix>lineGroups-inner, and a class selector matches whole
+//     tokens rather than prefixes -- and those groups are created at opacity 1 regardless.
+//
+// So the widget stops moving when the segments finish growing, at `speed`. Including the fade would
+// delay ready, and therefore Displayr's export and the visual suite's snapshotDelay, by 400ms per
+// initial render for a fade that never happens. It would also leave readyAfterAnimation.jest.test.js
+// 400ms of slack, so it would pass even if ready were announced early -- it would not pin the
+// boundary it exists to pin.
+const totalLoadAnimationDuration = ({ effect, speed }) =>
+  (effect === 'default') ? speed : 0
+
 const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   const { effect, speed } = animationConfig
   const { svg, cssPrefix } = canvas
@@ -64,7 +92,7 @@ const fadeInLabelsAndLines = ({ canvas, animationConfig }) => {
   let loadSpeed = (effect === 'default') ? speed : 1
 
   setTimeout(function () {
-    let labelFadeInTime = (effect === 'default') ? 400 : 1 // 400 is hardcoded for the present
+    let labelFadeInTime = (effect === 'default') ? LABEL_FADE_IN_MS : 1
 
     svg.selectAll('.' + cssPrefix + 'labelGroup-outer')
       .transition()
@@ -167,4 +195,5 @@ module.exports = {
   drawOuterLabelLines,
   drawInnerLabelLines,
   fadeInLabelsAndLines,
+  totalLoadAnimationDuration,
 }

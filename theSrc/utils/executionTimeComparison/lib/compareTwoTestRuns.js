@@ -57,7 +57,7 @@ function getMergedTests ({ baseline, candidate }) {
 
   const merged = _.merge(
     _.keyBy(nestUnderField(baseline, 'baseline'), 'scenario'),
-    _.keyBy(nestUnderField(candidate, 'checkpoint'), 'scenario')
+    _.keyBy(nestUnderField(candidate, 'checkpoint'), 'scenario'),
   )
   return _.values(merged)
 }

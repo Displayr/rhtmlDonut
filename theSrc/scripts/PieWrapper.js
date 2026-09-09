@@ -5,6 +5,7 @@ import d3pie from './lib/d3pie/d3pie'
 import Rainbow from './lib/d3pie/rainbowvis'
 import helpers from './lib/d3pie/helpers'
 import { Footer, Title, Subtitle } from 'rhtmlParts'
+import { totalLoadAnimationDuration } from './lib/d3pie/labellers/segmentLabeller/draw'
 import { layoutLogger, rootLogger, initialiseLogger } from './lib/logger'
 import { name, version } from '../../package.json'
 
@@ -34,8 +35,20 @@ class PieWrapper {
   }
 
   reset () {
+    // NB cancel here as well as in draw(). renderValue runs reset() -> setConfig() -> draw() inside a
+    // try, and setConfig throws on invalid input (a colour array length mismatch, say). draw() is then
+    // never reached, so without this a ready timer scheduled by the PREVIOUS successful render would
+    // still fire and stamp rhtmlwidget-status=ready on a container now holding only the error message.
+    // Anything polling that attribute -- Displayr's export among them -- would read a failed render as
+    // a finished one. That failure mode did not exist while ready was set synchronously.
+    this._cancelPendingReady()
     this.initialDrawComplete = false
     $(this.outerContainer).find('*').remove()
+  }
+
+  _cancelPendingReady () {
+    clearTimeout(this._readyTimer)
+    this._readyTimer = null
   }
 
   initialiseComponents () {
@@ -81,7 +94,7 @@ class PieWrapper {
     this.pieGroup = this.outerSvg.append('g')
       .attr('class', 'pieGroup')
 
-    this.pie = new d3pie(this.pieGroup.node(), { // eslint-disable-line new-cap
+    this.pie = new d3pie(this.pieGroup.node(), {
       size: {
         labelThreshold: absencePreservingParseFloat(this._settings.canvasSizeDrawLabelThreshold),
         labelOffset: absencePreservingParseFloat(this._settings.labelOffset),
@@ -181,12 +194,29 @@ class PieWrapper {
       .attr(name, version)
       .attr(`rhtmlwidget-status`, 'loading')
 
-    this._draw()
+    // Before _draw(), which can itself throw -- resize() calls draw() with no reset() in front of it.
+    this._cancelPendingReady()
 
-    wrappedElement
-      .attr(`rhtmlwidget-status`, 'ready')
+    const loadAnimationMs = this._draw()
+
+    // NB ready must not be announced while the widget is still moving. This used to be set here
+    // synchronously, immediately after _draw() had SCHEDULED the load transition -- so it claimed ready
+    // about 1.4 seconds early (segments grow over effects.load.speed, then labels fade in over another
+    // 400ms). Everything that waits on this attribute was therefore looking at a donut mid-animation:
+    // the visual suite's waitForWidgetToLoad, and any consumer that screenshots on ready.
+    //
+    // A redraw does not animate and clears the previous elements first (Segments.clearPreviousFromCanvas),
+    // which kills any transition still running on them, so resize still becomes ready immediately.
+    if (loadAnimationMs > 0) {
+      this._readyTimer = setTimeout(() => {
+        wrappedElement.attr(`rhtmlwidget-status`, 'ready')
+      }, loadAnimationMs)
+    } else {
+      wrappedElement.attr(`rhtmlwidget-status`, 'ready')
+    }
   }
 
+  // Returns the duration in ms of the load animation it started, or 0 if nothing is animating.
   _draw () {
     const { width, height } = getContainerDimensions(this.outerContainer)
     rootLogger.info(`draw called. Width: ${width}, height: ${height}`)
@@ -197,7 +227,7 @@ class PieWrapper {
       rootLogger.info(`${width}x${height} is below minimum size of ${drawThreshold}. Cancel render and leave canvas blank`)
       $(this.outerContainer).find('*').remove()
       this.initialDrawComplete = false
-      return
+      return 0
     }
 
     if (!this.initialDrawComplete) {
@@ -255,6 +285,11 @@ class PieWrapper {
       if (!this.initialDrawComplete) {
         this.pie.draw()
         this.initialDrawComplete = true
+
+        // NB read the duration off the d3pie instance, not this._settings: the settings here are
+        // absence-preserving, so speed is undefined unless the user set it, and it is d3pie that
+        // merges defaultSettings over the top.
+        return totalLoadAnimationDuration(this.pie.options.effects.load)
       } else {
         this.pie.redraw()
       }
@@ -265,6 +300,8 @@ class PieWrapper {
       //   .attr('width', width)
       //   .attr('height', donutPlotHeight)
     }
+
+    return 0
   }
 
   setConfig (newConfig) {
@@ -343,10 +380,10 @@ class PieWrapper {
     const values = this.pieData.map(({ value }) => value)
     const firstValueEqualLastValue = _.first(values) === _.last(values)
     const isSortedAscending = _.every(values, (value, index, array) =>
-      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value)
+      index === 0 || parseFloat(array[index - 1]) <= parseFloat(value),
     ) && !firstValueEqualLastValue
     const isSortedDescending = _.every(values, (value, index, array) =>
-      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value)
+      index === 0 || parseFloat(array[index - 1]) >= parseFloat(value),
     ) && !firstValueEqualLastValue
     const valuesOrder = (isSortedDescending)
       ? 'descending'

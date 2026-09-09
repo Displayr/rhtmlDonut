@@ -1,4 +1,3 @@
-
 class DonutPlotPage {
   constructor (page) {
     this.page = page
@@ -29,11 +28,14 @@ class DonutPlotPage {
   }
 
   async hoverOverSegmentThenMove (segmentIndex, xDelta, yDelta) {
-    await this.page.hover(`#donut-0segment${segmentIndex}`)
-    const x = this.page.mouse._x // NB this is not supported and may break in future
-    const y = this.page.mouse._y // NB this is not supported and may break in future
+    // NB this used to hover and then read page.mouse._x/_y, with a comment noting that was
+    // unsupported. puppeteer 24 does not expose them. clickablePoint() is what hover() uses to choose
+    // its point, so moving there is the same hover, and the delta is applied from a point we know.
+    const segment = await this.segment(segmentIndex)
+    const { x, y } = await segment.clickablePoint()
 
-    await this.page.mouse.move(parseFloat(x) + xDelta, parseFloat(y) + yDelta)
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.move(x + xDelta, y + yDelta)
   }
 
   async moveMouseOffDonut () {
