@@ -4,6 +4,7 @@ import { extractAndThrowIfNullFactory } from '../../mutationHelpers'
 import { terminateLoop } from '../../../../../loopControls'
 import RBush from 'rbush'
 import { labelLogger } from '../../../../../logger'
+import { normaliseAngle } from '../../../../math'
 
 const CC = 'COUNTER_CLOCKWISE'
 const CW = 'CLOCKWISE'
@@ -17,8 +18,6 @@ const INVARIABLE_CONFIG = [
   'liftOffAngle',
   'outerPadding',
 ]
-
-const boundedAngle = (angle) => (angle < 0) ? 360 - angle : angle % 360
 
 class DescendingOrderCollisionResolver {
   constructor ({ labelSet, variant, invariant, canvas }) {
@@ -101,6 +100,9 @@ class DescendingOrderCollisionResolver {
 
     const maxSweeps = 18
     const angleIncrement = 0.5
+    // One full revolution. A label that has been walked this far counter clockwise is back at the
+    // angle it started from, which is known to be colliding, so there is no valid slot to find.
+    const maxMovesPerLabel = Math.ceil(360 / angleIncrement)
 
     const sweepState = {
       direction: CW,
@@ -182,8 +184,8 @@ class DescendingOrderCollisionResolver {
           const nearestLargerNeighbor = wrappedLabelSet.getNearestActiveLargerNeighbor(label)
           if (nearestLargerNeighbor && nearestLargerNeighbor.labelAngle > label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CW: detected ${label.shortText} got left behind. Pushing Pushing ${CW}`)
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(nearestLargerNeighbor.labelAngle + angleIncrement))
           }
 
           const labelLineAngleExceededTooFarClockWise = (label) =>
@@ -210,8 +212,8 @@ class DescendingOrderCollisionResolver {
                 labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle + angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle + angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(label.labelAngle + angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(label.labelAngle + angleIncrement))
           }
 
           if (labelLogger.isDebugEnabled()) {
@@ -268,8 +270,8 @@ class DescendingOrderCollisionResolver {
           const nearestSmallerNeighbor = wrappedLabelSet.getNearestActiveSmallerNeighbor(label)
           if (nearestSmallerNeighbor && nearestSmallerNeighbor.labelAngle < label.labelAngle) {
             labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} ${CC}: detected ${label.shortText} got left behind. Pushing ${CC}`)
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(nearestSmallerNeighbor.labelAngle - angleIncrement))
           }
 
           const labelLineAngleExceededTooFarCounterClockWise = (label) =>
@@ -281,9 +283,11 @@ class DescendingOrderCollisionResolver {
               // || (label.inTopLeftQuadrant && label.labelAngle > 270)
             )
 
+          let movesRemaining = maxMovesPerLabel
           while (
             (wrappedLabelSet.findAllActiveCollisionsWithLesserLabels(label).length > 0 || !this.canvas.labelIsInBounds(label)) &&
-            !labelLineAngleExceededTooFarCounterClockWise(label)
+            !labelLineAngleExceededTooFarCounterClockWise(label) &&
+            movesRemaining > 0
           ) {
             if (labelLogger.isDebugEnabled()) {
               labelLogger.debug(`${logPrefix} sweep${sweepState.sweepCount} CC: moving ${label.shortText}`)
@@ -296,8 +300,9 @@ class DescendingOrderCollisionResolver {
                 labelLogger.debug(`${label.shortText} out of bounds`)
               }
             }
-            const newLineConnectorCoord = getLabelCoordAt(boundedAngle(label.labelAngle - angleIncrement))
-            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, boundedAngle(label.labelAngle - angleIncrement))
+            const newLineConnectorCoord = getLabelCoordAt(normaliseAngle(label.labelAngle - angleIncrement))
+            wrappedLabelSet.moveLabel(label, newLineConnectorCoord, normaliseAngle(label.labelAngle - angleIncrement))
+            movesRemaining--
           }
 
           if (labelLogger.isDebugEnabled()) {
@@ -307,8 +312,10 @@ class DescendingOrderCollisionResolver {
             }
           }
 
-          if (labelLineAngleExceededTooFarCounterClockWise(label)) {
-            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. Max angle exceed. Reset Label and continue CC`)
+          const exhaustedRevolution = movesRemaining === 0
+          if (labelLineAngleExceededTooFarCounterClockWise(label) || exhaustedRevolution) {
+            const reason = exhaustedRevolution ? 'Walked a full revolution without finding a slot' : 'Max angle exceed'
+            labelLogger.info(`${logPrefix} sweep${sweepState.sweepCount} CC: frontier ${label.shortText}. ${reason}. Reset Label and continue CC`)
             wrappedLabelSet.resetLabel(label)
             recordHitMaxAngle(CC)
           }
